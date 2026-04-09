@@ -1,4 +1,4 @@
-# 미션팟 (NudgeMe) — Pre-mortem
+# NudgeMe — Pre-mortem
 
 > **작성일**: 2026-04-08
 > **방법론**: Pre-mortem (Gary Klein) — "프로젝트가 이미 실패했다고 가정하고 원인을 거꾸로 추적"
