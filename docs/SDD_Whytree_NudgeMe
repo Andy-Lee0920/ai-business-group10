@@ -1,0 +1,186 @@
+Nudge Me — Product Spec
+재정의
+text
+복사
+기존 방향: 실행 강제 + 습관 게임화
+새 방향:   행동 교정 (Behavior Correction)
+
+"강제"가 아니라 "넛지"다.
+밀어붙이는 게 아니라 — 슬쩍 방향을 바꾼다.
+Nudge Theory (Thaler & Sunstein)
+선택을 강요하지 않고
+선택 환경을 설계해 행동을 유도한다
+
+1. Problem Reframe
+DoForce 프레임	Nudge Me 프레임
+실행 못 함	잘못된 방향으로 가고 있음
+의지 부족	환경 설계 부재
+강제 필요	넛지 필요
+실패 = 벌	이탈 = 교정 신호
+
+2. Core Concept
+text
+복사
+=== PRODUCT CONCEPT ===
+
+PRODUCT_NAME: Nudge Me
+TAGLINE: 당신이 원하는 사람이 되도록, 슬쩍 밀어드립니다
+TYPE: Behavior Correction System
+THEORY_BASE: Nudge Theory / BJ Fogg Behavior Model
+
+CORE_BELIEF:
+  - 사람은 나쁜 게 아니다. 환경이 나쁜 것이다
+  - 행동은 설계될 수 있다
+  - 교정은 처벌이 아니라 방향 재설정이다
+3. Problem Spec
+text
+복사
+PROBLEM_ID: P-001
+LABEL: 나쁜 패턴 인식 불가
+STATEMENT: 사용자는 자신이 반복하는 나쁜 행동 패턴을 인식하지 못한다
+INSIGHT: 보이지 않는 패턴은 교정할 수 없다
+
+PROBLEM_ID: P-002
+LABEL: 교정 타이밍 부재
+STATEMENT: 나쁜 행동을 하려는 순간 개입이 없다
+INSIGHT: 넛지는 결심할 때가 아니라 행동 직전에 작동해야 한다
+
+PROBLEM_ID: P-003
+LABEL: 대안 행동 부재
+STATEMENT: 나쁜 행동을 멈추려 해도 대신할 행동을 모른다
+INSIGHT: 행동 교정은 제거가 아니라 대체다
+
+PROBLEM_ID: P-004
+LABEL: 교정 지속성 부재
+STATEMENT: 며칠 잘 하다가 다시 원래대로 돌아간다
+INSIGHT: 교정은 이벤트가 아니라 환경이어야 한다
+4. Module Spec
+text
+복사
+MODULE_ID: M-001
+NAME: Pattern Tracker
+SOLVES: P-001
+PURPOSE: 사용자의 행동 패턴을 자동 감지 및 시각화
+INPUT: 사용자 행동 로그 (자가 입력 / 자동 감지)
+OUTPUT: 나쁜 패턴 리포트 + 교정 우선순위
+FEATURE:
+  - 반복 행동 태깅
+  - 시간대별 패턴 분석
+  - "당신은 오후 3시에 가장 자주 무너집니다" 형태 인사이트
+
+---
+
+MODULE_ID: M-002
+NAME: Nudge Trigger
+SOLVES: P-002
+PURPOSE: 나쁜 행동 직전 / 직후 개입
+INPUT: 패턴 데이터 (M-001) + 시간 / 위치 컨텍스트
+OUTPUT: 상황 맞춤 넛지 메시지
+NUDGE_TYPE:
+  - 예방 넛지: 행동 직전 개입 ("지금 폰 내려놓으면 어때요?")
+  - 교정 넛지: 행동 직후 인식 ("방금 또 했어요. 괜찮아요. 다음엔 이렇게 해봐요")
+  - 환경 넛지: 트리거 상황 재설계 제안
+RULE:
+  - 비난하지 않는다
+  - 명령하지 않는다
+  - 선택지를 제시한다
+
+---
+
+MODULE_ID: M-003
+NAME: Replacement Behavior Engine
+SOLVES: P-003
+PURPOSE: 나쁜 행동을 대체할 행동 추천
+INPUT: 교정 대상 행동 + 사용자 컨텍스트
+OUTPUT: 대체 행동 리스트 (난이도 순)
+RULE:
+  - 대체 행동은 기존 행동보다 쉬워야 한다
+  - 같은 욕구를 충족시켜야 한다
+EXAMPLE:
+  BAD  → 스트레스받으면 폭식
+  REPLACE:
+    Lv1. 물 한 잔 마시기
+    Lv2. 5분 산책
+    Lv3. 감정 일기 한 줄
+
+---
+
+MODULE_ID: M-004
+NAME: Correction Streak
+SOLVES: P-004
+PURPOSE: 교정 행동의 지속성 유지
+INPUT: 대체 행동 완료 데이터
+OUTPUT: 교정 스트릭 + 성장 시각화
+FEATURE:
+  - 실패해도 스트릭이 깨지지 않는다 (Forgiveness System)
+  - "교정 중" 상태를 유지하는 것 자체가 목표
+  - 완벽함이 아니라 방향성을 측정
+RULE:
+  실패 = 데이터
+  실패 ≠ 패배
+5. UX Principle
+text
+복사
+=== NUDGE DESIGN RULES ===
+
+RULE_01: 비난하지 않는다
+  → 모든 메시지는 중립 또는 따뜻한 톤
+
+RULE_02: 강요하지 않는다
+  → 모든 넛지는 선택지 형태로 제공
+
+RULE_03: 타이밍이 전부다
+  → 결심할 때 X / 행동 직전에 O
+
+RULE_04: 작게 시작한다
+  → 첫 대체 행동은 30초 이내 가능한 것
+
+RULE_05: 실패를 설계한다
+  → 실패를 예상하고 교정 루프에 포함시킨다
+6. Core Flow
+text
+복사
+[나쁜 패턴 발생]
+      ↓
+[Pattern Tracker] ── 패턴 인식 + 기록
+      ↓
+[Nudge Trigger] ──── 행동 직전 개입
+      ↓
+  반응? ── Yes → [Replacement Behavior] → [Correction Streak]
+    │
+    No (무시)
+    ↓
+[사후 교정 넛지] ── "괜찮아요. 다음엔 이렇게"
+    ↓
+[Pattern 재기록] ── 실패도 데이터
+7. Tone & Voice
+text
+복사
+나쁜 예:
+  "또 실패했네요"
+  "오늘도 못 지켰습니다"
+
+좋은 예:
+  "오늘 한 번 이탈했어요. 그래도 어제보다 2시간 늦었네요"
+  "지금 딱 넛지 타이밍이에요. 물 한 잔 어때요?"
+  "완벽하지 않아도 괜찮아요. 방향이 맞으면 됩니다"
+8. Summary
+text
+복사
+=== SYSTEM SUMMARY ===
+
+MISSION:
+  강제하지 않는다.
+  환경을 설계해 행동이 자연스럽게 바뀌게 한다.
+
+WHAT WE MEASURE:
+  완벽한 실행 X
+  올바른 방향 O
+
+CORE LOOP:
+  패턴 인식 → 넛지 개입 → 대체 행동 → 지속 교정
+
+PRODUCT BELIEF:
+  당신은 의지가 약한 게 아닙니다.
+  환경이 잘못 설계된 것입니다.
+  Nudge Me가 다시 설계합니다.

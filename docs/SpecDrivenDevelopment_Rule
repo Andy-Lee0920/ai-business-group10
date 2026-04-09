@@ -1,0 +1,541 @@
+# Structured Spec Format — Spec-Driven Vibe Coding
+
+> **용도**: 프로젝트 초기화 시 Claude Code가 인터뷰를 통해 빈칸을 채워나가는 스펙 템플릿.
+> CLAUDE.md에 삽입하거나, `/init` 커맨드로 실행하여 프로젝트별 `PROJECT_SPEC.md`를 생성한다.
+
+---
+
+## 인터뷰 실행 지시문 (CLAUDE.md에 삽입)
+
+```markdown
+## Project Spec Interview Protocol
+
+When the user runs `/spec` or asks to initialize a project spec:
+
+1. Read the Structured Spec Template from `./templates/SPEC_TEMPLATE.md`
+2. Walk through each section sequentially, asking the user to fill or confirm
+3. For each section:
+   - Show the section title and purpose in one sentence
+   - Ask the minimum viable question set (marked 🔴 REQUIRED)
+   - Offer optional deep-dive questions (marked 🟡 OPTIONAL) only if user says "more"
+   - Accept "skip" to leave a section as TBD with a ⚠️ marker
+   - Accept "default" to apply the recommended defaults (marked 📌 DEFAULT)
+4. After all sections: generate `PROJECT_SPEC.md` in the project root
+5. On subsequent code generation tasks, ALWAYS reference PROJECT_SPEC.md before writing code
+6. If a code request conflicts with the spec, warn before proceeding
+```
+
+---
+
+## Spec Template
+
+```markdown
+# PROJECT_SPEC.md
+# Generated: {{DATE}}
+# Last Updated: {{DATE}}
+# Status: DRAFT | REVIEW | LOCKED
+
+---
+
+## 0. Project Identity
+
+| Field              | Value |
+|--------------------|-------|
+| Project Name       |       |
+| One-line Purpose   |       |
+| Target Users       |       |
+| Deployment Target  |       |
+| MVP Deadline       |       |
+
+### Interview Questions
+- 🔴 "이 프로젝트를 한 문장으로 설명하면?"
+- 🔴 "누가 쓰나? (내부 도구 / B2C / B2B / 본인용)"
+- 🔴 "어디에 배포? (Vercel / AWS / 로컬 / Docker / 미정)"
+- 🟡 "MVP 데드라인이 있나?"
+
+---
+
+## 1. Tech Stack Boundaries
+
+> 목적: AI가 버전을 섞거나 구식 패턴을 쓰는 것을 방지
+
+### 1.1 Runtime & Language
+
+| Layer      | Technology | Version | Strict Mode |
+|------------|-----------|---------|-------------|
+| Language   |           |         | Yes / No    |
+| Runtime    |           |         |             |
+| Package Mgr |         |         |             |
+
+### 1.2 Framework & Libraries
+
+| Category    | Choice      | Version | Notes                     |
+|-------------|-------------|---------|---------------------------|
+| Framework   |             |         |                           |
+| Routing     |             |         | e.g. App Router only      |
+| Styling     |             |         |                           |
+| State Mgmt  |             |         |                           |
+| ORM / DB    |             |         |                           |
+| Auth        |             |         |                           |
+| Testing     |             |         |                           |
+| Linting     |             |         |                           |
+
+### 1.3 Compatibility Lock
+```
+# Verified working combination (paste from lockfile or tested env)
+node: 20.x LTS
+npm: 10.x
+# or provide: package.json / pyproject.toml / go.mod snapshot
+```
+
+### 1.4 Forbidden Patterns
+- [ ] No default exports (use named exports only)
+- [ ] No `any` type in TypeScript
+- [ ] No inline styles (use design system / utility classes)
+- [ ] No direct DOM manipulation in React
+- [ ] (custom):
+
+### Interview Questions
+- 🔴 "프론트? 백엔드? 풀스택? 데이터 파이프라인?"
+- 🔴 "언어와 프레임워크는 확정된 게 있나? 없으면 추천해줄까?"
+- 🔴 "TypeScript strict 모드 사용? (📌 DEFAULT: Yes)"
+- 🟡 "금지할 패턴이나 라이브러리가 있나? (예: lodash 대신 native)"
+- 🟡 "기존 코드베이스가 있나? 있으면 경로를 알려달라"
+
+---
+
+## 2. Data Schema & API Contract
+
+> 목적: 로직보다 데이터 형태를 먼저 확정하여 환각 방지
+
+### 2.1 Database Schema
+
+```prisma
+// 예시: Prisma 스키마, DDL, 또는 필드 목록
+// 핵심 엔티티와 관계(relation)를 여기에 정의
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  // ...
+}
+```
+
+**Migration Strategy**:
+- 마이그레이션 도구: (Prisma Migrate / Alembic / Flyway / 수동)
+- 스키마 변경 시 규칙:
+  - [ ] 컬럼 삭제 금지, deprecate 후 다음 릴리스에서 제거
+  - [ ] 새 필드는 반드시 nullable 또는 default 값 포함
+  - [ ] (custom):
+
+### 2.2 API Contract
+
+```yaml
+# 엔드포인트별 계약서
+# 형식: OpenAPI 3.0 / 자유 형식 / tRPC 타입
+
+POST /api/users:
+  request:
+    body:
+      email: string (required, email format)
+      password: string (required, min 8 chars)
+  response:
+    201: { id: string, email: string, createdAt: ISO8601 }
+    400: { error: string, code: "VALIDATION_ERROR", details: [...] }
+    409: { error: string, code: "DUPLICATE_EMAIL" }
+  auth: none
+  rate_limit: 10/min per IP
+```
+
+**API Conventions**:
+| Convention         | Choice                                    |
+|--------------------|-------------------------------------------|
+| Versioning         | URL path (`/v1/`) / Header / None         |
+| Pagination         | Cursor-based / Offset / None              |
+| Error Format       | `{ error, code, details }` (📌 DEFAULT)   |
+| Date Format        | ISO 8601 (📌 DEFAULT)                     |
+| Naming Convention  | camelCase / snake_case                    |
+
+### Interview Questions
+- 🔴 "핵심 데이터 엔티티는 뭔가? (예: User, Post, Order)"
+- 🔴 "엔티티 간 관계는? (1:N, N:M 등)"
+- 🔴 "외부 API를 호출하나? 호출한다면 스펙 문서 URL이나 예시가 있나?"
+- 🟡 "페이지네이션 방식 선호? (📌 DEFAULT: Cursor-based)"
+- 🟡 "API 버저닝 필요? (📌 DEFAULT: URL path /v1/)"
+- 🟡 "기존 DB가 있나? 있으면 스키마를 덤프해서 공유해달라"
+
+---
+
+## 3. Architecture & Design Patterns
+
+> 목적: 코드 구조의 규칙을 선제적으로 고정
+
+### 3.1 Layer Architecture
+
+```
+📁 src/
+├── 📁 app/          # Routes / Pages (presentation)
+├── 📁 components/   # UI components (pure, no business logic)
+├── 📁 hooks/        # Custom hooks (frontend business logic)
+├── 📁 services/     # Backend business logic
+├── 📁 repositories/ # Data access layer
+├── 📁 lib/          # Shared utilities, constants
+├── 📁 types/        # Type definitions
+└── 📁 __tests__/    # Co-located or separate
+```
+
+### 3.2 Pattern Rules
+
+| Rule                                   | Enforcement |
+|----------------------------------------|-------------|
+| Backend: Controller → Service → Repo   | 🔴 REQUIRED |
+| Frontend logic in Custom Hooks         | 🔴 REQUIRED |
+| No business logic in components        | 🔴 REQUIRED |
+| (custom):                              |             |
+
+### 3.3 File Naming Convention
+- Components: `PascalCase.tsx`
+- Hooks: `use-kebab-case.ts`
+- Services: `kebab-case.service.ts`
+- Types: `kebab-case.types.ts`
+- (custom):
+
+### Interview Questions
+- 🔴 "코드 구조에 대한 기존 컨벤션이나 선호가 있나?"
+- 🟡 "모노레포? 단일 레포?"
+- 🟡 "특별히 따르는 디자인 패턴이 있나? (📌 DEFAULT: Layered Architecture)"
+
+---
+
+## 4. State Machine & Flow Control
+
+> 목적: Happy Path 외의 모든 상태를 명시적으로 정의
+
+### 4.1 Core State Machines
+
+```
+[Entity: Order]
+States: DRAFT → PENDING_PAYMENT → PAID → SHIPPING → DELIVERED → COMPLETED
+                                    ↘ CANCELLED (from DRAFT, PENDING_PAYMENT)
+                                    ↘ REFUND_REQUESTED → REFUNDED (from PAID, DELIVERED)
+
+Transition Rules:
+- DRAFT → PENDING_PAYMENT: requires all mandatory fields filled
+- PENDING_PAYMENT → PAID: payment gateway webhook confirmation
+- PAID → CANCELLED: triggers refund side-effect
+- Any → CANCELLED: only within 24h of creation
+
+Side Effects:
+- PAID: emit OrderPaid event, decrement inventory
+- SHIPPED: send notification email
+- REFUNDED: increment inventory, emit RefundProcessed event
+```
+
+### 4.2 Frontend Async State Pattern
+
+```typescript
+type AsyncState<T> =
+  | { status: 'IDLE' }
+  | { status: 'LOADING' }
+  | { status: 'SUCCESS'; data: T }
+  | { status: 'ERROR'; error: AppError; retryCount: number }
+```
+
+**Retry & Timeout Policy**:
+| Parameter            | Value             |
+|----------------------|-------------------|
+| Max Retries          | 3 (📌 DEFAULT)    |
+| Retry Strategy       | Exponential Backoff (📌 DEFAULT) |
+| Base Delay           | 1000ms            |
+| Request Timeout      | 5000ms (📌 DEFAULT)|
+| Circuit Breaker      | Yes / No          |
+
+### Interview Questions
+- 🔴 "핵심 비즈니스 엔티티의 상태 전이가 있나? (예: 주문, 결제, 승인)"
+- 🔴 "상태 전이 시 부수 효과(이벤트 발행, 알림 등)가 있나?"
+- 🟡 "API 실패 시 재시도 정책 선호? (📌 DEFAULT: 3회, 지수 백오프)"
+- 🟡 "Circuit Breaker 필요한 외부 의존성이 있나?"
+
+---
+
+## 5. Security & Validation
+
+> 목적: 명시하지 않으면 AI가 생략하는 보안 레이어를 강제
+
+### 5.1 Authentication
+
+| Item             | Choice                              |
+|------------------|-------------------------------------|
+| Strategy         | JWT / Session / OAuth / None        |
+| Token Storage    | httpOnly Cookie (📌 DEFAULT) / localStorage |
+| Token Expiry     | Access: 15min / Refresh: 7d         |
+| Password Hashing | bcrypt, cost factor 12 (📌 DEFAULT) |
+
+### 5.2 Authorization
+
+| Pattern        | Description                         |
+|----------------|-------------------------------------|
+| Model          | RBAC / ABAC / Simple role check     |
+| Roles          | (e.g. ADMIN, USER, VIEWER)          |
+| Default Deny   | 🔴 Yes — 명시적 허용 없으면 403     |
+| Error Response | `{ error, code: "FORBIDDEN" }`      |
+
+### 5.3 Input Validation
+
+| Layer      | Tool / Method                         |
+|------------|---------------------------------------|
+| Frontend   | Zod / Yup / native validation         |
+| Backend    | Zod / class-validator / Joi           |
+| DB Level   | NOT NULL, CHECK constraints, UNIQUE   |
+
+**Validation Rules**:
+- Email: RFC 5322 regex + MX record check (optional)
+- Password: min 8 chars, 1 uppercase, 1 number, 1 special (📌 DEFAULT)
+- File Upload: max size, allowed MIME types, virus scan
+- (custom):
+
+### 5.4 Security Hardening Checklist
+- [ ] SQL Injection: ORM 사용 강제, raw query 금지
+- [ ] XSS: 출력 이스케이핑, CSP 헤더 설정
+- [ ] CSRF: 토큰 기반 방어 (SameSite cookie 📌 DEFAULT)
+- [ ] CORS: 허용 origin 명시적 화이트리스트
+- [ ] Rate Limiting: per-endpoint 설정
+- [ ] Secrets: 하드코딩 금지, 환경변수 참조만 허용 (`process.env.X`)
+- [ ] Dependency Audit: `npm audit` / `pip audit` CI에 포함
+
+### Interview Questions
+- 🔴 "인증이 필요한가? 방식은? (📌 DEFAULT: JWT + httpOnly Cookie)"
+- 🔴 "사용자 역할(Role)이 있나? 있으면 어떤 역할?"
+- 🟡 "파일 업로드 기능이 있나? 있으면 허용 파일 타입과 최대 크기는?"
+- 🟡 "외부 노출 API인가, 내부 전용인가?"
+
+---
+
+## 6. Observability & Operations
+
+> 목적: 프로덕션에서 디버깅 가능한 코드를 보장
+
+### 6.1 Logging Policy
+
+| Level   | 사용 기준                                       |
+|---------|------------------------------------------------|
+| ERROR   | 시스템이 요청을 처리하지 못한 경우                |
+| WARN    | 예상 범위 내이나 비정상적 상황 (재시도 성공 등)    |
+| INFO    | 주요 비즈니스 이벤트 (주문 생성, 결제 완료 등)    |
+| DEBUG   | 개발 환경 전용 상세 정보                         |
+
+**Log Format**: Structured JSON (📌 DEFAULT)
+```json
+{
+  "timestamp": "ISO8601",
+  "level": "INFO",
+  "traceId": "uuid",
+  "service": "order-service",
+  "message": "Order created",
+  "metadata": { "orderId": "...", "userId": "..." }
+}
+```
+
+### 6.2 Error Handling Convention
+
+```typescript
+// 표준 에러 클래스 계층
+class AppError extends Error {
+  constructor(
+    public code: string,
+    public statusCode: number,
+    public details?: unknown
+  ) { super(code); }
+}
+
+class ValidationError extends AppError { /* 400 */ }
+class NotFoundError extends AppError { /* 404 */ }
+class ForbiddenError extends AppError { /* 403 */ }
+```
+
+### 6.3 Health Check & Monitoring
+- Health endpoint: `GET /health` → `{ status, version, uptime, dependencies }`
+- (optional) Metrics: Prometheus / Datadog / None
+- (optional) Tracing: OpenTelemetry / None
+
+### Interview Questions
+- 🟡 "로깅 라이브러리 선호? (winston / pino / 📌 DEFAULT: pino)"
+- 🟡 "에러 모니터링 서비스 사용? (Sentry / Datadog / None)"
+- 🟡 "분산 트레이싱 필요? (📌 DEFAULT: No, 단일 서비스면 불필요)"
+
+---
+
+## 7. Concurrency & Idempotency
+
+> 목적: 데이터 정합성을 보장하는 규칙 명시
+
+### 7.1 Idempotency
+
+| Endpoint Type   | Strategy                                |
+|-----------------|----------------------------------------|
+| 결제 / 주문     | Idempotency Key (헤더 기반) 🔴 REQUIRED |
+| 일반 POST       | DB unique constraint로 중복 방지        |
+| GET / DELETE     | 자연적으로 멱등                         |
+
+### 7.2 Concurrency Control
+
+| Scenario              | Strategy                              |
+|-----------------------|---------------------------------------|
+| 동시 수정 충돌        | Optimistic Lock (version 필드) 📌 DEFAULT |
+| 재고 차감 등 경합     | Pessimistic Lock / DB Advisory Lock   |
+| 이벤트 순서 보장      | Outbox Pattern / 순차 큐              |
+
+### 7.3 Transaction Boundaries
+- DB 트랜잭션 범위 규칙: 하나의 Service 메서드 = 하나의 트랜잭션 (📌 DEFAULT)
+- 트랜잭션 격리 수준: READ COMMITTED (📌 DEFAULT)
+- 분산 트랜잭션: Saga / 2PC / 불필요
+
+### Interview Questions
+- 🟡 "동시에 같은 데이터를 수정하는 시나리오가 있나?"
+- 🟡 "결제나 과금처럼 중복 실행이 치명적인 기능이 있나?"
+- 🟡 "여러 서비스 간 데이터 일관성 보장이 필요한가?"
+
+---
+
+## 8. Testing & Acceptance Criteria
+
+> 목적: 코드 정확도를 검증할 기준을 선제적으로 제시
+
+### 8.1 Test Strategy
+
+| Layer              | Scope                  | Coverage Target |
+|--------------------|------------------------|-----------------|
+| Unit Tests         | 순수 함수, 서비스 로직  | 90%+ (핵심 로직) |
+| Integration Tests  | API 엔드포인트, DB 연동 | 주요 플로우 전체  |
+| E2E Tests          | 사용자 시나리오         | Critical Path   |
+
+**Test Framework**: (Jest / Vitest / Pytest / Go test / ...)
+**Mocking Strategy**: (MSW for API / in-memory DB / test containers)
+
+### 8.2 I/O Specification Examples
+
+```typescript
+// 각 핵심 함수에 대해 Input → Expected Output 명세
+describe('filterActiveUsers', () => {
+  it('should return only active user IDs', () => {
+    const input = [
+      { id: 1, active: false },
+      { id: 2, active: true },
+      { id: 3, active: true },
+    ];
+    const expected = [2, 3];
+    expect(filterActiveUsers(input)).toEqual(expected);
+  });
+
+  it('should return empty array when no active users', () => {
+    const input = [{ id: 1, active: false }];
+    expect(filterActiveUsers(input)).toEqual([]);
+  });
+
+  it('should return empty array for empty input', () => {
+    expect(filterActiveUsers([])).toEqual([]);
+  });
+});
+```
+
+### 8.3 Acceptance Checklist (per Feature)
+- [ ] Happy Path 동작 확인
+- [ ] 빈 입력 / null / undefined 처리
+- [ ] 권한 없는 사용자 접근 시 403
+- [ ] 유효하지 않은 입력 시 400 + 에러 메시지
+- [ ] 존재하지 않는 리소스 접근 시 404
+- [ ] 동시 요청 시 데이터 정합성 유지
+- [ ] 네트워크 실패 시 적절한 에러 표시 (프론트)
+
+### Interview Questions
+- 🔴 "테스트 프레임워크 선호? (📌 DEFAULT: Vitest for TS, Pytest for Python)"
+- 🟡 "CI에서 테스트 자동 실행 필요? (📌 DEFAULT: Yes)"
+- 🟡 "E2E 테스트 필요? 필요하면 도구 선호? (Playwright / Cypress)"
+- 🟡 "핵심 비즈니스 로직의 I/O 예시를 지금 줄 수 있나?"
+
+---
+
+## 9. Environment & Deployment
+
+> 목적: 로컬에서는 되는데 배포하면 깨지는 문제 방지
+
+### 9.1 Environment Variables
+
+```bash
+# .env.example — 이 파일을 프로젝트 루트에 생성
+# 📌 모든 시크릿은 반드시 환경변수로 관리. 하드코딩 절대 금지.
+
+DATABASE_URL=postgresql://...
+JWT_SECRET=your-secret-here
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+# NEXT_PUBLIC_ 접두사: 클라이언트 노출 허용 변수만
+```
+
+### 9.2 Deployment Config
+
+| Item              | Value                                |
+|-------------------|--------------------------------------|
+| Platform          | Vercel / AWS / GCP / Docker / ...    |
+| Build Command     |                                      |
+| Node Version      | (`.nvmrc` 또는 `engines` 필드에 고정) |
+| Docker Base Image |                                      |
+
+### 9.3 CI/CD Pipeline
+
+```yaml
+# 최소 파이프라인 정의
+steps:
+  - lint        # ESLint + Prettier check
+  - type-check  # tsc --noEmit
+  - test        # unit + integration
+  - build       # production build
+  - deploy      # (conditional: main branch only)
+```
+
+### Interview Questions
+- 🟡 "배포 파이프라인이 이미 있나?"
+- 🟡 "환경변수 관리 방식? (.env / Vault / AWS SSM / Vercel env)"
+- 🟡 "Docker 사용? (📌 DEFAULT: 백엔드 Yes, 프론트 Vercel이면 No)"
+
+---
+
+## Spec Completion Checklist
+
+| Section                          | Status |
+|----------------------------------|--------|
+| 0. Project Identity              | ⬜     |
+| 1. Tech Stack Boundaries         | ⬜     |
+| 2. Data Schema & API Contract    | ⬜     |
+| 3. Architecture & Design Patterns| ⬜     |
+| 4. State Machine & Flow Control  | ⬜     |
+| 5. Security & Validation         | ⬜     |
+| 6. Observability & Operations    | ⬜     |
+| 7. Concurrency & Idempotency     | ⬜     |
+| 8. Testing & Acceptance Criteria | ⬜     |
+| 9. Environment & Deployment      | ⬜     |
+
+⬜ = Not started | 🟡 = Partial (has TBD items) | ✅ = Complete | ⏭️ = Skipped (N/A)
+```
+
+---
+
+## 운용 가이드
+
+### CLAUDE.md 통합 방법
+
+```markdown
+## Spec-Driven Development
+
+- 모든 코드 생성 전에 `PROJECT_SPEC.md`를 참조할 것
+- 스펙에 정의되지 않은 기술적 결정이 필요하면 코드를 쓰기 전에 사용자에게 질문할 것
+- 스펙과 충돌하는 요청을 받으면 충돌 내용을 명시하고 확인을 받을 것
+- 스펙의 📌 DEFAULT 값은 사용자가 별도 지시하지 않으면 적용할 것
+- 스펙의 ⚠️ TBD 항목이 코드에 영향을 줄 경우, 해당 항목부터 확정할 것
+```
+
+### 인터뷰 진행 팁
+
+1. **순서를 지킬 것**: 0 → 1 → 2 순서가 의존성 순서임. 스택이 정해져야 스키마 문법이 정해지고, 스키마가 정해져야 상태 머신이 정해짐
+2. **🔴만 먼저**: 각 섹션에서 REQUIRED 질문만 먼저 던지고, 사용자가 "more"라고 하면 OPTIONAL 확장
+3. **skip 허용**: 초기 MVP에서 7번(동시성)이나 6번(관측성)은 skip 가능. 단 ⚠️ 표시 필수
+4. **기존 코드 감지**: 사용자가 기존 코드베이스를 공유하면 스캔하여 1번(스택)과 3번(아키텍처)을 자동 추론 후 확인만 받기

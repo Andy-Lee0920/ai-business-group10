@@ -1,0 +1,174 @@
+=== SYSTEM SPEC ===
+
+PRODUCT_NAME: DoForce
+VERSION: 1.0.0
+TYPE: Execution & Habit Enforcement System
+
+CORE_PRINCIPLE:
+  - 의지에 의존하지 않는다
+  - 구조가 행동을 만든다
+  - 실패에는 반드시 비용이 따른다
+
+---
+
+=== PROBLEM SPEC ===
+
+PROBLEM_ID: P-001
+LABEL: 입력 마찰
+STATEMENT: 사용자는 생각이 떠올라도 앱 진입 비용 때문에 기록하지 않는다
+ROOT_CAUSE: 입력까지의 단계가 많다
+INSIGHT: 입력이 느리면 기록 자체를 포기한다
+
+PROBLEM_ID: P-002
+LABEL: 실행 단위 부재
+STATEMENT: Goal은 있지만 Task로 변환하지 못해 시작하지 못한다
+ROOT_CAUSE: Goal → Task 변환 능력 / 구조 부재
+INSIGHT: 실행 가능한 단위가 아니면 행동이 시작되지 않는다
+
+PROBLEM_ID: P-003
+LABEL: 강제력 부재
+STATEMENT: 실패해도 손해가 없어 행동을 미룬다
+ROOT_CAUSE: 실패 비용 없음
+INSIGHT: 리스크가 없으면 행동은 약해진다
+
+PROBLEM_ID: P-004
+LABEL: 사회적 압박 부재
+STATEMENT: 혼자 하면 외부 압박이 없어 무너진다
+ROOT_CAUSE: 타인의 시선 / 책임 구조 없음
+INSIGHT: 사람은 혼자 있을 때 가장 쉽게 무너진다
+
+PROBLEM_ID: P-005
+LABEL: 게임 구조 부재
+STATEMENT: 반복이 지루해 지속하지 못한다
+ROOT_CAUSE: 즉각 보상 / 게임성 없음
+INSIGHT: 지속은 의지가 아니라 재미 구조에서 나온다
+
+---
+
+=== MODULE SPEC ===
+
+MODULE_ID: M-001
+NAME: Quick Capture
+SOLVES: P-001
+PURPOSE: 생각이 사라지기 전에 즉시 기록
+INPUT: 텍스트 | 음성
+OUTPUT: Raw Task (미분류)
+CONSTRAINT:
+  - 앱 진입 없이 접근 가능 (Widget / Shortcut)
+  - 3초 이내 입력 시작 가능
+RULE: 입력 단계 최소화 / 분류는 이후 처리
+
+---
+
+MODULE_ID: M-002
+NAME: AI Task Parser
+SOLVES: P-002
+PURPOSE: Goal을 실행 가능한 Task 단위로 자동 분해
+INPUT: Raw Task (M-001 Output)
+OUTPUT: Actionable Task List
+CONSTRAINT:
+  - 사용자 개입 최소화
+  - 1 Task = 30분 이내 완료 가능 단위
+RULE:
+  BAD  → "운동하기"
+  GOOD → "러닝화 꺼내기 → 10분 걷기 → 스트레칭 5분"
+
+---
+
+MODULE_ID: M-003
+NAME: Action Trigger + Penalty System
+SOLVES: P-003
+PURPOSE: 실행을 강제하는 외부 압박 구조
+INPUT: Task List (M-002 Output) + 지정 시간
+OUTPUT: 알림 / Penalty 확정 / Pool 적립
+FLOW:
+  Task 미완료
+  → 1차 알림 (유예 시간)
+  → 미응답 → Penalty 확정
+  → Pool 차감 → Group Reward Pool 이동
+CONSTRAINT:
+  - Penalty는 실제 비용 (포인트 / 금액)
+  - 유예 시간 초과 시 자동 확정
+
+---
+
+MODULE_ID: M-004
+NAME: Group System
+SOLVES: P-004
+PURPOSE: 타인의 시선으로 지속 압박 생성
+INPUT: 사용자 달성 데이터
+OUTPUT: 그룹 내 공개 현황
+CONSTRAINT:
+  - 그룹 구성: 2~6인
+  - 공개 범위: 그룹 내 한정
+  - 공개 항목: 달성률 / 실패 이력
+
+---
+
+MODULE_ID: M-005
+NAME: Scoring + Ranking
+SOLVES: P-005
+PURPOSE: 반복을 게임으로 만들어 지속 동기 생성
+INPUT: 완료 데이터 / Penalty Pool
+OUTPUT: 점수 / 랭킹 / 보상 분배
+SCORING_RULE:
+  - 완료율
+  - 연속 달성 (Streak)
+  - 완료 속도
+REWARD_RULE:
+  - Penalty Pool → 주간 상위 달성자 분배
+
+---
+
+=== FLOW SPEC ===
+
+FLOW_ID: F-001
+NAME: Main Execution Flow
+STEPS:
+  1. 사용자 생각 발생
+  2. Quick Capture (M-001) → Raw Task 생성
+  3. AI Task Parser (M-002) → Task 분해
+  4. Action Trigger (M-003) → 시간 지정 + 알림
+  5A. 완료 → Scoring (M-005) → Ranking 반영
+  5B. 미완료 → Penalty 확정 → Pool 적립 → Group 공개 (M-004)
+
+---
+
+=== CONSTRAINT SPEC ===
+
+CONSTRAINT_ID: C-001
+RULE: 입력은 3초 이내 시작 가능해야 한다
+
+CONSTRAINT_ID: C-002
+RULE: Task 분해는 사용자 개입 없이 자동 처리된다
+
+CONSTRAINT_ID: C-003
+RULE: Penalty는 실제 비용이어야 한다 (포인트 / 금액)
+
+CONSTRAINT_ID: C-004
+RULE: Group 공개는 그룹 내로 제한한다
+
+CONSTRAINT_ID: C-005
+RULE: 1 Task = 30분 이내 완료 가능한 단위로 정의한다
+
+---
+
+=== OUT OF SCOPE ===
+
+EXCLUDED: 캘린더 연동 → v2
+EXCLUDED: 외부 SNS 공유 → 미정
+EXCLUDED: 개인 분석 리포트 → v2
+
+---
+
+=== SYSTEM SUMMARY ===
+
+MISSION:
+  의지에 의존하지 않는다.
+  구조가 행동을 만든다.
+
+ENFORCE_EXECUTION:
+  빠른 입력 (M-001) + AI 분해 (M-002) + Trigger (M-003)
+
+ENFORCE_HABIT:
+  사회적 압박 (M-004) + 게임 구조 (M-005) + 실패 비용 (M-003)
