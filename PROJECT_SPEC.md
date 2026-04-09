@@ -2,7 +2,7 @@
 
 > **Generated**: 2026-04-09
 > **Last Updated**: 2026-04-09
-> **Status**: DRAFT (§0~§2 LOCKED, §3~§9 진행 중)
+> **Status**: **DRAFT v1.0 — 전 섹션(§0~§10) LOCKED, 팀 리뷰 대기**
 > **Owner**: ReliOptic 외 팀
 
 본 문서는 [SpecDrivenDevelopment_Rule](docs/SpecDrivenDevelopment_Rule)에 따라 인터뷰 기반으로 작성되었습니다. 코드 생성 전 본 문서를 항상 참조하며, 본 문서와 충돌하는 코드 요청은 반드시 사전 확인을 거칩니다.
@@ -41,7 +41,9 @@
 
 ---
 
-## 1. Tech Stack Boundaries ✅ LOCKED
+## 1. Tech Stack Boundaries ✅ LOCKED (v1.1 — 2026-04-09 TDS amendment)
+
+> **v1.1 변경**: TDS Mobile 채택 (검수 필수), Tailwind는 layout-only로 강등, granite-js 빌드 도입, SDK 2.x 고정.
 
 ### 1.1 Runtime & Language
 
@@ -55,9 +57,13 @@
 
 | Category | Choice | Notes |
 |---|---|---|
-| Framework | **React** 19 + **Vite** 8 | 기존 유지 |
+| Framework | **React** 19 + **granite-js** + **Vite** 8 | granite-js가 빌드 오케스트레이션, Vite는 dev server |
+| Toss SDK | **`@apps-in-toss/web-framework@^2`** | 2026-03-23 이후 1.x 업로드 불가 |
+| Build Config | **`granite.config.ts`** (프로젝트 루트) | |
 | Routing | **React Router** v7 | 4모듈 분리 |
-| Styling | **Tailwind v4** + CSS variables (design tokens) | Liquid Glass 디자인 시스템 |
+| Styling — Base | **TDS Mobile** (`@toss/tds-mobile` 또는 공식 미니앱 패키지) | 🔴 검수 필수. 모든 표준 UI(입력/버튼/리스트/네비)는 TDS만 |
+| Styling — Layout | **Tailwind v4** (layout-only) | flex/gap/padding/grid 등 레이아웃 유틸리티 한정. **색상/타이포/그림자 금지** |
+| Styling — Signature | **Liquid Glass overlay** | 시그니처 화면 한정 (홈 Hero, Streak Ring, Nudge Card 등 3~5개), TDS 토큰에 매핑 |
 | Client State | **Zustand** | 가벼움 (번들 ≤50MB 제약) |
 | Server/Async State | **TanStack Query** | (Local-first에선 Dexie 쿼리 래핑용) |
 | Persistence | **Dexie (IndexedDB)** | Local-first 핵심 |
@@ -72,7 +78,10 @@
 - ❌ Inline styles 금지 (Tailwind 또는 디자인 토큰 사용)
 - ❌ `document.querySelector` 등 React 외부에서 DOM 직접 조작 금지 — `useRef` 사용
 - ❌ `alert()`, `confirm()` 사용 금지 — Toast/Modal 컴포넌트 사용
-- ❌ 하드코딩된 색상/여백 금지 — 디자인 토큰 참조
+- ❌ 하드코딩된 색상/여백 금지 — TDS 토큰 또는 Liquid Glass 매핑 토큰만
+- ❌ TDS 토큰 외 색상·타이포·그림자 사용 금지 (Tailwind 색상 클래스 `bg-red-500` 등 금지)
+- ❌ Tailwind에 색상/타이포/shadow 유틸 사용 금지 (layout-only enforcement, ESLint rule로 강제)
+- ❌ 표준 UI 컴포넌트(버튼/입력/리스트/네비)를 TDS 외부에서 만들기 금지
 - ❌ 금전·실손 페널티 로직 금지 (영구)
 
 ### 1.4 디자인 시스템
@@ -956,7 +965,474 @@ Sentry.init({
 
 ---
 
-## 7. Concurrency & Idempotency ⏭️ NEXT
+## 7. Concurrency & Idempotency ✅ LOCKED
+
+### 7.1 Risk Surface
+
+| Risk | 시나리오 | 영향 |
+|---|---|---|
+| R1 멀티탭 동시 쓰기 | 미니앱 + 브라우저 동시 사용 | 중복/오류 |
+| R2 Streak 갱신 race | CorrectionLog → Streak 비원자 | 카운트 오류 |
+| R3 NudgeDelivery 중복 발화 | Scheduler + Push 사전예약 충돌 | 중복 알림 |
+| R4 insights idle 재진입 | requestIdleCallback 중첩 | 캐시 불일치 |
+| R5 forgiveness race | 자정 cron + 사용자 액션 동시 | 카운트 오버/언더 |
+
+### 7.2 정책
+
+**1. Service 메서드 = Dexie 트랜잭션 1개** (R2)
+
+```typescript
+async acceptNudge(deliveryId: string, replacementActionId: string): Promise<Result<void>> {
+  return db.transaction('rw', [db.nudgeDeliveries, db.correctionLogs, db.streaks], async () => {
+    // 상태 전이 → CorrectionLog 생성 → Streak 재계산을 한 트랜잭션에서
+  }).then(ok).catch((e) => err(new StorageError(e)));
+}
+```
+
+**2. 자연키 idempotencyKey** (R3)
+
+```typescript
+interface NudgeDelivery {
+  // ...
+  idempotencyKey: string; // `${ruleId}:${triggerWindowStart}`
+}
+```
+
+Dexie unique index `&idempotencyKey`. 윈도우 길이는 triggerType별:
+- `time`: 분 단위 (`14:00` → 14:00~14:59)
+- `frequency`: 1시간 단위
+- `location`: 진입 이벤트 1회당
+- `context`: 컨디션 평가 단위 (phase 2)
+
+**3. Web Locks API (폴백 가드 포함)** (R1, R5)
+
+```typescript
+// src/lib/locks.ts
+export async function withLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  if (navigator.locks) {
+    return navigator.locks.request(name, { mode: 'exclusive' }, fn);
+  }
+  // 폴백: 락 없이 실행 (Dexie 트랜잭션이 최소 안전망)
+  return fn();
+}
+```
+
+→ §9 액션: 샌드박스에서 `navigator.locks` 가용성 확인.
+
+추가로 `BroadcastChannel('nudgeme:invalidate')` → 다른 탭에 TanStack Query `invalidateQueries`.
+
+**4. In-flight singleton** (R4)
+
+```typescript
+let inflightInference: Promise<void> | null = null;
+async function runInference(userId: string): Promise<void> {
+  if (inflightInference) return inflightInference;
+  inflightInference = (async () => {
+    try { await actuallyRun(userId); } finally { inflightInference = null; }
+  })();
+  return inflightInference;
+}
+```
+
+**5. PatternEvent 30초 디바운스**
+
+같은 `(patternId, source)` 조합에서 30초 내 중복 자가리포트 무시. Service 레이어에서 last-write timestamp 체크.
+
+### 7.3 트랜잭션 격리
+
+Dexie/IndexedDB는 명세상 serializable. 별도 설정 불필요.
+
+### 7.4 Optimistic vs Pessimistic
+
+| 시나리오 | 전략 |
+|---|---|
+| BadPattern 편집 | Optimistic (`updatedAt` 비교) |
+| Streak 갱신 | Pessimistic (Web Lock) |
+| NudgeDelivery 발화 | Idempotency Key |
+
+### 7.5 분산 트랜잭션
+
+phase 1: N/A. phase 2: Outbox + LWW with vector clock (별도 spec).
+
+---
+
+## ⚠️ 1. Tech Stack v1.1 AMENDMENT — TDS 통합 (BLOCKING DECISION)
+
+### 배경
+[`docs/toss-mini-dev-docs-unified.md`](docs/toss-mini-dev-docs-unified.md) 검토 결과 **TDS(Toss Design System) 사용이 검수 필수** 조건. §1 LOCKED를 v1.1로 amend합니다.
+
+### 결정 (제 권고: 옵션 A)
+
+**옵션 A — TDS Base + Liquid Glass 시그니처 오버레이** ⭐
+- `@toss/tds-mobile` (또는 미니앱용 공식 패키지)을 base 컴포넌트 시스템으로 채택
+- 입력/버튼/리스트/네비게이션 등 표준 UI는 100% TDS 사용 → 검수 안전 + 토스 네이티브 접근성/i18n 무료
+- **Liquid Glass는 시그니처 화면 한정 커스텀 오버레이**: 홈 Hero, Streak Ring, Nudge Card 정도
+- Tailwind는 **레이아웃 유틸리티 한정** (flex, gap, padding) — 색상/타이포는 TDS 토큰만
+- Liquid Glass 토큰은 TDS 토큰에 매핑 (예: `--glass-surface` → `tds.color.surface.primary` + alpha)
+
+**옵션 B** — TDS + Tailwind 병행, 두 시스템 토큰 매핑
+- 두 시스템 동시 운용 → 토큰 충돌, 번들 중복, 디자이너/개발자 인지 부담 ↑
+- 비추천
+
+**왜 A인가**:
+1. 검수 통과 = 최우선 (반려 시 OBT 일정 0)
+2. TDS가 토스 네이티브 인터랙션/접근성 무료 제공
+3. Liquid Glass는 "시그니처 차별화 화면"에만 적용해도 브랜드 정체성 충분
+4. Tailwind v4를 layout-only로 강등하면 토큰 충돌 0
+
+### 영향 받는 섹션
+- §1.2 Styling: `Tailwind v4 (전면)` → `TDS Mobile (base) + Tailwind v4 (layout-only) + Liquid Glass overlay`
+- §1.4 Forbidden: "TDS 토큰 외 색상/타이포 사용 금지" 추가
+- §3.1 components/glass/: "시그니처 화면 한정 컴포넌트" 명시
+- §3.2 빌드 모드: granite-js 기반 빌드 (Vite 단독 → granite-js + Vite)
+- §9: TDS WebView 패키지 통합, 샌드박스 테스트 루프 정식화
+
+### 추가 §1 amendment (toss-mini-dev-docs에서 도출)
+
+- **SDK**: `@apps-in-toss/web-framework` **2.x** (2026-03-23 이후 1.x 업로드 불가)
+- **빌드**: `granite-js` + `granite.config.ts` 프로젝트 루트 추가
+- **번들 하드 리밋**: 100MB (권장 50MB) — 우리 버짓 220KB는 여유 충분
+- **Sentry**: `@granite-js/plugin-sentry`, `useClient: false`
+- **테스트**: 토스 샌드박스 앱 필수 (로컬 브라우저 TDS 미동작)
+
+### §9 액션 아이템 누적 (지금까지 8개)
+
+1. Dexie/IndexedDB 토스 WebView 정상 작동 검증
+2. WebView 스토리지 영속성 (캐시 정리 시 IndexedDB 보존?)
+3. IndexedDB 용량 한계 (90일 정책 충분한지)
+4. `TossPushAdapter.schedule()` 미래 시점 사전예약 가능 여부
+5. 토스 WebView CSP 외부 도메인 허용 (Sentry DSN)
+6. 토스 대시보드 커스텀 이벤트 지원 → PostHog 도입 결정
+7. `navigator.locks` API 가용성 (샌드박스)
+8. **TDS Mobile 패키지 통합 — 검수 필수, 통합 방식 옵션 A 채택 가정**
+
+---
+
+## 8. Testing & Acceptance Criteria ✅ LOCKED
+
+### 8.1 테스트 피라미드
+
+```
+Manual Sandbox QA   ← 토스 샌드박스 앱 (TDS/Push/WebView)
+E2E (Playwright)    ← Critical Path 11개, Chromium, TDS는 mock
+Integration         ← Vitest + fake-indexeddb
+Unit                ← Vitest, 순수 로직 + InferenceEngine
+```
+
+### 8.2 도구
+
+| 레이어 | 도구 |
+|---|---|
+| Unit/Integration | Vitest (jsdom) |
+| Component | Vitest + @testing-library/react, TDS는 mock |
+| E2E | Playwright (Chromium) |
+| Mock IndexedDB | fake-indexeddb |
+| TDS Mock | `__mocks__/@toss/tds-mobile.ts` |
+| 샌드박스 QA | 수동 체크리스트, 실 디바이스 |
+
+### 8.3 Coverage 목표
+
+| 레이어 | 목표 |
+|---|---|
+| `services/` | 90%+ (CI 강제) |
+| `inference/` | 95%+ (CI 강제) |
+| `repositories/` | 85%+ |
+| `hooks/` | 70%+ |
+| `components/` | 50%+ (시그니처 화면은 시각 회귀로 보완) |
+| `routes/` | E2E로 커버 |
+
+### 8.4 Critical Path E2E (11개)
+
+| ID | 시나리오 |
+|---|---|
+| E2E-1 | 신규 사용자 온보딩 → 첫 BadPattern 등록 → 홈 진입 |
+| E2E-2 | PatternEvent 셀프리포트 (30초 디바운스 검증) |
+| E2E-3 | system_learned 룰 자동 생성 (PatternEvent 14건 mock) |
+| E2E-4 | NudgeDelivery DELIVERED → ACCEPTED → CorrectionLog → Streak +1 |
+| E2E-5 | NudgeDelivery EXPIRED 자정 정리 |
+| E2E-6 | forgiveness 미접속일 자동 면제 vs 의도적 실패 카운트 분리 |
+| E2E-7 | forceMode 글로벌 토글 → 모든 패턴 반영 |
+| E2E-8 | forceMode 패턴별 오버라이드 → 글로벌과 독립 |
+| E2E-9 | directionalScore 14일 미만 = null, 이후 = 계산 |
+| E2E-10 | 90일 이전 PatternEvent 자동 아카이브 → 일별 집계 표시 |
+| **E2E-11** | **Golden Path** — 패턴 등록 → 이벤트 14건 축적 → system_learned 룰 → 넛지 DELIVERED → ACCEPTED → CorrectionLog → Streak +1 → directionalScore 계산. 통합 회귀 방어. |
+
+### 8.5 I/O 명세 예시 (TDD 역산)
+
+```typescript
+describe('LocalStatEngine.computePeakHours', () => {
+  it('상위 2개 시간대를 반환한다', () => {
+    const events = [
+      ...times(12, () => mockEvent({ hour: 14 })),
+      ...times(8,  () => mockEvent({ hour: 15 })),
+      ...times(3,  () => mockEvent({ hour: 21 })),
+    ];
+    expect(LocalStatEngine.computePeakHours(events)).toEqual([14, 15]);
+  });
+  it('이벤트 0개 → 빈 배열', () => {
+    expect(LocalStatEngine.computePeakHours([])).toEqual([]);
+  });
+});
+
+describe('StreakService.computeDirectionalScore', () => {
+  it('14일 미만 → null', () => {
+    expect(computeDirectionalScore({ patternAgeDays: 13, prev7: 10, curr7: 5 })).toBeNull();
+  });
+  it('완전 개선 → 100', () => {
+    expect(computeDirectionalScore({ patternAgeDays: 30, prev7: 10, curr7: 0 })).toBe(100);
+  });
+  it('변화 없음 → 50', () => {
+    expect(computeDirectionalScore({ patternAgeDays: 30, prev7: 10, curr7: 10 })).toBe(50);
+  });
+  it('악화 2배 → 0', () => {
+    expect(computeDirectionalScore({ patternAgeDays: 30, prev7: 10, curr7: 30 })).toBe(0);
+  });
+  it('prev7=0 division 가드', () => {
+    expect(computeDirectionalScore({ patternAgeDays: 30, prev7: 0, curr7: 0 })).toBe(50);
+  });
+});
+```
+
+### 8.6 Acceptance Checklist (every feature)
+
+- Happy Path / 빈 입력 / null / Result 에러 분기 / 멱등성 / PII 비노출 / forceMode 양 케이스 / TDS 토큰 외 색상 0 / 번들 회귀 0
+
+### 8.7 샌드박스 QA 게이트 운영 (병목 방지)
+
+- **feature 브랜치 머지**: CI 자동화만 통과
+- **release 브랜치 머지**: 샌드박스 QA 사인오프 필수
+- **사인오프**: `docs/SANDBOX_QA_CHECKLIST.md` 에 항목별 pass/fail + 스크린샷
+- **사인오프 권한**: 팀원 2명 중 1명 (단일 병목 방지)
+
+### 8.8 샌드박스 QA 체크리스트 항목
+
+- TDS 시각 검증 (실 디바이스)
+- IndexedDB 영속성, 용량 한도 거동
+- `TossPushAdapter.schedule()` 미래 시점 발화
+- 위치 권한 동의 화면
+- CSP가 Sentry DSN 차단 안 하는지
+- WebView suspend/resume 상태 보존
+- 검수 가이드라인 (TDS, 접근성, 사행성)
+- forceMode UI가 사용자 선택임이 명확한지
+
+### 8.9 Mocking 전략
+
+| 대상 | 전략 |
+|---|---|
+| Dexie | fake-indexeddb |
+| Toss Adapters | `Mock*Adapter` (§3.3) |
+| TDS | `__mocks__/@toss/tds-mobile.ts` 더미 |
+| 시간 | `vi.useFakeTimers()` |
+| `requestIdleCallback` | polyfill + fake timer |
+| `navigator.locks` | 폴백 경로 우선 |
+| `BroadcastChannel` | jsdom 폴리필 |
+
+### 8.10 CI 파이프라인
+
+```yaml
+steps:
+  - lint              # ESLint (TDS 토큰 enforce 룰) + Prettier
+  - type-check        # tsc --noEmit (strict)
+  - test:unit
+  - test:integration  # fake-indexeddb
+  - test:e2e          # Playwright (11 scenarios)
+  - bundle-check      # bundlewatch
+  - build             # granite-js production build
+  - (manual gate, release branch only) sandbox QA sign-off
+```
+
+---
+
+## 9. Environment & Deployment ✅ LOCKED
+
+### 9.1 환경변수
+
+```bash
+# .env.example
+VITE_APP_ENV=development                # development | sandbox | production
+VITE_SENTRY_DSN=
+VITE_POSTHOG_KEY=
+VITE_POSTHOG_HOST=https://app.posthog.com
+VITE_TOSS_SDK_MODE=mock                 # mock | real
+```
+
+🔴 `.env*` gitignore. `import.meta.env.VITE_*`만, 시크릿 하드코딩 금지.
+
+### 9.2 빌드 환경
+
+| 항목 | 값 |
+|---|---|
+| Platform | App in Toss (미니앱 WebView) |
+| Build Tool | granite-js + Vite 8 |
+| Build Config | `granite.config.ts` (루트) |
+| Build Cmd | `npx granite-js build` |
+| Dev Cmd | `npx granite-js dev` + 토스 샌드박스 앱 (실기) |
+| Node | `.nvmrc` 20.x LTS |
+| 번들 한도 | 100MB hard / 50MB target / **220KB 우리 버짓** |
+
+### 9.3 `granite.config.ts`
+
+```typescript
+import { defineConfig } from 'granite-js';
+import sentryPlugin from '@granite-js/plugin-sentry';
+
+export default defineConfig({
+  framework: '@apps-in-toss/web-framework',  // 2.x
+  plugins: [
+    sentryPlugin({
+      dsn: process.env.VITE_SENTRY_DSN,
+      useClient: false,  // 🔴 토스 미니앱 필수
+    }),
+  ],
+  build: { target: 'es2020', sourcemap: true },
+});
+```
+
+### 9.4 환경별 빌드 타겟
+
+| 환경 | TossSDK | Sentry | Analytics |
+|---|---|---|---|
+| development | Mock | OFF | OFF |
+| sandbox | Real | ON (sandbox project) | OFF |
+| production | Real | ON (prod project) | ON |
+
+### 9.5 브랜치 전략 (단순화)
+
+팀 규모 작음 + 토스 심사 주기 묶임 → **`feature/*` → `main` → `release/x.y.z` 컷**.
+- `develop` 브랜치 없음 (동시 진행 feature 3개 미만 동안)
+- 동시 feature가 3개 이상 되면 `develop` 도입 재검토
+
+### 9.6 CI/CD
+
+```yaml
+on: [push, pull_request]
+jobs:
+  validate:
+    steps:
+      - lint / type-check / test:unit / test:integration / test:e2e
+      - build:sandbox / bundlewatch
+  release:
+    needs: validate
+    if: startsWith(github.ref, 'refs/heads/release/')
+    steps:
+      - build:production
+      - require: sandbox-qa-signoff label  # 🔴 수동 게이트
+      - upload to Toss developer console
+```
+
+### 9.7 액션 아이템 (블로커 우선순위)
+
+**🚨 즉시 (1주 내, 코드 작성 전)** — 아키텍처 전제 조건:
+1. Dexie/IndexedDB가 토스 WebView에서 정상 작동 (CRUD + 재진입 보존, 30분 PoC)
+2. WebView 스토리지 영속성
+8. TDS Mobile 패키지 설치 + 기본 컴포넌트 렌더링
+
+**⚙️ 개발 중 (해당 기능 구현 시)**:
+3. IndexedDB 용량 한계 (90일 정책 검증)
+4. `TossPushAdapter.schedule()` 미래 시점 사전예약
+5. 토스 WebView CSP가 Sentry DSN 허용
+7. `navigator.locks` 가용성 (샌드박스 런타임)
+9. TDS Mobile 번들 사이즈 → 220KB 버짓 영향
+
+**📋 출시 전**:
+6. 토스 대시보드 커스텀 이벤트 지원 → PostHog 도입 결정
+10. 위치 권한 동의 화면 표준
+
+### 9.8 Fallback 정책 (블로커 현실화 시)
+
+| 블로커 | Fallback |
+|---|---|
+| Dexie 작동 안 함 | 🚨 Local-first 폐기 → phase 1부터 BaaS (Supabase) |
+| 스토리지 영속성 X | 🚨 phase 1부터 클라우드 동기화 |
+| 90일 한계 부족 | 60일로 단축, 더 공격적 일별 집계 |
+| Push schedule 불가 | 활성 시 평가만, in-app toast로 강등 |
+| CSP 차단 | 자체 ring buffer만, Sentry phase 2 |
+| `navigator.locks` X | Dexie 트랜잭션 단일 안전망 (이미 폴백 구현) |
+| TDS 통합 실패 | 🚨 출시 불가 — 즉시 토스 측 협의 |
+
+---
+
+## 10. Risk Management (Pre-mortem 재맵핑) ✅ LOCKED
+
+> [`docs/PREMORTEM.md`](docs/PREMORTEM.md)는 **이전 미션팟(금전 분배 구조)** 기준 작성. Nudge Me 피벗으로 위험 분포가 크게 달라졌으므로 재맵핑.
+
+### 10.1 자동 소거된 리스크 (Nudge Me 피벗 효과)
+
+| 원래 ID | 원래 리스크 | 소거 근거 |
+|---|---|---|
+| F2 (부분) | 단위경제: 환급 송금 수수료, PG 수수료 | 금전 흐름 0 — §0.1 영구 금지. PG/송금 수수료 자체가 발생 안 함 |
+| F4 | 사행성 규제 (사행행위규제법, 전금법) | 금전 분배 0 → 사행성 정의 자체가 성립 안 함 |
+| F5 (부분) | 다계정 환급 펌핑 | 환급이 없으므로 펌핑 동기 0 |
+
+→ Pre-mortem의 F4/F5/F2 "치명" 등급 3개 중 2.5개가 피벗 자체로 무력화. **§0.1 영구 금지 결정의 가장 큰 부수효과**.
+
+### 10.2 변형되어 잔존하는 리스크
+
+| 신규 ID | 변형된 리스크 | 원래 ID | Nudge Me 맥락 |
+|---|---|---|---|
+| **R-A** | 단위경제: 광고/구독 BM 부재 | F2 | 금전 흐름 없으므로 수익원은 광고/구독/B2B만 가능. MAU 1,000 이하에선 광고 단가 0 → 닭과 달걀 |
+| **R-B** | 리텐션: 넛지 무시 → 이탈 | F3 | "환급 지연으로 이탈"이 아니라 "넛지가 천편일률이라 3일 만에 무시"로 변형. §3.7 템플릿 풀 + Tier 1 학습으로 부분 대응 |
+| **R-C** | 운영 공백 | F6 | 인시던트 임팩트는 줄어듦(금전 사고 0). 그러나 PII/감정 데이터 누출 인시던트는 여전히 치명. 4인 사이드 프로젝트 구조 동일 |
+| **R-D** | MAU 미달 | F1 | 동일. 토스 앱인 노출 한정 |
+
+### 10.3 신규로 발생한 Nudge Me 고유 리스크
+
+| ID | 리스크 | 영향 | 대응 |
+|---|---|---|---|
+| **R-E** | **TDS 검수 반려** | 치명 (출시 불가) | §1 v1.1 TDS amendment, §9.7 액션 #8 즉시 검증 |
+| **R-F** | **토스 WebView 환경 가정 깨짐** (Dexie/CSP/스토리지) | 치명 (Local-first 전략 폐기) | §9.7 액션 #1, #2 즉시 검증, §9.8 fallback 준비 |
+| **R-G** | **PII 누출** (PatternEvent.note에 민감정보) | 고 (신뢰 붕괴 + 규제) | §5.6 note 역할 재정의, DOMPurify, 검색 인덱싱 비활성, Sentry redact |
+| **R-H** | **forceMode 오용 → 사용자 압박감** | 중 (앱 철학 훼손) | §0.1 사용자 자발 토글, §4.3 비난 금지 카피, A/B 모니터링 |
+| **R-I** | **system_learned 룰의 잘못된 학습** | 중 (UX 저하) | §4.4 confidence < 0.6 비활성, 사용자 피드백으로 재조정, §8.4 E2E-3/E2E-11 회귀 방어 |
+| **R-J** | **WebView suspend로 InferenceEngine 미실행** | 중 (학습 정체) | §3.8 백그라운드 금지 + 활성 시 idle 실행, 5건 누적 트리거 |
+
+### 10.4 재구성 리스크 매트릭스
+
+| ID | 발생 가능성 | 영향 | 종합 |
+|---|---|---|---|
+| R-E TDS 검수 반려 | 중 | 치명 | 🔴 최우선 |
+| R-F WebView 환경 가정 | 중 | 치명 | 🔴 최우선 |
+| R-A 단위경제 (BM 부재) | 고 | 고 | 🔴 최우선 |
+| R-G PII 누출 | 중 | 고 | 🟠 높음 |
+| R-C 운영 공백 | 고 | 중 | 🟠 높음 |
+| R-B 리텐션 (넛지 무시) | 고 | 중 | 🟠 높음 |
+| R-I 학습 오류 | 중 | 중 | 🟡 중간 |
+| R-D MAU 미달 | 중 | 중 | 🟡 중간 |
+| R-H forceMode 오용 | 저 | 중 | 🟡 중간 |
+| R-J Inference 미실행 | 중 | 저 | 🟢 낮음 |
+
+### 10.5 출시 전 차단 액션 (Nudge Me 버전)
+
+**🔴 출시 차단 (must)**:
+- [ ] R-E: TDS 통합 PoC 통과 (`npx granite-js dev` + 샌드박스에서 TDS 컴포넌트 렌더링)
+- [ ] R-F: Dexie 30분 PoC (CRUD + 종료/재진입 데이터 보존)
+- [ ] R-G: PatternEvent.note DOMPurify + 검색 인덱싱 비활성 + Sentry beforeSend redact 구현
+- [ ] R-A: 광고/구독 BM 가설 1개 이상 LOI 또는 PoC (예: TDS 광고 슬롯, 프리미엄 패턴 팩)
+- [ ] R-C: 4인 R&R 명문화 + CS 채널 단일화 + 인시던트 SLA 6h
+- [ ] §9.7 즉시 액션 #1, #2, #8 모두 PASS
+
+**🟠 출시 전 권장**:
+- [ ] R-B: nudge-templates.ts 풀에 카테고리당 최소 10개 메시지
+- [ ] R-I: E2E-3, E2E-11 통과 + confidence 분포 대시보드
+- [ ] R-H: forceMode 토글 화면 UX 리서치 1회 (자발성 인지 확인)
+
+### 10.6 Kill Criteria (Nudge Me 버전)
+
+기존 미션팟 Kill Criteria 5개 중 1개만 그대로 유지, 나머지는 재정의:
+
+1. **법률**: ~~사행성 행정지도~~ → **PII 누출 사고 1건 미디어 노출**
+2. **신뢰**: ~~사용자 피해 미디어 노출~~ → **forceMode 강압 논란 미디어 노출**
+3. **검수**: 토스 검수 2회 연속 반려 (TDS/사행성/접근성 등 사유 무관)
+4. **운영**: 핵심 인력 2명 이상 이탈 (동일)
+5. **시장**: 출시 2개월 차 MAU < 300 (동일)
+
+### 10.7 월간 리뷰 항목
+
+매월 본 §10을 재검토:
+- 신규 리스크 추가
+- 발생 가능성/영향도 재평가
+- Kill Criteria 충족 여부
+- 액션 아이템 #1~#10 status
 
 ---
 
@@ -965,12 +1441,14 @@ Sentry.init({
 | Section | Status |
 |---|---|
 | 0. Project Identity | ✅ LOCKED |
-| 1. Tech Stack | ✅ LOCKED |
-| 2. Data Schema & API Contract | ✅ LOCKED |
-| 3. Architecture & Design Patterns | ✅ LOCKED |
+| 1. Tech Stack | ✅ LOCKED v1.1 (TDS) |
+| 2. Data Schema & API Contract | ✅ LOCKED v1.2 |
+| 3. Architecture & Design Patterns | ✅ LOCKED v1.1 |
 | 4. State Machine & Flow Control | ✅ LOCKED |
 | 5. Security & Validation | ✅ LOCKED |
 | 6. Observability & Operations | ✅ LOCKED |
-| 7. Concurrency & Idempotency | ⏭️ NEXT |
-| 8. Testing & Acceptance Criteria | ⬜ |
-| 9. Environment & Deployment | ⬜ |
+| 7. Concurrency & Idempotency | ✅ LOCKED |
+| 8. Testing & Acceptance Criteria | ✅ LOCKED |
+| 9. Environment & Deployment | ✅ LOCKED |
+| 10. Risk Management (Pre-mortem 재맵핑) | ✅ LOCKED |
+| **PROJECT_SPEC.md v1.0** | 🎉 **DRAFT 완성 — 팀 리뷰 대기** |
