@@ -7,6 +7,7 @@ Who is this feature for?
 *   **Returning Visitors:** Users who may have been logged out due to session expiration.
 * Changed of email version
 * local export set
+* pull close and retry 
 
 ## Problem
 
