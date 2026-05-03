@@ -8,6 +8,7 @@ Who is this feature for?
 * Changed of email version
 * local export set
 * pull close and retry 
+* change user name 
 
 ## Problem
 
