@@ -3,7 +3,7 @@
 ## Target User
 
 Who is this feature for?
-*   **Registered Users:** Individuals who have already created an account and need to access their personalized dashboard.
+*   **Registered Users:** Individuals who have already created an account and need to access their personalized dashboard...
 *   **Returning Visitors:** Users who may have been logged out due to session expiration.
 
 ## Problem
