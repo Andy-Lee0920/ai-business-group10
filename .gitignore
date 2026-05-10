@@ -71,3 +71,9 @@ docs/**/ChatGPT Image*.png
 # Local scratch artifacts moved out of docs while preserving working copies
 .local-artifacts/
 .vercel
+.env*.local
+
+# Local agent runtime state
+.omc/
+.omx/state/
+.omx/logs/
