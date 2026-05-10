@@ -20,6 +20,7 @@ Use this page as the first stop after `README.md`. It is a navigation interface 
 | Product/PM reviewer | `docs/01-product/original-note-hyunjoo.md` | `docs/01-product/prd-v1.0.md` → `docs/01-product/slc-target.md` |
 | Designer | `docs/02-design/designer-brief.md` | `docs/02-design/deck.md` |
 | Engineer/agent starting #32+ | relevant GitHub issue | `docs/03-engineering/slc-tdd-issue-map.md` |
+| Engineer/agent starting overnight batch | `docs/03-engineering/overnight-batch-runbook.md` | `docs/03-engineering/deployment-readiness.md` → active issue |
 | Security/RLS reviewer | `docs/03-engineering/schema-rls-matrix.md` | relevant migration/spec once app code exists |
 | Issue author | `docs/03-engineering/issue-writing-rules.md` | `.github/ISSUE_TEMPLATE/slc-contribution.md` |
 
@@ -55,7 +56,9 @@ When documents disagree, prefer this order:
 - `docs/03-engineering/issue-writing-rules.md` — Korean-first issue grammar for non-developer contributors.
 - `docs/03-engineering/slc-tdd-issue-map.md` — how SLC, TDD, and issues fit together.
 - `docs/03-engineering/schema-rls-matrix.md` — minimum Supabase schema/RLS contract.
-- `docs/03-engineering/deployment-readiness.md` — repo-owned CI checks vs external Vercel project Red.
+- `docs/03-engineering/deployment-readiness.md` — real SLC vs backendless presentation deployment contracts.
+- `docs/03-engineering/overnight-batch-runbook.md` — current overnight batch preflight, lane split, and remaining P0 order.
+- `docs/03-engineering/slc-release-gate-checklist.md` — draft manual QA evidence template for #56.
 - `docs/specs/issue-32-app-scaffold-vercel-supabase-foundation.md` — first app scaffold spec.
 
 ### Decisions and contribution

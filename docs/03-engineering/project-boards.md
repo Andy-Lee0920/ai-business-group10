@@ -222,41 +222,47 @@ P0 critical path:
 
 `exp` = expansion (P1+), `core` = SLC P0, `boost` = ADR 0002 P0 보정, `gate` = 결정 ADR.
 
-## Status matrix (snapshot 2026-05-10)
+## Status matrix (snapshot 2026-05-11 KST)
 
-P0 코드 한 줄도 시작 전 상태. 모든 acceptance criteria가 작성된 P0 이슈는 `Ready`로 간주.
+GitHub issue state was checked after merging the Phase 0/1/2/3 core PRs. Remaining P0 work is concentrated in Reminder, Description Guide, Partner revoke UI, release QA, and preview SOP.
 
 | Board | Backlog | Ready | In Progress | Review | Blocked | Done |
 |---|--:|--:|--:|--:|--:|--:|
-| 1 Auth & Privacy | 1 (#50) | 2 (#23, N7) | 0 | 0 | 0 | 1 (#35) |
-| 2 Capture & Split | 1 (#51) | 1 (#24) | 0 | 0 | 0 | 0 |
-| 3 Cards & Home | 2 (#44, #45) | 5 (N4, #25, N3, #26, N5) | 0 | 0 | 0 | 0 |
-| 4 Partner | 1 (#46) | 3 (#27, N2, N10) | 0 | 0 | 0 | 0 |
-| 5 Reliability | 1 (#49) | 2 (N8, N1) | 0 | 0 | 0 | 0 |
+| 1 Auth & Privacy | 1 (#50) | 0 | 0 | 0 | 0 | 4 (#23, #35, #58, RLS baseline) |
+| 2 Capture & Split | 2 (#51, #60) | 0 | 0 | 0 | 0 | 1 (#24) |
+| 3 Cards & Home | 2 (#44, #45) | 2 (#54, #56) | 0 | 0 | 0 | 4 (#25, #26, #34, #55) |
+| 4 Partner | 1 (#46) | 1 (#61) | 0 | 0 | 0 | 2 (#27, #53) |
+| 5 Reliability | 1 (#49) | 1 (#52) | 0 | 0 | 0 | 1 (#59) |
 | 6 Care Journey | 2 (#47, #48) | 0 | 0 | 0 | 0 | 0 |
-| 7 Foundation & Ops | 4 (#34, #39, #40, #41, N6) | 0 | 0 | 0 | 0 | 3 (#32, #33, #38) |
+| 7 Foundation & Ops | 3 (#39, #40, #41) | 1 (#57) | 0 | 0 | 0 | 4 (#32, #33, #34, #38) |
+
+Deployment interpretation:
+
+- Real SLC lane: `ckiwon7-6820s-projects/fevio`, Supabase-backed, production alias `https://project-oznp0.vercel.app`.
+- Team presentation lane: Andy-owned Vercel, backendless via `NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1`.
+- Project board visualization can lag behind issue/PR truth; use GitHub issue state plus this snapshot until Projects v2 automation is available.
 
 ## SLC release-gate burnup
 
 `docs/01-product/slc-target.md`의 release gate를 보드 단위로 분해. P0 + 보정 룰 + N5가 모두 체크되어야 SLC가 닫힌다.
 
-- [x] Vercel Preview URL이 모바일 viewport에서 열린다 — `#32` Done, `#39`/`#40`/`#41` 후속 정리
-- [ ] Google OAuth 로그인 성공 — `#23`
-- [ ] Privacy Gate 미수락 시 sensitive write 차단 — `#23`
-- [ ] Privacy Gate 안내에 "삭제 요청 v1.x" 명시 — `N7`
-- [ ] 첫 로그인 홈이 `onboarding`이다 — `#26`
-- [ ] Capture CTA가 `visit_inputs`+`action_split_drafts`만 저장 — `#24`
-- [ ] Classification 버튼 클릭이 DB write를 발생시키지 않음 — `#24`
-- [ ] Confirm transaction이 `split_candidates`+`care_action_cards` 생성 + `first_capture_completed_at` 1회 — `#24`
-- [ ] Dynamic Home이 onboarding → care day로 전환 — `#26`
-- [ ] Supabase RLS integration tests 통과 — `#23` (+ `#35` Done)
-- [ ] Partner share link sanitized — `#27` + `N2`
-- [ ] [BOOST] Critical injection 카드가 임박 시 in-app 시각·텍스트 강조 — `#25` + N1 in-app 슬라이스
-- [ ] [BOOST] Partner description 화이트리스트로 행동 단서 제공 — `#27` + `N2` + `N3`
-- [ ] [BOOST] Email 1회 리마인드 동작 (Vercel Preview) — `N1` + `N8` ADR 결정
+- [x] Vercel URL이 모바일 viewport에서 열린다 — `#32` Done; real SLC lane verified at `https://project-oznp0.vercel.app`, Andy presentation lane uses backendless mode
+- [x] Google OAuth 로그인 시작 경로가 Supabase authorize로 연결됨 — `#23` Done; Supabase Google OAuth configured, full human login QA remains in `#56`
+- [x] Privacy Gate 미수락 시 sensitive write 차단 — `#23`
+- [x] Privacy Gate 안내에 "삭제 요청 v1.x" 명시 — `#58`
+- [x] 첫 로그인/첫 캡처 전 홈 규칙이 `onboarding`을 지원 — `#26`; full manual QA remains in `#56`
+- [x] Capture CTA가 `visit_inputs`+`action_split_drafts`만 저장 — `#24`
+- [x] Classification 버튼 클릭이 DB write를 발생시키지 않음 — `#24`
+- [x] Confirm transaction이 `split_candidates`+`care_action_cards` 생성 + `first_capture_completed_at` 1회 — `#24`
+- [x] Dynamic Home이 onboarding → care day로 전환 — `#26`
+- [x] Supabase RLS/schema baseline and auth boundary tests 통과 — `#23` + `#35`
+- [x] Partner share link sanitized — `#27` + `#53`
+- [x] [BOOST] Critical injection 카드가 임박 시 in-app 시각·텍스트 강조 — `#25` + `#26`
+- [ ] [BOOST] Partner description 가이드와 행동 단서 보강 — `#54` remaining; whitelist done in `#53`
+- [ ] [BOOST] Email 1회 리마인드 동작 — `#52`; ADR `#59` Done
 - [ ] SLC manual QA checklist all green — `N5`
-- [ ] 일정 모델 ADR 결정 — `N4`
-- [ ] 알림 채널 ADR 결정 — `N8`
+- [x] 일정 모델 ADR 결정 — `#55`
+- [x] 알림 채널 ADR 결정 — `#59`
 
 ## Migration to GitHub Projects v2
 

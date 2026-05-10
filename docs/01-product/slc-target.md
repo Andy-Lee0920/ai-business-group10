@@ -25,7 +25,8 @@ If implementation details conflict, the final 20 decisions win. If product meani
 
 ## SLC product goal
 
-Deliver a Vercel Preview webapp where a first-time primary user can complete the core Fevio [페비오] loop:
+Deliver a Vercel webapp where a first-time primary user can complete the core Fevio [페비오] loop on the real SLC lane. A separate backendless presentation lane may demonstrate the same story, but it does not replace persisted Supabase acceptance evidence.
+
 
 ```text
 Vercel Preview URL
@@ -95,6 +96,7 @@ Coauthors do **not** need shared raw secrets committed to git.
 - Never commit `SUPABASE_SERVICE_ROLE_KEY`, DB password, JWT secret, Google OAuth secret, OpenRouter keys, Vault secrets, dump files, or local Supabase runtime files.
 - Coauthors who need deployment access should be invited to Vercel/Supabase with least-privilege roles.
 - Coauthors who only implement frontend can use `.env.example` and a local/dev Supabase project or receive env values through a secure password manager.
+- Team presentation deployments should use `NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1` instead of shared Supabase or Google OAuth secrets.
 
 ## SLC release gate
 

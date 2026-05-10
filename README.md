@@ -166,6 +166,21 @@ Fevio는 병원 EMR처럼 차갑게 보이면 안 되고, 임신/출산 앱처�
 
 ---
 
+## Deployment lanes
+
+Fevio currently uses **one codebase with two deployment lanes**.
+
+| Lane | Purpose | Env shape |
+|---|---|---|
+| Real SLC validation | Auth, Supabase persistence, RLS, Capture/Confirm, Partner, Reminder QA | Supabase/Vercel env configured; `NEXT_PUBLIC_FEVIO_PRESENTATION_MODE` off |
+| Team presentation | Stable team demo without backend/OAuth dependency | `NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1`, `NEXT_PUBLIC_APP_URL=<demo URL>` |
+
+The real SLC lane is the source of truth for product acceptance. The presentation lane is for showing the flow safely when the owner-controlled Vercel project does not have backend credentials.
+
+Runbook: [`docs/03-engineering/overnight-batch-runbook.md`](docs/03-engineering/overnight-batch-runbook.md)
+
+---
+
 ## 주요 문서
 
 - Documentation map: [`docs/README.md`](docs/README.md)
@@ -193,3 +208,5 @@ Do not commit real secrets.
 - Frontend-only contributors can use `.env.example` with a local/dev Supabase project.
 
 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are browser-public config, but real project values should still be managed through Vercel/Supabase environment settings instead of hardcoded source constants.
+
+For backendless team demos, use `NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1` rather than sharing Supabase or Google OAuth secrets. Local files such as `env/google_oAuth.txt` and `env/supabase_secret.txt` must remain ignored and local-only.

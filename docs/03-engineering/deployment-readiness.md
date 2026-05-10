@@ -1,6 +1,8 @@
 # Deployment readiness
 
-This page exists so contributors can separate repo-owned build health from external Vercel project configuration.
+Last updated: 2026-05-11 KST.
+
+This page separates repo-owned build health from external deployment-lane configuration. It is also the canonical place to decide whether a deployment problem blocks product work.
 
 ## Repo-owned Green checks
 
@@ -11,36 +13,87 @@ npm ci
 npm run test
 npm run typecheck
 npm run build
+```
+
+Use Playwright for flow evidence when the changed slice touches navigation, auth redirects, capture/confirm, partner view, or presentation mode:
+
+```bash
 npm run test:e2e
 ```
 
-GitHub Actions runs the same checks on pull requests and pushes to `main`. This gives reviewers a stable signal even while Vercel project settings are being repaired.
+## Current deployment lanes
 
-## Vercel project Red currently tracked outside the repo
+| Lane | Vercel target | Purpose | Backend mode | Current status |
+|---|---|---|---|---|
+| Real SLC validation | `ckiwon7-6820s-projects/fevio` | Product-like Auth, Supabase, RLS, Capture, Confirm, Partner, Reminder QA | Supabase remote project | Green for build/deploy; public alias `https://project-oznp0.vercel.app` verified |
+| Team presentation | Andy-owned Vercel project | Stable team presentation without backend setup risk | Backendless presentation mode | Use `NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1`; Supabase env not required |
 
-GitHub deployments created by `vercel[bot]` are still failing under the existing Vercel project context:
+One codebase serves both lanes. Do not fork product logic for presentation; use the explicit env flag only.
 
-```text
-Deployment has failed — run this Vercel CLI command: npx vercel inspect <deployment-id> --logs
+## Real SLC lane contract
+
+Required external configuration:
+
+- Supabase project ref: `awetgcuczwdytctwfyjl`.
+- Supabase migrations applied remotely.
+- Vercel env includes Supabase public URL, anon key, service role where server routes require it, `NEXT_PUBLIC_APP_URL`, and privacy contact email.
+- Supabase Auth has Google OAuth configured in the dashboard.
+- Supabase Auth redirects include the active production callback URL, currently `https://project-oznp0.vercel.app/auth/callback`, plus local callback when needed.
+
+Verification commands:
+
+```bash
+curl -I https://project-oznp0.vercel.app
+curl -I https://project-oznp0.vercel.app/privacy
+curl -I https://project-oznp0.vercel.app/auth/sign-in
 ```
 
-Observed constraints:
+Expected:
 
-- The failing deployment URLs use `andy-lee0920s-projects.vercel.app`.
-- The current local Vercel CLI context is `ckiwon7-6820s-projects`.
-- `ckiwon7-6820s-projects` cannot inspect those failing deployments.
-- A new CLI-created project with Root Directory `.` could not connect GitHub because the Vercel account needs a GitHub Login Connection first.
+- `/` and `/privacy` return `200`.
+- `/auth/sign-in` redirects to Supabase authorize and uses the configured app callback.
 
-Therefore, do not close #38 while this Red remains. Use child issues for each Red → Green transition.
+## Presentation lane contract
 
-## Required Vercel Green evidence
+Andy-owned Vercel can run without Supabase or Google OAuth by setting:
 
-The Vercel owner for the project connected to `Andy-Lee0920/ai-business-group10` should verify:
+```env
+NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1
+NEXT_PUBLIC_APP_URL=<Andy presentation URL>
+```
 
-1. Project Settings → General → Root Directory is empty/default, not an old app folder.
-2. The project is connected to the correct GitHub repository.
-3. The connected Vercel account has a GitHub Login Connection.
-4. A fresh deployment starts from repo root `package.json` and runs `npm run build`.
-5. The deployment URL opens the Fevio shell.
+In this mode:
 
-Post evidence to #38 and the relevant child issue before closing them.
+- `/auth/sign-in` redirects to Privacy Gate instead of starting Google OAuth.
+- Privacy acceptance sets a demo cookie.
+- Capture/Confirm uses the demo store and does not write sensitive data.
+- This lane is for presentation stability only; it is not SLC release evidence for Auth/RLS/backend writes.
+
+## Secret handling
+
+Never commit raw values from local files under `env/`, `.env.local`, Vercel pulls, Supabase dashboard exports, Google OAuth credentials, or provider keys.
+
+Local known secret files are intentionally gitignored, including:
+
+- `env/supabase_secret.txt`
+- `env/google_oAuth.txt`
+- `env/supabase_db_url.txt`
+- `.env.local`
+
+If a client secret or service key is printed in a terminal, chat, screenshot, CI log, or PR comment, rotate it at the provider and update the relevant dashboard before relying on it.
+
+## Non-blockers
+
+- `supabase gen types typescript --db-url ...` is not required for the current SLC because generated DB types are not imported by the app. Add generated types later as a quality improvement when Docker or API-based generation is available.
+- Vercel Git-connected preview gaps on an owner-split project do not block real SLC work as long as manual production/preview deployments and repo checks are green.
+
+## Required Green evidence before SLC release
+
+- Repo checks green.
+- Real SLC lane opens on mobile viewport.
+- Google OAuth login succeeds through Supabase.
+- Privacy Gate blocks sensitive writes until accepted.
+- Capture → Split Review → Confirm creates persisted care cards.
+- Dynamic Home reflects confirmed cards.
+- Partner link returns sanitized server-filtered payload.
+- Remaining P0s (`#52`, `#54`, `#56`, `#61`) are closed or explicitly scoped out with issue comments.

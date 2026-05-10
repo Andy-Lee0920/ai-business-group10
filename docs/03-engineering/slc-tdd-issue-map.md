@@ -79,13 +79,29 @@ First tests:
 
 ## Readiness for grouped development
 
-Before a grouped development run, provide the implementer/agent with:
+Phase 0/1/2/3 core development is complete enough for the next overnight batch. Before a grouped run, provide the implementer/agent with:
 
-1. `docs/01-product/prd-v1.0.md`
-2. `docs/01-product/slc-target.md`
-3. `docs/specs/issue-32-app-scaffold-vercel-supabase-foundation.md`
-4. `docs/03-engineering/schema-rls-matrix.md`
-5. `docs/02-design/deck.md`
-6. GitHub issues #32–#35 and #23–#27
+1. `docs/01-product/original-note-hyunjoo.md`
+2. `docs/01-product/prd-v1.0.md`
+3. `docs/01-product/slc-target.md`
+4. `docs/04-decisions/0002-p0-boost-rules.md`
+5. `docs/04-decisions/0003-schedule-model.md`
+6. `docs/04-decisions/0004-reminder-channel.md`
+7. `docs/03-engineering/schema-rls-matrix.md`
+8. `docs/03-engineering/tdd-policy.md`
+9. `docs/03-engineering/deployment-readiness.md`
+10. `docs/03-engineering/overnight-batch-runbook.md`
 
-The stop condition for #32 remains scaffold verification, not SLC completion.
+Current overnight batch candidates:
+
+- `#54` Description Guide — safe frontend/domain slice, no backend dependency.
+- `#61` Partner revoke UI — follows merged partner link/whitelist work.
+- `#52` Reminder Minimum — requires email provider/scheduler decisions for full green; UI/in-app sub-slice can proceed.
+- `#56` Manual QA checklist — final release evidence after the above.
+- `#57` Vercel Preview SOP — document owner-split Vercel reality and both deployment lanes.
+
+Deployment assumptions:
+
+- Real SLC validation happens on the Supabase-backed ckiwon Vercel lane.
+- Team presentation happens on Andy Vercel with `NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1`.
+- Google OAuth has been configured in Supabase, but raw OAuth credentials remain local-only and must not be pasted into issues, PRs, docs, or logs.
