@@ -2,8 +2,8 @@
 
 This document preserves the project-specific SLC/issue-first contribution guidance that was first drafted while preparing the Fevio [페비오] repository.
 
-For general contributor onboarding, use [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
-For agent/runtime instructions, use [`../AGENTS.md`](../AGENTS.md) and [`../CLAUDE.md`](../CLAUDE.md).
+For general contributor onboarding, use [`../../CONTRIBUTING.md`](../../CONTRIBUTING.md).
+For agent/runtime instructions, use [`../../AGENTS.md`](../../AGENTS.md) and [`../../CLAUDE.md`](../../CLAUDE.md).
 
 ---
 
@@ -15,10 +15,10 @@ This repository uses a **spec-first, SLC-first** workflow. Contributors should a
 
 Use these in order:
 
-1. `docs/01_product_requirements/fertility-support-prd-v1.0.md`
+1. `docs/01-product/prd-v1.0.md`
 2. GitHub Epic #29 and its linked implementation issues
-3. `docs/01_product_requirements/SLC target/SLC target.md`
-4. `docs/schema-rls-matrix.md`
+3. `docs/01-product/slc-target.md`
+4. `docs/03-engineering/schema-rls-matrix.md`
 5. The current feature spec in `docs/specs/` when a spec exists
 
 If older PRD text conflicts with the final 20 decisions, the final 20 decisions win.
@@ -163,7 +163,7 @@ Required invariants:
 
 ## 8. Design contribution rules
 
-Use `02_product_design_10` as a reference deck, not as production screens.
+Use `docs/02-design` as a reference deck, not as production screens.
 
 Contributors should extract reusable tokens and components:
 
@@ -190,7 +190,7 @@ Expected checks by change type:
 - Partner link changes: token leakage checks, expired/revoked link tests, sanitized payload checks.
 - Visual changes: mobile viewport screenshot or visual smoke evidence.
 
-Do not claim SLC completion without fresh evidence for the SLC release gate in `docs/01_product_requirements/SLC target/SLC target.md`.
+Do not claim SLC completion without fresh evidence for the SLC release gate in `docs/01-product/slc-target.md`.
 
 ## 10. Commit message protocol
 

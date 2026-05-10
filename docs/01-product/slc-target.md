@@ -10,13 +10,18 @@ For this repository, **SLC** means **Simple, Lovable, Complete**:
 
 ## Source of truth
 
-The implementation source of truth is:
+Product meaning starts from `docs/01-product/original-note-hyunjoo.md`. That document is the highest-priority origin for the user pain: complex treatment schedules, medication/injection timing risk, couple information asymmetry, emotional load, and sensitive-data trust.
 
-1. `docs/01_product_requirements/fertility-support-prd-v1.0.md`
-2. GitHub Epic #29 and P0 issues #23–#27
-3. This SLC definition for the first Vercel-first release gate
+This SLC document narrows the first implementation loop. It must not redefine Fevio into a simpler or colder product than the original request.
 
-If older PRD text conflicts with the final 20 decisions, the final 20 decisions win.
+Implementation reading order:
+
+1. `docs/01-product/original-note-hyunjoo.md` for product origin and user pain
+2. This SLC definition for the first Vercel-first release gate
+3. `docs/01-product/prd-v1.0.md` for final implementation decisions
+4. GitHub Epic #29 and P0 issues #23–#27
+
+If implementation details conflict, the final 20 decisions win. If product meaning feels narrowed or distorted, return to `original-note-hyunjoo.md` and preserve that original user pain while narrowing only implementation scope.
 
 ## SLC product goal
 
@@ -71,7 +76,7 @@ OpenRouter BYOK is optional after the manual P0 loop works. It must remain advis
 
 ## Design direction
 
-Use `docs/02_product_design_10` as a design reference, not as raw production UI.
+Use `docs/02-design` as a design reference, not as raw production UI.
 
 Initial implementation tokens:
 

@@ -42,18 +42,19 @@ Every feature should either strengthen this loop or explicitly stay out of P0.
 
 When deciding what to implement, read source artifacts in this order:
 
-1. relevant GitHub issue/spec for the active slice
-2. `docs/01_product_requirements/SLC target/SLC target.md`
-3. final PRD decisions document: `docs/01_product_requirements/fertility-support-prd-v1.0.md`
-4. `docs/adr/` for accepted architecture/product decisions
-5. `CONTEXT.md` for shared domain language
-6. `CONTRIBUTING.md`
-7. `docs/schema-rls-matrix.md`
-8. existing code and tests
+1. `docs/01-product/original-note-hyunjoo.md` for the originating request, user pain, and long-term product axes
+2. relevant GitHub issue/spec for the active slice
+3. `docs/01-product/slc-target.md` for the current release gate
+4. final PRD decisions document: `docs/01-product/prd-v1.0.md`
+5. `docs/04-decisions/` for accepted architecture/product decisions
+6. `CONTEXT.md` for shared domain language
+7. `CONTRIBUTING.md`
+8. `docs/03-engineering/schema-rls-matrix.md`
+9. existing code and tests
 
-If this file conflicts with a more specific current issue/spec, follow the issue/spec unless it violates the invariants below.
+If a specific issue/spec narrows scope, follow it only as an implementation slice of `docs/01-product/original-note-hyunjoo.md`. Do not let SLC simplification erase the original product pain: irregular clinic schedules, medication/injection timing risk, couple information asymmetry, emotional load, and sensitive-data trust.
 
-Do not update this file for routine progress. Put progress, release status, and issue ordering in GitHub issues, specs, `README.md`, or `docs/01_product_requirements/SLC target/SLC target.md`.
+Do not update this file for routine progress. Put progress, release status, and issue ordering in GitHub issues, specs, `README.md`, or `docs/01-product/slc-target.md`.
 
 ## System model
 
@@ -265,9 +266,9 @@ If validation cannot run, state the gap and use the next-best check. Do not desc
 
 ## Where status belongs
 
-- Current SLC definition: `docs/01_product_requirements/SLC target/SLC target.md`
+- Current SLC definition: `docs/01-product/slc-target.md`
 - Contributor workflow: `CONTRIBUTING.md`
-- Schema/RLS ownership: `docs/schema-rls-matrix.md`
+- Schema/RLS ownership: `docs/03-engineering/schema-rls-matrix.md`
 - Current implementation order and progress: GitHub issues / README
 - Feature-specific intent: `docs/specs/`
 

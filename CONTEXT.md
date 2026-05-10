@@ -85,9 +85,10 @@ A client-side display priority derived deterministically from confirmed data. It
 
 ## Architecture reading order
 
-1. GitHub issue/spec for the active slice, as long as it does not violate product invariants.
-2. `docs/01_product_requirements/SLC target/SLC target.md` for the SLC release gate.
-3. `docs/01_product_requirements/fertility-support-prd-v1.0.md` for PRD detail.
-4. `docs/adr/` for decisions that future changes should not relitigate casually.
-5. `CONTEXT.md` for shared domain language.
-6. `README.md` and `docs/README.md` for orientation/navigation.
+1. `docs/01-product/original-note-hyunjoo.md` for the originating request, user pain, and long-term product axes.
+2. GitHub issue/spec for the active slice, as long as it does not violate the original product pain or product invariants.
+3. `docs/01-product/slc-target.md` for the SLC release gate.
+4. `docs/01-product/prd-v1.0.md` for PRD detail.
+5. `docs/04-decisions/` for decisions that future changes should not relitigate casually.
+6. `CONTEXT.md` for shared domain language.
+7. `README.md` and `docs/README.md` for orientation/navigation.

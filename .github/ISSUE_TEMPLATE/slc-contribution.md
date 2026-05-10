@@ -56,6 +56,6 @@ labels: p0
 
 ## 연결 문서
 
-- SLC target: `docs/01_product_requirements/SLC target/SLC target.md`
-- PRD: `docs/01_product_requirements/fertility-support-prd-v1.0.md`
-- Issue writing rules: `docs/02_engineering/issue-writing-rules.md`
+- SLC target: `docs/01-product/slc-target.md`
+- PRD: `docs/01-product/prd-v1.0.md`
+- Issue writing rules: `docs/03-engineering/issue-writing-rules.md`
