@@ -1,6 +1,6 @@
 # Fevio [페비오] Agent Mental Model
 
-This file is not a project dashboard. Do not use it to track current progress, issue status, or temporary decisions.
+This is the Codex-readable project instruction surface. It is not a project dashboard. Do not use it to track current progress, issue status, or temporary decisions.
 
 Use this file as the stable mental model for working in this repository: what the product is, what must stay true, and how agents should reason while changing code.
 

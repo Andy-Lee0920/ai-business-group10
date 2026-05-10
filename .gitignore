@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+.yarn/install-state.gz
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.vercel/
+.turbo/
+.cache/
+coverage/
+playwright-report/
+test-results/
+
+# Local env files - never commit real secrets
+.env
+.env.*
+!.env.example
+!.env*.example
+
+# Supabase local/runtime secrets
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.*
+supabase/config.toml.local
+supabase/seed.local.sql
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+
+# Generated type artifacts that may include local paths
+*.tsbuildinfo
+
+# Local credentials / exports / backups
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.mobileprovision
+*.bak
+*.backup
+*.dump
+*.sql.gz
+*.sqlite
+*.sqlite3
