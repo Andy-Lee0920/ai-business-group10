@@ -2,57 +2,71 @@
 
 Use this page as the first stop after `README.md`. It is a navigation interface for contributors and coding agents; it is not a progress dashboard.
 
+## Directory contract
+
+| Directory | Purpose | Read when... |
+|---|---|---|
+| `docs/01-product/` | Product source of truth: SLC, PRD, original note | deciding what Fevio must become |
+| `docs/02-design/` | Design direction, deck, curated visual assets | preparing UI, copy, or design tokens |
+| `docs/03-engineering/` | Issue grammar, TDD map, schema/RLS contract, specs | implementing or reviewing an issue |
+| `docs/04-decisions/` | Durable ADR-style decisions | checking why a direction is fixed |
+| `docs/05-contribution/` | Contribution workflow notes | using specctl or onboarding collaborators |
+
 ## Fast path by role
 
 | If you are... | Start here | Then read |
 |---|---|---|
 | New contributor | `README.md` | `CONTRIBUTING.md` |
-| Product/PM reviewer | `docs/01_product_requirements/SLC target/SLC target.md` | `docs/01_product_requirements/fertility-support-prd-v1.0.md` |
-| Designer | `docs/03_design_guidance/designer-brief.md` | `docs/02_product_design_10/slides.md` |
-| Engineer/agent starting #32 | `docs/specs/issue-32-app-scaffold-vercel-supabase-foundation.md` | `docs/02_engineering/slc-tdd-issue-map.md` |
-| Security/RLS reviewer | `docs/schema-rls-matrix.md` | relevant migration/spec once app code exists |
-| Issue author | `docs/02_engineering/issue-writing-rules.md` | `.github/ISSUE_TEMPLATE/slc-contribution.md` |
+| Product/PM reviewer | `docs/01-product/original-note-hyunjoo.md` | `docs/01-product/prd-v1.0.md` → `docs/01-product/slc-target.md` |
+| Designer | `docs/02-design/designer-brief.md` | `docs/02-design/deck.md` |
+| Engineer/agent starting #32+ | relevant GitHub issue | `docs/03-engineering/slc-tdd-issue-map.md` |
+| Security/RLS reviewer | `docs/03-engineering/schema-rls-matrix.md` | relevant migration/spec once app code exists |
+| Issue author | `docs/03-engineering/issue-writing-rules.md` | `.github/ISSUE_TEMPLATE/slc-contribution.md` |
 
 ## Source hierarchy
 
 When documents disagree, prefer this order:
 
-1. GitHub issue/spec for the active slice, as long as it does not violate product invariants.
-2. `docs/01_product_requirements/SLC target/SLC target.md`
-3. `docs/01_product_requirements/fertility-support-prd-v1.0.md`
-4. `docs/adr/`
-5. `CONTEXT.md`
-6. `AGENTS.md` / `CLAUDE.md`
-7. Older background notes
+1. `docs/01-product/original-note-hyunjoo.md` for originating user pain and long-term product axes
+2. GitHub issue/spec for the active slice, as long as it does not erase that original product meaning
+3. `docs/01-product/slc-target.md` for the current release gate
+4. `docs/01-product/prd-v1.0.md` for implementation decisions
+5. `docs/04-decisions/`
+6. `CONTEXT.md`
+7. `AGENTS.md` / `CLAUDE.md`
 
-## Durable decisions
+## Canonical documents
 
-- `docs/adr/0001-slc-first-manual-first.md` — SLC-first, manual-first, Vercel/Supabase split.
+### Product
 
-## Product requirement files
+- `docs/01-product/README.md` — product document reading guide.
+- `docs/01-product/original-note-hyunjoo.md` — original problem framing and long-term product axes.
+- `docs/01-product/prd-v1.0.md` — PRD v1.0 implementation source.
+- `docs/01-product/slc-target.md` — final SLC release gate.
 
-- `docs/01_product_requirements/SLC target/SLC target.md` — final SLC release gate.
-- `docs/01_product_requirements/fertility-support-prd-v1.0.md` — PRD v1.0 implementation source.
-- `docs/01_product_requirements/fertility-support-original (by Hyunjoo).md` — original/background product note.
+### Design
 
-## Engineering files
+- `docs/02-design/designer-brief.md` — do/don't guidance for Fevio visual direction.
+- `docs/02-design/deck.md` — reference deck notes.
+- `docs/02-design/assets/` — curated deck images that may be referenced by docs.
 
+### Engineering
+
+- `docs/03-engineering/issue-writing-rules.md` — Korean-first issue grammar for non-developer contributors.
+- `docs/03-engineering/slc-tdd-issue-map.md` — how SLC, TDD, and issues fit together.
+- `docs/03-engineering/schema-rls-matrix.md` — minimum Supabase schema/RLS contract.
+- `docs/03-engineering/deployment-readiness.md` — repo-owned CI checks vs external Vercel project Red.
 - `docs/specs/issue-32-app-scaffold-vercel-supabase-foundation.md` — first app scaffold spec.
-- `docs/02_engineering/slc-tdd-issue-map.md` — how SLC, TDD, and issues fit together.
-- `docs/02_engineering/issue-writing-rules.md` — Korean-first issue grammar for non-developer contributors.
-- `docs/schema-rls-matrix.md` — minimum Supabase schema/RLS contract.
 
-## Design files
+### Decisions and contribution
 
-- `docs/03_design_guidance/designer-brief.md` — do/don't guidance for Fevio visual direction.
-- `docs/02_product_design_10/slides.md` — design asset reference deck and slide notes.
-- `docs/02_product_design_10/assets/` — referenced design slide images.
-
-## Contribution files
-
+- `docs/04-decisions/0001-slc-first-manual-first.md` — SLC-first, manual-first, Vercel/Supabase split.
+- `docs/05-contribution/specctl-by-junhyun.md` — preserved note about JunHyun's specctl-based contribution flow.
 - `CONTRIBUTING.md` — canonical contribution guide.
-- `docs/contribution-by-specctl-skill-junhyun.md` — preserved note about JunHyun's specctl-based contribution flow.
-- `.github/ISSUE_TEMPLATE/slc-contribution.md` — GitHub issue template.
+
+## Local-only generated files
+
+Do not store raw generated ideation images directly in product/docs folders. Keep only curated assets in `docs/02-design/assets/`. Local scratch artifacts belong outside git, for example under ignored `.local-artifacts/`.
 
 ## What not to use this page for
 

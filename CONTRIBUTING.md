@@ -11,7 +11,7 @@ Use this guide if you are:
 - reviewing a spec or pull request;
 - joining as a coauthor/collaborator without direct access to production secrets.
 
-Project-specific agent notes live in `AGENTS.md` and `CLAUDE.md`. The current SLC product contract lives in [`docs/01_product_requirements/SLC target/SLC target.md`](<docs/01_product_requirements/SLC target/SLC target.md>).
+Project-specific agent notes live in `AGENTS.md` and `CLAUDE.md`. The current SLC product contract lives in [`docs/01-product/slc-target.md`](<docs/01-product/slc-target.md>).
 
 ## Contribution principles
 
@@ -26,13 +26,14 @@ Project-specific agent notes live in `AGENTS.md` and `CLAUDE.md`. The current SL
 
 When contributing, read these in order:
 
-1. `docs/01_product_requirements/fertility-support-prd-v1.0.md`
+1. `docs/01-product/original-note-hyunjoo.md` for product origin and user pain
 2. GitHub Epic #29 and the relevant implementation issue
-3. `docs/01_product_requirements/SLC target/SLC target.md`
-4. `docs/schema-rls-matrix.md`
-5. the active spec in `docs/specs/`, if one exists
+3. `docs/01-product/slc-target.md`
+4. `docs/01-product/prd-v1.0.md`
+5. `docs/03-engineering/schema-rls-matrix.md`
+6. the active spec in `docs/specs/`, if one exists
 
-If older PRD text conflicts with the final 20 decisions, the final 20 decisions win.
+If implementation details conflict, the final 20 decisions win. If product meaning feels narrowed or distorted, return to `docs/01-product/original-note-hyunjoo.md` and preserve that original user pain.
 
 ## 1. Prepare your local environment
 
@@ -217,7 +218,7 @@ Use lowercase kebab-case for docs and specs:
 
 ```text
 docs/specs/auth-privacy-gate.md
-docs/contribution-by-specctl-skill-junhyun.md
+docs/05-contribution/specctl-by-junhyun.md
 ```
 
 Avoid spaces and parentheses in filenames because they are awkward in shell commands, URLs, and automation.

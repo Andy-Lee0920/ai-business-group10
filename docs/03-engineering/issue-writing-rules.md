@@ -147,7 +147,7 @@ Green: 새 deployment가 repo root package.json을 기준으로 build를 시작�
 When asking Claude Code/Codex to work on an issue:
 
 1. Paste or reference the issue URL.
-2. Tell the agent to read `docs/01_product_requirements/SLC target/SLC target.md`.
+2. Tell the agent to read `docs/01-product/slc-target.md`.
 3. Tell the agent which TDD cycle to start with.
 4. Ask it to avoid P1/OpenRouter unless the issue is #28.
 5. Ask it to report tests run and files changed.
@@ -156,7 +156,7 @@ Suggested prompt:
 
 ```text
 이 GitHub 이슈를 해결해줘: <issue-url>
-반드시 docs/01_product_requirements/SLC target/SLC target.md 와 관련 spec을 먼저 읽고,
+반드시 docs/01-product/slc-target.md 와 관련 spec을 먼저 읽고,
 TDD로 red → green → refactor 순서로 진행해.
 이번 PR에서는 이슈 범위 밖 작업과 P1 OpenRouter는 하지 마.
 완료 시 변경 파일, 테스트 결과, 남은 리스크를 보고해.

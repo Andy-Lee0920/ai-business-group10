@@ -23,17 +23,22 @@ Fevio는 의료 판단을 대신하지 않습니다. 치료 전략, 용량, 진�
 
 ## Fevio가 해결하려는 문제
 
+Fevio의 출발점은 “난임 치료를 복잡하고 헷갈리는 의료 과정에서, 부부가 함께 관리하는 체계적인 시스템으로 전환한다”는 요청입니다. 그래서 Fevio는 단순 메모장이나 캘린더가 아니라, **치료 운영 부담을 한 사람에게 몰리지 않게 나누는 제품**이어야 합니다.
+
 난임 치료에서 어려운 것은 정보가 없어서가 아닙니다. 병원에서 정보는 전달됩니다.
 
 진짜 어려움은 그 정보를 일상에서 실행 가능한 형태로 바꾸는 일입니다.
 
-- 오늘 몇 시에 무엇을 해야 하는지 기억해야 함
-- 어떤 내용은 병원에 다시 확인해야 함
-- 파트너에게 무엇을 어떻게 부탁할지 정리해야 함
-- 중요한 주사/복약/방문 일정을 놓치지 않아야 함
-- 치료 정보와 감정 부담이 한 사람에게 몰림
+- 병원 방문 일정이 불규칙하고 당일 변경도 잦음
+- 진료, 주사, 검사, 시술처럼 방문 목적이 매번 다름
+- 약, 주사, 질정 등 치료 방식이 다양하고 타이밍 실수가 큰 부담이 됨
+- 병원에서 들은 내용을 귀가 후 다시 전달하면서 누락·왜곡이 생김
+- 파트너가 돕고 싶어도 “무엇을 어떻게 해야 하는지” 알기 어려움
+- 치료 정보 관리와 감정 부담이 한 사람에게 몰려 “나만 고생한다”는 소진이 생김
 
-Fevio는 이 부담을 “오늘의 실행 카드”와 “파트너가 도울 행동”으로 나누는 것을 목표로 합니다.
+Fevio는 이 부담을 **오늘의 실행 카드**, **파트너가 도울 행동**, **치료 맥락에 따라 바뀌는 홈**으로 나누는 것을 목표로 합니다.
+
+제품의 원문 문제 정의는 [`docs/01-product/original-note-hyunjoo.md`](docs/01-product/original-note-hyunjoo.md)에 보존되어 있습니다. 현재 SLC는 이 큰 제품 비전 전체가 아니라, 그중 가장 먼저 검증할 수 있는 얇은 웹앱 루프입니다.
 
 ---
 
@@ -64,9 +69,11 @@ Fevio는 이 부담을 “오늘의 실행 카드”와 “파트너가 도울 �
 
 ---
 
-## 첫 SLC 목표
+## 제품 범위: 큰 비전과 첫 SLC
 
-첫 제품 컷은 **Simple, Lovable, Complete**입니다.
+Fevio의 장기 비전에는 치료 일정 관리, 약/주사 알림, 부부 실시간 공유, IVF 트래킹, 감정 기록, 시술 여정 타임라인까지 포함됩니다. 다만 이 모든 것을 한 번에 만들면 Vercel 웹앱 경험, 개인정보 경계, Supabase 저장, 파트너 공유가 제대로 작동하는지 검증하기 어렵습니다.
+
+그래서 첫 제품 컷은 **Simple, Lovable, Complete**입니다. SLC는 제품을 작게 만드는 결정이 아니라, 원래 문제를 가장 빨리 증명하는 첫 번째 완성 루프입니다.
 
 ```text
 Vercel Preview URL
@@ -82,7 +89,23 @@ Vercel Preview URL
 
 SLC는 하나의 최종 목표입니다. TDD는 이슈별 작은 검증 루프로 진행하고, PR은 가능하면 이슈별로 분리합니다.
 
-자세한 기준: [`docs/01_product_requirements/SLC target/SLC target.md`](<docs/01_product_requirements/SLC target/SLC target.md>)
+자세한 기준: [`docs/01-product/slc-target.md`](<docs/01-product/slc-target.md>)
+
+---
+
+## SLC 이후에도 잊지 않을 제품 축
+
+아래 영역은 원래 문제 정의에서 나온 중요한 축입니다. 단, 현재는 P0/SLC 밖이거나 thin slice로만 다룹니다.
+
+| 제품 축 | 왜 중요한가 | 현재 처리 |
+|---|---|---|
+| 치료 일정 관리 | 병원 방문이 불규칙하고 목적이 매번 다름 | Dynamic Home과 care day로 첫 검증 |
+| 약/주사 관리 | 타이밍 실수가 치료 일정에 큰 부담을 줌 | confirmed care action card로 첫 검증 |
+| 부부 공유 | 정보 비대칭과 역할 부담을 줄임 | partner action view로 첫 검증 |
+| 감정 소진 완화 | “나만 고생한다”는 감정을 줄여야 함 | 파트너 친화 UX 원칙으로 반영, 감정 기록은 후속 |
+| IVF 여정 기록 | 치료 회차와 결과의 의미 있는 기록 | v1.1+ 후보 |
+| 알림 실패 대응 | 중요한 주사/복약 놓침 방지 | native push/Kakao/SMS는 후속 |
+| 보안/삭제 정책 | 민감 의료 정보 신뢰의 전제 | Privacy Gate/RLS부터 구현 |
 
 ---
 
@@ -122,7 +145,7 @@ Fevio는 병원 EMR처럼 차갑게 보이면 안 되고, 임신/출산 앱처�
 - 파트너에게 부담 없는 공유 화면
 - AI가 판단하는 느낌보다 사용자가 확인하는 느낌
 
-디자이너 협업 문서: [`docs/03_design_guidance/designer-brief.md`](docs/03_design_guidance/designer-brief.md)
+디자이너 협업 문서: [`docs/02-design/designer-brief.md`](docs/02-design/designer-brief.md)
 
 ---
 
@@ -147,12 +170,14 @@ Fevio는 병원 EMR처럼 차갑게 보이면 안 되고, 임신/출산 앱처�
 
 - Documentation map: [`docs/README.md`](docs/README.md)
 - Domain language: [`CONTEXT.md`](CONTEXT.md)
-- Product SLC: [`docs/01_product_requirements/SLC target/SLC target.md`](<docs/01_product_requirements/SLC target/SLC target.md>)
-- PRD: [`docs/01_product_requirements/fertility-support-prd-v1.0.md`](docs/01_product_requirements/fertility-support-prd-v1.0.md)
-- Architecture decisions: [`docs/adr/`](docs/adr/)
-- Designer brief: [`docs/03_design_guidance/designer-brief.md`](docs/03_design_guidance/designer-brief.md)
-- Issue writing rules: [`docs/02_engineering/issue-writing-rules.md`](docs/02_engineering/issue-writing-rules.md)
-- TDD issue map: [`docs/02_engineering/slc-tdd-issue-map.md`](docs/02_engineering/slc-tdd-issue-map.md)
+- Product origin note: [`docs/01-product/original-note-hyunjoo.md`](docs/01-product/original-note-hyunjoo.md)
+- Product SLC: [`docs/01-product/slc-target.md`](<docs/01-product/slc-target.md>)
+- PRD: [`docs/01-product/prd-v1.0.md`](docs/01-product/prd-v1.0.md)
+- Architecture decisions: [`docs/04-decisions/`](docs/04-decisions/)
+- Designer brief: [`docs/02-design/designer-brief.md`](docs/02-design/designer-brief.md)
+- Issue writing rules: [`docs/03-engineering/issue-writing-rules.md`](docs/03-engineering/issue-writing-rules.md)
+- TDD issue map: [`docs/03-engineering/slc-tdd-issue-map.md`](docs/03-engineering/slc-tdd-issue-map.md)
+- Deployment readiness: [`docs/03-engineering/deployment-readiness.md`](docs/03-engineering/deployment-readiness.md)
 - Contributor guide: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ---

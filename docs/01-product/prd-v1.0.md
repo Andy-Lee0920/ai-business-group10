@@ -11,6 +11,8 @@
 **Core workflow:** Privacy Gate → Capture → Manual/LLM-assisted Action Split → Confirmation → Dynamic Home → Partner Action View
 **Last decision pass:** Q1–Q20 complete
 
+**Product origin:** `docs/01-product/original-note-hyunjoo.md` remains the highest-priority product origin. This PRD translates that origin into an implementation-ready v1.0 slice; it must not erase the original user pain around irregular schedules, medication/injection timing risk, couple information asymmetry, emotional load, and sensitive-data trust.
+
 ---
 
 ## 1. Executive Summary

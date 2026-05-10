@@ -81,11 +81,11 @@ First tests:
 
 Before a grouped development run, provide the implementer/agent with:
 
-1. `docs/01_product_requirements/fertility-support-prd-v1.0.md`
-2. `docs/01_product_requirements/SLC target/SLC target.md`
+1. `docs/01-product/prd-v1.0.md`
+2. `docs/01-product/slc-target.md`
 3. `docs/specs/issue-32-app-scaffold-vercel-supabase-foundation.md`
-4. `docs/schema-rls-matrix.md`
-5. `docs/02_product_design_10/slides.md`
+4. `docs/03-engineering/schema-rls-matrix.md`
+5. `docs/02-design/deck.md`
 6. GitHub issues #32–#35 and #23–#27
 
 The stop condition for #32 remains scaffold verification, not SLC completion.
