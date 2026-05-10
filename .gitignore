@@ -23,6 +23,7 @@ test-results/
 !.env*.example
 
 # Supabase local/runtime secrets
+env/
 supabase/.branches/
 supabase/.temp/
 supabase/.env
