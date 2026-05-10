@@ -1,11 +1,21 @@
-export default function CapturePage() {
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { Card, Notice } from '../../src/components/ui';
+import { CaptureForm } from './capture-form';
+
+export default async function CapturePage() {
+  const cookieStore = await cookies();
+  if (cookieStore.get('fevio_privacy_accepted')?.value !== '1') redirect('/privacy');
+
   return (
     <main className="app-shell">
-      <section className="placeholder-card">
+      <Card aria-labelledby="capture-title">
         <p className="eyebrow">Post-Visit Capture</p>
-        <h2>병원 메모 입력 준비</h2>
-        <p className="lead">#24에서 visit_inputs와 action_split_drafts 저장을 연결합니다.</p>
-      </section>
+        <h2 id="capture-title">병원 메모를 그대로 붙여넣기</h2>
+        <p className="lead">잘 모르겠는 내용도 그대로 적어도 괜찮아요. 확인이 필요한 항목은 따로 표시됩니다.</p>
+        <Notice tone="sage">약/주사, 시간, 다음 방문, 파트너에게 부탁할 일을 한 번에 적어도 됩니다.</Notice>
+        <CaptureForm />
+      </Card>
     </main>
   );
 }
