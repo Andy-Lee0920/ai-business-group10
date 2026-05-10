@@ -47,3 +47,25 @@ textarea:focus-visible {
   line-height: 1.6;
   margin: 0;
 }
+
+.description-warning {
+  background: rgba(224, 122, 104, 0.1);
+  border: 1px solid rgba(224, 122, 104, 0.28);
+  border-radius: 16px;
+  color: #8d3326;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.description-warning p {
+  margin: 0;
+}
+
+.description-warning__heading,
+.description-warning__badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
