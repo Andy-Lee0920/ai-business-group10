@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isPresentationMode } from '../../../../src/config';
 import { PRIVACY_GATE_VERSION } from '../../../../src/domain/auth-privacy';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 
@@ -14,6 +15,16 @@ function redirectWithDemoCookie(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const acceptsHtml = request.headers.get('accept')?.includes('text/html') ?? false;
+
+  if (isPresentationMode()) {
+    if (acceptsHtml) return redirectWithDemoCookie(request);
+    return NextResponse.json({
+      accepted: {
+        privacy_gate_version: PRIVACY_GATE_VERSION,
+        mode: 'presentation',
+      },
+    });
+  }
 
   try {
     const supabase = await createCookieBackedSupabaseClient();

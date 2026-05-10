@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isPresentationMode } from '../src/config';
 import { requireSupabasePublicConfig } from '../src/lib/env';
 
 describe('Supabase public env contract', () => {
@@ -18,5 +19,15 @@ describe('Supabase public env contract', () => {
       url: 'https://example.supabase.co',
       anonKey: 'test-anon-key',
     });
+  });
+});
+
+describe('presentation mode env contract', () => {
+  it('is off by default for real Supabase deployments', () => {
+    expect(isPresentationMode({})).toBe(false);
+  });
+
+  it('turns on with a public Vercel-safe flag', () => {
+    expect(isPresentationMode({ NEXT_PUBLIC_FEVIO_PRESENTATION_MODE: '1' })).toBe(true);
   });
 });
