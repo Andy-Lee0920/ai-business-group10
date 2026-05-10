@@ -12,7 +12,7 @@ This matrix keeps the final PRD data model aligned before implementation across 
 | `visit_inputs` | #24 | capture migration | own couple only; blocked until Privacy Gate accepted | capture creates raw input only; other couple blocked |
 | `action_split_drafts` | #24 | capture migration | own couple only; draft shell created on Capture CTA | draft shell created; classification buttons do not write DB |
 | `split_candidates` | #35 / #24 | schema baseline or capture migration | own couple through parent draft/couple; created only on Confirm | Confirm batch insert; no rows before Confirm |
-| `care_action_cards` | #25 / #24 | card model migration | own couple only for app; anon blocked; partner view only via server token projection | confirmed constraints; card creation; anon direct read denied |
+| `care_action_cards` | #25 / #24; schedule decision #55 / ADR 0003 | card model migration | own couple only for app; anon blocked; partner view only via server token projection; clinic visits stay card-backed for SLC | confirmed constraints; clinic_visit scheduling via `scheduled_at` / `care_date`; card creation; anon direct read denied |
 | `partner_share_links` | #27 | partner migration | authenticated owner can create/revoke; anon cannot direct query; token hash only | one active link, 7-day TTL, raw token absent |
 | `partner_share_events` | #27 | partner migration | server-controlled partner token flow; authenticated owner can observe relevant acknowledgement state if needed | view/ack events record revision seen |
 | `user_ai_settings` | #28 P1 | llm migration | own user metadata only; raw key in Vault only | raw key not selectable/logged; P0 works without key |
@@ -28,6 +28,7 @@ This matrix keeps the final PRD data model aligned before implementation across 
 - Partner view is a sanitized live server projection; no frozen snapshot table for v1.0.
 - Partner raw token is never stored; store `SHA-256(token)` only.
 - Partner links expire after 7 days and can be explicitly revoked.
+- ADR 0003 keeps clinic visit scheduling on `care_action_cards` for SLC; do not add `clinic_visits` or `visit_id` before P1 `#44` reopens the decision with concrete recurrence/reschedule requirements.
 
 ## Minimum integration tests
 
