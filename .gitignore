@@ -62,3 +62,7 @@ Thumbs.db
 *.sql.gz
 *.sqlite
 *.sqlite3
+
+# Local/generated ideation images not referenced by docs
+# Keep curated design assets under docs/02_product_design_10/assets/ explicitly staged when needed.
+docs/**/ChatGPT Image*.png
