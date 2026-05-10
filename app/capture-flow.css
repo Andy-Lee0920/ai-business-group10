@@ -1,0 +1,49 @@
+.capture-form,
+.split-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.field-label {
+  color: var(--fevio-ink);
+  font-weight: 800;
+}
+
+textarea {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(32, 35, 31, 0.14);
+  border-radius: 18px;
+  color: var(--fevio-ink);
+  line-height: 1.6;
+  min-height: 190px;
+  padding: 14px;
+  resize: vertical;
+  width: 100%;
+}
+
+textarea:focus-visible {
+  outline: 3px solid rgba(111, 143, 110, 0.32);
+  outline-offset: 3px;
+}
+
+.helper-row {
+  color: var(--fevio-muted);
+  display: grid;
+  font-size: 0.9rem;
+  gap: 6px;
+}
+
+.split-item {
+  background: rgba(111, 143, 110, 0.08);
+  border: 1px solid rgba(111, 143, 110, 0.18);
+  border-radius: 18px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.split-item p {
+  line-height: 1.6;
+  margin: 0;
+}
