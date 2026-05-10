@@ -28,5 +28,8 @@ describe('partner view payload integration contract', () => {
     expect(Object.keys(payload.items[0]).sort()).toEqual([...PARTNER_VIEW_ITEM_FIELDS].sort());
     expect(JSON.stringify(payload)).not.toContain('원문 메모');
     expect(JSON.stringify(payload)).not.toContain('source_input_id');
+    expect(JSON.stringify(payload)).not.toContain('token_hash');
+    expect(JSON.stringify(payload)).not.toContain('created_by');
+    expect(JSON.stringify(payload)).not.toContain('user-1');
   });
 });

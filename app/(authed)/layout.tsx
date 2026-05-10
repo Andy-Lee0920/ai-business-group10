@@ -41,7 +41,7 @@ export default function AuthedLayout({ children }: { children: React.ReactNode }
         <Link href="/capture" style={tabStyle} aria-label="병원 기록">
           기록
         </Link>
-        <Link href="/partner" style={tabStyle} aria-label="파트너 보기">
+        <Link href="/settings/sharing" style={tabStyle} aria-label="파트너 보기">
           파트너
         </Link>
       </nav>
