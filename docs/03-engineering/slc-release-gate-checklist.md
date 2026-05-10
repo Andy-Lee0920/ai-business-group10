@@ -33,7 +33,7 @@ Status: draft for `#56`. Use this as the manual QA evidence template; completing
 - [ ] Dynamic Home changes from onboarding to the correct care day.
 - [ ] Critical injection card appears above other confirmed cards with text and visual emphasis.
 - [ ] Partner share link exposes only whitelisted fields and no raw memo/token.
-- [ ] Partner revoke UI/path works after `#61`.
+- [x] Partner revoke UI/path is implemented by `#61`; live Supabase click QA still needs evidence here.
 - [ ] Email reminder path works after `#52`, or is explicitly scoped out for the QA run.
 
 ## Presentation lane
@@ -44,6 +44,12 @@ Status: draft for `#56`. Use this as the manual QA evidence template; completing
 - [ ] Privacy Gate accept sets demo flow cookie and opens Capture.
 - [ ] Capture → Split Review → Confirm can be demonstrated without backend writes.
 - [ ] UI copy makes it clear this is a safe product-flow demo, not medical advice.
+
+## Presentation visual checks
+
+- [ ] Desktop/tablet renders the app inside an iOS-style mobile frame after `#74`.
+- [ ] Logo/app icon/OG metadata are visible and linked after `#75`.
+- [ ] Presentation mode still works without Supabase/OAuth secrets.
 
 ## Evidence to attach to `#56`
 

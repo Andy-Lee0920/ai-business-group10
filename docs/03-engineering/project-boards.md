@@ -224,17 +224,17 @@ P0 critical path:
 
 ## Status matrix (snapshot 2026-05-11 KST)
 
-GitHub issue state was checked after merging the Phase 0/1/2/3 core PRs. Remaining P0 work is concentrated in Reminder, Description Guide, Partner revoke UI, release QA, and preview SOP.
+GitHub issue state was checked after merging PRs #70–#73. Remaining work is concentrated in presentation polish (#74/#75), Reminder Minimum (#52), release QA (#56), and preview SOP (#57).
 
 | Board | Backlog | Ready | In Progress | Review | Blocked | Done |
 |---|--:|--:|--:|--:|--:|--:|
 | 1 Auth & Privacy | 1 (#50) | 0 | 0 | 0 | 0 | 4 (#23, #35, #58, RLS baseline) |
 | 2 Capture & Split | 2 (#51, #60) | 0 | 0 | 0 | 0 | 1 (#24) |
-| 3 Cards & Home | 2 (#44, #45) | 2 (#54, #56) | 0 | 0 | 0 | 4 (#25, #26, #34, #55) |
-| 4 Partner | 1 (#46) | 1 (#61) | 0 | 0 | 0 | 2 (#27, #53) |
+| 3 Cards & Home | 2 (#44, #45) | 1 (#56) | 0 | 0 | 0 | 5 (#25, #26, #34, #54, #55) |
+| 4 Partner | 1 (#46) | 0 | 0 | 0 | 0 | 3 (#27, #53, #61) |
 | 5 Reliability | 1 (#49) | 1 (#52) | 0 | 0 | 0 | 1 (#59) |
 | 6 Care Journey | 2 (#47, #48) | 0 | 0 | 0 | 0 | 0 |
-| 7 Foundation & Ops | 3 (#39, #40, #41) | 1 (#57) | 0 | 0 | 0 | 4 (#32, #33, #34, #38) |
+| 7 Foundation & Ops | 3 (#39, #40, #41) | 3 (#57, #74, #75) | 0 | 0 | 0 | 6 (#32, #33, #34, #38, #68, #69) |
 
 Deployment interpretation:
 
@@ -258,11 +258,16 @@ Deployment interpretation:
 - [x] Supabase RLS/schema baseline and auth boundary tests 통과 — `#23` + `#35`
 - [x] Partner share link sanitized — `#27` + `#53`
 - [x] [BOOST] Critical injection 카드가 임박 시 in-app 시각·텍스트 강조 — `#25` + `#26`
-- [ ] [BOOST] Partner description 가이드와 행동 단서 보강 — `#54` remaining; whitelist done in `#53`
+- [x] [BOOST] Partner description 가이드와 행동 단서 보강 — `#54`; whitelist done in `#53`
 - [ ] [BOOST] Email 1회 리마인드 동작 — `#52`; ADR `#59` Done
-- [ ] SLC manual QA checklist all green — `N5`
+- [ ] SLC manual QA checklist all green — `#56`
 - [x] 일정 모델 ADR 결정 — `#55`
 - [x] 알림 채널 ADR 결정 — `#59`
+
+Presentation readiness add-ons before final QA:
+
+- [ ] iOS-style fixed mobile frame on desktop/tablet — `#74`
+- [ ] Fevio logo/app icon/OG brand identity wired into metadata/assets — `#75`
 
 ## Migration to GitHub Projects v2
 
