@@ -13,11 +13,14 @@ export default function HomePage() {
           Dynamic Home 전환을 검증하는 방향으로 구현합니다.
         </p>
         <div className="cta-row">
-          <Link className="primary-cta" href="/capture">
-            병원 메모 입력 준비
+          <Link className="primary-cta" href="/auth/sign-in">
+            Google로 시작하기
           </Link>
           <Link className="secondary-cta" href="/privacy">
             Privacy Gate 보기
+          </Link>
+          <Link className="secondary-cta" href="/capture">
+            병원 메모 입력 준비
           </Link>
         </div>
         <ul className="status-list" aria-label="준비된 기반">
