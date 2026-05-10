@@ -53,7 +53,7 @@ Epic `#29`. Spawned by ADR 0002 룰 #49-A.
 ### 이번 이슈에서 할 일
 
 - [ ] in-app 강조: `#25`의 `computeDisplaySafetyLevel` critical 판정과 `#26`의 home composition을 연결한다.
-- [ ] email channel: Supabase Edge Function `send-reminder` 작성, transactional mail provider(예: Resend/SES — `N8`에서 결정)와 연결.
+- [ ] email-only channel: ADR 0004 결정에 따라 Supabase Edge Function `send-reminder` 작성, transactional mail provider(예: Resend/SES)와 연결.
 - [ ] schedule trigger: `care_action_cards.scheduled_at` 30분 전 발송. 중복 방지 키 = `(card.id, scheduled_at)`.
 - [ ] template: 한국어, 의료 조언 금지 문구, 카드 title + scheduled_at + 앱 deep link만 포함.
 - [ ] integration test: confirmed injection 카드 + scheduled_at 30분 후 → reminder log row 1개 + email 1건.
@@ -97,13 +97,13 @@ RED: confirmed injection 카드 1건과 `scheduled_at = now+30m`이 주어졌을
 
 ### Blocked by
 
-`N8` (알림 채널 ADR), `#25` (Card Model), `#26` (Dynamic Home)
+ADR 0004 accepted; implementation still depends on `#25` (Card Model), `#26` (Dynamic Home), and transactional email provider setup.
 
 ### 개발 메모
 
 - Tables/columns: `care_action_cards.scheduled_at`, 신규 `reminder_dispatches(card_id, scheduled_at, channel, status, sent_at)` UNIQUE(card_id, scheduled_at, channel).
 - Edge Function: `/functions/v1/send-reminder`
-- Provider env: `RESEND_API_KEY` 또는 `SES_*` (N8 결정에 따라)
+- Provider env: `RESEND_API_KEY` 또는 `SES_*` (ADR 0004: email-only).
 - Cron: pg_cron 또는 Supabase Scheduled Function, 1분 단위.
 
 ### 연결 문서
@@ -576,9 +576,9 @@ Gate for `N1`.
 
 ### 이번 이슈에서 할 일
 
-- [ ] 옵션별 표 비교: 인프라 비용, iOS Safari 지원, 사용자 동의 흐름, 발송 신뢰도, SLC release gate 영향.
-- [ ] 권장안: Email-only (단순·iOS 호환·SLC 안에 안전 진입). Web Push는 P1.
-- [ ] ADR `0004-reminder-channel.md` 머지.
+- [x] 옵션별 표 비교: 인프라 비용, iOS Safari 지원, 사용자 동의 흐름, 발송 신뢰도, SLC release gate 영향.
+- [x] 권장안: Email-only (단순·iOS 호환·SLC 안에 안전 진입). Web Push는 P1.
+- [x] ADR `0004-reminder-channel.md` 머지.
 
 ### 이번 이슈에서 하지 않을 일
 
@@ -603,8 +603,8 @@ Gate for `N1`.
 
 ### 완료 기준
 
-- [ ] ADR 0004 머지
-- [ ] `N1` 본문 갱신
+- [x] ADR 0004 머지
+- [x] `N1` 본문 갱신
 
 ### Blocked by
 

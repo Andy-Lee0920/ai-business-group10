@@ -1,9 +1,10 @@
 import Link from 'next/link';
+import { Badge, Card, Notice } from '../src/components/ui';
 
 export default function HomePage() {
   return (
     <main className="app-shell">
-      <section className="hero-card" aria-labelledby="home-title">
+      <Card aria-labelledby="home-title" className="hero-card">
         <p className="eyebrow">SLC scaffold</p>
         <h1 id="home-title">Fevio [페비오]</h1>
         <p className="lead">병원 메모를 오늘의 실행 카드로 바꾸는 웹앱</p>
@@ -20,11 +21,18 @@ export default function HomePage() {
           </Link>
         </div>
         <ul className="status-list" aria-label="준비된 기반">
-          <li>모바일 우선 앱 shell</li>
-          <li>Fevio 디자인 토큰 baseline</li>
-          <li>Supabase/Vercel env 계약 준비</li>
+          <li>
+            <Badge tone="sage">모바일 우선</Badge> 앱 shell
+          </li>
+          <li>
+            <Badge tone="lavender">Design token</Badge> Fevio baseline
+          </li>
+          <li>
+            <Badge tone="neutral">Env contract</Badge> Supabase/Vercel 준비
+          </li>
         </ul>
-      </section>
+        <Notice tone="coral">중요 상태는 색상만이 아니라 배지와 텍스트로 함께 표시합니다.</Notice>
+      </Card>
     </main>
   );
 }
