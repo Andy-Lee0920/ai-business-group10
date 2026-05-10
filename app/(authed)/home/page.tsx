@@ -1,26 +1,31 @@
 import { Badge, Card } from '../../../src/components/ui';
-import { computeHomeContext } from '../../../src/domain/home-composition';
+import { isPresentationMode } from '../../../src/config';
+import { computeDisplaySafetyLevel } from '../../../src/domain/care-cards';
+import { computeHomeContext, type HomeActionCard } from '../../../src/domain/home-composition';
+import { getPresentationCards } from '../../../src/lib/presentation-demo-data';
 import styles from './home.module.css';
-import type { CareActionCard } from '../../../src/types/care-cards.types';
+import type { CareActionCard, DisplaySafetyLevel } from '../../../src/types/care-cards.types';
 
 export const dynamic = 'force-dynamic';
 
+type RenderableHomeCard = HomeActionCard & { status: CareActionCard['status'] };
+
 export default function DynamicHomePage() {
   const now = new Date();
-  const context = computeHomeContext(makeDemoCards(now), now);
+  const cards = isPresentationMode() ? getPresentationCards(now) : makeDemoCards(now);
+  const context = computeHomeContext(cards, now);
+  const renderedCards = isPresentationMode() ? toPresentationHomeCards(cards, now) : withConfirmedStatus(context.cards);
 
   return (
     <main className="app-shell">
       <Card aria-labelledby="home-title" className="hero-card">
-        <p className="eyebrow">Dynamic Home</p>
+        <p className="eyebrow">{isPresentationMode() ? '발표 데모' : 'Dynamic Home'}</p>
         <h1 id="home-title">오늘의 실행 카드</h1>
         <p className="lead">{context.primaryMessage}</p>
         <div className={styles.homeCardList} aria-label="오늘 카드 목록">
-          {context.cards.map((card) => (
+          {renderedCards.map((card) => (
             <article className={`${styles.homeActionCard} ${card.displaySafetyLevel === 'critical' ? styles.homeCardCoral : ''}`} data-testid="home-action-card" key={card.id}>
-              <Badge tone={card.displaySafetyLevel === 'critical' ? 'coral' : 'sage'}>
-                {card.displaySafetyLevel === 'critical' ? '임박' : '확정'}
-              </Badge>
+              <Badge tone={badgeTone(card.displaySafetyLevel, card.status)}>{badgeLabel(card.displaySafetyLevel, card.status)}</Badge>
               <h2>{card.title}</h2>
               {card.urgencyCopy ? <p className={styles.homeUrgencyCopy}>{card.urgencyCopy}</p> : null}
               {card.description ? <p className="lead">{card.description}</p> : null}
@@ -30,6 +35,54 @@ export default function DynamicHomePage() {
       </Card>
     </main>
   );
+}
+
+function toPresentationHomeCards(cards: readonly CareActionCard[], now: Date): RenderableHomeCard[] {
+  return cards.map((card) => toRenderableCard(card, now)).sort(compareRenderableCards);
+}
+
+function toRenderableCard(card: CareActionCard, now: Date): RenderableHomeCard {
+  const displaySafetyLevel = computeDisplaySafetyLevel(card, now);
+  return {
+    id: card.id,
+    title: card.title,
+    description: card.description,
+    scheduledAt: card.scheduled_at,
+    displaySafetyLevel,
+    accentClassName: displaySafetyLevel === 'critical' ? 'home-card--critical home-card--coral' : 'home-card--calm',
+    urgencyCopy: displaySafetyLevel === 'critical' ? '시간 다 됐어요 · 지금 ±30분' : null,
+    status: card.status,
+  };
+}
+
+function withConfirmedStatus(cards: readonly HomeActionCard[]): RenderableHomeCard[] {
+  return cards.map((card) => ({ ...card, status: 'confirmed' }));
+}
+
+function compareRenderableCards(left: RenderableHomeCard, right: RenderableHomeCard) {
+  const levelDelta = safetyRank(right.displaySafetyLevel) - safetyRank(left.displaySafetyLevel);
+  if (levelDelta !== 0) return levelDelta;
+  return timeRank(left.scheduledAt) - timeRank(right.scheduledAt);
+}
+
+function safetyRank(level: DisplaySafetyLevel) {
+  if (level === 'critical') return 2;
+  if (level === 'time_sensitive') return 1;
+  return 0;
+}
+
+function timeRank(value: string | null) {
+  return value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER;
+}
+
+function badgeTone(level: DisplaySafetyLevel, status: CareActionCard['status']) {
+  if (status === 'completed') return 'lavender';
+  return level === 'critical' ? 'coral' : 'sage';
+}
+
+function badgeLabel(level: DisplaySafetyLevel, status: CareActionCard['status']) {
+  if (status === 'completed') return '완료';
+  return level === 'critical' ? '임박' : '확정';
 }
 
 function makeDemoCards(now: Date): CareActionCard[] {

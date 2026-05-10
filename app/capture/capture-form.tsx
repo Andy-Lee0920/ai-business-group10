@@ -6,8 +6,10 @@ import { CtaButton, Notice } from '../../src/components/ui';
 type Candidate = { sourceText: string; orderIndex: number };
 type CaptureResponse = { visitInputId: string; draftId: string; candidates: Candidate[]; error?: string };
 
-export function CaptureForm() {
-  const [rawText, setRawText] = useState('');
+type CaptureFormProps = { initialRawText?: string; presentationMode?: boolean };
+
+export function CaptureForm({ initialRawText = '', presentationMode = false }: CaptureFormProps) {
+  const [rawText, setRawText] = useState(initialRawText);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,6 +50,11 @@ export function CaptureForm() {
         <span>붙여넣기 가능</span>
         <span>음성 입력은 기기 키보드 마이크를 사용해 주세요</span>
       </div>
+      {presentationMode ? (
+        <button className="secondary-cta" onClick={() => setRawText(initialRawText)} type="button">
+          데모 리셋
+        </button>
+      ) : null}
       {error ? <Notice tone="coral">{error}</Notice> : null}
       <CtaButton disabled={submitting} onClick={submitCapture} type="button">
         실행 카드로 나누기
