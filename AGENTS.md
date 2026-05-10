@@ -171,6 +171,15 @@ Avoid:
 - progress notes inside agent instruction files.
 
 
+
+Issue closure discipline:
+
+- Do not close an issue while a known Red remains.
+- Red includes failing tests, deployment errors, failing checks, unresolved external settings, or unverified acceptance criteria.
+- Create a child issue for each specific Red → Green transition.
+- Post Red evidence and Green evidence as issue comments so the work log is visible to the team.
+- Close parent issues only after linked child Red issues are Green or explicitly out of scope.
+
 Notification discipline:
 
 - Use email notifications only for review-ready specs or milestone-impacting PRs.

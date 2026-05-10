@@ -113,6 +113,35 @@ Good: Supabase RLS — 다른 커플의 데이터가 절대 보이지 않게 막
 Bad: RLS policies and grants
 ```
 
+
+## Red issue closure rule
+
+Red가 남아 있으면 이슈를 닫지 않는다.
+
+Red는 아래를 포함한다.
+
+- 실패하는 테스트
+- 실패하는 Vercel/GitHub check
+- 재현 가능한 deployment error
+- 권한 있는 사람이 처리해야 하는 외부 설정
+- 아직 증거가 없는 완료 기준
+
+진행 방식:
+
+1. 부모 이슈에 Red evidence를 남긴다.
+2. Red를 Green으로 넘기는 child issue를 만든다.
+3. child issue에 완료 기준을 하나의 관찰 가능한 Green으로 적는다.
+4. child issue가 Green evidence로 닫히기 전까지 부모 이슈는 닫지 않는다.
+5. 부모 이슈는 연결된 child Red가 모두 Green이거나 명시적으로 out of scope가 되었을 때만 닫는다.
+
+이 규칙은 코드 TDD뿐 아니라 configuration TDD에도 적용한다.
+
+```text
+Red: Vercel log says Root Directory "old-app-root" does not exist.
+Child: Vercel Project Settings에서 Root Directory를 empty/default로 바꾼다.
+Green: 새 deployment가 repo root package.json을 기준으로 build를 시작한다.
+```
+
 ## Agent-use rules
 
 When asking Claude Code/Codex to work on an issue:

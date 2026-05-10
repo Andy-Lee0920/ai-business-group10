@@ -150,7 +150,31 @@ Email frequency policy:
 - Do not use `--email` for draft updates, typo fixes, or repeated CI retries.
 - Prefer `--notify` for normal review requests.
 
-## 8. Secret policy
+
+## 8. Red issue closure rule
+
+Do not close an issue while a known Red remains.
+
+Use this rule for tests, deployments, configuration, security, and review blockers:
+
+- If the current issue still has a failing check, deployment error, unresolved external setting, or unverified acceptance criterion, leave it open.
+- Create a child issue for the specific Red → Green transition.
+- Link the child issue from the parent issue.
+- Close the child issue only after Green evidence is posted.
+- Close the parent issue only when all child Red issues are Green or explicitly out of scope.
+
+Example:
+
+```text
+Parent: #38 Vercel Fevio Preview 정리
+Child: Vercel Root Directory의 old app 설정 제거하기
+Red: deployment log says Root Directory "old-app-root" does not exist
+Green: new deployment starts from repo root package.json
+```
+
+Issue comments should carry the work log: Red evidence, Green evidence, commands run, remaining risks.
+
+## 9. Secret policy
 
 Never commit real secrets.
 
@@ -174,7 +198,7 @@ Do not commit:
 
 Coauthors should not receive raw secrets through git. Use least-privilege Vercel/Supabase access or a secure password manager.
 
-## 9. Medical and privacy boundaries
+## 10. Medical and privacy boundaries
 
 Fevio [페비오] is not a medical advice product.
 
@@ -187,7 +211,7 @@ Contributions must preserve these invariants:
 - LLM output must not decide `assigned_to`, `card_type`, dosage, treatment strategy, or safety priority.
 - Safety priority is deterministic UI display logic, not stored medical judgment.
 
-## 10. File naming
+## 11. File naming
 
 Use lowercase kebab-case for docs and specs:
 
@@ -198,7 +222,7 @@ docs/contribution-by-specctl-skill-junhyun.md
 
 Avoid spaces and parentheses in filenames because they are awkward in shell commands, URLs, and automation.
 
-## 11. Maintainer notes
+## 12. Maintainer notes
 
 Maintainers may ask contributors to use direct GitHub or git commands. When doing so, keep the same spec-first and secret-safe rules.
 
