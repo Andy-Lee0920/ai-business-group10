@@ -67,6 +67,19 @@ specctl submit docs/specs/user-login.md --notify --email
 [Spec Review Needed] user-login
 ```
 
+
+---
+
+## 5.1 발송 빈도 정책
+
+메일 알림은 리뷰 준비가 된 spec 또는 마일스톤에 영향을 주는 PR에만 사용합니다.
+
+- Use `--email` only for review-ready specs or milestone-impacting PRs.
+- Do not use `--email` for draft updates, typo fixes, or repeated CI retries.
+- Prefer `--notify` for normal review requests.
+
+일반 리뷰 요청은 GitHub 알림(`--notify`)을 우선 사용하고, 초안 수정·오타 수정·CI 재시도에는 이메일을 보내지 않습니다. Gmail/SMTP 한도와 스팸 판정을 피하기 위해 `--email`은 의도적으로 드물게 사용합니다.
+
 ---
 
 ## 6. 문제 해결
