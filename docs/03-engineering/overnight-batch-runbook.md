@@ -63,25 +63,35 @@ Do not print env values. Use `vercel env ls`, Supabase dashboard, or redacted ke
 
 ## Open overnight batch candidates
 
-Core P0 already merged/closed: `#23`, `#24`, `#25`, `#26`, `#27`, `#34`, `#53`, `#55`, `#58`, `#59`.
+Core P0 merged/closed: `#23`, `#24`, `#25`, `#26`, `#27`, `#34`, `#53`, `#54`, `#55`, `#58`, `#59`, `#61`, `#68`, `#69`.
 
-Remaining high-value batch order:
+Current next-work order after the 2026-05-11 overnight merges:
 
-1. `#54` Description Guide
-   - Scope: content rule, hint, forbidden medical-judgment phrase detection.
-   - Backend dependency: none.
-   - Good for presentation and real SLC lanes.
-2. `#61` Partner revoke UI
-   - Scope: revoke button/status path for existing partner share link model.
-   - Backend dependency: Supabase schema already exists; use real SLC lane for validation.
+1. `#74` iOS Frame
+   - Scope: desktop/tablet presentation frame around the mobile app viewport.
+   - Dependency: none beyond the merged #68 app shell.
+   - Why now: highest visual payoff before team presentation; CSS/layout-only and quick to verify.
+2. `#75` Brand Identity
+   - Scope: logo/app icon/OG image/metadata wiring.
+   - Dependency: brand asset direction or generated/approved source assets.
+   - Why next: presentation impression remains weak without a visible Fevio mark.
+   - Agent can wire assets into `public/`, metadata, manifest, and e2e checks; original PNG/SVG generation needs an approved concept or supplied assets.
 3. `#52` Reminder Minimum
-   - Scope: in-app critical card emphasis is already available; email dispatch/logging remains.
-   - Backend dependency: transactional email provider key and scheduled-function/cron decision.
-   - Do not block UI-only work on email provider setup.
+   - Scope: email-only reminder path from ADR 0004 plus any remaining in-app reminder checks.
+   - Dependency: Resend/API provider key and scheduler/cron setup for full green.
+   - Why after visual polish: SLC safety feature, but external email credentials can block completion.
 4. `#56` SLC manual QA checklist
-   - Scope: manual QA evidence for real SLC lane plus backendless presentation lane smoke path.
+   - Scope: final real SLC + presentation lane evidence.
+   - Dependency: run after `#74`, `#75`, and `#52` are merged or explicitly scoped out.
 5. `#57` Vercel Preview SOP
-   - Scope: document how to validate both lanes when Git-connected preview is unavailable or owner-split.
+   - Scope: document owner-split Vercel reality and both deployment lanes.
+   - Can be done anytime, but best after the current presentation/real-lane deployment pattern stabilizes.
+
+Google OAuth status:
+
+- `/auth/sign-in` redirects to Supabase authorize with `redirect_to=https://project-oznp0.vercel.app/auth/callback`.
+- ckiwon Vercel production/development env now includes `NEXT_PUBLIC_APP_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+- Full Google account login remains a manual QA item for `#56`, not a code blocker.
 
 ## Batch execution constraints
 

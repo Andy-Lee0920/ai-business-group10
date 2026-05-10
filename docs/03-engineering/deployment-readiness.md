@@ -87,6 +87,14 @@ If a client secret or service key is printed in a terminal, chat, screenshot, CI
 - `supabase gen types typescript --db-url ...` is not required for the current SLC because generated DB types are not imported by the app. Add generated types later as a quality improvement when Docker or API-based generation is available.
 - Vercel Git-connected preview gaps on an owner-split project do not block real SLC work as long as manual production/preview deployments and repo checks are green.
 
+
+## Current next action order
+
+1. `#74` iOS Frame — fast CSS/layout visual polish for desktop presentation review.
+2. `#75` Brand Identity — requires source logo/icon/OG assets or an approved generation concept; implementation can wire assets and metadata.
+3. `#52` Reminder Minimum — requires Resend/API provider key and scheduler setup for full green.
+4. `#56` SLC manual QA checklist — run last, after the above are merged or scoped out.
+
 ## Required Green evidence before SLC release
 
 - Repo checks green.
@@ -96,4 +104,6 @@ If a client secret or service key is printed in a terminal, chat, screenshot, CI
 - Capture → Split Review → Confirm creates persisted care cards.
 - Dynamic Home reflects confirmed cards.
 - Partner link returns sanitized server-filtered payload.
-- Remaining P0s (`#52`, `#54`, `#56`, `#61`) are closed or explicitly scoped out with issue comments.
+- Presentation polish issues `#74` and `#75` are merged or explicitly scoped out for the release demo.
+- Remaining P0 `#52` is closed or explicitly scoped out with issue comments.
+- `#56` manual QA evidence is attached after real SLC and presentation lane smoke checks.

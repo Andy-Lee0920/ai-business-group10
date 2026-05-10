@@ -179,6 +179,10 @@ The real SLC lane is the source of truth for product acceptance. The presentatio
 
 Runbook: [`docs/03-engineering/overnight-batch-runbook.md`](docs/03-engineering/overnight-batch-runbook.md)
 
+
+Current next implementation order after the merged overnight batch: `#74` iOS Frame → `#75` Brand Identity → `#52` Reminder Minimum → `#56` SLC manual QA. See [`docs/03-engineering/overnight-batch-runbook.md`](docs/03-engineering/overnight-batch-runbook.md).
+
+
 ---
 
 ## 주요 문서

@@ -92,13 +92,20 @@ Phase 0/1/2/3 core development is complete enough for the next overnight batch. 
 9. `docs/03-engineering/deployment-readiness.md`
 10. `docs/03-engineering/overnight-batch-runbook.md`
 
-Current overnight batch candidates:
+Current next-work order:
 
-- `#54` Description Guide — safe frontend/domain slice, no backend dependency.
-- `#61` Partner revoke UI — follows merged partner link/whitelist work.
-- `#52` Reminder Minimum — requires email provider/scheduler decisions for full green; UI/in-app sub-slice can proceed.
-- `#56` Manual QA checklist — final release evidence after the above.
-- `#57` Vercel Preview SOP — document owner-split Vercel reality and both deployment lanes.
+1. `#74` iOS Frame — CSS/layout visual containment for desktop presentation review.
+2. `#75` Brand Identity — logo/icon/OG asset integration once source assets or a generation concept is approved.
+3. `#52` Reminder Minimum — email-only reminder path; requires provider/scheduler setup for full green.
+4. `#56` Manual QA checklist — final release evidence after the above.
+5. `#57` Vercel Preview SOP — owner-split Vercel documentation and preview/deploy procedure.
+
+Completed from the previous overnight batch:
+
+- `#68` Visual Shell — merged via PR #70.
+- `#69` Presentation Polish — merged via PR #72.
+- `#54` Description Guide — merged via PR #71.
+- `#61` Partner Revoke UI — merged via PR #73.
 
 Deployment assumptions:
 
