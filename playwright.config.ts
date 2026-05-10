@@ -9,7 +9,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run build && npm run start -- --hostname 127.0.0.1',
+    command: 'NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1 npm run build && NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1 npm run start -- --hostname 127.0.0.1',
     url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
