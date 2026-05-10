@@ -4,9 +4,33 @@ import {
   expiresSevenDaysFrom,
   hashPartnerShareToken,
 } from '../../../src/services/partner-view';
+import {
+  createPartnerShareLinkRepository,
+  type SupabasePartnerShareLinkClient,
+} from '../../../src/lib/partner-share-link-repository';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
+import { listActiveLinksForUser } from '../../../src/services/partner-share-link-service';
 
 type CoupleShellRow = { couple_id: string };
+
+export async function GET() {
+  const supabase = await createCookieBackedSupabaseClient();
+  const { data: userResult, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userResult.user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  }
+
+  try {
+    const repository = createPartnerShareLinkRepository(
+      supabase as unknown as SupabasePartnerShareLinkClient,
+    );
+    const links = await listActiveLinksForUser(userResult.user.id, repository);
+    return NextResponse.json({ links });
+  } catch (error) {
+    return serverError('partner_links_list_failed', messageOf(error));
+  }
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await createCookieBackedSupabaseClient();
@@ -54,4 +78,8 @@ function partnerUrl(request: NextRequest, token: string) {
 
 function serverError(error: string, detail: string) {
   return NextResponse.json({ error, detail }, { status: 500 });
+}
+
+function messageOf(error: unknown) {
+  return error instanceof Error ? error.message : 'unknown';
 }
