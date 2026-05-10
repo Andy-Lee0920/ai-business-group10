@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './fevio-ui.css';
 
 export const metadata: Metadata = {
   title: 'Fevio [페비오]',
