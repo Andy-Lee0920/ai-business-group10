@@ -19,7 +19,7 @@ test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await expect(page.getByRole('link', { name: /약·주사 추가/ })).toHaveAttribute('href', '/medication');
 });
 
-test('desktop home is constrained to an iPhone-width frame with in-frame navigation', async ({ page }) => {
+test('desktop home is constrained to an iPhone 17-width frame with in-frame navigation', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/home?care=injection');
 
@@ -30,8 +30,8 @@ test('desktop home is constrained to an iPhone-width frame with in-frame navigat
 
   expect(shellBox).not.toBeNull();
   expect(navBox).not.toBeNull();
-  expect(shellBox!.width).toBeLessThanOrEqual(390);
-  expect(navBox!.width).toBeLessThanOrEqual(390);
+  expect(shellBox!.width).toBeLessThanOrEqual(402);
+  expect(navBox!.width).toBeLessThanOrEqual(402);
   expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
   expect(Math.abs(navBox!.x + navBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
   expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);

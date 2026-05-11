@@ -1,19 +1,25 @@
 import { expect, test } from '@playwright/test';
 
-test('desktop renders Fevio inside an iPhone-width shell with sage outside background', async ({ page }) => {
+test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
 
   const shell = page.locator('main.app-shell').first();
   const shellBox = await shell.boundingBox();
   const viewportWidth = await page.evaluate(() => window.innerWidth);
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  const documentScrollHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  const shellOverflowY = await shell.evaluate((element) => getComputedStyle(element).overflowY);
   const bodyBackgroundImage = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
   const shellBackgroundColor = await shell.evaluate((element) => getComputedStyle(element).backgroundColor);
   const bodyBackgroundColor = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 
   expect(shellBox).not.toBeNull();
-  expect(shellBox!.width).toBeLessThanOrEqual(390);
+  expect(shellBox!.width).toBeLessThanOrEqual(402);
+  expect(shellBox!.height).toBeLessThanOrEqual(874);
   expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  expect(documentScrollHeight).toBeLessThanOrEqual(viewportHeight);
+  expect(shellOverflowY).toBe('auto');
   expect(bodyBackgroundImage).toContain('gradient');
   expect(bodyBackgroundColor).not.toEqual(shellBackgroundColor);
 });

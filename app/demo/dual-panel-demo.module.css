@@ -1,12 +1,11 @@
 .demoShell {
-  width: min(1180px, 100vw);
+  width: min(1280px, 100vw);
   min-height: 100dvh;
   padding: 16px clamp(12px, 3vw, 32px) 36px;
 }
 
 .compactHeader {
-  position: sticky;
-  top: 10px;
+  position: relative;
   z-index: 5;
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -152,18 +151,45 @@
 
 .dualPanel {
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
-  gap: clamp(16px, 3vw, 28px);
-  max-width: 1040px;
+  grid-template-columns: minmax(360px, 402px) minmax(96px, 132px) minmax(360px, 402px);
+  gap: clamp(12px, 2vw, 24px);
+  max-width: 1060px;
   margin: 0 auto;
-  align-items: start;
+  align-items: center;
+  justify-content: center;
   animation: panelIn 220ms ease both;
 }
 
 .panel {
+  position: relative;
   display: grid;
   gap: 10px;
   min-width: 0;
+  padding: 18px 9px 10px;
+  border: 5px solid rgba(8, 11, 10, 0.94);
+  border-radius: 48px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 18%),
+    #0b0f0d;
+  box-shadow:
+    0 26px 78px rgba(12, 24, 13, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.panel::before {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  z-index: 3;
+  width: 116px;
+  height: 32px;
+  border-radius: 999px;
+  background: #050706;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 10px 20px rgba(12, 24, 13, 0.26);
+  content: "";
+  transform: translateX(-50%);
 }
 
 .panelHeader {
@@ -193,15 +219,23 @@
   --accent: var(--fevio-sage);
   display: grid;
   gap: 12px;
-  min-height: 730px;
-  padding: 14px;
-  overflow: hidden;
+  height: 874px;
+  max-height: calc(100dvh - 48px);
+  padding: 44px 14px 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   border: 1px solid rgba(32, 35, 31, 0.1);
-  border-radius: 34px;
+  border-radius: 39px;
   background:
     radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 32%),
     linear-gradient(180deg, #ffffff 0%, rgba(246, 244, 241, 0.94) 100%);
   box-shadow: var(--fevio-shadow-card);
+  scrollbar-width: none;
+}
+
+.appScreen::-webkit-scrollbar {
+  display: none;
 }
 
 .partnerApp {
@@ -289,6 +323,7 @@
 }
 
 .inputMomentCard,
+.liveMirrorCard,
 .partnerInputMoment {
   display: grid;
   gap: 7px;
@@ -305,12 +340,26 @@
 }
 
 .inputMomentCard p,
+.liveMirrorCard p,
 .partnerInputMoment p {
   margin: 0;
   color: var(--fevio-muted);
   font-size: 12px;
   font-weight: 800;
   line-height: 1.45;
+}
+
+.liveMirrorCard {
+  border-color: color-mix(in srgb, var(--accent) 30%, rgba(32, 35, 31, 0.08));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
+    rgba(255, 255, 255, 0.84);
+  animation: syncFlash 620ms ease both;
+}
+
+.liveMirrorCard strong {
+  font-size: 15px;
+  letter-spacing: -0.03em;
 }
 
 .statePill {
@@ -553,6 +602,92 @@
   }
 }
 
+@keyframes syncFlash {
+  0% {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 36%, transparent);
+  }
+  45% {
+    transform: translateY(0);
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  100% {
+    box-shadow: 0 10px 28px rgba(50, 61, 46, 0.08);
+  }
+}
+
+.syncBridge {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  align-content: center;
+  min-height: 148px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(185, 174, 214, 0.24), transparent 42%),
+    rgba(255, 255, 255, 0.16);
+  color: white;
+  text-align: center;
+  box-shadow: 0 18px 46px rgba(12, 24, 13, 0.22);
+  backdrop-filter: blur(18px);
+  animation: bridgePulse 720ms ease both;
+}
+
+.syncBridge::before,
+.syncBridge::after {
+  position: absolute;
+  top: 50%;
+  width: clamp(20px, 3vw, 42px);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent);
+  content: "";
+}
+
+.syncBridge::before {
+  right: 100%;
+}
+
+.syncBridge::after {
+  left: 100%;
+}
+
+.syncBridge span {
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.syncBridge strong {
+  font-size: 13px;
+  letter-spacing: -0.02em;
+}
+
+.syncBridge p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.42;
+}
+
+@keyframes bridgePulse {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.65;
+  }
+  45% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 880px) {
   .demoShell {
     padding: 12px 10px 28px;
@@ -589,8 +724,19 @@
     grid-template-columns: 1fr;
   }
 
-  .appScreen {
+  .syncBridge {
+    order: 2;
     min-height: auto;
+  }
+
+  .syncBridge::before,
+  .syncBridge::after {
+    display: none;
+  }
+
+  .appScreen {
+    height: auto;
+    max-height: none;
   }
 }
 

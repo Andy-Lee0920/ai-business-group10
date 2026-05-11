@@ -10,6 +10,11 @@ type PatientPanelProps = {
   careDone: boolean;
   onCareDoneToggle: () => void;
   partnerConfirmed: boolean;
+  syncEvent: {
+    source: string;
+    target: string;
+    label: string;
+  };
 };
 
 export function PatientPanel({
@@ -19,6 +24,7 @@ export function PatientPanel({
   careDone,
   onCareDoneToggle,
   partnerConfirmed,
+  syncEvent,
 }: PatientPanelProps) {
   const { patient } = scenario;
 
@@ -50,6 +56,12 @@ export function PatientPanel({
         <span className={styles.microLabel}>{patient.inputMoment.prompt}</span>
         <strong>{patient.inputMoment.answer}</strong>
         <p>{patient.inputMoment.adaptation}</p>
+      </Card>
+
+      <Card as="div" className={styles.liveMirrorCard} data-testid="patient-sync-mirror">
+        <span className={styles.microLabel}>Live mirror</span>
+        <strong>{syncEvent.target === '내 화면' ? '파트너에서 들어온 업데이트' : '파트너 화면으로 보내는 중'}</strong>
+        <p>{syncEvent.label}</p>
       </Card>
 
       <Card as="div" className={styles.sharedSyncCard}>

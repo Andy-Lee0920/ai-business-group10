@@ -66,6 +66,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByText('문제는 부주의가 아니라 전달 구조입니다')).toBeVisible();
   await expect(page.getByText('병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.')).toBeVisible();
   await expect(page.getByText('선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.')).toBeVisible();
+  await expect(page.getByText('Live Sync')).toBeVisible();
   await expect(patient).toContainText('방금 붙여넣은 메모');
   await expect(patient).toContainText('주사 준비·확인자 역할을 먼저 올렸어요.');
   await expect(partner).toContainText('내가 다시 설명하지 않아도 되는 내용');
@@ -84,8 +85,10 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
 
   await patient.getByRole('button', { name: '오늘 항목 완료' }).click();
   await expect(partner).toContainText('완료됨');
+  await expect(page.getByTestId('partner-sync-mirror')).toContainText('오늘 항목 완료가 파트너 화면에 즉시 반영됐어요');
   await partner.getByRole('button', { name: '확인 완료', exact: true }).click();
   await expect(patient).toContainText('파트너가 확인했어요');
+  await expect(page.getByTestId('patient-sync-mirror')).toContainText('파트너 확인 완료가 내 화면에 바로 도착했어요');
 
   await page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '병원 다녀오기' }).click();
   await expect(page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '병원 다녀오기' })).toHaveAttribute('aria-pressed', 'true');

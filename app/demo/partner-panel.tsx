@@ -9,6 +9,11 @@ type PartnerPanelProps = {
   careDone: boolean;
   partnerConfirmed: boolean;
   onPartnerConfirmToggle: () => void;
+  syncEvent: {
+    source: string;
+    target: string;
+    label: string;
+  };
 };
 
 export function PartnerPanel({
@@ -18,6 +23,7 @@ export function PartnerPanel({
   careDone,
   partnerConfirmed,
   onPartnerConfirmToggle,
+  syncEvent,
 }: PartnerPanelProps) {
   const { partner } = scenario;
 
@@ -38,6 +44,12 @@ export function PartnerPanel({
         <span className={styles.microLabel}>내가 다시 설명하지 않아도 되는 내용</span>
         <strong>{scenario.patient.inputMoment.answer}</strong>
         <p>{scenario.patient.inputMoment.adaptation}</p>
+      </Card>
+
+      <Card as="div" className={styles.liveMirrorCard} data-testid="partner-sync-mirror">
+        <span className={styles.microLabel}>Live mirror</span>
+        <strong>{syncEvent.target === '파트너 화면' ? '내 화면에서 들어온 업데이트' : '내 화면으로 보내는 중'}</strong>
+        <p>{syncEvent.label}</p>
       </Card>
 
       <Card as="div" className={styles.sharedSyncCard}>
