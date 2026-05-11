@@ -30,8 +30,10 @@ test('desktop home is constrained to an iPhone 17-width frame with in-frame navi
 
   expect(shellBox).not.toBeNull();
   expect(navBox).not.toBeNull();
-  expect(shellBox!.width).toBeLessThanOrEqual(402);
-  expect(navBox!.width).toBeLessThanOrEqual(402);
+  expect(shellBox!.width).toBeLessThanOrEqual(440);
+  expect(shellBox!.width).toBeGreaterThanOrEqual(430);
+  expect(navBox!.width).toBeLessThanOrEqual(440);
+  expect(navBox!.width).toBeGreaterThanOrEqual(430);
   expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
   expect(Math.abs(navBox!.x + navBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
   expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);

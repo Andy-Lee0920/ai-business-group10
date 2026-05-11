@@ -1,12 +1,23 @@
 .demoShell {
+  --fevio-material-ultra-thin-blur: 20px;
+  --fevio-material-thin-blur: 30px;
+  --fevio-material-regular-blur: 40px;
+  --fevio-material-thick-blur: 50px;
+  --fevio-material-ultra-thick-blur: 60px;
+  --fevio-glass-edge: rgba(255, 255, 255, 0.42);
+  --fevio-glass-shadow: 0 4px 16px rgba(49, 45, 42, 0.07), 0 12px 40px rgba(49, 45, 42, 0.1);
+  --demo-device-scale: 0.84;
   width: min(1280px, 100vw);
   min-height: 100dvh;
   padding: 10px clamp(10px, 2.5vw, 28px) 18px;
   background:
-    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.2), transparent 28rem),
-    radial-gradient(circle at 50% 105%, rgba(185, 174, 214, 0.16), transparent 24rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24rem),
-    #050706;
+    radial-gradient(circle at 22% 6%, rgba(255, 232, 219, 0.92), transparent 22rem),
+    radial-gradient(circle at 82% 8%, rgba(220, 235, 219, 0.86), transparent 24rem),
+    radial-gradient(circle at 50% 92%, rgba(221, 216, 241, 0.72), transparent 28rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(244, 238, 229, 0.82)),
+    #f7f4ee;
+  color: rgba(32, 35, 31, 0.92);
+  overflow: hidden;
 }
 
 .compactHeader {
@@ -19,11 +30,12 @@
   max-width: 1040px;
   margin: 0 auto 10px;
   padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--fevio-glass-edge);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.28));
+  box-shadow: var(--fevio-glass-shadow);
+  backdrop-filter: blur(var(--fevio-material-thin-blur)) saturate(1.22);
 }
 
 .compactHeader h1 {
@@ -122,9 +134,13 @@
 
 .dualPanel {
   display: grid;
-  grid-template-columns: minmax(360px, 402px) minmax(96px, 132px) minmax(360px, 402px);
+  grid-template-columns:
+    calc(440px * var(--demo-device-scale))
+    minmax(96px, 132px)
+    calc(440px * var(--demo-device-scale));
   gap: clamp(12px, 2vw, 24px);
-  max-width: 1060px;
+  max-width: 1128px;
+  height: calc(956px * var(--demo-device-scale));
   margin: 0 auto;
   align-items: center;
   justify-content: center;
@@ -132,30 +148,37 @@
 }
 
 .panel {
+  --device-safe-top: 59px;
+  --device-safe-bottom: 34px;
   position: relative;
   display: block;
+  width: 440px;
+  height: 956px;
   min-width: 0;
-  height: min(852px, calc(100dvh - 70px));
-  min-height: 832px;
-  padding: 10px;
-  border: 5px solid #050706;
-  border-radius: 54px;
+  min-height: 0;
+  padding: 11px;
+  border: 6px solid #0a0c0b;
+  border-radius: 53px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 18%),
-    linear-gradient(180deg, #141715, #050706);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.26), transparent 19%),
+    linear-gradient(180deg, #171a18 0%, #090b0a 58%, #030403 100%);
   box-shadow:
-    0 30px 86px rgba(0, 0, 0, 0.52),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    0 28px 80px rgba(71, 63, 55, 0.22),
+    0 48px 110px rgba(119, 106, 91, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  transform: translateZ(0);
+  transform-origin: top center;
+  zoom: var(--demo-device-scale);
 }
 
 .dynamicIsland {
   position: absolute;
-  top: 9px;
+  top: 11px;
   left: 50%;
   z-index: 8;
-  width: 122px;
-  height: 36px;
-  border-radius: 999px;
+  width: 125.67px;
+  height: 36.67px;
+  border-radius: 18.33px;
   background: #000;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
@@ -210,7 +233,7 @@
 
 .panelHeader {
   position: absolute;
-  top: 54px;
+  top: calc(var(--device-safe-top) + 5px);
   left: 28px;
   right: 28px;
   z-index: 5;
@@ -243,16 +266,20 @@
   gap: 12px;
   height: 100%;
   max-height: 100%;
-  padding: 92px 14px 14px;
+  padding: calc(var(--device-safe-top) + 74px) 16px calc(var(--device-safe-bottom) + 16px);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   border: 1px solid rgba(32, 35, 31, 0.1);
-  border-radius: 39px;
+  border-radius: 47px;
   background:
-    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, rgba(246, 244, 241, 0.94) 100%);
-  box-shadow: var(--fevio-shadow-card);
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 30%),
+    radial-gradient(circle at 92% 3%, rgba(224, 122, 104, 0.1), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 246, 242, 0.78));
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.44),
+    0 12px 40px rgba(49, 45, 42, 0.1);
+  backdrop-filter: blur(var(--fevio-material-regular-blur)) saturate(1.16);
   scrollbar-width: none;
 }
 
@@ -289,8 +316,10 @@
 .contextStrip {
   border: 1px solid rgba(32, 35, 31, 0.08);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 10px 28px rgba(50, 61, 46, 0.08);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.42));
+  box-shadow: var(--fevio-glass-shadow);
+  backdrop-filter: blur(var(--fevio-material-thin-blur)) saturate(1.15);
 }
 
 .stageCard {

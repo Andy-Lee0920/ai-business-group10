@@ -83,50 +83,69 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
     return {
       backgroundColor: styles.backgroundColor,
       backgroundImage: styles.backgroundImage,
+      materialThin: styles.getPropertyValue('--fevio-material-thin-blur').trim(),
+      materialRegular: styles.getPropertyValue('--fevio-material-regular-blur').trim(),
+      materialThick: styles.getPropertyValue('--fevio-material-thick-blur').trim(),
     };
   });
-  expect(stageStyles.backgroundColor).toBe('rgb(5, 7, 6)');
+  expect(stageStyles.backgroundColor).toBe('rgb(247, 244, 238)');
   expect(stageStyles.backgroundImage).not.toContain('74, 107, 73');
+  expect(stageStyles.backgroundImage).toContain('radial-gradient');
+  expect(stageStyles.materialThin).toBe('30px');
+  expect(stageStyles.materialRegular).toBe('40px');
+  expect(stageStyles.materialThick).toBe('50px');
 
   const frameMetrics = await frames.evaluateAll((elements) =>
     elements.map((element) => {
       const frame = element.getBoundingClientRect();
       const island = element.querySelector('[data-testid="demo-dynamic-island"]')?.getBoundingClientRect();
       const screen = element.querySelector('[data-testid$="-panel"]')?.getBoundingClientRect();
-      const islandStyles = island
-        ? getComputedStyle(element.querySelector('[data-testid="demo-dynamic-island"]') as HTMLElement)
-        : null;
+      const frameStyles = getComputedStyle(element);
+      const islandElement = element.querySelector('[data-testid="demo-dynamic-island"]') as HTMLElement | null;
+      const islandStyles = islandElement ? getComputedStyle(islandElement) : null;
       return {
         width: frame.width,
         height: frame.height,
-        radius: getComputedStyle(element).borderRadius,
-        borderColor: getComputedStyle(element).borderColor,
+        cssWidth: Number.parseFloat(frameStyles.width),
+        cssHeight: Number.parseFloat(frameStyles.height),
+        radius: frameStyles.borderRadius,
+        borderColor: frameStyles.borderColor,
+        safeAreaTop: frameStyles.getPropertyValue('--device-safe-top').trim(),
+        safeAreaBottom: frameStyles.getPropertyValue('--device-safe-bottom').trim(),
+        transform: frameStyles.transform,
         islandTop: island ? island.top - frame.top : null,
         islandCenterOffset: island ? Math.abs(island.left + island.width / 2 - (frame.left + frame.width / 2)) : null,
         islandBackground: islandStyles?.backgroundColor ?? '',
-        islandWidth: island?.width ?? 0,
-        islandHeight: island?.height ?? 0,
+        islandCssTop: Number.parseFloat(islandStyles?.top ?? '0'),
+        islandCssWidth: Number.parseFloat(islandStyles?.width ?? '0'),
+        islandCssHeight: Number.parseFloat(islandStyles?.height ?? '0'),
+        islandCssRadius: Number.parseFloat(islandStyles?.borderRadius ?? '0'),
         islandOverlapsScreenTop: Boolean(island && screen && island.top < screen.top + 42),
       };
     }),
   );
 
   for (const frame of frameMetrics) {
-    expect(frame.width).toBeGreaterThanOrEqual(374);
-    expect(frame.width).toBeLessThanOrEqual(414);
-    expect(frame.height).toBeGreaterThanOrEqual(830);
-    expect(frame.radius).toBe('54px');
-    expect(frame.borderColor).toBe('rgb(5, 7, 6)');
+    expect(frame.cssWidth).toBeCloseTo(440, 1);
+    expect(frame.cssHeight).toBeCloseTo(956, 1);
+    expect(frame.width).toBeGreaterThanOrEqual(360);
+    expect(frame.width).toBeLessThanOrEqual(440);
+    expect(frame.height).toBeGreaterThanOrEqual(780);
+    expect(frame.radius).toBe('53px');
+    expect(frame.borderColor).toBe('rgb(10, 12, 11)');
+    expect(frame.safeAreaTop).toBe('59px');
+    expect(frame.safeAreaBottom).toBe('34px');
+    expect(frame.transform).not.toBe('none');
     expect(frame.islandTop).not.toBeNull();
-    expect(frame.islandTop!).toBeGreaterThanOrEqual(12);
-    expect(frame.islandTop!).toBeLessThanOrEqual(18);
+    expect(frame.islandTop!).toBeGreaterThanOrEqual(13);
+    expect(frame.islandTop!).toBeLessThanOrEqual(16);
     expect(frame.islandCenterOffset).not.toBeNull();
     expect(frame.islandCenterOffset!).toBeLessThanOrEqual(1);
     expect(frame.islandBackground).toBe('rgb(0, 0, 0)');
-    expect(frame.islandWidth).toBeGreaterThanOrEqual(118);
-    expect(frame.islandWidth).toBeLessThanOrEqual(126);
-    expect(frame.islandHeight).toBeGreaterThanOrEqual(34);
-    expect(frame.islandHeight).toBeLessThanOrEqual(38);
+    expect(frame.islandCssTop).toBeCloseTo(11, 1);
+    expect(frame.islandCssWidth).toBeCloseTo(125.67, 1);
+    expect(frame.islandCssHeight).toBeCloseTo(36.67, 1);
+    expect(frame.islandCssRadius).toBeCloseTo(18.33, 1);
     expect(frame.islandOverlapsScreenTop).toBe(true);
   }
 
