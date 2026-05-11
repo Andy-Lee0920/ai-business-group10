@@ -2,8 +2,8 @@ import { headers } from 'next/headers';
 import { Badge, Card } from '../../../src/components/ui';
 import { isPresentationHost, isPresentationMode } from '../../../src/config';
 import { computeHomeContext, type HomeActionCard } from '../../../src/domain/home-composition';
-import { getPresentationCards } from '../../../src/lib/presentation-demo-data';
 import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
+import { getPresentationScenarioCards, normalizePresentationCare } from '../../../src/features/adaptive-home/presentation-scenarios';
 import styles from './home.module.css';
 import type { CareActionCard, DisplaySafetyLevel } from '../../../src/types/care-cards.types';
 
@@ -11,11 +11,17 @@ export const dynamic = 'force-dynamic';
 
 type RenderableHomeCard = HomeActionCard & { status: CareActionCard['status'] };
 
-export default async function DynamicHomePage() {
+type HomePageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const now = new Date();
   const requestHeaders = await headers();
   const presentationMode = isPresentationMode() || isPresentationHost(requestHeaders.get('host'));
-  const cards = presentationMode ? getPresentationCards(now) : makeDemoCards(now);
+  const query = await searchParams;
+  const presentationCare = normalizePresentationCare(query?.care);
+  const cards = presentationMode ? getPresentationScenarioCards(presentationCare, now) : makeDemoCards(now);
   const context = computeHomeContext(cards, now);
 
   if (presentationMode) return <AdaptiveHomeRuntime context={context} demoMode />;

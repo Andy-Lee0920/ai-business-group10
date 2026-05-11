@@ -10,6 +10,8 @@
   --fevio-radius-control: 999px;
   --fevio-shadow-card: 0 20px 60px rgba(50, 61, 46, 0.12);
   --fevio-touch-target: 48px;
+  --fevio-phone-frame-max: 390px;
+  --fevio-bottom-nav-height: 64px;
 }
 
 * {
@@ -20,6 +22,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  overflow-x: hidden;
   background: var(--fevio-cream);
   color: var(--fevio-ink);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -40,10 +43,37 @@ select {
 body {
   display: flex;
   justify-content: center;
+  min-height: 100dvh;
 }
 
 .app-shell {
-  width: min(100%, 460px);
+  width: min(100vw, var(--fevio-phone-frame-max));
+  max-width: 100%;
   min-height: 100vh;
-  padding: 24px 18px 32px;
+  min-height: 100dvh;
+  padding: max(24px, env(safe-area-inset-top, 0px)) 18px max(32px, env(safe-area-inset-bottom, 0px));
+}
+
+.authed-content {
+  width: min(100vw, var(--fevio-phone-frame-max));
+  max-width: 100%;
+  padding-bottom: calc(var(--fevio-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  width: min(100vw, var(--fevio-phone-frame-max));
+  max-width: 100%;
+  height: calc(var(--fevio-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transform: translateX(-50%);
+  align-items: center;
+  justify-content: space-around;
+  overflow-x: hidden;
+  border-top: 1px solid rgba(32, 35, 31, 0.08);
+  background: var(--fevio-card);
 }

@@ -12,7 +12,26 @@ test('mobile visitor sees the Fevio landing shell', async ({ page }) => {
 
 test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await page.goto('/home');
-  await expect(page.getByRole('heading', { name: '오늘의 실행 카드' })).toBeVisible();
+  await expect(page.locator('main.app-shell')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: '주 탐색' })).toBeVisible();
+});
+
+test('desktop home is constrained to an iPhone-width frame with in-frame navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/home?care=injection');
+
+  const shellBox = await page.locator('main.app-shell').first().boundingBox();
+  const navBox = await page.getByRole('navigation', { name: '주 탐색' }).boundingBox();
+  const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  const viewportWidth = await page.evaluate(() => window.innerWidth);
+
+  expect(shellBox).not.toBeNull();
+  expect(navBox).not.toBeNull();
+  expect(shellBox!.width).toBeLessThanOrEqual(390);
+  expect(navBox!.width).toBeLessThanOrEqual(390);
+  expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  expect(Math.abs(navBox!.x + navBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);
 });
 
 test('not-found page renders the Fevio 404 shell', async ({ page }) => {
