@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { Badge, Card, CtaButton } from '../../src/components/ui';
+import { Badge, Card, ConfirmChip, CtaButton, StatusBadge } from '../../src/components/ui';
 import type { DemoScenario } from './demo-scenarios';
 import styles from './dual-panel-demo.module.css';
 
@@ -7,9 +7,19 @@ type PatientPanelProps = {
   scenario: DemoScenario;
   checked: ReadonlySet<string>;
   onToggle: (id: string) => void;
+  careDone: boolean;
+  onCareDoneToggle: () => void;
+  partnerConfirmed: boolean;
 };
 
-export function PatientPanel({ scenario, checked, onToggle }: PatientPanelProps) {
+export function PatientPanel({
+  scenario,
+  checked,
+  onToggle,
+  careDone,
+  onCareDoneToggle,
+  partnerConfirmed,
+}: PatientPanelProps) {
   const { patient } = scenario;
 
   return (
@@ -34,6 +44,19 @@ export function PatientPanel({ scenario, checked, onToggle }: PatientPanelProps)
         <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         <h3>{patient.headline}</h3>
         <CtaButton className={styles.mainAction} type="button">{patient.primaryAction}</CtaButton>
+      </Card>
+
+      <Card as="div" className={styles.sharedSyncCard}>
+        <div>
+          <span className={styles.microLabel}>공유 상태</span>
+          <strong>다시 설명하지 않아도 돼요</strong>
+        </div>
+        <div className={styles.syncActions}>
+          <ConfirmChip selected={careDone} tone={scenario.accent} onClick={onCareDoneToggle}>
+            오늘 항목 완료
+          </ConfirmChip>
+          {partnerConfirmed ? <StatusBadge state="synced">파트너가 확인했어요</StatusBadge> : <StatusBadge state="shared">파트너와 공유중</StatusBadge>}
+        </div>
       </Card>
 
       <div className={styles.coreRail} aria-label="v1 필수 기능">
