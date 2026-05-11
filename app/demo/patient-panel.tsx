@@ -13,7 +13,7 @@ export function PatientPanel({ scenario, checked, onToggle }: PatientPanelProps)
   const { patient } = scenario;
 
   return (
-    <section className={`${styles.appScreen} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-patient-panel" aria-label="환자 화면">
+    <section className={`${styles.appScreen} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-patient-panel" aria-label="내 화면">
       <div className={styles.statusBar}>
         <span>9:41</span>
         <span>Fevio</span>

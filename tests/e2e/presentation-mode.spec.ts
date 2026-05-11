@@ -57,8 +57,8 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   const patient = page.getByTestId('demo-patient-panel');
   const partner = page.getByTestId('demo-partner-panel');
 
-  await expect(page.getByRole('heading', { name: '환자 화면' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '파트너 화면' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '내 화면', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
   await expect(patient).toContainText('주사 준비 체크');
   await expect(patient).toContainText('일정 변경');
   await expect(patient).toContainText('중요 알림');
