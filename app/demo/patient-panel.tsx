@@ -30,11 +30,6 @@ export function PatientPanel({
 
   return (
     <section className={`${styles.appScreen} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-patient-panel" aria-label="내 화면">
-      <div className={styles.statusBar}>
-        <span>9:41</span>
-        <span>Fevio</span>
-      </div>
-
       <Card as="div" className={styles.stageCard}>
         <div>
           <span className={styles.microLabel}>현재 단계</span>

@@ -122,12 +122,13 @@
 
 .stepBadge {
   display: inline-grid;
-  min-width: 44px;
-  min-height: 34px;
+  min-width: 0;
+  min-height: 0;
   place-items: center;
-  border-radius: 999px;
-  background: rgba(111, 143, 110, 0.14);
-  color: var(--fevio-sage);
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: #F3F4F6;
+  color: #374151;
   font-size: 13px;
   font-weight: 900;
 }
@@ -233,7 +234,7 @@
 
 .panelHeader {
   position: absolute;
-  top: calc(var(--device-safe-top) + 5px);
+  top: 0;
   left: 28px;
   right: 28px;
   z-index: 5;
@@ -242,6 +243,8 @@
   justify-content: space-between;
   gap: 10px;
   padding: 0 8px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .panelHeader h2 {
@@ -253,10 +256,10 @@
 
 .panelKicker,
 .microLabel {
-  color: var(--fevio-muted);
+  color: #9CA3AF;
   font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
@@ -266,7 +269,7 @@
   gap: 12px;
   height: 100%;
   max-height: 100%;
-  padding: calc(var(--device-safe-top) + 74px) 16px calc(var(--device-safe-bottom) + 16px);
+  padding: var(--device-safe-top) 16px calc(var(--device-safe-bottom) + 16px);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
@@ -297,14 +300,6 @@
 .accent_sage { --accent: var(--fevio-sage); }
 .accent_lavender { --accent: var(--fevio-lavender); }
 
-.statusBar {
-  display: flex;
-  justify-content: space-between;
-  color: rgba(32, 35, 31, 0.72);
-  font-size: 12px;
-  font-weight: 900;
-}
-
 .stageCard,
 .primaryCard,
 .inputMomentCard,
@@ -313,13 +308,13 @@
 .partnerHero,
 .partnerInputMoment,
 .avoidCard,
-.contextStrip {
-  border: 1px solid rgba(32, 35, 31, 0.08);
-  border-radius: 24px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.42));
-  box-shadow: var(--fevio-glass-shadow);
-  backdrop-filter: blur(var(--fevio-material-thin-blur)) saturate(1.15);
+.contextStrip,
+.sharedSyncCard {
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  backdrop-filter: none;
 }
 
 .stageCard {
@@ -327,7 +322,7 @@
   justify-content: space-between;
   gap: 14px;
   align-items: center;
-  padding: 14px;
+  padding: 16px;
 }
 
 .stageCard strong {
@@ -340,8 +335,8 @@
 .stageCard p,
 .partnerHero p {
   margin: 0;
-  color: var(--fevio-muted);
-  font-size: 13px;
+  color: #6B7280;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -370,7 +365,7 @@
 .partnerHero {
   display: grid;
   gap: 10px;
-  padding: 18px;
+  padding: 16px;
 }
 
 .inputMomentCard,
@@ -378,9 +373,8 @@
 .partnerInputMoment {
   display: grid;
   gap: 7px;
-  padding: 14px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, white), rgba(255, 255, 255, 0.86));
+  padding: 16px;
+  background: #FFFFFF;
 }
 
 .inputMomentCard strong,
@@ -394,17 +388,15 @@
 .liveMirrorCard p,
 .partnerInputMoment p {
   margin: 0;
-  color: var(--fevio-muted);
+  color: #6B7280;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.45;
 }
 
 .liveMirrorCard {
-  border-color: color-mix(in srgb, var(--accent) 30%, rgba(32, 35, 31, 0.08));
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
-    rgba(255, 255, 255, 0.84);
+  border-color: rgba(229, 231, 235, 0.9);
+  background: #FFFFFF;
   animation: syncFlash 620ms ease both;
 }
 
@@ -446,17 +438,18 @@
 .metricGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
 }
 
 .metricCard {
   display: grid;
   gap: 4px;
   min-height: 88px;
-  padding: 12px;
-  border: 1px solid rgba(32, 35, 31, 0.07);
-  border-radius: 20px;
-  background: white;
+  padding: 16px;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .metricCard span,
@@ -492,7 +485,7 @@
 .avoidCard {
   display: grid;
   gap: 12px;
-  padding: 14px;
+  padding: 16px;
 }
 
 .cardTitleRow {
@@ -511,14 +504,14 @@
 .checkGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
 }
 
 .checkTile,
 .actionRow,
 .toolButton {
   border: 1px solid rgba(32, 35, 31, 0.08);
-  background: rgba(255, 255, 255, 0.86);
+  background: #FFFFFF;
   cursor: pointer;
 }
 
@@ -527,8 +520,8 @@
   grid-template-columns: 22px 1fr;
   gap: 4px 8px;
   min-height: 76px;
-  padding: 11px;
-  border-radius: 18px;
+  padding: 16px;
+  border-radius: 16px;
   text-align: left;
 }
 
@@ -563,8 +556,8 @@
 .timelineCard {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  padding: 8px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .timelineItem {
@@ -579,7 +572,7 @@
 .partnerToolGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 12px;
 }
 
 .partnerToolGrid {
@@ -590,16 +583,16 @@
   display: grid;
   gap: 3px;
   min-height: 58px;
-  padding: 10px;
-  border-radius: 18px;
+  padding: 16px;
+  border-radius: 16px;
   text-align: left;
 }
 
 .contextStrip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  padding: 8px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .contextStrip div {
@@ -612,7 +605,7 @@
 
 .actionStack {
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .actionRow {
@@ -621,8 +614,8 @@
   gap: 10px;
   align-items: center;
   min-height: 52px;
-  padding: 10px;
-  border-radius: 18px;
+  padding: 16px;
+  border-radius: 16px;
   text-align: left;
 }
 
@@ -656,14 +649,14 @@
 @keyframes syncFlash {
   0% {
     transform: translateY(4px);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 36%, transparent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
   45% {
     transform: translateY(0);
-    box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 12%, transparent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
   100% {
-    box-shadow: 0 10px 28px rgba(50, 61, 46, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
 }
 
@@ -691,10 +684,11 @@
   position: absolute;
   top: 50%;
   width: clamp(20px, 3vw, 42px);
-  height: 2px;
+  height: 1.5px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   content: "";
+  opacity: 0.4;
 }
 
 .syncBridge::before {
@@ -706,9 +700,10 @@
 }
 
 .syncBridge span {
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.14em;
+  color: #9CA3AF;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
@@ -719,9 +714,9 @@
 
 .syncBridge p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 11px;
-  font-weight: 800;
+  color: #6B7280;
+  font-size: 12px;
+  font-weight: 650;
   line-height: 1.42;
 }
 
@@ -823,7 +818,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px;
+  padding: 16px;
 }
 
 .sharedSyncCard strong {
@@ -843,17 +838,18 @@
 .coreRail {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
+  gap: 12px;
 }
 
 .coreTool {
   display: grid;
   gap: 3px;
   min-height: 58px;
-  padding: 9px 7px;
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, rgba(32, 35, 31, 0.08));
+  padding: 16px;
+  border: 1px solid rgba(229, 231, 235, 0.9);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--accent) 7%, white);
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   text-align: left;
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;

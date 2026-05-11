@@ -29,11 +29,6 @@ export function PartnerPanel({
 
   return (
     <section className={`${styles.appScreen} ${styles.partnerApp} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-partner-panel" aria-label="파트너 화면">
-      <div className={styles.statusBar}>
-        <span>9:41</span>
-        <span>Partner</span>
-      </div>
-
       <Card as="div" className={styles.partnerHero}>
         <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         <h3>{partner.role}</h3>

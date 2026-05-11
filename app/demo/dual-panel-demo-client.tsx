@@ -121,7 +121,7 @@ export function DualPanelDemoClient() {
           />
         </article>
 
-        <div className={styles.syncBridge} aria-live="polite" key={syncEvent.id}>
+        <div className={styles.syncBridge} aria-live="polite" data-testid="live-sync-bridge" key={syncEvent.id}>
           <span>Live Sync</span>
           <strong>{syncEvent.source} → {syncEvent.target}</strong>
           <p>{syncEvent.label}</p>

@@ -76,6 +76,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByText('문제는 부주의가 아니라 전달 구조입니다')).toHaveCount(0);
   await expect(page.getByText('병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.')).toHaveCount(0);
   await expect(page.getByText('선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.')).toHaveCount(0);
+  await expect(page.getByText('9:41')).toHaveCount(0);
   expect(documentScrollHeight).toBeLessThanOrEqual(viewportHeight);
 
   const stageStyles = await stage.evaluate((element) => {
@@ -165,6 +166,61 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(patient).toContainText('부부 연결');
   await expect(partner).toContainText('확인자');
   await expect(partner).toContainText('공간 준비');
+
+  const demoUiMetrics = await page.evaluate(() => {
+    const patientPanel = document.querySelector('[data-testid="demo-patient-panel"]') as HTMLElement | null;
+    const firstCard = patientPanel?.querySelector('.fevio-card') as HTMLElement | null;
+    const liveLabel = Array.from(document.querySelectorAll('[data-testid="demo-patient-panel"] span')).find((element) =>
+      element.textContent?.toLowerCase().includes('live mirror'),
+    ) as HTMLElement | undefined;
+    const liveBody = document.querySelector('[data-testid="patient-sync-mirror"] p') as HTMLElement | null;
+    const stepBadge = Array.from(document.querySelectorAll('span')).find((element) => element.textContent === '1/3') as HTMLElement | undefined;
+    const bridge = document.querySelector('[data-testid="live-sync-bridge"]') as HTMLElement | null;
+
+    const styles = (element: HTMLElement | null | undefined) => {
+      if (!element) return null;
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        borderRadius: style.borderRadius,
+        boxShadow: style.boxShadow,
+        color: style.color,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        letterSpacing: style.letterSpacing,
+        paddingBottom: style.paddingBottom,
+        paddingLeft: style.paddingLeft,
+        paddingRight: style.paddingRight,
+        paddingTop: style.paddingTop,
+        rowGap: style.rowGap,
+        textTransform: style.textTransform,
+      };
+    };
+
+    const bridgeBefore = bridge ? getComputedStyle(bridge, '::before') : null;
+    return {
+      panel: patientPanel ? { paddingTop: getComputedStyle(patientPanel).paddingTop, rowGap: getComputedStyle(patientPanel).rowGap } : null,
+      firstCard: styles(firstCard),
+      liveLabel: styles(liveLabel),
+      liveBody: styles(liveBody),
+      stepBadge: styles(stepBadge),
+      bridgeLine: bridgeBefore
+        ? {
+            height: bridgeBefore.height,
+            opacity: bridgeBefore.opacity,
+            backgroundImage: bridgeBefore.backgroundImage,
+          }
+        : null,
+    };
+  });
+
+  expect(demoUiMetrics.panel).toMatchObject({ paddingTop: '59px', rowGap: '12px' });
+  expect(demoUiMetrics.firstCard).toMatchObject({ backgroundColor: 'rgb(255, 255, 255)', borderRadius: '16px', paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '16px' });
+  expect(demoUiMetrics.firstCard?.boxShadow).toContain('rgba(0, 0, 0, 0.05)');
+  expect(demoUiMetrics.liveLabel).toMatchObject({ color: 'rgb(156, 163, 175)', fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' });
+  expect(demoUiMetrics.liveBody).toMatchObject({ color: 'rgb(107, 114, 128)', fontSize: '12px' });
+  expect(demoUiMetrics.stepBadge).toMatchObject({ backgroundColor: 'rgb(243, 244, 246)', borderRadius: '99px', paddingTop: '6px', paddingRight: '12px', paddingBottom: '6px', paddingLeft: '12px' });
+  expect(demoUiMetrics.bridgeLine).toMatchObject({ height: '1.5px', opacity: '0.4' });
 
   await page.getByRole('button', { name: '펜 용량 확인' }).click();
   await expect(page.getByRole('button', { name: /펜 용량 확인/ })).toHaveAttribute('aria-pressed', 'true');
