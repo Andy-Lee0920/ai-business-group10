@@ -80,3 +80,35 @@ test('onboarding uses real mobile width without an artificial phone bezel', asyn
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.viewportWidth);
   expect(metrics.h1FontSize).toBeLessThanOrEqual(36);
 });
+
+
+test('desktop onboarding lets the screen scroll behind the Dynamic Island overlay', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.context().addCookies([{ name: 'fevio_privacy_accepted', value: '1', domain: '127.0.0.1', path: '/' }]);
+  await page.goto('/onboarding');
+
+  const shellMotion = await page.locator('main.app-shell').evaluate((shell) => {
+    const style = getComputedStyle(shell);
+    const before = getComputedStyle(shell, '::before');
+    const card = shell.querySelector('section.hero-card') as HTMLElement | null;
+    const beforeTop = before.top;
+    const cardTopBefore = card?.getBoundingClientRect().top ?? 0;
+    shell.scrollTop = 72;
+    const cardTopAfter = card?.getBoundingClientRect().top ?? 0;
+    return {
+      paddingTop: style.paddingTop,
+      overflowY: style.overflowY,
+      islandPosition: before.position,
+      islandTopStable: getComputedStyle(shell, '::before').top === beforeTop,
+      contentMovedBehindIsland: shell.scrollTop > 0 && cardTopAfter < cardTopBefore,
+    };
+  });
+
+  expect(shellMotion).toMatchObject({
+    paddingTop: '0px',
+    overflowY: 'auto',
+    islandPosition: 'fixed',
+    islandTopStable: true,
+    contentMovedBehindIsland: true,
+  });
+});
