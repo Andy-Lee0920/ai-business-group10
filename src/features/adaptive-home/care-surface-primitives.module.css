@@ -366,8 +366,8 @@
 
 @media (min-width: 768px) {
   .surfaceFrame {
-    min-height: calc(var(--fevio-phone-frame-height) - var(--fevio-phone-safe-top) - var(--fevio-phone-safe-bottom));
-    margin: calc(var(--fevio-phone-safe-top) * -1) -14px -24px;
+    min-height: var(--fevio-phone-frame-height);
+    margin: 0 -14px -24px;
     padding-top: var(--fevio-phone-safe-top);
   }
 

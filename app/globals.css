@@ -127,7 +127,8 @@ body {
     height: min(var(--fevio-phone-frame-height), calc(100dvh - 48px));
     min-height: 0;
     margin: 24px auto;
-    padding-top: var(--fevio-phone-safe-top);
+    padding-top: 0;
+    scroll-padding-top: var(--fevio-phone-safe-top);
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
@@ -147,8 +148,8 @@ body {
   }
 
   .app-shell::before {
-    position: absolute;
-    top: var(--fevio-dynamic-island-top-offset);
+    position: fixed;
+    top: calc(24px + var(--fevio-dynamic-island-top-offset));
     left: 50%;
     z-index: 30;
     display: block;

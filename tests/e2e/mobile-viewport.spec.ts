@@ -10,6 +10,7 @@ test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   const documentScrollHeight = await page.evaluate(() => document.documentElement.scrollHeight);
   const shellOverflowY = await shell.evaluate((element) => getComputedStyle(element).overflowY);
+  const shellPaddingTop = await shell.evaluate((element) => getComputedStyle(element).paddingTop);
   const bodyBackgroundImage = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
   const shellBackgroundColor = await shell.evaluate((element) => getComputedStyle(element).backgroundColor);
   const bodyBackgroundColor = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -33,6 +34,7 @@ test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll
   expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
   expect(documentScrollHeight).toBeLessThanOrEqual(viewportHeight);
   expect(shellOverflowY).toBe('auto');
+  expect(shellPaddingTop).toBe('0px');
   expect(bodyBackgroundImage).toContain('gradient');
   expect(bodyBackgroundImage).not.toContain('74, 107, 73');
   expect(bodyBackgroundColor).toBe('rgb(247, 244, 238)');
@@ -40,9 +42,9 @@ test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll
   expect(shellIsland.backgroundColor).toBe('rgb(0, 0, 0)');
   expect(Number.parseFloat(shellIsland.width)).toBeCloseTo(125.67, 1);
   expect(Number.parseFloat(shellIsland.height)).toBeCloseTo(36.67, 1);
-  expect(shellIsland.position).toBe('absolute');
+  expect(shellIsland.position).toBe('fixed');
   expect(shellIsland.marginTop).toBe('0px');
-  expect(shellIsland.top).toBe('11px');
+  expect(shellIsland.top).toBe('35px');
   expect(shellIsland.transform).toContain('matrix');
 });
 
