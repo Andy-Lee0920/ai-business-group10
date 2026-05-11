@@ -21,14 +21,9 @@ export default async function LandingPage() {
         </p>
         <div className="cta-row">
           {presentationMode ? (
-            <>
-              <Link className="primary-cta" href="/home">
-                발표 데모 바로 보기
-              </Link>
-              <Link className="secondary-cta" href="/privacy?mode=presentation">
-                Privacy Gate부터 보기
-              </Link>
-            </>
+            <Link className="primary-cta" href="/demo">
+              듀얼뷰 데모 바로 보기
+            </Link>
           ) : (
             <>
               <Link className="primary-cta" href="/auth/sign-in">
