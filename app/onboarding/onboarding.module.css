@@ -33,6 +33,46 @@
 .onboardingFlow {
   display: grid;
   gap: 12px;
+  min-height: min(620px, calc(100dvh - 170px));
+}
+
+.interviewProgress {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(32, 35, 31, 0.06);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(50, 61, 46, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.interviewProgress span,
+.interviewProgress small {
+  color: var(--fevio-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(32, 35, 31, 0.08);
+}
+
+.progressTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--fevio-sage), var(--fevio-lavender));
+  transition: width 220ms ease;
 }
 
 .choiceSection {
@@ -44,11 +84,25 @@
   background: rgba(246, 244, 241, 0.7);
 }
 
+.interviewSlide {
+  min-height: min(540px, calc(100dvh - 230px));
+  align-content: start;
+  animation: slideIn 220ms ease both;
+}
+
 .sectionTitle {
   margin: 0;
   font-size: 1.32rem;
   line-height: 1.2;
   letter-spacing: -0.055em;
+}
+
+.questionLead {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 0.95rem;
+  font-weight: 750;
+  line-height: 1.55;
 }
 
 .choiceGrid {
@@ -88,15 +142,63 @@
   line-height: 1.55;
 }
 
-.primaryAction {
-  position: sticky;
-  bottom: max(12px, env(safe-area-inset-bottom, 0px));
-  z-index: 2;
-  box-shadow: 0 14px 34px rgba(61, 92, 60, 0.24);
+.slideActions {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+  margin-top: auto;
+}
+
+.reviewList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.reviewList div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid rgba(32, 35, 31, 0.07);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.reviewList dt {
+  color: var(--fevio-muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.reviewList dd {
+  margin: 0;
+  color: var(--fevio-ink);
+  font-size: 0.98rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (min-width: 768px) {
   .onboardingCard {
     padding: 22px;
+  }
+
+  .onboardingFlow {
+    min-height: 608px;
+  }
+
+  .interviewSlide {
+    min-height: 520px;
   }
 }
