@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { CareActionCard } from '../../src/types/care-cards.types';
 import { computeHomeContext, type HomeContext } from '../../src/domain/home-composition';
+import { getPresentationScenarioCards } from '../../src/features/adaptive-home/presentation-scenarios';
 
 const NOW = new Date('2026-05-10T09:00:00.000Z');
 const BASE: CareActionCard = {
@@ -89,6 +90,14 @@ describe('home composition', () => {
       displaySafetyLevel: 'normal',
       urgencyCopy: null,
     });
+  });
+
+  it('keeps presentation injection and clinic previews in the intended care day around UTC midnight', () => {
+    const lateUtc = new Date('2026-05-11T23:50:00.000Z');
+
+    expect(computeHomeContext(getPresentationScenarioCards('injection', lateUtc), lateUtc).careDay).toBe('injection_day');
+    expect(computeHomeContext(getPresentationScenarioCards('clinic', lateUtc), lateUtc).careDay).toBe('clinic_day');
+    expect(computeHomeContext(getPresentationScenarioCards('waiting', lateUtc), lateUtc).careDay).toBe('waiting_day');
   });
 
   it('has a stable public return type', () => {

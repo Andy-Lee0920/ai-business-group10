@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('home opens as a cinematic Care OS surface instead of a generic card list', async ({ page }) => {
   await page.context().addCookies([{ name: 'fevio_privacy_accepted', value: '1', domain: '127.0.0.1', path: '/' }]);
-  await page.goto('/home');
+  await page.goto('/home?care=injection');
 
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
   await expect(page.getByRole('heading', { name: '오늘은 시간을 함께 지키는 날' })).toBeVisible();

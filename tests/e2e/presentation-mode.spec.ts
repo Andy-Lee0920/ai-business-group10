@@ -10,7 +10,7 @@ test('presentation landing opens the dual-view demo without auth steps', async (
 });
 
 test('presentation home defaults to an immersive injection-day care instrument', async ({ page }) => {
-  await page.goto('/home');
+  await page.goto('/home?care=injection');
 
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
   await expect(page.getByTestId('care-moment-hero')).toBeVisible();

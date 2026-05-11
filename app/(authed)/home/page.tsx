@@ -3,13 +3,15 @@ import { isPresentationHost, isPresentationMode } from '../../../src/config';
 import { computeHomeContext } from '../../../src/domain/home-composition';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
-import { getPresentationScenarioCards, normalizePresentationCare } from '../../../src/features/adaptive-home/presentation-scenarios';
+import { getPresentationScenarioCards, normalizePresentationCare, toAdaptiveCareDay } from '../../../src/features/adaptive-home/presentation-scenarios';
 import type { CareActionCard } from '../../../src/types/care-cards.types';
 
 export const dynamic = 'force-dynamic';
 
+type HomeSearchParams = Record<string, string | string[] | undefined> | URLSearchParams;
+
 type HomePageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<HomeSearchParams> | HomeSearchParams;
 };
 
 export default async function DynamicHomePage({ searchParams }: HomePageProps) {
@@ -18,19 +20,33 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const cookieStore = await cookies();
   const presentationMode = isPresentationMode() || isPresentationHost(requestHeaders.get('host'));
   const query = await searchParams;
-  const presentationCare = normalizePresentationCare(query?.care);
-  const onboardingCard = presentationMode ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
-  const persistedCards = presentationMode || onboardingCard ? [] : await getPersistedCards();
+  const careQuery = getSearchParam(query, 'care');
+  const presentationCare = normalizePresentationCare(careQuery);
+  const hasCarePreviewQuery = careQuery !== undefined;
+  const useCarePreview = presentationMode || hasCarePreviewQuery;
+  const onboardingCard = presentationMode && !hasCarePreviewQuery ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
+  const persistedCards = useCarePreview || onboardingCard ? [] : await getPersistedCards();
   const cards = onboardingCard
     ? [onboardingCard]
-    : presentationMode
+    : useCarePreview
       ? getPresentationScenarioCards(presentationCare, now)
       : persistedCards.length > 0
         ? persistedCards
         : makeDemoCards(now);
-  const context = computeHomeContext(cards, now);
+  const baseContext = computeHomeContext(cards, now);
+  const context = useCarePreview && !onboardingCard
+    ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
+    : baseContext;
 
-  return <AdaptiveHomeRuntime context={context} demoMode={presentationMode} />;
+  return <AdaptiveHomeRuntime context={context} demoMode={useCarePreview} />;
+}
+
+
+function getSearchParam(params: HomeSearchParams | undefined, key: string) {
+  if (!params) return undefined;
+  if (params instanceof URLSearchParams) return params.get(key) ?? undefined;
+  const value = params[key];
+  return Array.isArray(value) ? value[0] : value;
 }
 
 async function getPersistedCards(): Promise<CareActionCard[]> {

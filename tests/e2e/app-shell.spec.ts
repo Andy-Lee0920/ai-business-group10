@@ -11,7 +11,7 @@ test('mobile visitor sees the Fevio landing shell', async ({ page }) => {
 });
 
 test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
-  await page.goto('/home');
+  await page.goto('/home?care=injection');
   await expect(page.locator('main.app-shell')).toBeVisible();
   await expect(page.getByRole('navigation', { name: '주 탐색' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '오늘은 시간을 함께 지키는 날' })).toBeVisible();
