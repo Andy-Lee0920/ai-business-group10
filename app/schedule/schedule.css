@@ -1,17 +1,15 @@
 .schedule-page {
-  min-height: 100vh;
-  padding: 24px;
-  background: linear-gradient(180deg, #fbfaf7 0%, #eef6ef 100%);
+  width: 100%;
 }
 
 .schedule-card {
   margin: 0 auto;
-  max-width: 720px;
+  max-width: var(--fevio-phone-frame-max);
 }
 
 .schedule-eyebrow {
   margin: 0 0 8px;
-  color: #587463;
+  color: var(--fevio-sage-dark);
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -25,7 +23,7 @@
 }
 
 .schedule-lede {
-  color: #4f5d55;
+  color: var(--fevio-muted);
   line-height: 1.7;
 }
 
@@ -46,7 +44,7 @@
 .schedule-memo-input span {
   display: block;
   margin-bottom: 10px;
-  color: #28342d;
+  color: var(--fevio-ink);
   font-weight: 700;
 }
 
@@ -70,9 +68,9 @@
 
 .schedule-date-input input,
 .schedule-memo-input textarea {
-  border: 1px solid rgba(56, 72, 62, 0.18);
+  border: 1px solid var(--fevio-border-subtle);
   border-radius: 18px;
-  color: #223028;
+  color: var(--fevio-ink);
   font: inherit;
   min-height: 48px;
   padding: 12px 14px;
@@ -85,7 +83,7 @@
 
 .schedule-date-input small,
 .schedule-memo-input small {
-  color: #66756c;
+  color: var(--fevio-muted);
 }
 
 .schedule-summary {

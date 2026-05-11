@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, ConfirmChip, CtaButton, Notice, SelectionChip, StatusBadge, TimeInput } from '../../src/components/ui';
 
-type MedicationType = 'medication' | 'injection' | 'general_action';
+type MedicationType = 'medication' | 'injection' | 'vaginal' | 'general_action';
 type RepeatPattern = 'once' | 'daily' | 'clinic_instruction';
 type CreatedCard = {
   cardId: string;
@@ -25,6 +25,7 @@ const REPEAT_OPTIONS: Array<{ value: RepeatPattern; label: string }> = [
 const TYPE_OPTIONS: Array<{ value: MedicationType; label: string }> = [
   { value: 'medication', label: '약' },
   { value: 'injection', label: '주사' },
+  { value: 'vaginal', label: '질정' },
   { value: 'general_action', label: '기타' },
 ];
 
@@ -88,7 +89,7 @@ export function MedicationInputClient() {
     <div className="capture-form">
       <div role="group" aria-label="종류 선택" className="helper-row">
         {TYPE_OPTIONS.map((option) => (
-          <SelectionChip key={option.value} selected={type === option.value} onClick={() => setType(option.value)} tone={option.value === 'injection' ? 'lavender' : 'sage'}>
+          <SelectionChip key={option.value} selected={type === option.value} onClick={() => setType(option.value)} tone={option.value === 'injection' ? 'lavender' : option.value === 'vaginal' ? 'coral' : 'sage'}>
             {option.label}
           </SelectionChip>
         ))}

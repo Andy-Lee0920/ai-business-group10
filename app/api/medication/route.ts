@@ -5,7 +5,7 @@ import { bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } fro
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import type { CardType } from '../../../src/types/care-cards.types';
 
-type MedicationType = 'medication' | 'injection' | 'general_action';
+type MedicationType = 'medication' | 'injection' | 'vaginal' | 'general_action';
 type RepeatPattern = 'once' | 'daily' | 'clinic_instruction';
 type MedicationBody = {
   type?: unknown;
@@ -31,7 +31,7 @@ type BootstrapRow = { couple_id: string; privacy_gate_accepted_at: string | null
 type VisitInputRow = { id: string };
 type CardRow = { id: string; status: string };
 
-const TYPES: MedicationType[] = ['medication', 'injection', 'general_action'];
+const TYPES: MedicationType[] = ['medication', 'injection', 'vaginal', 'general_action'];
 const REPEAT_LABELS: Record<RepeatPattern, string> = {
   once: '오늘만',
   daily: '매일',
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         created_by: user.id,
         source_input_id: visitInput.data.id,
         assignee_role: 'primary_user',
-        card_type: input.type,
+        card_type: input.type === 'vaginal' ? 'medication' : input.type,
         title: sourceText,
         source_text: sourceText,
         scheduled_at: scheduledAtForToday(input.time),
@@ -120,13 +120,13 @@ export async function POST(request: NextRequest) {
 function normalizeInput(body: MedicationBody):
   | { type: MedicationType; name: string; dose: string; doseConfirmed: true; time: string; repeat: RepeatPattern; important: boolean }
   | { error: string } {
-  const type = body.type === 'medication' || body.type === 'injection' || body.type === 'general_action' ? body.type : null;
+  const type = body.type === 'medication' || body.type === 'injection' || body.type === 'vaginal' || body.type === 'general_action' ? body.type : null;
   const name = normalizeText(body.name);
   const dose = normalizeText(body.dose);
   const time = normalizeText(body.time);
   const repeat = normalizeRepeat(body.repeat);
 
-  if (!type || !TYPES.includes(type)) return { error: '약, 주사, 기타 중 하나를 선택해 주세요.' };
+  if (!type || !TYPES.includes(type)) return { error: '약, 주사, 질정, 기타 중 하나를 선택해 주세요.' };
   if (!name) return { error: '이름을 짧게 적어 주세요.' };
   if (!dose) return { error: '용량은 사용자가 직접 적어야 합니다.' };
   if (body.doseConfirmed !== true) return { error: '용량은 사용자가 직접 확인해야 합니다.' };
@@ -143,8 +143,9 @@ function normalizeRepeat(value: unknown): RepeatPattern {
   return value === 'daily' || value === 'clinic_instruction' ? value : 'once';
 }
 
-function buildSourceText(input: { name: string; dose: string; time: string; repeat: RepeatPattern; important: boolean }) {
-  return [input.name, input.dose, input.time, REPEAT_LABELS[input.repeat], input.important ? '꼭 챙겨야 해요' : null].filter(Boolean).join(' · ');
+function buildSourceText(input: { type: MedicationType; name: string; dose: string; time: string; repeat: RepeatPattern; important: boolean }) {
+  const methodLabel = input.type === 'vaginal' ? '질정' : input.type === 'injection' ? '주사' : input.type === 'medication' ? '약' : '기타';
+  return [methodLabel, input.name, input.dose, input.time, REPEAT_LABELS[input.repeat], input.important ? '꼭 챙겨야 해요' : null].filter(Boolean).join(' · ');
 }
 
 async function getAuthenticatedUser(supabase: MedicationSupabaseClient) {

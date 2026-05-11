@@ -118,13 +118,13 @@ describe('/api/medication', () => {
     const payload = (await response.json()) as { cardId: string; createdCardCount: number; persisted: boolean };
 
     expect(response.status).toBe(200);
-    expect(visitTable.insert).toHaveBeenCalledWith({ couple_id: 'couple-1', raw_text: '오비드렐 · 250mcg · 22:00 · 매일 · 꼭 챙겨야 해요' });
+    expect(visitTable.insert).toHaveBeenCalledWith({ couple_id: 'couple-1', raw_text: '주사 · 오비드렐 · 250mcg · 22:00 · 매일 · 꼭 챙겨야 해요' });
     expect(cardTable.insert).toHaveBeenCalledWith(expect.objectContaining({
       couple_id: 'couple-1',
       created_by: 'user-1',
       source_input_id: 'visit-1',
       card_type: 'injection',
-      title: '오비드렐 · 250mcg · 22:00 · 매일 · 꼭 챙겨야 해요',
+      title: '주사 · 오비드렐 · 250mcg · 22:00 · 매일 · 꼭 챙겨야 해요',
       scheduled_at: expect.any(String),
       status: 'confirmed',
       user_marked_important: true,
@@ -133,6 +133,33 @@ describe('/api/medication', () => {
     expect(payload).toMatchObject({ cardId: 'card-1', createdCardCount: 1, persisted: true });
   });
 });
+
+
+
+  it('distinguishes vaginal suppository input while storing it as a medication card without inference', async () => {
+    const visitTable = createInsertTable({ id: 'visit-vaginal' });
+    const cardTable = createInsertTable({ id: 'card-vaginal', status: 'confirmed' });
+    const from = vi.fn((table: string) => (table === 'visit_inputs' ? visitTable : cardTable));
+    mockedCreateSupabase.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@example.com' } }, error: null }) },
+      rpc: vi.fn().mockResolvedValue({ data: [{ couple_id: 'couple-1', privacy_gate_accepted_at: '2026-05-11T00:00:00.000Z' }], error: null }),
+      from,
+    } as never);
+
+    const response = await createMedication(jsonRequest('/api/medication', {
+      type: 'vaginal',
+      name: '크리논',
+      dose: '1회',
+      doseConfirmed: true,
+      time: '23:00',
+    }));
+    const payload = (await response.json()) as { cardId: string; title: string };
+
+    expect(response.status).toBe(200);
+    expect(visitTable.insert).toHaveBeenCalledWith({ couple_id: 'couple-1', raw_text: '질정 · 크리논 · 1회 · 23:00 · 오늘만' });
+    expect(cardTable.insert).toHaveBeenCalledWith(expect.objectContaining({ card_type: 'medication', title: '질정 · 크리논 · 1회 · 23:00 · 오늘만' }));
+    expect(payload).toMatchObject({ cardId: 'card-vaginal', title: '질정 · 크리논 · 1회 · 23:00 · 오늘만' });
+  });
 
 describe('/api/medication/complete', () => {
   beforeEach(() => vi.clearAllMocks());

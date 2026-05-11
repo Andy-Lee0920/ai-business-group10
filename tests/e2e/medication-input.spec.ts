@@ -18,6 +18,7 @@ test('low-energy medication input creates one explicit-dose card and can mark it
 
   const card = page.getByTestId('medication-card');
   await expect(card).toContainText('오비드렐');
+  await expect(card).toContainText('주사');
   await expect(card).toContainText('250mcg');
   await expect(card).toContainText('22:00');
   await expect(card).toContainText('매일');
