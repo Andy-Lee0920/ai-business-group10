@@ -1,9 +1,9 @@
 # Fevio Day 1–3 작업 로그와 Ticket Alignment
 
-**작성일:** 2026-05-11 KST  
-**기준 브랜치:** `main`  
-**기준 커밋:** `eb78263` — `Keep the presentation lane out of Google OAuth`  
-**검토 범위:** GitHub issue open/closed 상태, 최근 merged PR, `docs/03-engineering/project-boards.md`, `docs/01-product/prd-v1.0.md`  
+**작성일:** 2026-05-11 KST
+**기준 브랜치:** `main`
+**기준 커밋:** `eb78263` — `Keep the presentation lane out of Google OAuth`
+**검토 범위:** GitHub issue open/closed 상태, 최근 merged PR, `docs/03-engineering/project-boards.md`, `docs/01-product/prd-v1.0.md`
 **개인정보 원칙:** 이 문서는 ticket 업데이트에 옮길 수 있도록 개인명·이메일·비공개 계정 식별자를 쓰지 않는다. 필요한 주체는 role/account label로만 표기한다.
 
 ---
