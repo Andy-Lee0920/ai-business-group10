@@ -20,8 +20,13 @@ export function HomeUtilityLauncher() {
           <strong>약·주사 추가</strong>
           <small>이름·용량·시간을 직접 확인하고 완료 체크</small>
         </Link>
-        <Link className={styles.utilityLink} href="/capture">
+        <Link className={styles.utilityLink} href="/emotion">
           <span>03</span>
+          <strong>감정 부담 기록</strong>
+          <small>공유 기본 OFF, 원문 없이 도움 신호만 선택 공유</small>
+        </Link>
+        <Link className={styles.utilityLink} href="/capture">
+          <span>04</span>
           <strong>병원 메모 정리</strong>
           <small>들은 내용을 확정 전 카드로 나누기</small>
         </Link>

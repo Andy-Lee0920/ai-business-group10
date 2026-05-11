@@ -40,4 +40,38 @@ describe('partner view payload integration contract', () => {
       visibility: 'partner_safe',
     });
   });
+
+  it('keeps private emotion records out of the partner payload unless explicitly shared', () => {
+    const privateEmotion: CareActionCard = {
+      ...card,
+      id: 'emotion-private',
+      card_type: 'record',
+      title: '감정 기록 · 불안해요',
+      description: '나를 위한 비공개 감정 기록이에요. 공유하지 않아도 충분해요.',
+      source_text: '감정 기록 · 불안해요 · 강도 5/5 · 실패할까봐 너무 무서워',
+      partner_visible: false,
+    };
+    const sharedEmotion: CareActionCard = {
+      ...privateEmotion,
+      id: 'emotion-shared',
+      title: '공유된 감정 신호',
+      description: '오늘은 마음이 많이 긴장된 날이에요. 해결책보다 조용한 도움을 먼저 건네 주세요.',
+      partner_visible: true,
+    };
+
+    const payload = { items: serializePartnerViewCards([privateEmotion, sharedEmotion]) };
+
+    expect(payload.items).toHaveLength(1);
+    expect(payload.items[0]).toMatchObject({
+      title: '공유된 감정 신호',
+      card_type: 'record',
+      description: '오늘은 마음이 많이 긴장된 날이에요. 해결책보다 조용한 도움을 먼저 건네 주세요.',
+      partner_role: '기록 동반자',
+      visibility: 'private_summary',
+    });
+    expect(JSON.stringify(payload)).not.toContain('실패할까봐');
+    expect(JSON.stringify(payload)).not.toContain('강도 5/5');
+    expect(JSON.stringify(payload)).not.toContain('emotion-private');
+  });
+
 });
