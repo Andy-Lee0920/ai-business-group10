@@ -19,6 +19,18 @@ describe('Fevio design tokens and UI primitive class contracts', () => {
     expect(uiClassNames.notice('lavender')).toBe('fevio-notice fevio-notice--lavender');
   });
 
+  it('renders low-energy input and sync primitive classes', () => {
+    expect(uiClassNames.selectionChip(false, 'sage')).toBe('fevio-selection-chip fevio-selection-chip--sage');
+    expect(uiClassNames.selectionChip(true, 'coral')).toBe(
+      'fevio-selection-chip fevio-selection-chip--coral fevio-selection-chip--selected',
+    );
+    expect(uiClassNames.confirmChip(true, 'lavender')).toBe(
+      'fevio-confirm-chip fevio-confirm-chip--lavender fevio-confirm-chip--selected',
+    );
+    expect(uiClassNames.statusBadge('synced')).toBe('fevio-status-badge fevio-status-badge--synced');
+    expect(uiClassNames.timeInput()).toBe('fevio-time-input');
+  });
+
   it('marks selected segmented buttons with text-independent state', () => {
     expect(uiClassNames.segment(false)).toBe('fevio-segment');
     expect(uiClassNames.segment(true)).toBe('fevio-segment fevio-segment--selected');

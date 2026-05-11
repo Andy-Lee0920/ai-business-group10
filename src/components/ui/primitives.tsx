@@ -1,7 +1,8 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
 
 type Tone = 'sage' | 'lavender' | 'coral' | 'neutral';
 type Size = 'sm' | 'md';
+type StatusState = 'idle' | 'shared' | 'synced' | 'attention' | 'done';
 
 export function classNames(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ');
@@ -14,6 +15,12 @@ export const uiClassNames = {
   badge: (tone: Tone = 'sage') => classNames('fevio-badge', `fevio-badge--${tone}`),
   notice: (tone: Exclude<Tone, 'neutral'> = 'sage') => classNames('fevio-notice', `fevio-notice--${tone}`),
   segment: (selected = false) => classNames('fevio-segment', selected && 'fevio-segment--selected'),
+  selectionChip: (selected = false, tone: Tone = 'sage') =>
+    classNames('fevio-selection-chip', `fevio-selection-chip--${tone}`, selected && 'fevio-selection-chip--selected'),
+  confirmChip: (selected = false, tone: Tone = 'sage') =>
+    classNames('fevio-confirm-chip', `fevio-confirm-chip--${tone}`, selected && 'fevio-confirm-chip--selected'),
+  statusBadge: (state: StatusState = 'idle') => classNames('fevio-status-badge', `fevio-status-badge--${state}`),
+  timeInput: () => 'fevio-time-input',
   touchSize: (size: Size = 'md') => `fevio-touch-${size}`,
 };
 
@@ -48,6 +55,63 @@ type NoticeProps = HTMLAttributes<HTMLDivElement> & {
 
 export function Notice({ tone = 'sage', className, ...props }: NoticeProps) {
   return <div className={classNames(uiClassNames.notice(tone), className)} {...props} />;
+}
+
+type SelectionChipProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  selected?: boolean;
+  tone?: Tone;
+};
+
+export function SelectionChip({ selected = false, tone = 'sage', className, ...props }: SelectionChipProps) {
+  return (
+    <button
+      aria-pressed={selected}
+      className={classNames(uiClassNames.selectionChip(selected, tone), className)}
+      type="button"
+      {...props}
+    />
+  );
+}
+
+type ConfirmChipProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  selected?: boolean;
+  tone?: Tone;
+};
+
+export function ConfirmChip({ selected = false, tone = 'sage', className, ...props }: ConfirmChipProps) {
+  return (
+    <button
+      aria-pressed={selected}
+      className={classNames(uiClassNames.confirmChip(selected, tone), className)}
+      type="button"
+      {...props}
+    />
+  );
+}
+
+type StatusBadgeProps = HTMLAttributes<HTMLSpanElement> & {
+  state?: StatusState;
+};
+
+export function StatusBadge({ state = 'idle', className, ...props }: StatusBadgeProps) {
+  return <span className={classNames(uiClassNames.statusBadge(state), className)} {...props} />;
+}
+
+type TimeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
+  label: ReactNode;
+  helperText?: ReactNode;
+};
+
+export function TimeInput({ label, helperText, className, id, ...props }: TimeInputProps) {
+  const helperId = helperText && id ? `${id}-helper` : undefined;
+
+  return (
+    <label className={classNames(uiClassNames.timeInput(), className)}>
+      <span>{label}</span>
+      <input aria-describedby={helperId} id={id} inputMode="numeric" type="time" {...props} />
+      {helperText ? <small id={helperId}>{helperText}</small> : null}
+    </label>
+  );
 }
 
 type SegmentedButtonOption = {
