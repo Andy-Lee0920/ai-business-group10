@@ -111,10 +111,16 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
         cssHeight: Number.parseFloat(frameStyles.height),
         radius: frameStyles.borderRadius,
         borderColor: frameStyles.borderColor,
+        bezelWidth: frameStyles.getPropertyValue('--demo-device-bezel-width').trim(),
+        screenInsetToken: frameStyles.getPropertyValue('--demo-device-screen-inset').trim(),
+        islandScreenTopToken: frameStyles.getPropertyValue('--demo-dynamic-island-screen-top').trim(),
+        visibleInsetLeft: screen ? screen.left - frame.left : null,
+        visibleInsetTop: screen ? screen.top - frame.top : null,
         safeAreaTop: frameStyles.getPropertyValue('--device-safe-top').trim(),
         safeAreaBottom: frameStyles.getPropertyValue('--device-safe-bottom').trim(),
         transform: frameStyles.transform,
         islandTop: island ? island.top - frame.top : null,
+        islandTopFromScreen: island && screen ? island.top - screen.top : null,
         islandCenterOffset: island ? Math.abs(island.left + island.width / 2 - (frame.left + frame.width / 2)) : null,
         islandBackground: islandStyles?.backgroundColor ?? '',
         islandCssTop: Number.parseFloat(islandStyles?.top ?? '0'),
@@ -134,16 +140,24 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
     expect(frame.height).toBeGreaterThanOrEqual(780);
     expect(frame.radius).toBe('53px');
     expect(frame.borderColor).toBe('rgb(10, 12, 11)');
+    expect(frame.bezelWidth).toBe('3px');
+    expect(frame.screenInsetToken).toBe('7px');
+    expect(frame.islandScreenTopToken).toBe('11px');
+    expect(frame.visibleInsetLeft).not.toBeNull();
+    expect(frame.visibleInsetTop).not.toBeNull();
+    expect(frame.visibleInsetLeft!).toBeLessThanOrEqual(10);
+    expect(frame.visibleInsetTop!).toBeLessThanOrEqual(10);
     expect(frame.safeAreaTop).toBe('59px');
     expect(frame.safeAreaBottom).toBe('34px');
     expect(frame.transform).not.toBe('none');
     expect(frame.islandTop).not.toBeNull();
-    expect(frame.islandTop!).toBeGreaterThanOrEqual(13);
-    expect(frame.islandTop!).toBeLessThanOrEqual(16);
+    expect(frame.islandTopFromScreen).not.toBeNull();
+    expect(frame.islandTopFromScreen!).toBeGreaterThanOrEqual(8);
+    expect(frame.islandTopFromScreen!).toBeLessThanOrEqual(11);
     expect(frame.islandCenterOffset).not.toBeNull();
     expect(frame.islandCenterOffset!).toBeLessThanOrEqual(1);
     expect(frame.islandBackground).toBe('rgb(0, 0, 0)');
-    expect(frame.islandCssTop).toBeCloseTo(11, 1);
+    expect(frame.islandCssTop).toBeCloseTo(18, 1);
     expect(frame.islandCssWidth).toBeCloseTo(125.67, 1);
     expect(frame.islandCssHeight).toBeCloseTo(36.67, 1);
     expect(frame.islandCssRadius).toBeCloseTo(18.33, 1);

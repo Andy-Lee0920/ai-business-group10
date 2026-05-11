@@ -6,7 +6,10 @@
   --fevio-material-ultra-thick-blur: 60px;
   --fevio-glass-edge: rgba(255, 255, 255, 0.42);
   --fevio-glass-shadow: 0 4px 16px rgba(49, 45, 42, 0.07), 0 12px 40px rgba(49, 45, 42, 0.1);
-  --demo-device-scale: 0.84;
+  --demo-device-scale: 0.85;
+  --demo-device-bezel-width: 3px;
+  --demo-device-screen-inset: 7px;
+  --demo-dynamic-island-screen-top: 11px;
   width: min(1280px, 100vw);
   min-height: 100dvh;
   padding: 10px clamp(10px, 2.5vw, 28px) 18px;
@@ -157,15 +160,15 @@
   height: 956px;
   min-width: 0;
   min-height: 0;
-  padding: 11px;
-  border: 6px solid #0a0c0b;
+  padding: var(--demo-device-screen-inset);
+  border: var(--demo-device-bezel-width) solid #0a0c0b;
   border-radius: 53px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.26), transparent 19%),
     linear-gradient(180deg, #171a18 0%, #090b0a 58%, #030403 100%);
   box-shadow:
-    0 28px 80px rgba(71, 63, 55, 0.22),
-    0 48px 110px rgba(119, 106, 91, 0.16),
+    0 22px 70px rgba(71, 63, 55, 0.2),
+    0 42px 96px rgba(119, 106, 91, 0.13),
     inset 0 0 0 1px rgba(255, 255, 255, 0.18);
   transform: translateZ(0);
   transform-origin: top center;
@@ -174,7 +177,7 @@
 
 .dynamicIsland {
   position: absolute;
-  top: 11px;
+  top: calc(var(--demo-device-screen-inset) + var(--demo-dynamic-island-screen-top));
   left: 50%;
   z-index: 8;
   width: 125.67px;
@@ -202,7 +205,7 @@
 .deviceButton {
   position: absolute;
   z-index: 1;
-  width: 4px;
+  width: 3px;
   border-radius: 999px;
   background: linear-gradient(180deg, #1b1f1d, #050706);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
@@ -210,25 +213,25 @@
 
 .deviceButtonLeftTop {
   top: 128px;
-  left: -8px;
+  left: -6px;
   height: 52px;
 }
 
 .deviceButtonLeftBottom {
   top: 196px;
-  left: -8px;
+  left: -6px;
   height: 70px;
 }
 
 .deviceButtonRightTop {
   top: 150px;
-  right: -8px;
+  right: -6px;
   height: 76px;
 }
 
 .deviceButtonRightBottom {
   top: 292px;
-  right: -8px;
+  right: -6px;
   height: 42px;
 }
 
@@ -273,12 +276,12 @@
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  border: 1px solid rgba(32, 35, 31, 0.1);
-  border-radius: 47px;
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: 48px;
   background:
-    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 30%),
-    radial-gradient(circle at 92% 3%, rgba(224, 122, 104, 0.1), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 246, 242, 0.78));
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 30%),
+    radial-gradient(circle at 92% 3%, rgba(224, 122, 104, 0.07), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 250, 251, 0.94));
   box-shadow:
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.44),
     0 12px 40px rgba(49, 45, 42, 0.1);
