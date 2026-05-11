@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-test('presentation home renders five demo cards', async ({ page }) => {
+test('presentation home renders confirmed demo cards', async ({ page }) => {
   await page.goto('/home');
 
   const cards = page.getByTestId('home-action-card');
-  await expect(cards).toHaveCount(5);
+  await expect(cards).toHaveCount(4);
   await expect(cards.first()).toContainText(/고날에프|오비트렐/);
   await expect(page.getByText('발표 데모')).toBeVisible();
 });

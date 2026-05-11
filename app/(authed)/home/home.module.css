@@ -22,3 +22,22 @@
   font-weight: 900;
   margin: 0 0 8px;
 }
+
+:global(.adaptive-home-list) {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+:global(.adaptive-home-card) {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: var(--fevio-radius-card);
+  padding: 18px;
+}
+
+:global(.adaptive-home-urgency) {
+  color: #8C463A;
+  font-weight: 900;
+  margin: 0 0 8px;
+}
