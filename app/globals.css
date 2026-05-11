@@ -28,7 +28,10 @@ body {
     radial-gradient(circle at 50% 0%, rgba(185, 174, 214, 0.2), transparent 34rem),
     linear-gradient(180deg, #4A6B49 0%, var(--fevio-sage-dark) 100%);
   color: var(--fevio-ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -46,20 +49,21 @@ select {
 body {
   display: flex;
   justify-content: center;
+  width: 100%;
   min-height: 100dvh;
 }
 
 .app-shell {
-  width: min(100vw, var(--fevio-phone-frame-max));
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--fevio-cream);
-  padding: max(24px, env(safe-area-inset-top, 0px)) 18px max(32px, env(safe-area-inset-bottom, 0px));
+  padding: max(18px, env(safe-area-inset-top, 0px)) 14px max(24px, env(safe-area-inset-bottom, 0px));
 }
 
 .authed-content {
-  width: min(100vw, var(--fevio-phone-frame-max));
+  width: 100%;
   max-width: 100%;
   padding-bottom: calc(var(--fevio-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
@@ -70,7 +74,7 @@ body {
   left: 50%;
   z-index: 20;
   display: flex;
-  width: min(100vw, var(--fevio-phone-frame-max));
+  width: 100%;
   max-width: 100%;
   height: calc(var(--fevio-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -84,16 +88,20 @@ body {
 
 @media (min-width: 768px) {
   .app-shell {
-    margin-block: 28px;
+    width: min(100vw, var(--fevio-phone-frame-max));
+    max-width: var(--fevio-phone-frame-max);
+    margin: 28px auto;
     min-height: min(844px, calc(100dvh - 56px));
     border: 1px solid rgba(246, 244, 241, 0.35);
-    border-radius: 44px;
+    border-radius: 36px;
     box-shadow:
-      0 28px 90px rgba(12, 24, 13, 0.34),
-      0 0 0 10px rgba(255, 255, 255, 0.06);
+      0 24px 72px rgba(12, 24, 13, 0.28),
+      0 0 0 3px rgba(255, 255, 255, 0.05);
   }
 
   .bottom-nav {
+    width: min(100vw, var(--fevio-phone-frame-max));
+    max-width: var(--fevio-phone-frame-max);
     bottom: 28px;
     overflow: hidden;
     border: 1px solid rgba(32, 35, 31, 0.08);

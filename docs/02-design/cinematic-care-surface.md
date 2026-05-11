@@ -17,7 +17,7 @@ Fevio should feel like a calm care surface, not a boxed dashboard. Visual depth 
 
 ## Current bridge
 
-- `/demo` uses data-driven patient/partner panels and now includes an explicit input-to-adaptation card for each treatment situation.
+- `/demo` uses data-driven 내 화면/파트너 panels and now includes an explicit input-to-adaptation card for each treatment situation.
 - `AdaptiveHomeRuntime` injection day uses a stronger care summary surface based on confirmed cards and keeps the utility/action cards visible below it.
 
 ## Non-goals

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CtaButton, Notice, SelectionChip } from '../../src/components/ui';
+import styles from './onboarding.module.css';
 
 type TreatmentContext = 'ivf_cycle' | 'transfer_wait' | 'early_check' | 'unsure';
 type RoleContext = 'primary_solo' | 'primary_with_partner' | 'shared_later';
@@ -73,15 +74,16 @@ export function OnboardingClient() {
   }
 
   return (
-    <div className="capture-form" aria-label="처음 설정">
-      <section className="split-item" aria-labelledby="treatment-context-title">
-        <h2 id="treatment-context-title">어디쯤에 있으세요?</h2>
-        <div className="chip-grid" role="group" aria-label="치료 상황 선택">
+    <div className={styles.onboardingFlow} aria-label="처음 설정">
+      <section className={styles.choiceSection} aria-labelledby="treatment-context-title">
+        <h2 className={styles.sectionTitle} id="treatment-context-title">어디쯤에 있으세요?</h2>
+        <div className={styles.choiceGrid} role="group" aria-label="치료 상황 선택">
           {TREATMENT_OPTIONS.map((option) => (
             <SelectionChip
               key={option.value}
               onClick={() => setTreatmentContext(option.value)}
               selected={treatmentContext === option.value}
+              className={styles.choiceChip}
               tone="sage"
             >
               <span>{option.label}</span>
@@ -91,14 +93,15 @@ export function OnboardingClient() {
         </div>
       </section>
 
-      <section className="split-item" aria-labelledby="role-context-title">
-        <h2 id="role-context-title">기록 방식은 어떻게 시작할까요?</h2>
-        <div className="chip-grid" role="group" aria-label="기록 방식 선택">
+      <section className={styles.choiceSection} aria-labelledby="role-context-title">
+        <h2 className={styles.sectionTitle} id="role-context-title">기록 방식은 어떻게 시작할까요?</h2>
+        <div className={styles.choiceGrid} role="group" aria-label="기록 방식 선택">
           {ROLE_OPTIONS.map((option) => (
             <SelectionChip
               key={option.value}
               onClick={() => setRoleContext(option.value)}
               selected={roleContext === option.value}
+              className={styles.choiceChip}
               tone="lavender"
             >
               {option.label}
@@ -107,14 +110,15 @@ export function OnboardingClient() {
         </div>
       </section>
 
-      <section className="split-item" aria-labelledby="first-item-title">
-        <h2 id="first-item-title">첫 실행 항목 하나만 적어볼까요?</h2>
-        <div className="chip-grid chip-grid--compact" role="group" aria-label="첫 항목 종류 선택">
+      <section className={styles.choiceSection} aria-labelledby="first-item-title">
+        <h2 className={styles.sectionTitle} id="first-item-title">첫 실행 항목 하나만 적어볼까요?</h2>
+        <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="첫 항목 종류 선택">
           {FIRST_ITEM_OPTIONS.map((option) => (
             <SelectionChip
               key={option.value}
               onClick={() => setFirstItemKind(option.value)}
               selected={firstItemKind === option.value}
+              className={styles.choiceChip}
               tone={option.value === 'injection' ? 'coral' : 'sage'}
             >
               {option.label}
@@ -125,6 +129,7 @@ export function OnboardingClient() {
           첫 실행 항목
         </label>
         <textarea
+          className={styles.textArea}
           id="first-onboarding-item"
           onChange={(event) => setFirstItemText(event.target.value)}
           placeholder="예: 오늘 밤 9시 주사 확인 또는 내일 오전 병원 방문"
@@ -134,16 +139,16 @@ export function OnboardingClient() {
         <small className="helper-row">약 이름이나 용량은 Fevio가 판단하지 않아요. 사용자가 적은 문장 그대로 확인 카드가 됩니다.</small>
       </section>
 
-      <section className="split-item" aria-labelledby="partner-invite-title">
-        <h2 id="partner-invite-title">파트너 초대</h2>
-        <p className="lead">공유 링크는 나중에 만들어도 돼요. 지금은 홈을 먼저 만들 수 있어요.</p>
-        <SelectionChip onClick={() => setPartnerInviteSkipped(true)} selected={partnerInviteSkipped} tone="lavender">
+      <section className={styles.choiceSection} aria-labelledby="partner-invite-title">
+        <h2 className={styles.sectionTitle} id="partner-invite-title">파트너 초대</h2>
+        <p className={styles.partnerCopy}>공유 링크는 나중에 만들어도 돼요. 지금은 홈을 먼저 만들 수 있어요.</p>
+        <SelectionChip className={styles.choiceChip} onClick={() => setPartnerInviteSkipped(true)} selected={partnerInviteSkipped} tone="lavender">
           지금은 건너뛰기
         </SelectionChip>
       </section>
 
       {error ? <Notice tone="coral">{error}</Notice> : null}
-      <CtaButton disabled={submitting} onClick={completeOnboarding} type="button">
+      <CtaButton className={styles.primaryAction} disabled={submitting} onClick={completeOnboarding} type="button">
         홈 만들기
       </CtaButton>
     </div>

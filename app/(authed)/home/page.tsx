@@ -1,10 +1,10 @@
 import { cookies, headers } from 'next/headers';
-import Link from 'next/link';
 import { Badge, Card } from '../../../src/components/ui';
 import { isPresentationHost, isPresentationMode } from '../../../src/config';
 import { computeHomeContext, type HomeActionCard } from '../../../src/domain/home-composition';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
+import { HomeUtilityLauncher } from '../../../src/features/adaptive-home/home-utility-launcher';
 import { getPresentationScenarioCards, normalizePresentationCare } from '../../../src/features/adaptive-home/presentation-scenarios';
 import styles from './home.module.css';
 import type { CareActionCard, DisplaySafetyLevel } from '../../../src/types/care-cards.types';
@@ -55,38 +55,7 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
             </article>
           ))}
         </div>
-        <section className={styles.utilityLauncher} aria-labelledby="utility-launcher-title">
-          <div className={styles.utilityHeader}>
-            <p className="eyebrow">Low-energy input</p>
-            <h2 id="utility-launcher-title">바로 정리하기</h2>
-            <p>
-              처음부터 길게 쓰지 않아도 괜찮아요. 지금 필요한 하나만 넣으면 오늘 화면과 공유 상태가
-              같이 정리됩니다.
-            </p>
-          </div>
-          <div className={styles.utilityGrid}>
-            <Link className={styles.utilityLink} href="/schedule">
-              <span>01</span>
-              <strong>일정 등록·변경</strong>
-              <small>방문·검사·취소를 오늘 실행 카드로 연결</small>
-            </Link>
-            <Link className={styles.utilityLink} href="/medication">
-              <span>02</span>
-              <strong>약·주사 추가</strong>
-              <small>이름·용량·시간을 직접 확인하고 완료 체크</small>
-            </Link>
-            <Link className={styles.utilityLink} href="/capture">
-              <span>03</span>
-              <strong>병원 메모 정리</strong>
-              <small>들은 내용을 확정 전 카드로 나누기</small>
-            </Link>
-          </div>
-          <div className={styles.sharedProjection} aria-label="파트너 공유 상태">
-            <span>공유 상태</span>
-            <strong>내가 확정한 카드만 파트너 화면에 안전하게 보입니다.</strong>
-            <p>아직 파트너가 직접 바꾸지는 않습니다. v1.0은 한쪽에서 정리한 내용을 놓치지 않게 보여주는 단계입니다.</p>
-          </div>
-        </section>
+        <HomeUtilityLauncher />
       </Card>
     </main>
   );

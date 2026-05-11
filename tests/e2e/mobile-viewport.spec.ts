@@ -26,6 +26,27 @@ test('mobile viewport keeps shell readable without horizontal overflow', async (
   const viewportWidth = await page.evaluate(() => window.innerWidth);
 
   expect(shellBox).not.toBeNull();
-  expect(shellBox!.width).toBeLessThanOrEqual(390);
+  expect(shellBox!.width).toBeLessThanOrEqual(viewportWidth);
   expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);
+});
+
+test('onboarding uses real mobile width without an artificial phone bezel', async ({ page }) => {
+  await page.context().addCookies([{ name: 'fevio_privacy_accepted', value: '1', domain: '127.0.0.1', path: '/' }]);
+  await page.goto('/onboarding');
+
+  const metrics = await page.evaluate(() => {
+    const shell = document.querySelector('main.app-shell');
+    const title = document.querySelector('h1');
+    const shellBox = shell?.getBoundingClientRect();
+    return {
+      shellWidth: shellBox?.width ?? 0,
+      viewportWidth: window.innerWidth,
+      h1FontSize: Number.parseFloat(getComputedStyle(title!).fontSize),
+      scrollWidth: document.documentElement.scrollWidth,
+    };
+  });
+
+  expect(metrics.shellWidth).toBeGreaterThanOrEqual(metrics.viewportWidth - 1);
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.viewportWidth);
+  expect(metrics.h1FontSize).toBeLessThanOrEqual(36);
 });
