@@ -65,6 +65,9 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByText('문제는 부주의가 아니라 전달 구조입니다')).toBeVisible();
   await expect(page.getByText('병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.')).toBeVisible();
   await expect(page.getByText('선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.')).toBeVisible();
+  await expect(patient).toContainText('방금 붙여넣은 메모');
+  await expect(patient).toContainText('주사 준비·확인자 역할을 먼저 올렸어요.');
+  await expect(partner).toContainText('내가 다시 설명하지 않아도 되는 내용');
   await expect(patient).toContainText('주사 준비 체크');
   await expect(patient).toContainText('일정 변경');
   await expect(patient).toContainText('중요 알림');

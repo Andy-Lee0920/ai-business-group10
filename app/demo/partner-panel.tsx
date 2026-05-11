@@ -34,6 +34,12 @@ export function PartnerPanel({
         <p>{partner.status}</p>
       </Card>
 
+      <Card as="div" className={styles.partnerInputMoment}>
+        <span className={styles.microLabel}>내가 다시 설명하지 않아도 되는 내용</span>
+        <strong>{scenario.patient.inputMoment.answer}</strong>
+        <p>{scenario.patient.inputMoment.adaptation}</p>
+      </Card>
+
       <Card as="div" className={styles.sharedSyncCard}>
         <div>
           <span className={styles.microLabel}>공유 상태</span>

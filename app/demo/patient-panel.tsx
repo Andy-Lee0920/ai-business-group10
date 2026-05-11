@@ -46,6 +46,12 @@ export function PatientPanel({
         <CtaButton className={styles.mainAction} type="button">{patient.primaryAction}</CtaButton>
       </Card>
 
+      <Card as="div" className={styles.inputMomentCard}>
+        <span className={styles.microLabel}>{patient.inputMoment.prompt}</span>
+        <strong>{patient.inputMoment.answer}</strong>
+        <p>{patient.inputMoment.adaptation}</p>
+      </Card>
+
       <Card as="div" className={styles.sharedSyncCard}>
         <div>
           <span className={styles.microLabel}>공유 상태</span>

@@ -224,9 +224,11 @@
 
 .stageCard,
 .primaryCard,
+.inputMomentCard,
 .utilityCard,
 .timelineCard,
 .partnerHero,
+.partnerInputMoment,
 .avoidCard,
 .contextStrip {
   border: 1px solid rgba(32, 35, 31, 0.08);
@@ -284,6 +286,31 @@
   display: grid;
   gap: 10px;
   padding: 18px;
+}
+
+.inputMomentCard,
+.partnerInputMoment {
+  display: grid;
+  gap: 7px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, white), rgba(255, 255, 255, 0.86));
+}
+
+.inputMomentCard strong,
+.partnerInputMoment strong {
+  font-size: 16px;
+  letter-spacing: -0.03em;
+  line-height: 1.35;
+}
+
+.inputMomentCard p,
+.partnerInputMoment p {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .statePill {

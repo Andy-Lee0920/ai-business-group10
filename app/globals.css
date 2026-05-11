@@ -1,5 +1,6 @@
 :root {
   --fevio-sage: #6F8F6E;
+  --fevio-sage-dark: #3D5C3C;
   --fevio-lavender: #B9AED6;
   --fevio-cream: #F6F4F1;
   --fevio-ink: #20231F;
@@ -23,7 +24,9 @@ body {
   margin: 0;
   min-height: 100%;
   overflow-x: hidden;
-  background: var(--fevio-cream);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(185, 174, 214, 0.2), transparent 34rem),
+    linear-gradient(180deg, #4A6B49 0%, var(--fevio-sage-dark) 100%);
   color: var(--fevio-ink);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
@@ -51,6 +54,7 @@ body {
   max-width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
+  background: var(--fevio-cream);
   padding: max(24px, env(safe-area-inset-top, 0px)) 18px max(32px, env(safe-area-inset-bottom, 0px));
 }
 
@@ -76,4 +80,24 @@ body {
   overflow-x: hidden;
   border-top: 1px solid rgba(32, 35, 31, 0.08);
   background: var(--fevio-card);
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    margin-block: 28px;
+    min-height: min(844px, calc(100dvh - 56px));
+    border: 1px solid rgba(246, 244, 241, 0.35);
+    border-radius: 44px;
+    box-shadow:
+      0 28px 90px rgba(12, 24, 13, 0.34),
+      0 0 0 10px rgba(255, 255, 255, 0.06);
+  }
+
+  .bottom-nav {
+    bottom: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(32, 35, 31, 0.08);
+    border-radius: 0 0 34px 34px;
+    box-shadow: 0 18px 44px rgba(12, 24, 13, 0.18);
+  }
 }

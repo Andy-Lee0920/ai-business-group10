@@ -15,6 +15,17 @@ export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
         </h1>
         <p className="lead">{context.primaryMessage}</p>
 
+        <section className={styles.careSurface} aria-label="오늘 주사 케어 요약">
+          <div>
+            <span className={styles.blockLabel}>오늘 우선순위</span>
+            <strong>확정된 주사 카드 먼저</strong>
+            <p>확정된 카드 {context.cards.length}개만 홈과 파트너 공유에 사용해요.</p>
+          </div>
+          <div className={styles.careOrb} aria-hidden="true">
+            <span>✓</span>
+          </div>
+        </section>
+
         <Notice tone="coral" className={styles.notificationBlock} aria-label="알림 문구 예시">
           <span className={styles.blockLabel}>알림은 이렇게 전해져요</span>
           <p>30분 뒤 주사 시간이에요. 준비물을 함께 확인해요.</p>

@@ -12,7 +12,8 @@
     "start": "next start",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:real-medication-input": "node scripts/verify-real-medication-e2e.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.3",

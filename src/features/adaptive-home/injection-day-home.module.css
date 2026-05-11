@@ -25,6 +25,57 @@
   margin-top: 22px;
 }
 
+.careSurface {
+  align-items: center;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(224, 122, 104, 0.16), transparent 48%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(246, 244, 241, 0.78));
+  border: 1px solid rgba(224, 122, 104, 0.18);
+  border-radius: 28px;
+  box-shadow: 0 18px 48px rgba(50, 61, 46, 0.1);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr auto;
+  margin-top: 24px;
+  padding: 20px;
+}
+
+.careSurface strong {
+  display: block;
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
+  line-height: 1.25;
+  margin-top: 8px;
+}
+
+.careSurface p {
+  color: var(--fevio-muted);
+  line-height: 1.55;
+  margin: 8px 0 0;
+}
+
+.careOrb {
+  background:
+    conic-gradient(from -60deg, var(--fevio-coral), var(--fevio-lavender), var(--fevio-sage), var(--fevio-coral));
+  border-radius: 50%;
+  display: grid;
+  height: 74px;
+  place-items: center;
+  width: 74px;
+}
+
+.careOrb span {
+  background: #ffffff;
+  border-radius: 50%;
+  color: #8c463a;
+  display: grid;
+  font-size: 1.45rem;
+  font-weight: 900;
+  height: 54px;
+  place-items: center;
+  width: 54px;
+}
+
 .notificationBlock p,
 .partnerBlock p {
   margin: 0;
@@ -109,4 +160,21 @@
   line-height: 1.6;
   margin: 0;
   padding-left: 20px;
+}
+
+@media (max-width: 360px) {
+  .careSurface {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  .careOrb {
+    height: 60px;
+    width: 60px;
+  }
+
+  .careOrb span {
+    height: 44px;
+    width: 44px;
+  }
 }
