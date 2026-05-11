@@ -90,3 +90,37 @@
   font-weight: 750;
   line-height: 1.35;
 }
+
+.sharedProjection {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(185, 174, 214, 0.32);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(185, 174, 214, 0.22), transparent 35%),
+    rgba(255, 255, 255, 0.82);
+}
+
+.sharedProjection span {
+  color: var(--fevio-muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sharedProjection strong {
+  color: var(--fevio-ink);
+  font-size: 1rem;
+  letter-spacing: -0.035em;
+  line-height: 1.35;
+}
+
+.sharedProjection p {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.5;
+}

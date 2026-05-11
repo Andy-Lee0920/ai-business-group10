@@ -26,6 +26,17 @@ export function HomeUtilityLauncher() {
           <small>들은 내용을 확정 전 카드로 나누기</small>
         </Link>
       </div>
+      <SharedCareProjectionCard />
     </section>
+  );
+}
+
+export function SharedCareProjectionCard() {
+  return (
+    <div className={styles.sharedProjection} aria-label="파트너 공유 상태">
+      <span>Shared care projection</span>
+      <strong>내가 확정한 카드만 파트너 화면에 안전하게 보입니다.</strong>
+      <p>원문 메모와 비공개 필드는 보내지 않고, 현재·완료 상태만 읽기 전용으로 이어집니다.</p>
+    </div>
   );
 }

@@ -18,6 +18,7 @@ test('presentation home defaults to the injection-day partner action story', asy
   await expect(page.getByRole('button', { name: '주사 준비 체크 시작' })).toBeVisible();
   await expect(page.getByText('오늘 파트너의 역할')).toBeVisible();
   await expect(page.getByText('오늘은 확인자')).toBeVisible();
+  await expect(page.getByText('내가 확정한 카드만 파트너 화면에 안전하게 보입니다.')).toBeVisible();
 });
 
 test('presentation home switches between three treatment situations', async ({ page }) => {

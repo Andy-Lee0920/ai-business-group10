@@ -76,6 +76,19 @@ describe('partner view serialization contract', () => {
     });
   });
 
+  it('projects completed cards as completed without adding private fields', () => {
+    const [item] = serializePartnerViewCards([card({ status: 'completed', revision: 3 })]);
+
+    expect(item).toEqual({
+      title: '고날에프 주사',
+      scheduled_at: '2026-05-10T12:30:00.000Z',
+      card_type: 'injection',
+      description: '오늘 21시 고날에프 1회',
+      display_state: 'completed',
+    });
+    expect(Object.keys(item).sort()).toEqual([...PARTNER_VIEW_ITEM_FIELDS].sort());
+  });
+
   it('hashes partner tokens with SHA-256 without returning the raw token', () => {
     expect(hashPartnerShareToken('raw-token')).toBe('34d328009b123fbbb0dc93f18b3e6de1ecf7b1a5783c33dff7ffe1926f09e943');
     expect(hashPartnerShareToken('raw-token')).not.toContain('raw-token');
