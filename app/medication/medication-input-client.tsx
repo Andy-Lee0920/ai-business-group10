@@ -8,6 +8,7 @@ type RepeatPattern = 'once' | 'daily' | 'clinic_instruction';
 type CreatedCard = {
   cardId: string;
   title: string;
+  type: MedicationType;
   name: string;
   dose: string;
   time: string;
@@ -59,7 +60,8 @@ export function MedicationInputClient() {
 
     setCard({
       cardId: payload.cardId,
-      title: payload.title ?? [name.trim(), dose.trim(), time].filter(Boolean).join(' · '),
+      title: payload.title ?? [methodLabel(type), name.trim(), dose.trim(), time].filter(Boolean).join(' · '),
+      type,
       name: name.trim(),
       dose: dose.trim(),
       time,
@@ -135,7 +137,7 @@ export function MedicationInputClient() {
         <Card as="article" data-testid="medication-card" tone={card.status === 'completed' ? 'lavender' : 'sage'}>
           <StatusBadge state={card.status === 'completed' ? 'done' : 'shared'}>{card.status === 'completed' ? '완료' : '확정'}</StatusBadge>
           <h2>{card.name}</h2>
-          <p className="lead">{card.dose} · {card.time} · {repeatLabel(card.repeat)}</p>
+          <p className="lead">{methodLabel(card.type)} · {card.dose} · {card.time} · {repeatLabel(card.repeat)}</p>
           {card.status === 'completed' ? null : (
             <CtaButton onClick={completeCard} type="button" variant="secondary">
               완료로 표시
@@ -151,4 +153,11 @@ function repeatLabel(value: RepeatPattern) {
   if (value === 'daily') return '매일';
   if (value === 'clinic_instruction') return '병원 안내대로';
   return '오늘만';
+}
+
+function methodLabel(value: MedicationType) {
+  if (value === 'injection') return '주사';
+  if (value === 'vaginal') return '질정';
+  if (value === 'medication') return '약';
+  return '기타';
 }
