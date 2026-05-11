@@ -4,7 +4,7 @@ test('presentation home defaults to the injection-day partner action story', asy
   await page.goto('/home');
 
   const cards = page.getByTestId('home-action-card');
-  await expect(cards).toHaveCount(3);
+  await expect(cards).toHaveCount(4);
   await expect(cards.first()).toContainText(/고날에프|오비트렐/);
   await expect(page.getByRole('button', { name: '주사 준비 체크 시작' })).toBeVisible();
   await expect(page.getByText('오늘 파트너의 역할')).toBeVisible();

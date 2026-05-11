@@ -39,6 +39,7 @@ function injectionDaySeeds(now: Date): CareActionCard[] {
     makeCard('injection-gonal', 'injection', '오늘 21시 고날에프 1회', minutesFrom(now, 20), '주사 30분 전 손 씻기와 펜 확인', 'confirmed'),
     makeCard('injection-ovitrelle', 'injection', '오늘 22시 오비트렐 준비', minutesFrom(now, 80), '냉장 보관한 주사를 꺼내고 투여 시간 확인', 'confirmed'),
     makeCard('injection-partner', 'partner_support', '파트너가 주사 준비물 함께 확인', minutesFrom(now, 10), '알코올솜, 폐기통, 주사 공간을 함께 확인해요', 'confirmed'),
+    makeCard('injection-medication', 'medication', '프로게스테론 아침·저녁 복용', minutesFrom(now, 180), '주사 일정 뒤 복용 알림도 함께 정리해요', 'confirmed'),
   ];
 }
 
