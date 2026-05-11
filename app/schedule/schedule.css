@@ -1,0 +1,103 @@
+.schedule-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: linear-gradient(180deg, #fbfaf7 0%, #eef6ef 100%);
+}
+
+.schedule-card {
+  margin: 0 auto;
+  max-width: 720px;
+}
+
+.schedule-eyebrow {
+  margin: 0 0 8px;
+  color: #587463;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.schedule-card h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1.1;
+}
+
+.schedule-lede {
+  color: #4f5d55;
+  line-height: 1.7;
+}
+
+.schedule-form {
+  display: grid;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.schedule-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.schedule-fieldset legend,
+.schedule-date-input span,
+.schedule-memo-input span {
+  display: block;
+  margin-bottom: 10px;
+  color: #28342d;
+  font-weight: 700;
+}
+
+.schedule-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.schedule-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.schedule-date-input,
+.schedule-memo-input {
+  display: grid;
+  gap: 8px;
+}
+
+.schedule-date-input input,
+.schedule-memo-input textarea {
+  border: 1px solid rgba(56, 72, 62, 0.18);
+  border-radius: 18px;
+  color: #223028;
+  font: inherit;
+  min-height: 48px;
+  padding: 12px 14px;
+}
+
+.schedule-memo-input textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.schedule-date-input small,
+.schedule-memo-input small {
+  color: #66756c;
+}
+
+.schedule-summary {
+  font-weight: 700;
+}
+
+.schedule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.schedule-actions button {
+  flex: 1 1 180px;
+}
