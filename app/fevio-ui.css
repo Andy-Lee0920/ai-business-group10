@@ -160,6 +160,12 @@ h2 {
   transform: translateY(-1px);
 }
 
+.fevio-selection-chip:focus-visible,
+.fevio-confirm-chip:focus-visible {
+  outline: 3px solid rgba(111, 143, 110, 0.28);
+  outline-offset: 3px;
+}
+
 .fevio-selection-chip--selected,
 .fevio-confirm-chip--selected {
   box-shadow: 0 10px 24px rgba(50, 61, 46, 0.12);
