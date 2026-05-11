@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'vitest';
+import {
+  buildReminderEmail,
+  getReminderWindow,
+  shouldDispatchReminder,
+  type ReminderCandidate,
+} from '../../src/domain/reminder-dispatch';
+
+const NOW = new Date('2026-05-11T11:30:00.000Z');
+
+function candidate(overrides: Partial<ReminderCandidate> = {}): ReminderCandidate {
+  return {
+    cardId: 'card-1',
+    title: '오늘 21시 고날에프 1회',
+    scheduledAt: '2026-05-11T12:00:00.000Z',
+    recipientEmail: 'user@example.com',
+    ...overrides,
+  };
+}
+
+describe('reminder dispatch domain', () => {
+  it('selects confirmed injection reminders in the 30-minute email window', () => {
+    expect(shouldDispatchReminder(candidate(), NOW)).toBe(true);
+    expect(shouldDispatchReminder(candidate({ scheduledAt: '2026-05-11T12:01:01.000Z' }), NOW)).toBe(false);
+    expect(shouldDispatchReminder(candidate({ scheduledAt: '2026-05-11T11:58:59.000Z' }), NOW)).toBe(false);
+  });
+
+  it('computes a narrow scheduler window so a 1-minute cron does not drift into duplicate sends', () => {
+    expect(getReminderWindow(NOW)).toEqual({
+      startsAt: '2026-05-11T11:59:00.000Z',
+      endsAt: '2026-05-11T12:01:00.000Z',
+    });
+  });
+
+  it('builds deterministic Korean email copy without medical advice or raw memo text', () => {
+    const email = buildReminderEmail({
+      candidate: candidate({ title: '오비트렐 · 250mcg · 22:00' }),
+      appUrl: 'https://project-oznp0.vercel.app',
+    });
+
+    expect(email.subject).toBe('[Fevio] 확인할 주사 시간이 가까워졌어요');
+    expect(email.text).toContain('오비트렐 · 250mcg · 22:00');
+    expect(email.text).toContain('2026. 5. 11. 오후 9:00');
+    expect(email.text).toContain('https://project-oznp0.vercel.app/home');
+    expect(email.text).not.toMatch(/투여하세요|복용하세요|판단|source_text|raw memo|원문/u);
+  });
+});

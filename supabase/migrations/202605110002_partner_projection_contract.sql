@@ -2,6 +2,8 @@
 -- Partner view remains read-only and token-hash based. This only widens the
 -- sanitized projection with safe sync markers; it does not add partner writeback.
 
+drop function if exists public.get_partner_action_view(text);
+
 create or replace function public.get_partner_action_view(p_token_hash text)
 returns table (
   id uuid,
