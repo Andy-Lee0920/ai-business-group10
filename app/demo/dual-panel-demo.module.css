@@ -1,10 +1,4 @@
 .demoShell {
-  --fevio-material-ultra-thin-blur: 20px;
-  --fevio-material-thin-blur: 30px;
-  --fevio-material-regular-blur: 40px;
-  --fevio-material-thick-blur: 50px;
-  --fevio-material-ultra-thick-blur: 60px;
-  --fevio-glass-edge: rgba(255, 255, 255, 0.42);
   --fevio-glass-shadow: 0 4px 16px rgba(49, 45, 42, 0.07), 0 12px 40px rgba(49, 45, 42, 0.1);
   --demo-device-scale: 0.85;
   --demo-device-bezel-width: 3px;
@@ -130,7 +124,7 @@
   place-items: center;
   padding: 6px 12px;
   border-radius: 99px;
-  background: #F3F4F6;
+  background: var(--fevio-soft-gray);
   color: #374151;
   font-size: 13px;
   font-weight: 900;
@@ -259,7 +253,7 @@
 
 .panelKicker,
 .microLabel {
-  color: #9CA3AF;
+  color: var(--fevio-text-tertiary);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -314,9 +308,9 @@
 .contextStrip,
 .sharedSyncCard {
   border: 1px solid rgba(229, 231, 235, 0.9);
-  border-radius: 16px;
-  background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: var(--fevio-radius-card-tight);
+  background: var(--fevio-card);
+  box-shadow: var(--fevio-shadow-soft);
   backdrop-filter: none;
 }
 
@@ -338,7 +332,7 @@
 .stageCard p,
 .partnerHero p {
   margin: 0;
-  color: #6B7280;
+  color: var(--fevio-text-secondary);
   font-size: 12px;
   font-weight: 700;
 }
@@ -377,7 +371,7 @@
   display: grid;
   gap: 7px;
   padding: 16px;
-  background: #FFFFFF;
+  background: var(--fevio-card);
 }
 
 .inputMomentCard strong,
@@ -391,7 +385,7 @@
 .liveMirrorCard p,
 .partnerInputMoment p {
   margin: 0;
-  color: #6B7280;
+  color: var(--fevio-text-secondary);
   font-size: 12px;
   font-weight: 650;
   line-height: 1.45;
@@ -399,7 +393,7 @@
 
 .liveMirrorCard {
   border-color: rgba(229, 231, 235, 0.9);
-  background: #FFFFFF;
+  background: var(--fevio-card);
   animation: syncFlash 620ms ease both;
 }
 
@@ -450,9 +444,9 @@
   min-height: 88px;
   padding: 16px;
   border: 1px solid rgba(229, 231, 235, 0.9);
-  border-radius: 16px;
-  background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: var(--fevio-radius-card-tight);
+  background: var(--fevio-card);
+  box-shadow: var(--fevio-shadow-soft);
 }
 
 .metricCard span,
@@ -514,7 +508,7 @@
 .actionRow,
 .toolButton {
   border: 1px solid rgba(32, 35, 31, 0.08);
-  background: #FFFFFF;
+  background: var(--fevio-card);
   cursor: pointer;
 }
 
@@ -703,7 +697,7 @@
 }
 
 .syncBridge span {
-  color: #9CA3AF;
+  color: var(--fevio-text-tertiary);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -717,7 +711,7 @@
 
 .syncBridge p {
   margin: 0;
-  color: #6B7280;
+  color: var(--fevio-text-secondary);
   font-size: 12px;
   font-weight: 650;
   line-height: 1.42;
@@ -850,9 +844,9 @@
   min-height: 58px;
   padding: 16px;
   border: 1px solid rgba(229, 231, 235, 0.9);
-  border-radius: 16px;
-  background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: var(--fevio-radius-card-tight);
+  background: var(--fevio-card);
+  box-shadow: var(--fevio-shadow-soft);
   cursor: pointer;
   text-align: left;
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;

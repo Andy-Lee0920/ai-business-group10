@@ -35,7 +35,7 @@
   margin-top: 0;
   padding: 16px 20px;
   border-radius: 12px;
-  background: #F0F9FF;
+  background: var(--fevio-sky);
   color: #374151;
 }
 
@@ -111,7 +111,7 @@
 
 .questionLead {
   margin: 0;
-  color: #6B7280;
+  color: var(--fevio-text-secondary);
   font-size: 14px;
   font-weight: 650;
   line-height: 1.5;
@@ -134,9 +134,9 @@
   gap: 4px;
   min-height: 72px;
   padding: 20px;
-  border: 1px solid #E5E7EB;
-  border-radius: 16px;
-  background: #FFFFFF;
+  border: 1px solid var(--fevio-border);
+  border-radius: var(--fevio-radius-card-tight);
+  background: var(--fevio-card);
   text-align: left;
 }
 
@@ -148,7 +148,7 @@
 }
 
 .choiceChip small {
-  color: #9CA3AF;
+  color: var(--fevio-text-tertiary);
   font-size: 13px;
   font-weight: 650;
   line-height: 1.4;
@@ -177,7 +177,7 @@
 
 .partnerCopy {
   margin: 0;
-  color: #6B7280;
+  color: var(--fevio-text-secondary);
   font-size: 14px;
   line-height: 1.55;
 }
