@@ -143,6 +143,16 @@ describe('/api/medication/complete', () => {
     expect(payload).toMatchObject({ cardId: 'card-1', status: 'completed' });
   });
 
+
+  it('completes a demo medication card without sending the non-UUID id to Supabase', async () => {
+    const response = await completeMedication(jsonRequest('/api/medication/complete', { cardId: 'demo-medication-123' }));
+    const payload = (await response.json()) as { cardId: string; status: string; persisted: boolean };
+
+    expect(response.status).toBe(200);
+    expect(mockedCreateSupabase).not.toHaveBeenCalled();
+    expect(payload).toMatchObject({ cardId: 'demo-medication-123', status: 'completed', persisted: false });
+  });
+
   it('returns success without a DB write for demo privacy cookie when Supabase public config is missing', async () => {
     mockedCreateSupabase.mockRejectedValue(new Error('Missing Supabase public config'));
 

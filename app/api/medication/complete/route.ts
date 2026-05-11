@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as CompleteBody;
   const cardId = typeof body.cardId === 'string' ? body.cardId.trim() : '';
   if (!cardId) return NextResponse.json({ error: 'Card id is required.' }, { status: 400 });
+  if (isDemoCardId(cardId) && hasDemoPrivacyCookie(request)) {
+    return NextResponse.json({ cardId, status: 'completed', persisted: false });
+  }
 
   try {
     const supabase = (await createCookieBackedSupabaseClient()) as unknown as MedicationSupabaseClient;
@@ -40,6 +43,10 @@ export async function POST(request: NextRequest) {
     }
     throw error;
   }
+}
+
+function isDemoCardId(cardId: string) {
+  return cardId.startsWith('demo-medication-');
 }
 
 function hasDemoPrivacyCookie(request: NextRequest) {
