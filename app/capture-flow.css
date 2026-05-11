@@ -69,3 +69,31 @@ textarea:focus-visible {
   flex-wrap: wrap;
   gap: 8px;
 }
+
+.chip-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.chip-grid--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.chip-grid .fevio-selection-chip {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.chip-grid--compact .fevio-selection-chip {
+  align-items: center;
+  text-align: center;
+}
+
+.fevio-selection-chip small {
+  color: var(--fevio-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
