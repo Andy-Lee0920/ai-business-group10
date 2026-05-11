@@ -53,19 +53,88 @@ test('presentation /partner/demo renders a sanitized partner view', async ({ pag
 
 
 test('presentation /demo behaves like utility panels, not text placeholders', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/demo');
 
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  const documentScrollHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  const stage = page.getByTestId('demo-preview-stage');
+  const frames = page.getByTestId('demo-device-frame');
+  const islands = page.getByTestId('demo-dynamic-island');
+  const sideButtons = page.getByTestId('demo-device-button');
   const patient = page.getByTestId('demo-patient-panel');
   const partner = page.getByTestId('demo-partner-panel');
+
+  await expect(stage).toBeVisible();
+  await expect(frames).toHaveCount(2);
+  await expect(islands).toHaveCount(2);
+  await expect(sideButtons).toHaveCount(8);
+  await expect(page.getByRole('region', { name: '발표 내러티브' })).toHaveCount(0);
+  await expect(page.getByText('Problem')).toHaveCount(0);
+  await expect(page.getByText('Input')).toHaveCount(0);
+  await expect(page.getByText('Shared care')).toHaveCount(0);
+  await expect(page.getByText('문제는 부주의가 아니라 전달 구조입니다')).toHaveCount(0);
+  await expect(page.getByText('병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.')).toHaveCount(0);
+  await expect(page.getByText('선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.')).toHaveCount(0);
+  expect(documentScrollHeight).toBeLessThanOrEqual(viewportHeight);
+
+  const stageStyles = await stage.evaluate((element) => {
+    const styles = getComputedStyle(element);
+    return {
+      backgroundColor: styles.backgroundColor,
+      backgroundImage: styles.backgroundImage,
+    };
+  });
+  expect(stageStyles.backgroundColor).toBe('rgb(5, 7, 6)');
+  expect(stageStyles.backgroundImage).not.toContain('74, 107, 73');
+
+  const frameMetrics = await frames.evaluateAll((elements) =>
+    elements.map((element) => {
+      const frame = element.getBoundingClientRect();
+      const island = element.querySelector('[data-testid="demo-dynamic-island"]')?.getBoundingClientRect();
+      const screen = element.querySelector('[data-testid$="-panel"]')?.getBoundingClientRect();
+      const islandStyles = island
+        ? getComputedStyle(element.querySelector('[data-testid="demo-dynamic-island"]') as HTMLElement)
+        : null;
+      return {
+        width: frame.width,
+        height: frame.height,
+        radius: getComputedStyle(element).borderRadius,
+        borderColor: getComputedStyle(element).borderColor,
+        islandTop: island ? island.top - frame.top : null,
+        islandCenterOffset: island ? Math.abs(island.left + island.width / 2 - (frame.left + frame.width / 2)) : null,
+        islandBackground: islandStyles?.backgroundColor ?? '',
+        islandWidth: island?.width ?? 0,
+        islandHeight: island?.height ?? 0,
+        islandOverlapsScreenTop: Boolean(island && screen && island.top < screen.top + 42),
+      };
+    }),
+  );
+
+  for (const frame of frameMetrics) {
+    expect(frame.width).toBeGreaterThanOrEqual(374);
+    expect(frame.width).toBeLessThanOrEqual(414);
+    expect(frame.height).toBeGreaterThanOrEqual(830);
+    expect(frame.radius).toBe('54px');
+    expect(frame.borderColor).toBe('rgb(5, 7, 6)');
+    expect(frame.islandTop).not.toBeNull();
+    expect(frame.islandTop!).toBeGreaterThanOrEqual(12);
+    expect(frame.islandTop!).toBeLessThanOrEqual(18);
+    expect(frame.islandCenterOffset).not.toBeNull();
+    expect(frame.islandCenterOffset!).toBeLessThanOrEqual(1);
+    expect(frame.islandBackground).toBe('rgb(0, 0, 0)');
+    expect(frame.islandWidth).toBeGreaterThanOrEqual(118);
+    expect(frame.islandWidth).toBeLessThanOrEqual(126);
+    expect(frame.islandHeight).toBeGreaterThanOrEqual(34);
+    expect(frame.islandHeight).toBeLessThanOrEqual(38);
+    expect(frame.islandOverlapsScreenTop).toBe(true);
+  }
 
   await expect(page.getByRole('heading', { name: '내 화면', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
   await expect(page.getByText('지금은 어떤 날에 가까우세요?')).toBeVisible();
   await expect(page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('오늘 화면을 이렇게 맞췄어요.')).toBeVisible();
-  await expect(page.getByText('문제는 부주의가 아니라 전달 구조입니다')).toBeVisible();
-  await expect(page.getByText('병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.')).toBeVisible();
-  await expect(page.getByText('선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.')).toBeVisible();
   await expect(page.getByText('Live Sync')).toBeVisible();
   await expect(patient).toContainText('방금 붙여넣은 메모');
   await expect(patient).toContainText('주사 준비·확인자 역할을 먼저 올렸어요.');

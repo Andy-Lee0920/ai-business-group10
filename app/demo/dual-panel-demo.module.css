@@ -1,7 +1,12 @@
 .demoShell {
   width: min(1280px, 100vw);
   min-height: 100dvh;
-  padding: 16px clamp(12px, 3vw, 32px) 36px;
+  padding: 10px clamp(10px, 2.5vw, 28px) 18px;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.2), transparent 28rem),
+    radial-gradient(circle at 50% 105%, rgba(185, 174, 214, 0.16), transparent 24rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24rem),
+    #050706;
 }
 
 .compactHeader {
@@ -9,27 +14,35 @@
   z-index: 5;
   display: grid;
   grid-template-columns: 1fr auto auto;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   max-width: 1040px;
-  margin: 0 auto 16px;
-  padding: 10px 12px;
-  border: 1px solid rgba(32, 35, 31, 0.08);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 16px 44px rgba(50, 61, 46, 0.1);
+  margin: 0 auto 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(18px);
 }
 
 .compactHeader h1 {
   margin: 0;
-  font-size: clamp(18px, 2vw, 24px);
+  font-size: clamp(17px, 1.5vw, 20px);
   letter-spacing: -0.04em;
+}
+
+.compactHeader :global(.eyebrow) {
+  margin: 0 0 2px;
+  font-size: 10px;
+  line-height: 1;
 }
 
 .careInput {
   display: grid;
-  gap: 5px;
+  grid-template-columns: auto auto auto;
+  gap: 4px 8px;
+  align-items: center;
 }
 
 .careInput p,
@@ -39,15 +52,17 @@
 
 .careInput p {
   color: var(--fevio-ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .careInput small {
   color: var(--fevio-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .compactController {
@@ -68,14 +83,14 @@
 }
 
 .compactController button {
-  min-width: 58px;
-  min-height: 34px;
+  min-width: 54px;
+  min-height: 30px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--fevio-muted);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -105,50 +120,6 @@
   font-weight: 900;
 }
 
-.storyRail {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  max-width: 1040px;
-  margin: 0 auto 16px;
-}
-
-.storyRail article {
-  display: grid;
-  gap: 6px;
-  min-height: 118px;
-  padding: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(32, 35, 31, 0.08);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(111, 143, 110, 0.13), transparent 36%),
-    rgba(255, 255, 255, 0.78);
-  box-shadow: 0 14px 38px rgba(50, 61, 46, 0.08);
-}
-
-.storyRail span {
-  color: var(--fevio-muted);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.storyRail strong {
-  font-size: clamp(16px, 1.55vw, 20px);
-  line-height: 1.12;
-  letter-spacing: -0.04em;
-}
-
-.storyRail p {
-  margin: 0;
-  color: var(--fevio-muted);
-  font-size: 12px;
-  font-weight: 750;
-  line-height: 1.45;
-}
-
 .dualPanel {
   display: grid;
   grid-template-columns: minmax(360px, 402px) minmax(96px, 132px) minmax(360px, 402px);
@@ -162,37 +133,87 @@
 
 .panel {
   position: relative;
-  display: grid;
-  gap: 10px;
+  display: block;
   min-width: 0;
-  padding: 18px 9px 10px;
-  border: 5px solid rgba(8, 11, 10, 0.94);
-  border-radius: 48px;
+  height: min(852px, calc(100dvh - 70px));
+  min-height: 832px;
+  padding: 10px;
+  border: 5px solid #050706;
+  border-radius: 54px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 18%),
-    #0b0f0d;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 18%),
+    linear-gradient(180deg, #141715, #050706);
   box-shadow:
-    0 26px 78px rgba(12, 24, 13, 0.32),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    0 30px 86px rgba(0, 0, 0, 0.52),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
-.panel::before {
+.dynamicIsland {
   position: absolute;
-  top: 11px;
+  top: 9px;
   left: 50%;
-  z-index: 3;
-  width: 116px;
-  height: 32px;
+  z-index: 8;
+  width: 122px;
+  height: 36px;
   border-radius: 999px;
-  background: #050706;
+  background: #000;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 10px 20px rgba(12, 24, 13, 0.26);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.38);
   content: "";
   transform: translateX(-50%);
 }
 
+.dynamicIsland::after {
+  position: absolute;
+  top: 11px;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(20, 24, 22, 0.86);
+  content: "";
+}
+
+.deviceButton {
+  position: absolute;
+  z-index: 1;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1b1f1d, #050706);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.deviceButtonLeftTop {
+  top: 128px;
+  left: -8px;
+  height: 52px;
+}
+
+.deviceButtonLeftBottom {
+  top: 196px;
+  left: -8px;
+  height: 70px;
+}
+
+.deviceButtonRightTop {
+  top: 150px;
+  right: -8px;
+  height: 76px;
+}
+
+.deviceButtonRightBottom {
+  top: 292px;
+  right: -8px;
+  height: 42px;
+}
+
 .panelHeader {
+  position: absolute;
+  top: 54px;
+  left: 28px;
+  right: 28px;
+  z-index: 5;
   display: flex;
   align-items: end;
   justify-content: space-between;
@@ -203,6 +224,7 @@
 .panelHeader h2 {
   margin: 0;
   font-size: 20px;
+  color: rgba(32, 35, 31, 0.9);
   letter-spacing: -0.03em;
 }
 
@@ -219,16 +241,16 @@
   --accent: var(--fevio-sage);
   display: grid;
   gap: 12px;
-  height: 874px;
-  max-height: calc(100dvh - 48px);
-  padding: 44px 14px 14px;
+  height: 100%;
+  max-height: 100%;
+  padding: 92px 14px 14px;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   border: 1px solid rgba(32, 35, 31, 0.1);
   border-radius: 39px;
   background:
-    radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 32%),
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 30%),
     linear-gradient(180deg, #ffffff 0%, rgba(246, 244, 241, 0.94) 100%);
   box-shadow: var(--fevio-shadow-card);
   scrollbar-width: none;
@@ -712,16 +734,28 @@
     display: none;
   }
 
-  .storyRail {
-    grid-template-columns: 1fr;
-  }
-
-  .storyRail article {
-    min-height: auto;
-  }
-
   .dualPanel {
     grid-template-columns: 1fr;
+  }
+
+  .panel {
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .dynamicIsland,
+  .deviceButton {
+    display: none;
+  }
+
+  .panelHeader {
+    position: static;
+    padding: 4px 4px 8px;
   }
 
   .syncBridge {
