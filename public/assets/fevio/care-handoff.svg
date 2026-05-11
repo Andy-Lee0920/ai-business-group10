@@ -1,0 +1,7 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Care handoff</title><desc id="desc">Two soft care cards passing from patient to partner.</desc>
+  <rect x="6" y="12" width="21" height="24" rx="8" fill="#F6F4F1" stroke="#6F8F6E" stroke-width="2"/>
+  <rect x="21" y="12" width="21" height="24" rx="8" fill="#FFFFFF" stroke="#B9AED6" stroke-width="2"/>
+  <path d="M17 24h13" stroke="#3D5C3C" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="m27 20 4 4-4 4" stroke="#3D5C3C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

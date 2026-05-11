@@ -56,6 +56,11 @@ describe('/api/schedule', () => {
           assignedTo: 'my_action',
           orderIndex: 0,
           userSelectedCardType: 'clinic_visit',
+          scheduledAt: '2026-05-13T09:30:00.000Z',
+          careDate: '2026-05-13',
+          description: '채혈 확인',
+          userMarkedImportant: false,
+          partnerVisible: true,
         },
       ],
     });
@@ -87,6 +92,11 @@ describe('/api/schedule', () => {
       items: [expect.objectContaining({
         sourceText: '일정 취소 확정: 2026-05-13 09:30 방문 — 방문 취소 확인',
         userSelectedCardType: 'clinic_visit',
+        scheduledAt: '2026-05-13T09:30:00.000Z',
+        careDate: '2026-05-13',
+        description: '방문 취소 확인',
+        userMarkedImportant: false,
+        partnerVisible: true,
       })],
     }));
     expect(payload).toMatchObject({ createdCardCount: 1, summary: '일정 취소 확정: 2026-05-13 09:30 방문 — 방문 취소 확인' });

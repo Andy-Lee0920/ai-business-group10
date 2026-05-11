@@ -1,0 +1,7 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Action timer</title><desc id="desc">A calm timer icon for time-sensitive care actions.</desc>
+  <rect x="7" y="8" width="34" height="34" rx="17" fill="#FFFFFF" stroke="#6F8F6E" stroke-width="2"/>
+  <path d="M24 17v9l6 4" stroke="#3D5C3C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 5h12" stroke="#6F8F6E" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="24" cy="26" r="2" fill="#E07A68"/>
+</svg>

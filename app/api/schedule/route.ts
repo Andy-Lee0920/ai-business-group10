@@ -50,6 +50,11 @@ export async function POST(request: NextRequest) {
     assignedTo: 'my_action',
     orderIndex: 0,
     userSelectedCardType: PURPOSE_CARD_TYPES[purpose],
+    scheduledAt: new Date(`${date}T${time}:00.000Z`).toISOString(),
+    careDate: date,
+    description: memo || `${PURPOSE_LABELS[purpose]} 일정`,
+    userMarkedImportant: purpose === 'injection' || purpose === 'procedure',
+    partnerVisible: true,
   };
   const result = await store.confirm({ ...capture, items: [item] });
 

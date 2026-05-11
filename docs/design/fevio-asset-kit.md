@@ -9,6 +9,9 @@ Status: implementation reference for issue `#123`.
 | Research and UX references | `/Users/reliqbit_mac/Downloads/FEVIO_UX` | `docs/design/fevio-design-philosophy.md` |
 | Product design deck | `docs/02-design/deck.md`, `docs/02-design/designer-brief.md` | Keep as reference, not direct production assets |
 | Code token map | `src/design/tokens.ts` | Imported by tests/components |
+| Production asset registry | `src/design/assets.ts` | Typed manifest for logo and P1 product icons |
+| P1 product icons | `public/assets/fevio/*.svg` | Reusable action, handoff, clinic note, empathy, and IVF cycle icons |
+| Brand source notes | `docs/design/brand-assets-source.md` | Reproducible source and Korean glyph constraints |
 | CSS variables | `app/globals.css` | Shared by app, onboarding, and demo |
 | iPhone demo shell | `app/demo/dual-panel-demo.module.css` | Must use device tokens |
 | App primitives | `app/fevio-ui.css`, `src/components/ui` | Must use semantic tokens |
@@ -76,7 +79,9 @@ Rules:
 
 ## Icon and illustration direction
 
-Until a final illustrated asset set exists:
+The committed P1 utility icon set lives in `public/assets/fevio/` and is exposed through `src/design/assets.ts`.
+
+Rules:
 
 - prefer simple line or filled utility icons over medical clip art;
 - avoid syringes as fear imagery unless the context is an explicit medication card;
@@ -93,6 +98,15 @@ Until a final illustrated asset set exists:
 | Quiet empathy card | private-by-default emotion, optional partner-safe nudge |
 | Dual-view demo | patient card changes should visibly become partner role cards |
 | Release evidence | Vercel screenshot/metric must show the tokenized iPhone shell and card system |
+
+Current committed icon families:
+
+- `actionTimer`: time-sensitive injection/medication actions;
+- `careHandoff`: patient-to-partner role translation;
+- `clinicNote`: hospital instruction/protocol draft input;
+- `quietEmpathy`: private emotion input with optional sharing;
+- `ivfCycle`: private IVF cycle/event history.
+
 
 ## Reference screenshots to capture when closing #123
 

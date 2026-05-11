@@ -26,6 +26,11 @@ export type ConfirmItem = {
   orderIndex: number;
   userSelectedCardType?: CardType | null;
   suggestedCardType?: CardType | null;
+  scheduledAt?: string | null;
+  careDate?: string | null;
+  description?: string | null;
+  userMarkedImportant?: boolean;
+  partnerVisible?: boolean;
 };
 
 export type ConfirmInput = { draftId: string; visitInputId: string; items: ConfirmItem[] };
@@ -95,6 +100,11 @@ class SupabaseCaptureStore implements CaptureStore {
           ? null
           : inferCardType(item.sourceText, item.assignedTo, item.userSelectedCardType, item.suggestedCardType),
       order_index: item.orderIndex,
+      scheduled_at: item.scheduledAt ?? null,
+      care_date: item.careDate ?? null,
+      description: item.description ?? null,
+      user_marked_important: item.userMarkedImportant === true,
+      partner_visible: item.partnerVisible === true,
     }));
 
     const result = await this.supabase.rpc<{ created_card_count: number }>('confirm_capture', {

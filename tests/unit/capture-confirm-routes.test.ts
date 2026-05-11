@@ -76,9 +76,9 @@ describe('/api/confirm', () => {
       draftId: 'draft-1',
       visitInputId: 'visit-1',
       items: [
-        { sourceText: '오비드렐 주사 밤 10시', assignedTo: 'my_action', orderIndex: 0 },
-        { sourceText: '남편이 준비 도와주기', assignedTo: 'partner_action', orderIndex: 1 },
-        { sourceText: '중복 메모', assignedTo: 'excluded', orderIndex: 2 },
+        expect.objectContaining({ sourceText: '오비드렐 주사 밤 10시', assignedTo: 'my_action', orderIndex: 0 }),
+        expect.objectContaining({ sourceText: '남편이 준비 도와주기', assignedTo: 'partner_action', orderIndex: 1 }),
+        expect.objectContaining({ sourceText: '중복 메모', assignedTo: 'excluded', orderIndex: 2 }),
       ],
     });
   });
