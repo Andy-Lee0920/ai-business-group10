@@ -25,10 +25,14 @@ export default function PrivacyPage() {
           <li>
             <Badge tone="coral">의료 경계</Badge> Fevio는 의료 판단, 용량 추천, 진단을 대신하지 않습니다.
           </li>
+          <li>
+            <Badge tone="lavender">연결 해제</Badge> 파트너 링크는 설정에서 즉시 회수할 수 있습니다.
+          </li>
         </ul>
 
         <Notice tone="sage">
           삭제 요청은 {privacyContactEmail}로 보내주시면 접수 후 처리합니다. 자동 삭제는 v1.x 예정입니다.
+          파트너 연결 해제는 <Link href="/settings/sharing">공유 링크 설정</Link>에서 먼저 할 수 있어요.
         </Notice>
         <Notice tone="coral">동의 전에는 병원 메모, 할 일 카드, 파트너 공유 링크를 만들 수 없습니다.</Notice>
 
