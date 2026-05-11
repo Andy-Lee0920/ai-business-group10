@@ -106,6 +106,50 @@
   font-weight: 900;
 }
 
+.storyRail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 1040px;
+  margin: 0 auto 16px;
+}
+
+.storyRail article {
+  display: grid;
+  gap: 6px;
+  min-height: 118px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(111, 143, 110, 0.13), transparent 36%),
+    rgba(255, 255, 255, 0.78);
+  box-shadow: 0 14px 38px rgba(50, 61, 46, 0.08);
+}
+
+.storyRail span {
+  color: var(--fevio-muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.storyRail strong {
+  font-size: clamp(16px, 1.55vw, 20px);
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+.storyRail p {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
 .dualPanel {
   display: grid;
   grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
@@ -504,6 +548,14 @@
 
   .stepBadge {
     display: none;
+  }
+
+  .storyRail {
+    grid-template-columns: 1fr;
+  }
+
+  .storyRail article {
+    min-height: auto;
   }
 
   .dualPanel {

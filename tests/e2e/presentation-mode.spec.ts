@@ -62,6 +62,9 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByText('지금은 어떤 날에 가까우세요?')).toBeVisible();
   await expect(page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('오늘 화면을 이렇게 맞췄어요.')).toBeVisible();
+  await expect(page.getByText('문제는 부주의가 아니라 전달 구조입니다')).toBeVisible();
+  await expect(page.getByText('병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.')).toBeVisible();
+  await expect(page.getByText('선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.')).toBeVisible();
   await expect(patient).toContainText('주사 준비 체크');
   await expect(patient).toContainText('일정 변경');
   await expect(patient).toContainText('중요 알림');

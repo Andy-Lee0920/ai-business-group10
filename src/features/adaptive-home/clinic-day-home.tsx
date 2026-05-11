@@ -1,4 +1,5 @@
 import { Badge, Card, CtaButton, Notice } from '../../components/ui';
+import { HomeUtilityLauncher } from './home-utility-launcher';
 import type { AdaptiveStateHomeBaseProps } from './types';
 import styles from './clinic-day-home.module.css';
 
@@ -76,6 +77,7 @@ export function ClinicDayHome({ context }: AdaptiveStateHomeBaseProps) {
           <p>오전 9시 병원 방문이에요. 채혈과 초음파 확인 예정입니다.</p>
           <p>준비물과 이동 시간을 함께 확인하면 대기 중에 덜 급해져요.</p>
         </Notice>
+        <HomeUtilityLauncher />
       </Card>
     </main>
   );

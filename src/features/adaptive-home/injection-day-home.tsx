@@ -1,4 +1,5 @@
 import { Badge, Card, CtaButton, Notice, classNames } from '../../components/ui';
+import { HomeUtilityLauncher } from './home-utility-launcher';
 import type { AdaptiveStateHomeBaseProps } from './types';
 import styles from './injection-day-home.module.css';
 
@@ -58,6 +59,7 @@ export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
             <li>끝난 뒤에는 사용한 물품을 정리하고 다음 알림을 확인해요.</li>
           </ul>
         </section>
+        <HomeUtilityLauncher />
       </Card>
     </main>
   );
