@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { CareActionCard, CareCardStatus } from '../types/care-cards.types';
+import { translateCareCardToPartnerRole } from '../domain/partner-role-projection';
 import {
   PARTNER_VIEW_ITEM_FIELDS,
   type PartnerActionViewItem,
@@ -37,13 +38,28 @@ function isPartnerVisible(card: CareActionCard) {
 }
 
 function toPartnerItem(card: CareActionCard): PartnerActionViewItem {
+  const displayState = displayStateForStatus(card.status);
+  const roleProjection = translateCareCardToPartnerRole({
+    card_type: card.card_type,
+    title: card.title,
+    description: card.description,
+    display_state: displayState,
+  });
+
   return {
+    safe_id: safePartnerItemId(card.id),
     title: card.title,
     scheduled_at: card.scheduled_at,
     card_type: card.card_type,
     description: card.description,
-    display_state: displayStateForStatus(card.status),
+    display_state: displayState,
+    sync_revision: card.revision,
+    ...roleProjection,
   };
+}
+
+export function safePartnerItemId(input: string) {
+  return createHash('sha256').update(input).digest('hex').slice(0, 16);
 }
 
 function displayStateForStatus(status: CareCardStatus): PartnerDisplayState {

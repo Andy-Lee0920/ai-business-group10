@@ -16,6 +16,48 @@ vi.mock('../../src/lib/server-supabase', () => ({
 }));
 
 describe('partner cards API route', () => {
+  it('returns polling-safe role translated partner projection for usable tokens', async () => {
+    rpcResponses.push(
+      { data: true, error: null },
+      {
+        data: [
+          {
+            id: '11111111-1111-1111-1111-111111111111',
+            title: '고날에프 주사',
+            scheduled_at: '2026-05-10T12:30:00.000Z',
+            card_type: 'injection',
+            description: '오늘 21시 고날에프 1회',
+            display_state: 'completed',
+            revision: 7,
+          },
+        ],
+        error: null,
+      },
+    );
+    const { GET } = await import('../../app/api/partner/[token]/cards/route');
+
+    const response = await GET(new Request('http://localhost/api/partner/live-token/cards'), {
+      params: Promise.resolve({ token: 'live-token' }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('x-fevio-sync-strategy')).toBe('polling');
+    expect(rpcCalls.at(-1)).toMatchObject({ name: 'get_partner_action_view' });
+    expect(payload.items[0]).toMatchObject({
+      title: '고날에프 주사',
+      display_state: 'completed',
+      sync_revision: 7,
+      partner_role: '확인자',
+      partner_action: expect.stringContaining('완료된 항목'),
+      avoid_prompt: expect.stringContaining('재촉하지 않기'),
+      visibility: 'partner_safe',
+    });
+    expect(JSON.stringify(payload)).not.toContain('source_text');
+    expect(JSON.stringify(payload)).not.toContain('token_hash');
+  });
+
   it('returns 404 for expired partner tokens', async () => {
     rpcResponses.push({ data: false, error: null });
     const { GET } = await import('../../app/api/partner/[token]/cards/route');

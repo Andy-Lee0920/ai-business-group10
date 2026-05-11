@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
 import { CARD_TYPES } from '../../../../../src/types/care-cards.types';
 import type { PartnerActionViewItem, PartnerDisplayState } from '../../../../../src/types/partner-view.types';
-import { hashPartnerShareToken } from '../../../../../src/services/partner-view';
+import { hashPartnerShareToken, safePartnerItemId } from '../../../../../src/services/partner-view';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
+import { translateCareCardToPartnerRole } from '../../../../../src/domain/partner-role-projection';
 
 type PartnerRpcRow = {
+  id?: string | null;
   title: string;
   scheduled_at: string | null;
   card_type: string;
   description: string | null;
   display_state: string;
+  revision?: number | null;
 };
 
 export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -27,7 +30,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   const { data, error } = await supabase.rpc('get_partner_action_view', { p_token_hash: tokenHash });
   if (error) return NextResponse.json({ error: 'partner_link_unavailable' }, { status: 404 });
 
-  return NextResponse.json({ items: toPartnerItems((data as PartnerRpcRow[] | null) ?? []) });
+  return NextResponse.json(
+    { items: toPartnerItems((data as PartnerRpcRow[] | null) ?? []) },
+    {
+      headers: {
+        'cache-control': 'no-store',
+        'x-fevio-sync-strategy': 'polling',
+      },
+    },
+  );
 }
 
 function toPartnerItems(rows: readonly PartnerRpcRow[]): PartnerActionViewItem[] {
@@ -36,12 +47,22 @@ function toPartnerItems(rows: readonly PartnerRpcRow[]): PartnerActionViewItem[]
 
 function toPartnerItem(row: PartnerRpcRow): PartnerActionViewItem | null {
   if (!isCardType(row.card_type) || !isDisplayState(row.display_state)) return null;
+  const roleProjection = translateCareCardToPartnerRole({
+    card_type: row.card_type,
+    title: row.title,
+    description: row.description,
+    display_state: row.display_state,
+  });
+  const safeIdSeed = row.id ?? `${row.card_type}:${row.scheduled_at ?? 'unscheduled'}:${row.title}`;
   return {
+    safe_id: safePartnerItemId(safeIdSeed),
     title: row.title,
     scheduled_at: row.scheduled_at,
     card_type: row.card_type,
     description: row.description,
     display_state: row.display_state,
+    sync_revision: typeof row.revision === 'number' && row.revision > 0 ? row.revision : 1,
+    ...roleProjection,
   };
 }
 

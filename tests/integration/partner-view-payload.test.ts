@@ -31,5 +31,13 @@ describe('partner view payload integration contract', () => {
     expect(JSON.stringify(payload)).not.toContain('token_hash');
     expect(JSON.stringify(payload)).not.toContain('created_by');
     expect(JSON.stringify(payload)).not.toContain('user-1');
+    expect(payload.items[0]).toMatchObject({
+      display_state: 'current',
+      sync_revision: 4,
+      partner_role: '확인자',
+      partner_action: expect.stringContaining('주사 시간 30분 전'),
+      avoid_prompt: expect.stringContaining('재촉하지 않기'),
+      visibility: 'partner_safe',
+    });
   });
 });

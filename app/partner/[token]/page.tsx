@@ -24,10 +24,12 @@ function PartnerActionList({ items }: { items: PartnerActionViewItem[] }) {
   return (
     <ul className="status-list" aria-label="파트너 할 일">
       {items.map((item) => (
-        <li key={`${item.title}-${item.scheduled_at ?? 'unscheduled'}`}>
+        <li key={item.safe_id}>
           <strong>{item.title}</strong>
           <p>{item.description ?? '확인된 설명이 없어요.'}</p>
-          <small>{stateLabel(item.display_state)}</small>
+          <p>{item.partner_action}</p>
+          <small>{item.partner_role} · {stateLabel(item.display_state)} · rev {item.sync_revision}</small>
+          <p>{item.avoid_prompt}</p>
         </li>
       ))}
     </ul>

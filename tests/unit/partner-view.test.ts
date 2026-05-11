@@ -63,16 +63,22 @@ describe('partner view serialization contract', () => {
     expect(serializePartnerViewCards([card({ partner_visible: false })])).toEqual([]);
   });
 
-  it('serializes exactly the five partner-action whitelist fields', () => {
+  it('serializes the partner-action whitelist fields with role translation and sync markers', () => {
     const [item] = serializePartnerViewCards([card()]);
 
     expect(Object.keys(item).sort()).toEqual([...PARTNER_VIEW_ITEM_FIELDS].sort());
     expect(item).toEqual({
+      safe_id: expect.any(String),
       title: '고날에프 주사',
       scheduled_at: '2026-05-10T12:30:00.000Z',
       card_type: 'injection',
       description: '오늘 21시 고날에프 1회',
       display_state: 'current',
+      sync_revision: 1,
+      partner_role: '확인자',
+      partner_action: '주사 시간 30분 전 준비물과 조용한 공간을 함께 확인해 주세요.',
+      avoid_prompt: '마지막 순간 질문하거나 재촉하지 않기',
+      visibility: 'partner_safe',
     });
   });
 
@@ -80,11 +86,17 @@ describe('partner view serialization contract', () => {
     const [item] = serializePartnerViewCards([card({ status: 'completed', revision: 3 })]);
 
     expect(item).toEqual({
+      safe_id: expect.any(String),
       title: '고날에프 주사',
       scheduled_at: '2026-05-10T12:30:00.000Z',
       card_type: 'injection',
       description: '오늘 21시 고날에프 1회',
       display_state: 'completed',
+      sync_revision: 3,
+      partner_role: '확인자',
+      partner_action: '완료된 항목이에요. 확인자 역할은 다음 확인까지 조용히 유지해 주세요.',
+      avoid_prompt: '마지막 순간 질문하거나 재촉하지 않기',
+      visibility: 'partner_safe',
     });
     expect(Object.keys(item).sort()).toEqual([...PARTNER_VIEW_ITEM_FIELDS].sort());
   });
@@ -103,6 +115,6 @@ describe('partner view serialization contract', () => {
   it('has public type contracts for the serializer and whitelist', () => {
     expectTypeOf(serializePartnerViewCards).returns.toEqualTypeOf<PartnerActionViewItem[]>();
     expectTypeOf(serializePartnerViewCards).parameter(0).toMatchTypeOf<readonly CareActionCard[]>();
-    expectTypeOf(PARTNER_VIEW_ITEM_FIELDS).toEqualTypeOf<readonly ['title', 'scheduled_at', 'card_type', 'description', 'display_state']>();
+    expectTypeOf(PARTNER_VIEW_ITEM_FIELDS).toEqualTypeOf<readonly ['safe_id', 'title', 'scheduled_at', 'card_type', 'description', 'display_state', 'sync_revision', 'partner_role', 'partner_action', 'avoid_prompt', 'visibility']>();
   });
 });

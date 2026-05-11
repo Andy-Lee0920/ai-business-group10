@@ -13,16 +13,31 @@ export function PartnerActionViewClient({ token }: { token: string }) {
 
   useEffect(() => {
     let mounted = true;
-    fetch(`/api/partner/${encodeURIComponent(token)}/cards`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error('invalid'))))
-      .then((payload: PartnerViewPayload) => {
-        if (mounted) setState({ status: 'ready', items: payload.items });
-      })
-      .catch(() => {
-        if (mounted) setState({ status: 'error' });
-      });
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let controller: AbortController | null = null;
+
+    const load = () => {
+      controller?.abort();
+      controller = new AbortController();
+      fetch(`/api/partner/${encodeURIComponent(token)}/cards`, { cache: 'no-store', signal: controller.signal })
+        .then((response) => (response.ok ? response.json() : Promise.reject(new Error('invalid'))))
+        .then((payload: PartnerViewPayload) => {
+          if (mounted) setState({ status: 'ready', items: payload.items });
+        })
+        .catch((error: Error) => {
+          if (mounted && error.name !== 'AbortError') setState({ status: 'error' });
+        })
+        .finally(() => {
+          if (mounted) timer = setTimeout(load, 5_000);
+        });
+    };
+
+    load();
+
     return () => {
       mounted = false;
+      controller?.abort();
+      if (timer) clearTimeout(timer);
     };
   }, [token]);
 
@@ -36,12 +51,14 @@ function PartnerActionList({ items }: { items: PartnerActionViewItem[] }) {
   if (items.length === 0) return <p className="notice">지금 공유된 파트너 할 일이 없어요.</p>;
 
   return (
-    <ul className="status-list" aria-label="파트너 할 일">
+    <ul className="status-list" aria-label="파트너 할 일" aria-live="polite">
       {items.map((item) => (
-        <li key={`${item.title}-${item.scheduled_at ?? 'unscheduled'}`}>
+        <li key={item.safe_id}>
           <strong>{item.title}</strong>
           <p>{item.description ?? '확인된 설명이 없어요.'}</p>
-          <small>{stateLabel(item.display_state)}</small>
+          <p>{item.partner_action}</p>
+          <small>{item.partner_role} · {stateLabel(item.display_state)} · rev {item.sync_revision}</small>
+          <p>{item.avoid_prompt}</p>
         </li>
       ))}
     </ul>
