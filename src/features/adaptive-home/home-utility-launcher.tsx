@@ -25,8 +25,13 @@ export function HomeUtilityLauncher() {
           <strong>감정 부담 기록</strong>
           <small>공유 기본 OFF, 원문 없이 도움 신호만 선택 공유</small>
         </Link>
-        <Link className={styles.utilityLink} href="/capture">
+        <Link className={styles.utilityLink} href="/ivf-record">
           <span>04</span>
+          <strong>시술 기록</strong>
+          <small>단계·날짜만으로 비공개 IVF 기록 남기기</small>
+        </Link>
+        <Link className={styles.utilityLink} href="/capture">
+          <span>05</span>
           <strong>병원 메모 정리</strong>
           <small>들은 내용을 확정 전 카드로 나누기</small>
         </Link>

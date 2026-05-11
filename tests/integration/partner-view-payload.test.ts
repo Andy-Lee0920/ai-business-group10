@@ -74,4 +74,29 @@ describe('partner view payload integration contract', () => {
     expect(JSON.stringify(payload)).not.toContain('emotion-private');
   });
 
+
+  it('keeps IVF record raw outcomes out of partner payload while allowing safe shared context', () => {
+    const sharedIvfRecord: CareActionCard = {
+      ...card,
+      id: 'ivf-shared',
+      card_type: 'record',
+      title: '공유된 IVF 기록',
+      description: '2026-05-15 난자 채취 단계예요. 결과를 단정하지 말고 이동·회복·다음 확인을 함께 챙겨 주세요.',
+      source_text: 'IVF 기록 · 난자 채취 · 2026-05-15 · 난자 8개 채취 · 마취가 무서웠음',
+      partner_visible: true,
+    };
+
+    const payload = { items: serializePartnerViewCards([sharedIvfRecord]) };
+
+    expect(payload.items).toHaveLength(1);
+    expect(payload.items[0]).toMatchObject({
+      title: '공유된 IVF 기록',
+      description: '2026-05-15 난자 채취 단계예요. 결과를 단정하지 말고 이동·회복·다음 확인을 함께 챙겨 주세요.',
+      partner_role: '기록 동반자',
+      visibility: 'private_summary',
+    });
+    expect(JSON.stringify(payload)).not.toContain('난자 8개');
+    expect(JSON.stringify(payload)).not.toContain('마취가 무서웠음');
+  });
+
 });
