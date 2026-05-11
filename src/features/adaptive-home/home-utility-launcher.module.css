@@ -17,23 +17,23 @@
 }
 
 .utilityHeader p {
-  color: var(--fevio-muted);
-  font-size: 0.74rem;
+  color: #8c463a;
+  font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.095em;
   text-transform: uppercase;
 }
 
 .utilityHeader h2 {
   color: var(--fevio-ink);
   font-size: 1.48rem;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.055em;
 }
 
 .utilityHeader span {
   color: var(--fevio-muted);
   font-size: 0.88rem;
-  font-weight: 750;
+  font-weight: 760;
   line-height: 1.5;
 }
 
@@ -53,7 +53,7 @@
   border-radius: 22px;
   background:
     radial-gradient(circle at 100% 0%, rgba(111, 143, 110, 0.12), transparent 36%),
-    rgba(255, 255, 255, 0.78);
+    rgba(255, 255, 255, 0.76);
   color: inherit;
   text-decoration: none;
   box-shadow: 0 12px 30px rgba(50, 61, 46, 0.08);
@@ -94,33 +94,34 @@
 .sharedProjection {
   display: grid;
   gap: 6px;
-  padding: 14px;
-  border: 1px solid rgba(185, 174, 214, 0.32);
-  border-radius: 22px;
+  padding: 16px;
+  border: 1px solid rgba(185, 174, 214, 0.34);
+  border-radius: 24px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(185, 174, 214, 0.22), transparent 35%),
-    rgba(255, 255, 255, 0.82);
+    radial-gradient(circle at 100% 0%, rgba(185, 174, 214, 0.24), transparent 35%),
+    rgba(255, 255, 255, 0.78);
+  box-shadow: 0 14px 34px rgba(50, 61, 46, 0.08);
 }
 
 .sharedProjection span {
-  color: var(--fevio-muted);
+  color: #75679b;
   font-size: 0.7rem;
-  font-weight: 900;
+  font-weight: 950;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .sharedProjection strong {
   color: var(--fevio-ink);
-  font-size: 1rem;
-  letter-spacing: -0.035em;
-  line-height: 1.35;
+  font-size: 1.08rem;
+  letter-spacing: -0.04em;
+  line-height: 1.3;
 }
 
 .sharedProjection p {
   margin: 0;
   color: var(--fevio-muted);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 720;
   line-height: 1.5;
 }

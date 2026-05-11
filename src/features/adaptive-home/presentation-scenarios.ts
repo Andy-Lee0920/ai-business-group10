@@ -36,10 +36,10 @@ function scenarioSeeds(care: PresentationCareParam, now: Date): CareActionCard[]
 
 function injectionDaySeeds(now: Date): CareActionCard[] {
   return [
-    makeCard('injection-gonal', 'injection', '오늘 21시 고날에프 1회', minutesFrom(now, 20), '주사 30분 전 손 씻기와 펜 확인', 'confirmed'),
-    makeCard('injection-ovitrelle', 'injection', '오늘 22시 오비트렐 준비', minutesFrom(now, 80), '냉장 보관한 주사를 꺼내고 투여 시간 확인', 'confirmed'),
-    makeCard('injection-partner', 'partner_support', '파트너가 주사 준비물 함께 확인', minutesFrom(now, 10), '알코올솜, 폐기통, 주사 공간을 함께 확인해요', 'confirmed'),
-    makeCard('injection-medication', 'medication', '프로게스테론 아침·저녁 복용', minutesFrom(now, 180), '주사 일정 뒤 복용 알림도 함께 정리해요', 'confirmed'),
+    makeCard('injection-gonal', 'injection', '21:00 고날에프 — 내가 확인한 용량', minutesFrom(now, 20), '주사 30분 전 손 씻기와 펜, 알코올솜을 조용히 확인해요.', 'confirmed'),
+    makeCard('injection-ovitrelle', 'injection', '22:00 오비드렐 트리거 확인', minutesFrom(now, 80), '골든타임은 내가 확인한 시간만 기준으로 보여줘요.', 'confirmed'),
+    makeCard('injection-partner', 'partner_support', '파트너 역할: 준비물과 공간 맡기', minutesFrom(now, 10), '질문을 늘리지 않고 알코올솜, 폐기통, 조용한 공간을 먼저 챙겨요.', 'confirmed'),
+    makeCard('injection-medication', 'medication', '프로게스테론 복용 — 병원 안내대로', minutesFrom(now, 180), '용량 판단 없이 내가 확인한 복용 시간만 남겨요.', 'confirmed'),
   ];
 }
 
