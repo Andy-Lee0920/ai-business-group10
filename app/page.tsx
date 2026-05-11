@@ -12,6 +12,7 @@ export default async function LandingPage() {
   return (
     <main className="app-shell">
       <Card aria-labelledby="landing-title" className="hero-card">
+        <img src="/logo.svg" alt="Fevio 페비오" width="256" height="72" style={{ width: 'min(256px, 100%)', height: 'auto' }} />
         <p className="eyebrow">{presentationMode ? 'Presentation demo' : 'IVF care-operation'}</p>
         <h1 id="landing-title">Fevio [페비오]</h1>
         <p className="lead">

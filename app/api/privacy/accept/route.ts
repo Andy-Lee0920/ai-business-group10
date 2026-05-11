@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isPresentationRequest } from '../../../../src/config';
 import { PRIVACY_GATE_VERSION } from '../../../../src/domain/auth-privacy';
+import { acceptPrivacyGateForUserWithServiceRole, bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } from '../../../../src/lib/couple-bootstrap-admin';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 
 function isMissingConfig(error: unknown) {
@@ -33,10 +34,21 @@ export async function POST(request: NextRequest) {
     if (userError || !userResult.user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
 
     const { error: bootstrapError } = await supabase.rpc('init_couple_for_user');
-    if (bootstrapError) return NextResponse.json({ error: 'bootstrap_failed', detail: bootstrapError.message }, { status: 500 });
+    if (bootstrapError) {
+      if (!isInitCoupleAmbiguityError(bootstrapError)) {
+        return NextResponse.json({ error: 'bootstrap_failed', detail: bootstrapError.message }, { status: 500 });
+      }
+      await bootstrapCoupleForUserWithServiceRole({ id: userResult.user.id, email: userResult.user.email });
+    }
 
     const { data, error } = await supabase.rpc('accept_privacy_gate', { p_version: PRIVACY_GATE_VERSION });
-    if (error) return NextResponse.json({ error: 'privacy_accept_failed', detail: error.message }, { status: 500 });
+    if (error) {
+      if (!isInitCoupleAmbiguityError(error)) {
+        return NextResponse.json({ error: 'privacy_accept_failed', detail: error.message }, { status: 500 });
+      }
+      const accepted = await acceptPrivacyGateForUserWithServiceRole({ id: userResult.user.id, email: userResult.user.email });
+      return NextResponse.json({ accepted });
+    }
 
     if (acceptsHtml) return redirectWithDemoCookie(request);
     return NextResponse.json({ accepted: data?.[0] ?? null });

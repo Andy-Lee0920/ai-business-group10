@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isPresentationRequest } from '../../../src/config';
-import { createCaptureStore, type ConfirmItem } from '../../../src/lib/capture-confirm-store';
+import { assertSensitiveWriteAllowed } from '../../../src/domain/auth-privacy';
+import { bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } from '../../../src/lib/couple-bootstrap-admin';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import type { CardType } from '../../../src/types/care-cards.types';
 
@@ -17,24 +18,17 @@ type MedicationBody = {
 };
 type DbError = { message: string };
 type SingleResult<T> = { data: T | null; error: DbError | null };
-type QueryChain<T> = {
-  select(columns: string): QueryChain<T>;
-  eq(column: string, value: string): QueryChain<T>;
-  order(column: string, options?: Record<string, unknown>): QueryChain<T>;
-  limit(count: number): QueryChain<T>;
-  single(): Promise<SingleResult<T>>;
-};
-type UpdateChain<T> = {
-  eq(column: string, value: string): UpdateChain<T>;
-  select(columns: string): UpdateChain<T>;
-  single(): Promise<SingleResult<T>>;
-};
+type RpcResult<T> = { data: T[] | T | null; error: DbError | null };
+type SelectChain<T> = { select(columns: string): SelectChain<T>; single(): Promise<SingleResult<T>> };
 type MedicationSupabaseClient = {
-  from(table: 'care_action_cards'): {
-    select<T>(columns: string): QueryChain<T>;
-    update<T>(value: Record<string, unknown>): UpdateChain<T>;
+  auth: { getUser(): Promise<{ data: { user: { id: string; email?: string | null } | null }; error: DbError | null }> };
+  rpc<T>(name: string, args?: Record<string, unknown>): Promise<RpcResult<T>>;
+  from(table: 'visit_inputs' | 'care_action_cards'): {
+    insert<T>(value: Record<string, unknown>): SelectChain<T>;
   };
 };
+type BootstrapRow = { couple_id: string; privacy_gate_accepted_at: string | null };
+type VisitInputRow = { id: string };
 type CardRow = { id: string; status: string };
 
 const TYPES: MedicationType[] = ['medication', 'injection', 'general_action'];
@@ -50,31 +44,77 @@ export async function POST(request: NextRequest) {
   const input = normalizeInput(body);
   if ('error' in input) return NextResponse.json({ error: input.error }, { status: 400 });
 
-  const store = await createCaptureStore(request);
-  if (store instanceof Response) return store;
-
   const sourceText = buildSourceText(input);
-  const capture = await store.createCapture(sourceText);
-  const item: ConfirmItem = {
-    sourceText,
-    assignedTo: 'my_action',
-    orderIndex: 0,
-    userSelectedCardType: input.type,
-  };
-  const result = await store.confirm({ ...capture, items: [item] });
-  if (result.createdCardCount !== 1) {
-    return NextResponse.json({ error: 'One confirmed medication card is required.' }, { status: 500 });
+
+  if (isPresentationRequest(request) && isDemoRequest(request)) {
+    return NextResponse.json({
+      cardId: `demo-medication-${Date.now()}`,
+      status: 'confirmed',
+      persisted: false,
+      createdCardCount: 1,
+      title: sourceText,
+    });
   }
 
-  const card = await findAndDecorateCard(request, capture.visitInputId, input);
-  if (card instanceof Response) return card;
+  try {
+    const supabase = (await createCookieBackedSupabaseClient()) as unknown as MedicationSupabaseClient;
+    const user = await getAuthenticatedUser(supabase);
+    const bootstrap = await bootstrapSensitiveContext(supabase, user);
+    try {
+      assertSensitiveWriteAllowed({ privacyGateAcceptedAt: bootstrap.privacy_gate_accepted_at });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Privacy Gate must be accepted')) {
+        return NextResponse.json({ error: error.message }, { status: 403 });
+      }
+      throw error;
+    }
 
-  return NextResponse.json({
-    cardId: card.id,
-    status: card.status,
-    createdCardCount: result.createdCardCount,
-    title: sourceText,
-  });
+    const visitInput = await supabase
+      .from('visit_inputs')
+      .insert<VisitInputRow>({ couple_id: bootstrap.couple_id, raw_text: sourceText })
+      .select('id')
+      .single();
+    if (visitInput.error || !visitInput.data) throw new Error(visitInput.error?.message ?? 'visit_inputs insert failed');
+
+    const card = await supabase
+      .from('care_action_cards')
+      .insert<CardRow>({
+        couple_id: bootstrap.couple_id,
+        created_by: user.id,
+        source_input_id: visitInput.data.id,
+        assignee_role: 'primary_user',
+        card_type: input.type,
+        title: sourceText,
+        source_text: sourceText,
+        scheduled_at: scheduledAtForToday(input.time),
+        status: 'confirmed',
+        confirmation_required: false,
+        user_marked_important: input.important,
+        partner_visible: true,
+      })
+      .select('id,status')
+      .single();
+    if (card.error || !card.data) throw new Error(card.error?.message ?? 'care_action_cards insert failed');
+
+    return NextResponse.json({
+      cardId: card.data.id,
+      status: card.data.status,
+      persisted: true,
+      createdCardCount: 1,
+      title: sourceText,
+    });
+  } catch (error) {
+    if (isMissingConfigError(error) && isDemoRequest(request)) {
+      return NextResponse.json({
+        cardId: `demo-medication-${Date.now()}`,
+        status: 'confirmed',
+        persisted: false,
+        createdCardCount: 1,
+        title: sourceText,
+      });
+    }
+    throw error;
+  }
 }
 
 function normalizeInput(body: MedicationBody):
@@ -107,48 +147,27 @@ function buildSourceText(input: { name: string; dose: string; time: string; repe
   return [input.name, input.dose, input.time, REPEAT_LABELS[input.repeat], input.important ? '꼭 챙겨야 해요' : null].filter(Boolean).join(' · ');
 }
 
-async function findAndDecorateCard(
-  request: NextRequest,
-  visitInputId: string,
-  input: { type: CardType; time: string; important: boolean },
-): Promise<CardRow | Response> {
-  try {
-    const supabase = (await createCookieBackedSupabaseClient()) as unknown as MedicationSupabaseClient;
-    const selected = await supabase
-      .from('care_action_cards')
-      .select<CardRow>('id,status')
-      .eq('source_input_id', visitInputId)
-      .eq('card_type', input.type)
-      .eq('status', 'confirmed')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+async function getAuthenticatedUser(supabase: MedicationSupabaseClient) {
+  const userResult = await supabase.auth.getUser();
+  if (userResult.error || !userResult.data.user) throw new Error(userResult.error?.message ?? 'Authentication required.');
+  return userResult.data.user;
+}
 
-    if (selected.error || !selected.data) throw new Error(selected.error?.message ?? 'Confirmed card lookup failed.');
-
-    const updated = await supabase
-      .from('care_action_cards')
-      .update<CardRow>({
-        scheduled_at: scheduledAtForToday(input.time),
-        user_marked_important: input.important,
-        partner_visible: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', selected.data.id)
-      .select('id,status')
-      .single();
-
-    if (updated.error || !updated.data) throw new Error(updated.error?.message ?? 'Confirmed card update failed.');
-    return updated.data;
-  } catch (error) {
-    if (isMissingConfigError(error) && isDemoRequest(request)) {
-      return { id: `demo-medication-${Date.now()}`, status: 'confirmed' };
-    }
-    if (isPresentationRequest(request) && isDemoRequest(request)) {
-      return { id: `demo-medication-${Date.now()}`, status: 'confirmed' };
-    }
-    throw error;
+async function bootstrapSensitiveContext(supabase: MedicationSupabaseClient, user: { id: string; email?: string | null }) {
+  const bootstrap = await supabase.rpc<BootstrapRow>('init_couple_for_user');
+  if (!bootstrap.error) {
+    const row = firstRow(bootstrap.data);
+    if (!row) throw new Error('Couple shell missing.');
+    return row;
   }
+
+  if (!isInitCoupleAmbiguityError(bootstrap.error)) throw new Error(bootstrap.error.message);
+  const shell = await bootstrapCoupleForUserWithServiceRole(user);
+  return { couple_id: shell.couple_id, privacy_gate_accepted_at: shell.privacy_gate_accepted_at };
+}
+
+function firstRow<T>(value: T[] | T | null) {
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function scheduledAtForToday(time: string) {

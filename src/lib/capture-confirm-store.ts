@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { isPresentationRequest } from '../config';
 import { assertSensitiveWriteAllowed } from '../domain/auth-privacy';
 import { inferCardType, type AssignedTo, type CardType } from '../domain/line-split';
+import { bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } from './couple-bootstrap-admin';
 import { createCookieBackedSupabaseClient } from './server-supabase';
 
 type BootstrapRow = { couple_id: string; privacy_gate_accepted_at: string | null };
@@ -116,7 +117,18 @@ export async function createCaptureStore(request: Request): Promise<CaptureStore
   try {
     const supabase = (await createCookieBackedSupabaseClient()) as unknown as CaptureSupabaseClient;
     const bootstrap = await supabase.rpc<BootstrapRow>('init_couple_for_user');
-    if (bootstrap.error) return Response.json({ error: bootstrap.error.message }, { status: 401 });
+    if (bootstrap.error) {
+      if (!isInitCoupleAmbiguityError(bootstrap.error) || !('auth' in supabase)) {
+        return Response.json({ error: bootstrap.error.message }, { status: 401 });
+      }
+
+      const userResult = await (supabase as CaptureSupabaseClient & { auth: { getUser(): Promise<{ data: { user: { id: string; email?: string | null } | null }; error: DbError | null }> } }).auth.getUser();
+      if (userResult.error || !userResult.data.user) return Response.json({ error: bootstrap.error.message }, { status: 401 });
+
+      const shell = await bootstrapCoupleForUserWithServiceRole(userResult.data.user);
+      assertSensitiveWriteAllowed({ privacyGateAcceptedAt: shell.privacy_gate_accepted_at ?? null });
+      return new SupabaseCaptureStore(shell.couple_id, supabase);
+    }
 
     const row = firstRow(bootstrap.data);
     assertSensitiveWriteAllowed({ privacyGateAcceptedAt: row?.privacy_gate_accepted_at ?? null });

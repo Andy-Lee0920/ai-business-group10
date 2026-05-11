@@ -19,6 +19,11 @@ export type DemoScenario = {
     progress: number;
     headline: string;
     primaryAction: string;
+    inputMoment: {
+      prompt: string;
+      answer: string;
+      adaptation: string;
+    };
     nowStack: UtilityItem[];
     checklist: UtilityItem[];
     timeline: UtilityItem[];
@@ -47,6 +52,11 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       progress: 72,
       headline: '21:00 주사 준비',
       primaryAction: '주사 준비 체크',
+      inputMoment: {
+        prompt: '방금 붙여넣은 메모',
+        answer: '오늘 21시 고날에프, 파트너가 같이 확인',
+        adaptation: '주사 준비·확인자 역할을 먼저 올렸어요.',
+      },
       nowStack: [
         { id: 'time', label: '다음 주사', value: '20분 후', meta: '고날에프', tone: 'coral' },
         { id: 'storage', label: '보관', value: '냉장', meta: '2–8℃', tone: 'sage' },
@@ -110,6 +120,11 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       progress: 64,
       headline: '09:00 방문 준비',
       primaryAction: '방문 체크리스트',
+      inputMoment: {
+        prompt: '짧게 고른 상황',
+        answer: '오늘 병원 다녀오기',
+        adaptation: '방문 준비·동행자 역할을 먼저 올렸어요.',
+      },
       nowStack: [
         { id: 'visit', label: '예약', value: '09:00', meta: '채혈·초음파', tone: 'sage' },
         { id: 'leave', label: '출발', value: '08:10', meta: '45분 이동', tone: 'lavender' },
@@ -173,6 +188,11 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       progress: 88,
       headline: '조용한 확인 모드',
       primaryAction: '차분한 체크인',
+      inputMoment: {
+        prompt: '오늘의 한 줄',
+        answer: '기다리는 중이라 알림을 줄이고 싶어요',
+        adaptation: '필수 확인·조용한 지지 행동만 남겼어요.',
+      },
       nowStack: [
         { id: 'next', label: '다음 일정', value: '목요일', meta: '09:00', tone: 'sage' },
         { id: 'notify', label: '알림', value: '낮음', meta: '필수만', tone: 'lavender' },
