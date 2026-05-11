@@ -40,7 +40,7 @@ const MOODS: Record<EmotionMood, { label: string; partnerLabel: string }> = {
   lonely: { label: '혼자인 것 같아요', partnerLabel: '혼자 감당하는 느낌이 큰' },
   anxious: { label: '불안해요', partnerLabel: '마음이 많이 긴장된' },
   tired: { label: '지쳤어요', partnerLabel: '몸과 마음이 지친' },
-  okay: { label: '괜찮아요', partnerLabel: '차분히 지나가는' },
+  okay: { label: '차분해요', partnerLabel: '차분히 지나가는' },
 };
 
 export async function POST(request: NextRequest) {

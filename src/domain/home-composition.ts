@@ -63,7 +63,7 @@ function timeRank(value: string | null) {
 }
 
 function getPrimaryMessage(careDay: CareDay) {
-  if (careDay === 'onboarding') return '처음부터 많이 묻지 않고, 오늘 가장 부담이 적은 케어부터 같이 정리해요.';
+  if (careDay === 'onboarding') return '오늘 필요한 케어를 먼저 정리해요.';
   if (careDay === 'injection_day') return '오늘은 시간과 준비물이 흔들리지 않도록, 확인한 내용만 먼저 놓을게요.';
   if (careDay === 'clinic_day') return '방문 전에는 이동, 질문, 다음 안내를 한 번에 덜 급하게 확인해요.';
   if (careDay === 'waiting_day') return '오늘은 더 많이 확인하기보다, 필요한 일정만 조용히 붙잡아 둘게요.';

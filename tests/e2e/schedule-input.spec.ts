@@ -18,7 +18,7 @@ test('schedule cancel keeps the low-energy form local without writing', async ({
   await page.getByRole('textbox', { name: '메모' }).fill('채혈 확인');
   await page.getByRole('button', { name: '그만둘게요' }).click();
 
-  await expect(page.getByText('저장하지 않았어요. 필요할 때 다시 적어도 괜찮아요.')).toBeVisible();
+  await expect(page.getByText('저장을 멈췄어요. 필요할 때 다시 적어 주세요.')).toBeVisible();
   await expect(page.getByText('일정 추가 확정')).toHaveCount(0);
   await expect(page).toHaveURL(/\/schedule$/u);
   expect(scheduleWrites).toBe(0);

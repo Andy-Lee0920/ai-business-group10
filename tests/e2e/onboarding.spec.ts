@@ -9,8 +9,10 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   await expect(page.getByText('파트너 앱')).toHaveCount(0);
   await expect(page.getByLabel(/처음 설정 1\/5/u)).toBeVisible();
   await expect(page.getByRole('heading', { name: '기록 방식은 어떻게 시작할까요?' })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: '오늘 어떤 도움부터 필요하세요?' })).toBeVisible();
-  await expect(page.getByText('Fevio가 당신을 분류하려는 게 아니에요.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘 먼저 챙길 케어를 골라주세요' })).toBeVisible();
+  await expect(page.getByText('선택한 흐름에 맞춰 첫 홈과 파트너 역할이 함께 정리됩니다.')).toBeVisible();
+  await expect(page.getByText('Fevio가 당신을 분류하려는 게 아니에요.')).toHaveCount(0);
+  await expect(page.getByText('처음부터 많이 묻지 않을게요')).toHaveCount(0);
   await expect(page.getByText('어디쯤에 있으세요?')).toHaveCount(0);
   await expect(page.getByText('정답을 고르는 화면')).toHaveCount(0);
 

@@ -25,7 +25,7 @@ export function WaitingDayHome({ context }: AdaptiveStateHomeBaseProps) {
           <CtaButton className={styles.primaryAction} type="button">
             차분한 체크인 시작
           </CtaButton>
-          <p className={styles.actionHint}>필요한 것만 짧게 보고, 나머지는 쉬어도 괜찮아요.</p>
+          <p className={styles.actionHint}>필요한 일정만 짧게 보고, 나머지는 낮은 알림으로 둡니다.</p>
         </div>
 
         {visibleCards.length > 0 ? (

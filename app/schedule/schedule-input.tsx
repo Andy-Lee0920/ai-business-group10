@@ -65,7 +65,7 @@ export function ScheduleInput() {
     setTime('');
     setMemo('');
     setConfirmedSummary('');
-    setStatus({ tone: 'sage', message: '저장하지 않았어요. 필요할 때 다시 적어도 괜찮아요.' });
+      setStatus({ tone: 'sage', message: '저장을 멈췄어요. 필요할 때 다시 적어 주세요.' });
   }
 
   return (
@@ -102,7 +102,7 @@ export function ScheduleInput() {
               <span>날짜</span>
               <input value={date} onChange={(event) => setDate(event.target.value)} type="date" />
             </label>
-            <TimeInput label="시간" id="schedule-time" value={time} onChange={(event) => setTime(event.target.value)} helperText="대략적인 시간이어도 괜찮아요." />
+            <TimeInput label="시간" id="schedule-time" value={time} onChange={(event) => setTime(event.target.value)} helperText="대략적인 시간으로도 저장할 수 있어요." />
           </div>
 
           <label className="schedule-memo-input">

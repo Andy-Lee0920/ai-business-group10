@@ -25,7 +25,7 @@ const MOOD_OPTIONS: Array<{ value: EmotionMood; label: string; helper: string }>
   { value: 'lonely', label: '혼자인 것 같아요', helper: '같이 하는 느낌이 약한 날' },
   { value: 'anxious', label: '불안해요', helper: '결과나 실수가 계속 떠오르는 날' },
   { value: 'tired', label: '지쳤어요', helper: '몸과 마음의 에너지가 낮은 날' },
-  { value: 'okay', label: '괜찮아요', helper: '기록만 남겨두고 싶은 날' },
+  { value: 'okay', label: '차분해요', helper: '기록만 남겨두고 싶은 날' },
 ];
 
 export function EmotionInputClient() {
@@ -75,7 +75,7 @@ export function EmotionInputClient() {
             </SelectionChip>
           ))}
         </div>
-        <small>{MOOD_OPTIONS.find((option) => option.value === mood)?.helper ?? '정확하지 않아도 괜찮아요. 가까운 하나만 고르면 됩니다.'}</small>
+        <small>{MOOD_OPTIONS.find((option) => option.value === mood)?.helper ?? '가까운 감정 하나를 고르면 됩니다.'}</small>
       </fieldset>
 
       <label className="field-label" htmlFor="emotion-intensity">부담 정도</label>

@@ -40,7 +40,7 @@ describe('home composition', () => {
     const context = computeHomeContext([], NOW);
     expect(context.careDay).toBe('onboarding');
     expect(context.cards).toEqual([]);
-    expect(context.primaryMessage).toContain('부담이 적은 케어');
+    expect(context.primaryMessage).toContain('오늘 필요한 케어');
   });
 
   it('does not mutate the card inputs while sorting', () => {

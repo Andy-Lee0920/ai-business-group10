@@ -23,7 +23,7 @@ const TREATMENT_OPTIONS: Array<{ value: TreatmentContext; label: string; helper:
   { value: 'ivf_cycle', label: '주사/채취 준비 중', helper: '오늘 할 일이나 주사 시간이 있을 수 있어요.' },
   { value: 'transfer_wait', label: '이식 후 기다리는 중', helper: '조용히 확인할 일정이나 약이 있을 수 있어요.' },
   { value: 'early_check', label: '검사/방문을 앞둠', helper: '방문 일정 확인부터 시작해요.' },
-  { value: 'unsure', label: '아직 잘 모르겠어요', helper: '첫 항목만 안전하게 적어도 괜찮아요.' },
+  { value: 'unsure', label: '첫 항목부터 시작', helper: '주사·방문·약 중 하나를 먼저 남겨요.' },
 ];
 
 const ROLE_OPTIONS: Array<{ value: RoleContext; label: string; helper: string }> = [
@@ -89,7 +89,7 @@ export function OnboardingClient() {
 
   function continueFromFirstItem() {
     if (!canAdvanceFirstItem) {
-      setError('첫 실행 항목 내용을 한 문장만 적어 주세요. 아직 없다면 종류 선택을 해제해도 괜찮아요.');
+      setError('첫 실행 항목은 종류와 내용을 함께 적어 주세요. 아직 없다면 종류 선택을 지워 주세요.');
       return;
     }
     goToStep('partner');
@@ -144,8 +144,8 @@ export function OnboardingClient() {
       {activeStep === 'treatment' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="treatment-context-title">
           <StatusBadge state="shared">처음 확인</StatusBadge>
-          <h2 className={styles.sectionTitle} id="treatment-context-title">오늘 어떤 도움부터 필요하세요?</h2>
-          <p className={styles.questionLead}>Fevio가 당신을 분류하려는 게 아니에요. 지금 덜 버거운 시작점을 하나만 같이 잡아볼게요.</p>
+          <h2 className={styles.sectionTitle} id="treatment-context-title">오늘 먼저 챙길 케어를 골라주세요</h2>
+          <p className={styles.questionLead}>선택한 흐름에 맞춰 첫 홈과 파트너 역할이 함께 정리됩니다.</p>
           <div className={styles.choiceGrid} role="group" aria-label="치료 상황 선택">
             {TREATMENT_OPTIONS.map((option) => (
               <SelectionChip
@@ -167,7 +167,7 @@ export function OnboardingClient() {
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="role-context-title">
           <StatusBadge state="shared">기록 방식</StatusBadge>
           <h2 className={styles.sectionTitle} id="role-context-title">기록 방식은 어떻게 시작할까요?</h2>
-          <p className={styles.questionLead}>지금 부담이 가장 적은 시작 방식을 고르면 됩니다.</p>
+          <p className={styles.questionLead}>오늘 이어가기 쉬운 방식으로 시작해요.</p>
           <div className={styles.choiceGrid} role="group" aria-label="기록 방식 선택">
             {ROLE_OPTIONS.map((option) => (
               <SelectionChip
@@ -189,7 +189,7 @@ export function OnboardingClient() {
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="first-item-title">
           <StatusBadge state="shared">첫 케어</StatusBadge>
           <h2 className={styles.sectionTitle} id="first-item-title">오늘 놓치면 안 되는 것 하나만 남겨볼까요?</h2>
-          <p className={styles.questionLead}>긴 메모는 필요 없어요. 확인한 한 문장만 오늘의 케어 흐름에 올려둘게요.</p>
+          <p className={styles.questionLead}>확인한 한 문장을 오늘의 케어 흐름에 올려둘게요.</p>
           <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="첫 항목 종류 선택">
             {FIRST_ITEM_OPTIONS.map((option) => (
               <SelectionChip
