@@ -50,6 +50,28 @@ describe('home composition', () => {
     expect(cards).toEqual(original);
   });
 
+
+  it('keeps IVF record cards in the simple home history list without time pressure', () => {
+    const context = computeHomeContext([
+      card({
+        id: 'ivf-record-card',
+        card_type: 'record',
+        title: 'IVF 기록 · 배아 배양',
+        description: '나를 위한 시술 기록이에요. 공유하지 않아도 충분해요.',
+        scheduled_at: null,
+        care_date: '2026-05-14',
+      }),
+    ], NOW);
+
+    expect(context.cards).toHaveLength(1);
+    expect(context.cards[0]).toMatchObject({
+      id: 'ivf-record-card',
+      title: 'IVF 기록 · 배아 배양',
+      displaySafetyLevel: 'normal',
+      urgencyCopy: null,
+    });
+  });
+
   it('has a stable public return type', () => {
     expectTypeOf(computeHomeContext).returns.toMatchTypeOf<HomeContext>();
   });
