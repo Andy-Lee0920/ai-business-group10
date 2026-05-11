@@ -19,7 +19,7 @@ export function StateHomeScaffold({
         <p className="eyebrow">{eyebrow}</p>
         <h1 id="home-title">{title}</h1>
         <p className="lead">{context.primaryMessage}</p>
-        <div className="adaptive-home-list" aria-label="오늘 카드 목록">
+        <div className="adaptive-home-list" aria-label="오늘 케어 흐름">
           {context.cards.map((card) => (
             <article className="adaptive-home-card" data-testid="home-action-card" key={card.id}>
               <Badge tone={card.displaySafetyLevel === 'critical' ? 'coral' : 'sage'}>{badge}</Badge>

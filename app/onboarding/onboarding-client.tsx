@@ -143,9 +143,9 @@ export function OnboardingClient() {
 
       {activeStep === 'treatment' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="treatment-context-title">
-          <StatusBadge state="shared">Question 01</StatusBadge>
-          <h2 className={styles.sectionTitle} id="treatment-context-title">어디쯤에 있으세요?</h2>
-          <p className={styles.questionLead}>정답을 고르는 화면이 아니에요. 지금 가장 가까운 위치 하나만 눌러 주세요.</p>
+          <StatusBadge state="shared">처음 확인</StatusBadge>
+          <h2 className={styles.sectionTitle} id="treatment-context-title">오늘 어떤 도움부터 필요하세요?</h2>
+          <p className={styles.questionLead}>Fevio가 당신을 분류하려는 게 아니에요. 지금 덜 버거운 시작점을 하나만 같이 잡아볼게요.</p>
           <div className={styles.choiceGrid} role="group" aria-label="치료 상황 선택">
             {TREATMENT_OPTIONS.map((option) => (
               <SelectionChip
@@ -165,7 +165,7 @@ export function OnboardingClient() {
 
       {activeStep === 'role' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="role-context-title">
-          <StatusBadge state="shared">Question 02</StatusBadge>
+          <StatusBadge state="shared">기록 방식</StatusBadge>
           <h2 className={styles.sectionTitle} id="role-context-title">기록 방식은 어떻게 시작할까요?</h2>
           <p className={styles.questionLead}>지금 부담이 가장 적은 시작 방식을 고르면 됩니다.</p>
           <div className={styles.choiceGrid} role="group" aria-label="기록 방식 선택">
@@ -187,9 +187,9 @@ export function OnboardingClient() {
 
       {activeStep === 'first_item' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="first-item-title">
-          <StatusBadge state="shared">Question 03</StatusBadge>
-          <h2 className={styles.sectionTitle} id="first-item-title">첫 실행 항목 하나만 적어볼까요?</h2>
-          <p className={styles.questionLead}>긴 메모는 필요 없어요. 오늘 확인할 한 문장만 넣으면 홈 카드가 됩니다.</p>
+          <StatusBadge state="shared">첫 케어</StatusBadge>
+          <h2 className={styles.sectionTitle} id="first-item-title">오늘 놓치면 안 되는 것 하나만 남겨볼까요?</h2>
+          <p className={styles.questionLead}>긴 메모는 필요 없어요. 확인한 한 문장만 오늘의 케어 흐름에 올려둘게요.</p>
           <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="첫 항목 종류 선택">
             {FIRST_ITEM_OPTIONS.map((option) => (
               <SelectionChip
@@ -225,7 +225,7 @@ export function OnboardingClient() {
 
       {activeStep === 'partner' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="partner-invite-title">
-          <StatusBadge state="shared">Question 04</StatusBadge>
+          <StatusBadge state="shared">파트너</StatusBadge>
           <h2 className={styles.sectionTitle} id="partner-invite-title">파트너 초대는 지금 할까요?</h2>
           <p className={styles.partnerCopy}>공유 링크는 나중에 만들어도 돼요. 지금은 홈을 먼저 만들 수 있어요.</p>
           <div className={styles.choiceGrid} role="group" aria-label="파트너 초대 선택">
@@ -247,7 +247,7 @@ export function OnboardingClient() {
 
       {activeStep === 'review' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="review-title">
-          <StatusBadge state="synced">Ready</StatusBadge>
+          <StatusBadge state="synced">마지막 확인</StatusBadge>
           <h2 className={styles.sectionTitle} id="review-title">이 설정으로 홈을 만들까요?</h2>
           <p className={styles.questionLead}>방금 답한 내용만으로 첫 화면을 만들고, 나중에 언제든 바꿀 수 있어요.</p>
           <dl className={styles.reviewList}>

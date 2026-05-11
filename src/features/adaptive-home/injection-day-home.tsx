@@ -20,7 +20,7 @@ export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
 
         <section className={styles.careSurface} aria-label="오늘 케어 운영 요약">
           <div className={styles.careSurfaceCopy}>
-            <span className={styles.blockLabel}>State-based dashboard</span>
+            <span className={styles.blockLabel}>오늘의 케어 중심</span>
             <strong>지금은 주사 시간이 케어의 중심이에요.</strong>
             <p>Fevio는 치료를 판단하지 않고, 내가 확인한 시간과 준비물을 잊히지 않는 순서로 놓습니다.</p>
           </div>
@@ -49,7 +49,7 @@ export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
 
         <section className={styles.cardSection} aria-labelledby="care-flow-title">
           <div className={styles.sectionHeader}>
-            <span className={styles.blockLabel}>Care flow</span>
+            <span className={styles.blockLabel}>오늘의 흐름</span>
             <h2 id="care-flow-title">오늘 실제로 해야 할 일</h2>
           </div>
           <div className={styles.cardList} aria-label="오늘 카드 목록">
@@ -84,7 +84,7 @@ export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
         </div>
 
         <section className={styles.partnerBlock} aria-labelledby="partner-role-title">
-          <span className={styles.blockLabel}>Partner translation</span>
+          <span className={styles.blockLabel}>파트너 역할 번역</span>
           <h2 id="partner-role-title">파트너에게는 “도와줘”가 아니라 역할로 번역돼요</h2>
           <ul>
             <li>주사 30분 전에는 준비물과 조용한 공간을 함께 확인해요.</li>

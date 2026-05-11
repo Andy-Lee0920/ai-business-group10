@@ -16,7 +16,7 @@ test('presentation home defaults to the injection-day partner action story', asy
   await expect(cards).toHaveCount(4);
   await expect(cards.first()).toContainText(/고날에프|오비트렐/);
   await expect(page.getByRole('button', { name: '오늘 케어 흐름 확인하기' })).toBeVisible();
-  await expect(page.getByText('Partner translation')).toBeVisible();
+  await expect(page.getByLabel('파트너에게는 “도와줘”가 아니라 역할로 번역돼요').getByText('파트너 역할 번역')).toBeVisible();
   await expect(page.getByRole('heading', { name: '파트너에게는 “도와줘”가 아니라 역할로 번역돼요' })).toBeVisible();
   await expect(page.getByText('내 상태가 그대로 던져지는 것이 아니라')).toBeVisible();
 });
@@ -166,9 +166,9 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
 
   await expect(page.getByRole('heading', { name: '내 화면', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
-  await expect(page.getByText('지금은 어떤 날에 가까우세요?')).toBeVisible();
-  await expect(page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('오늘 화면을 이렇게 맞췄어요.')).toBeVisible();
+  await expect(page.getByText('오늘 어떤 케어 장면을 볼까요?')).toBeVisible();
+  await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('선택한 장면에 맞춰 내 화면과 파트너 역할이 함께 바뀌어요.')).toBeVisible();
   await expect(page.getByText('Live Sync')).toBeVisible();
   await expect(patient).toContainText('방금 붙여넣은 메모');
   await expect(patient).toContainText('주사 준비·확인자 역할을 먼저 올렸어요.');
@@ -248,15 +248,15 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(patient).toContainText('파트너가 확인했어요');
   await expect(page.getByTestId('patient-sync-mirror')).toContainText('파트너 확인 완료가 내 화면에 바로 도착했어요');
 
-  await page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '병원 다녀오기' }).click();
-  await expect(page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '병원 다녀오기' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' }).click();
+  await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' })).toHaveAttribute('aria-pressed', 'true');
   await expect(patient).toContainText('방문 체크리스트');
   await expect(patient).toContainText('09:00');
   await expect(partner).toContainText('동행자');
   await expect(partner).toContainText('이동 시간 확인');
 
-  await page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '기다리는 중' }).click();
-  await expect(page.getByRole('group', { name: '지금은 어떤 날에 가까우세요?' }).getByRole('button', { name: '기다리는 중' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' }).click();
+  await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' })).toHaveAttribute('aria-pressed', 'true');
   await expect(patient).toContainText('차분한 체크인');
   await expect(patient).toContainText('조용 모드');
   await expect(partner).toContainText('곁에 있는 사람');

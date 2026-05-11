@@ -43,7 +43,7 @@ export function DualPanelDemoClient() {
     id: 0,
     source: '내 화면',
     target: '파트너 화면',
-    label: '확정 카드가 파트너 화면으로 안전하게 투영됩니다',
+    label: '내가 확인한 케어가 파트너의 역할로 조용히 바뀝니다',
   }));
 
   const scenario = DEMO_SCENARIOS[care];
@@ -63,11 +63,11 @@ export function DualPanelDemoClient() {
     <div className={styles.demoShell} data-testid="demo-preview-stage">
       <header className={styles.compactHeader}>
         <div>
-          <p className="eyebrow">Dual-view demo</p>
+          <p className="eyebrow">함께 보는 케어 데모</p>
           <h1>내 화면과 파트너 화면이 함께 바뀝니다</h1>
         </div>
         <div className={styles.careInput}>
-          <p id="care-input-label">지금은 어떤 날에 가까우세요?</p>
+          <p id="care-input-label">오늘 어떤 케어 장면을 볼까요?</p>
           <div className={styles.compactController} role="group" aria-labelledby="care-input-label">
             {DEMO_ORDER.map((value) => (
               <SelectionChip
@@ -80,7 +80,7 @@ export function DualPanelDemoClient() {
               </SelectionChip>
             ))}
           </div>
-          <small>오늘 화면을 이렇게 맞췄어요.</small>
+          <small>선택한 장면에 맞춰 내 화면과 파트너 역할이 함께 바뀌어요.</small>
         </div>
         <span className={styles.stepBadge}>{activeIndex}/3</span>
       </header>

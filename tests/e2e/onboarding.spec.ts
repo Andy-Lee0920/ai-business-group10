@@ -9,6 +9,10 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   await expect(page.getByText('파트너 앱')).toHaveCount(0);
   await expect(page.getByLabel(/처음 설정 1\/5/u)).toBeVisible();
   await expect(page.getByRole('heading', { name: '기록 방식은 어떻게 시작할까요?' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '오늘 어떤 도움부터 필요하세요?' })).toBeVisible();
+  await expect(page.getByText('Fevio가 당신을 분류하려는 게 아니에요.')).toBeVisible();
+  await expect(page.getByText('어디쯤에 있으세요?')).toHaveCount(0);
+  await expect(page.getByText('정답을 고르는 화면')).toHaveCount(0);
 
   const layoutMetrics = await page.evaluate(() => {
     const card = document.querySelector('main.app-shell > section.hero-card') as HTMLElement | null;
@@ -16,7 +20,7 @@ test('onboarding is one shared path where partner invite can be skipped and firs
       element.textContent?.includes('파트너 초대는 선택 사항'),
     ) as HTMLElement | undefined;
     const badge = Array.from(document.querySelectorAll('.fevio-status-badge')).find((element) =>
-      element.textContent?.includes('Question 01'),
+      element.textContent?.includes('처음 확인'),
     ) as HTMLElement | undefined;
     const title = document.querySelector('#treatment-context-title') as HTMLElement | null;
     const lead = document.querySelector('#treatment-context-title + p') as HTMLElement | null;

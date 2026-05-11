@@ -1,17 +1,12 @@
 import { cookies, headers } from 'next/headers';
-import { Badge, Card } from '../../../src/components/ui';
 import { isPresentationHost, isPresentationMode } from '../../../src/config';
-import { computeHomeContext, type HomeActionCard } from '../../../src/domain/home-composition';
+import { computeHomeContext } from '../../../src/domain/home-composition';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
-import { HomeUtilityLauncher } from '../../../src/features/adaptive-home/home-utility-launcher';
 import { getPresentationScenarioCards, normalizePresentationCare } from '../../../src/features/adaptive-home/presentation-scenarios';
-import styles from './home.module.css';
-import type { CareActionCard, DisplaySafetyLevel } from '../../../src/types/care-cards.types';
+import type { CareActionCard } from '../../../src/types/care-cards.types';
 
 export const dynamic = 'force-dynamic';
-
-type RenderableHomeCard = HomeActionCard & { status: CareActionCard['status'] };
 
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -35,30 +30,7 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
         : makeDemoCards(now);
   const context = computeHomeContext(cards, now);
 
-  if (presentationMode) return <AdaptiveHomeRuntime context={context} demoMode />;
-
-  const renderedCards = withConfirmedStatus(context.cards);
-
-  return (
-    <main className="app-shell">
-      <Card aria-labelledby="home-title" className="hero-card">
-        <p className="eyebrow">{presentationMode ? '발표 데모' : 'Dynamic Home'}</p>
-        <h1 id="home-title">오늘의 실행 카드</h1>
-        <p className="lead">{context.primaryMessage}</p>
-        <div className={styles.homeCardList} aria-label="오늘 카드 목록">
-          {renderedCards.map((card) => (
-            <article className={`${styles.homeActionCard} ${card.displaySafetyLevel === 'critical' ? styles.homeCardCoral : ''}`} data-testid="home-action-card" key={card.id}>
-              <Badge tone={badgeTone(card.displaySafetyLevel, card.status)}>{badgeLabel(card.displaySafetyLevel, card.status)}</Badge>
-              <h2>{card.title}</h2>
-              {card.urgencyCopy ? <p className={styles.homeUrgencyCopy}>{card.urgencyCopy}</p> : null}
-              {card.description ? <p className="lead">{card.description}</p> : null}
-            </article>
-          ))}
-        </div>
-        <HomeUtilityLauncher />
-      </Card>
-    </main>
-  );
+  return <AdaptiveHomeRuntime context={context} demoMode={presentationMode} />;
 }
 
 async function getPersistedCards(): Promise<CareActionCard[]> {
@@ -139,20 +111,6 @@ function readOnboardingCard(value: string | undefined): CareActionCard | null {
   } catch {
     return null;
   }
-}
-
-function withConfirmedStatus(cards: readonly HomeActionCard[]): RenderableHomeCard[] {
-  return cards.map((card) => ({ ...card, status: 'confirmed' }));
-}
-
-function badgeTone(level: DisplaySafetyLevel, status: CareActionCard['status']) {
-  if (status === 'completed') return 'lavender';
-  return level === 'critical' ? 'coral' : 'sage';
-}
-
-function badgeLabel(level: DisplaySafetyLevel, status: CareActionCard['status']) {
-  if (status === 'completed') return '완료';
-  return level === 'critical' ? '임박' : '확정';
 }
 
 function makeDemoCards(now: Date): CareActionCard[] {

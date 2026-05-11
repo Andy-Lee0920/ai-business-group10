@@ -5,7 +5,7 @@ export function HomeUtilityLauncher() {
   return (
     <section className={styles.utilityLauncher} aria-labelledby="adaptive-utility-launcher-title">
       <div className={styles.utilityHeader}>
-        <p>Care OS input</p>
+        <p>작은 케어 정리</p>
         <h2 id="adaptive-utility-launcher-title">흩어진 케어를 한 장의 카드로</h2>
         <span>병원 안내, 약·주사, 감정 부담, 시술 기록을 각각 가장 짧은 확인 루프로 남깁니다.</span>
       </div>
@@ -44,7 +44,7 @@ export function HomeUtilityLauncher() {
 export function SharedCareProjectionCard() {
   return (
     <div className={styles.sharedProjection} aria-label="파트너 공유 상태">
-      <span>Role-based sync</span>
+      <span>파트너 역할 번역</span>
       <strong>역할로 번역돼요.</strong>
       <p>내 상태가 그대로 던져지는 것이 아니라, 파트너가 지금 할 수 있는 작은 도움으로 바뀌어 보입니다.</p>
     </div>

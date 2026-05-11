@@ -10,4 +10,7 @@ test('home opens as a cinematic Care OS surface instead of a generic card list',
   await expect(page.getByRole('heading', { name: '파트너에게는 “도와줘”가 아니라 역할로 번역돼요' })).toBeVisible();
   await expect(page.getByText('확정된 카드')).toHaveCount(0);
   await expect(page.getByText('Low-energy input')).toHaveCount(0);
+  await expect(page.getByText('Dynamic Home')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '오늘의 실행 카드' })).toHaveCount(0);
+  await expect(page.getByText('임박')).toHaveCount(0);
 });

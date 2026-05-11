@@ -63,9 +63,9 @@ function timeRank(value: string | null) {
 }
 
 function getPrimaryMessage(careDay: CareDay) {
-  if (careDay === 'onboarding') return '병원 메모를 입력하면 오늘 카드가 만들어져요.';
-  if (careDay === 'injection_day') return '오늘은 주사 시간이 먼저 보여요.';
-  if (careDay === 'clinic_day') return '오늘 병원 방문 카드가 있어요.';
-  if (careDay === 'waiting_day') return '대기 중인 다음 일정만 조용히 확인해요.';
-  return '오늘 확인할 실행 카드를 정리했어요.';
+  if (careDay === 'onboarding') return '처음부터 많이 묻지 않고, 오늘 가장 부담이 적은 케어부터 같이 정리해요.';
+  if (careDay === 'injection_day') return '오늘은 시간과 준비물이 흔들리지 않도록, 확인한 내용만 먼저 놓을게요.';
+  if (careDay === 'clinic_day') return '방문 전에는 이동, 질문, 다음 안내를 한 번에 덜 급하게 확인해요.';
+  if (careDay === 'waiting_day') return '오늘은 더 많이 확인하기보다, 필요한 일정만 조용히 붙잡아 둘게요.';
+  return '오늘 해야 할 것과 쉬어도 되는 것을 나눠서 보여드릴게요.';
 }
