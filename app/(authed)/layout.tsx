@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import type { CSSProperties } from 'react';
+import { isPresentationHost, isPresentationMode } from '../../src/config';
 
 const tabStyle: CSSProperties = {
   display: 'flex',
@@ -14,7 +16,10 @@ const tabStyle: CSSProperties = {
   textDecoration: 'none',
 };
 
-export default function AuthedLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthedLayout({ children }: { children: React.ReactNode }) {
+  const requestHeaders = await headers();
+  const presentationMode = isPresentationMode() || isPresentationHost(requestHeaders.get('host'));
+
   return (
     <>
       <div style={{ paddingBottom: 72 }}>{children}</div>
@@ -41,7 +46,7 @@ export default function AuthedLayout({ children }: { children: React.ReactNode }
         <Link href="/capture" style={tabStyle} aria-label="병원 기록">
           기록
         </Link>
-        <Link href="/settings/sharing" style={tabStyle} aria-label="파트너 보기">
+        <Link href={presentationMode ? '/partner/demo' : '/settings/sharing'} style={tabStyle} aria-label="파트너 보기">
           파트너
         </Link>
       </nav>

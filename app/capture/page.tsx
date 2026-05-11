@@ -1,12 +1,14 @@
 import { cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Card, Notice } from '../../src/components/ui';
-import { isPresentationMode } from '../../src/config';
+import { isPresentationHost, isPresentationMode } from '../../src/config';
 import { getPresentationClinicMemo } from '../../src/lib/presentation-demo-data';
 import { CaptureForm } from './capture-form';
 
 export default async function CapturePage() {
-  const presentationMode = isPresentationMode();
+  const requestHeaders = await headers();
+  const presentationMode = isPresentationMode() || isPresentationHost(requestHeaders.get('host'));
   const cookieStore = await cookies();
   if (cookieStore.get('fevio_privacy_accepted')?.value !== '1') redirect('/privacy');
 

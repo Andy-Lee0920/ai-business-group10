@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getPublicAppUrl, isPresentationMode } from '../../../src/config';
+import type { NextRequest } from 'next/server';
+import { getPublicAppUrl, isPresentationRequest } from '../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const appUrl = getPublicAppUrl();
 
-  if (isPresentationMode()) {
-    return NextResponse.redirect(new URL('/privacy?mode=presentation', appUrl));
+  if (isPresentationRequest(request)) {
+    return NextResponse.redirect(new URL('/privacy?mode=presentation', request.url));
   }
 
   let supabase;
