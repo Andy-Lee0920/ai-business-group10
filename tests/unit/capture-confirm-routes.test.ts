@@ -83,6 +83,49 @@ describe('/api/confirm', () => {
     });
   });
 
+
+
+  it('passes protocol draft metadata through confirmation only after user review', async () => {
+    const confirm = vi.fn().mockResolvedValue({ createdCardCount: 1 });
+    mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture: vi.fn(), confirm } satisfies CaptureStore);
+
+    const response = await confirmPost(
+      jsonRequest('/api/confirm', {
+        draftId: 'draft-protocol',
+        visitInputId: 'visit-protocol',
+        items: [
+          {
+            sourceText: '오늘 밤 10시 오비드렐 주사',
+            assignedTo: 'my_action',
+            suggestedCardType: 'injection',
+            scheduledAt: '2026-05-11T22:00:00.000Z',
+            careDate: '2026-05-11',
+            description: '병원 안내에서 만든 확정 전 초안',
+            userMarkedImportant: true,
+            partnerVisible: true,
+          },
+        ],
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(confirm).toHaveBeenCalledWith({
+      draftId: 'draft-protocol',
+      visitInputId: 'visit-protocol',
+      items: [
+        expect.objectContaining({
+          sourceText: '오늘 밤 10시 오비드렐 주사',
+          assignedTo: 'my_action',
+          suggestedCardType: 'injection',
+          scheduledAt: '2026-05-11T22:00:00.000Z',
+          careDate: '2026-05-11',
+          userMarkedImportant: true,
+          partnerVisible: true,
+        }),
+      ],
+    });
+  });
+
   it('keeps card_type deterministic through inferCardType with no LLM path', () => {
     expect(inferCardType('오비드렐 주사 밤 10시', 'my_action')).toBe('injection');
   });

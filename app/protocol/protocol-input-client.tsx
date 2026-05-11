@@ -40,7 +40,20 @@ export function ProtocolInputClient() {
 
   function moveToReview() {
     if (!captureIds) return;
-    sessionStorage.setItem('fevio.splitReview', JSON.stringify({ ...captureIds, candidates: drafts.map((item) => ({ sourceText: item.sourceText, assignedTo: null, orderIndex: item.orderIndex })) }));
+    sessionStorage.setItem('fevio.splitReview', JSON.stringify({
+      ...captureIds,
+      candidates: drafts.map((item) => ({
+        sourceText: item.sourceText,
+        assignedTo: null,
+        orderIndex: item.orderIndex,
+        suggestedCardType: item.suggestedCardType,
+        scheduledAt: item.scheduledAt,
+        careDate: item.careDate,
+        description: item.uncertaintyReason ?? '병원 안내에서 만든 확정 전 초안',
+        userMarkedImportant: item.suggestedCardType === 'injection',
+        partnerVisible: item.suggestedCardType === 'injection' || item.suggestedCardType === 'clinic_visit',
+      })),
+    }));
     window.location.href = `/split-review?draftId=${encodeURIComponent(captureIds.draftId)}`;
   }
 

@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { Badge, CtaButton, Notice, SegmentedButton } from '../../src/components/ui';
-import { type AssignedTo } from '../../src/domain/line-split';
+import { type AssignedTo, type CardType } from '../../src/domain/line-split';
 import type { ForbiddenPhraseHit } from '../../src/types/description-guard.types';
 import { validateDescription } from '../../src/utils/description-guard';
 
-type Candidate = { sourceText: string; assignedTo: AssignedTo | null; orderIndex: number };
+type Candidate = {
+  sourceText: string;
+  assignedTo: AssignedTo | null;
+  orderIndex: number;
+  suggestedCardType?: CardType | null;
+  scheduledAt?: string | null;
+  careDate?: string | null;
+  description?: string | null;
+  userMarkedImportant?: boolean;
+  partnerVisible?: boolean;
+};
 type ReviewState = { visitInputId: string; draftId: string; candidates: Candidate[] };
 
 const OPTIONS = [
@@ -44,7 +54,16 @@ export function SplitReviewClient() {
 
   async function confirm() {
     if (!state) return;
-    const items = state.candidates.map((candidate) => ({ sourceText: candidate.sourceText, assignedTo: candidate.assignedTo ?? 'my_action' }));
+    const items = state.candidates.map((candidate) => ({
+      sourceText: candidate.sourceText,
+      assignedTo: candidate.assignedTo ?? 'my_action',
+      suggestedCardType: candidate.suggestedCardType ?? null,
+      scheduledAt: candidate.scheduledAt ?? null,
+      careDate: candidate.careDate ?? null,
+      description: candidate.description ?? null,
+      userMarkedImportant: candidate.userMarkedImportant === true,
+      partnerVisible: candidate.partnerVisible === true,
+    }));
     const response = await fetch('/api/confirm', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -71,6 +90,9 @@ export function SplitReviewClient() {
       {state.candidates.map((candidate, index) => (
         <section className="split-item" key={`${candidate.orderIndex}-${candidate.sourceText}`}>
           <p>{candidate.sourceText}</p>
+          {candidate.scheduledAt || candidate.careDate ? (
+            <p className="lead">{candidate.scheduledAt ? `예상 시간 ${candidate.scheduledAt.slice(11, 16)}` : `예상 날짜 ${candidate.careDate}`}</p>
+          ) : null}
           <DescriptionWarning hits={validateDescription(candidate.sourceText).warnings} />
           <SegmentedButton
             label={`${index + 1}번 항목 분류`}
