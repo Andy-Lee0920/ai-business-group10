@@ -11,7 +11,7 @@ export default async function PartnerActionPage({ params }: { params: Promise<{ 
       <section className="placeholder-card">
         <p className="eyebrow">Partner Action View</p>
         <h2>파트너 오늘 할 일</h2>
-        <p className="lead">사용자가 확인한 실행 내용만 보여주는 읽기 전용 링크예요.</p>
+        <p className="lead">상태를 그대로 던지지 않고, 지금 맡을 수 있는 역할만 조용히 번역해 보여줘요.</p>
         {demoItems ? <PartnerActionList items={demoItems} /> : <PartnerActionViewClient token={token} />}
       </section>
     </main>

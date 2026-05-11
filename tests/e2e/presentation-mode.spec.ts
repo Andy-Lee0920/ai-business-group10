@@ -15,16 +15,16 @@ test('presentation home defaults to the injection-day partner action story', asy
   const cards = page.getByTestId('home-action-card');
   await expect(cards).toHaveCount(4);
   await expect(cards.first()).toContainText(/고날에프|오비트렐/);
-  await expect(page.getByRole('button', { name: '주사 준비 체크 시작' })).toBeVisible();
-  await expect(page.getByText('오늘 파트너의 역할')).toBeVisible();
-  await expect(page.getByText('오늘은 확인자')).toBeVisible();
-  await expect(page.getByText('내가 확정한 카드만 파트너 화면에 안전하게 보입니다.')).toBeVisible();
+  await expect(page.getByRole('button', { name: '오늘 케어 흐름 확인하기' })).toBeVisible();
+  await expect(page.getByText('Partner translation')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '파트너에게는 “도와줘”가 아니라 역할로 번역돼요' })).toBeVisible();
+  await expect(page.getByText('내 상태가 그대로 던져지는 것이 아니라')).toBeVisible();
 });
 
 test('presentation home switches between three treatment situations', async ({ page }) => {
   await page.goto('/home?care=injection');
-  await expect(page.getByRole('button', { name: '주사 준비 체크 시작' })).toBeVisible();
-  await expect(page.getByText('오늘은 확인자')).toBeVisible();
+  await expect(page.getByRole('button', { name: '오늘 케어 흐름 확인하기' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '파트너에게는 “도와줘”가 아니라 역할로 번역돼요' })).toBeVisible();
 
   await page.goto('/home?care=clinic');
   await expect(page.getByRole('button', { name: '방문 체크리스트 열기' })).toBeVisible();
@@ -47,7 +47,7 @@ test('presentation /partner/demo renders a sanitized partner view', async ({ pag
   await page.goto('/partner/demo');
 
   await expect(page.getByRole('heading', { name: '파트너 오늘 할 일' })).toBeVisible();
-  await expect(page.getByText('오늘 21시 고날에프 1회')).toBeVisible();
+  await expect(page.getByText('21:00 고날에프 — 내가 확인한 용량')).toBeVisible();
   await expect(page.getByText(/raw_text|token|user_id|원문 메모/)).toHaveCount(0);
 });
 

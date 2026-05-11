@@ -160,7 +160,7 @@ function makeDemoCards(now: Date): CareActionCard[] {
   const later = new Date(now.getTime() + 3 * 60 * 60_000).toISOString();
   return [
     makeCard('routine', 'medication', '프로게스테론 복용', later),
-    makeCard('injection', 'injection', '오늘 21시 고날에프 1회', imminent),
+    makeCard('injection', 'injection', '21:00 고날에프 — 내가 확인한 용량', imminent),
   ];
 }
 

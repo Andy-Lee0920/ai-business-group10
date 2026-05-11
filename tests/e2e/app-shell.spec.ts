@@ -14,9 +14,9 @@ test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await page.goto('/home');
   await expect(page.locator('main.app-shell')).toBeVisible();
   await expect(page.getByRole('navigation', { name: '주 탐색' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '바로 정리하기' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /일정 등록·변경/ })).toHaveAttribute('href', '/schedule');
-  await expect(page.getByRole('link', { name: /약·주사 추가/ })).toHaveAttribute('href', '/medication');
+  await expect(page.getByRole('heading', { name: '흩어진 케어를 한 장의 카드로' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /일정 변경/ })).toHaveAttribute('href', '/schedule');
+  await expect(page.getByRole('link', { name: /약·주사 확인/ })).toHaveAttribute('href', '/medication');
 });
 
 test('desktop home is constrained to an iPhone 17-width frame with in-frame navigation', async ({ page }) => {

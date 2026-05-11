@@ -89,7 +89,7 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   await page.getByRole('button', { name: '홈 만들기' }).click();
 
   await expect(page).toHaveURL(/\/home$/u);
-  await expect(page.getByRole('heading', { name: '주사 시간부터 함께 확인해요' })).toBeVisible();
-  await expect(page.getByText('오늘은 주사 시간이 먼저 보여요.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /오늘의 케어 운영/ })).toBeVisible();
+  await expect(page.getByText('병원 밖에서 흩어지는 일정·약·감정')).toBeVisible();
   await expect(page.getByText('오늘 밤 9시 주사 확인')).toBeVisible();
 });

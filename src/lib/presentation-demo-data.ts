@@ -16,11 +16,11 @@ export function getPresentationCards(now: Date): PresentationCareActionCard[] {
 
 export function getPresentationClinicMemo(): string {
   return [
-    '오늘 21시 고날에프 1회, 시간 맞춰 주사하기',
-    '22시 오비트렐 주사는 냉장 보관 후 준비',
+    '21:00 고날에프 — 내가 확인한 용량',
+    '22:00 오비드렐 트리거 확인, 냉장 보관 후 준비',
     '내일부터 프로게스테론 아침·저녁 복용',
     '목요일 오전 9시 병원 방문, 채혈과 초음파 확인',
-    '배우자는 주사 30분 전 알람과 얼음팩 준비 도와주기',
+    '파트너는 주사 30분 전 펜, 알코올솜, 조용한 공간만 함께 확인',
   ].join('\n');
 }
 
@@ -30,11 +30,11 @@ export function getPresentationPartnerView(): PartnerActionViewItem[] {
 
 function cardSeeds(now: Date): CareActionCard[] {
   return [
-    makeCard('critical-gonal', 'injection', '오늘 21시 고날에프 1회', minutesFrom(now, 20), '주사 30분 전 손 씻기와 펜 확인', 'confirmed'),
-    makeCard('critical-ovitrelle', 'injection', '오늘 22시 오비트렐 준비', minutesFrom(now, 25), '냉장 보관한 주사를 꺼내고 투여 시간 확인', 'confirmed'),
+    makeCard('critical-gonal', 'injection', '21:00 고날에프 — 내가 확인한 용량', minutesFrom(now, 20), '주사 30분 전 펜, 알코올솜, 조용한 공간을 함께 확인해요.', 'confirmed'),
+    makeCard('critical-ovitrelle', 'injection', '22:00 오비드렐 트리거 확인', minutesFrom(now, 25), '냉장 보관한 주사를 꺼내고 투여 시간을 다시 확인해요.', 'confirmed'),
     makeCard('routine-progesterone', 'medication', '프로게스테론 아침·저녁 복용', hoursFrom(now, 3), '복용 시간을 놓치지 않도록 알람 설정', 'confirmed'),
     makeCard('routine-clinic', 'clinic_visit', '목요일 오전 9시 병원 방문', daysFrom(now, 2), '채혈과 초음파 확인 예정', 'confirmed'),
-    makeCard('completed-partner', 'partner_support', '배우자 주사 준비 도움 완료', minutesFrom(now, -90), '얼음팩과 주사 공간을 미리 준비했어요', 'completed'),
+    makeCard('completed-partner', 'partner_support', '파트너 주사 준비 역할 완료', minutesFrom(now, -90), '필요한 준비물을 묻기 전에 먼저 확인했어요.', 'completed'),
   ];
 }
 
