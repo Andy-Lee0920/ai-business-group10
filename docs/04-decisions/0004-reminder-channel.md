@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted — 2026-05-10
+Amended — 2026-05-11
+
+2026-05-11 amendment: email remains an optional deterministic dispatch path, but production email sending and scheduler proof are **not** a current SLC release gate. The core #52 closure criterion is in-app imminent injection emphasis; external reminder delivery is deferred unless stakeholders reclassify it as core.
 
 ## Context
 
@@ -15,12 +17,12 @@ The options compared here are Web Push API + Service Worker, Email-only, and PWA
 
 ## Decision
 
-Choose **Email-only** as the P0 off-tab reminder channel for `N1`.
+Choose **Email-only** as the optional off-tab reminder channel for `N1`, but do not let production email/scheduler proof block the SLC core care loop.
 
 `N1` should implement:
 
 - in-app critical time emphasis for confirmed injection cards, as already required by ADR 0002 Rule #25-A;
-- one 30-minute-before reminder sent to the user's verified account email;
+- optional one 30-minute-before reminder sent to the user's verified account email when scheduler/provider proof is explicitly in scope;
 - a deterministic dispatch log keyed by card, scheduled time, and channel;
 - Korean copy that includes only the confirmed card title, scheduled time, and app link;
 - no medical advice, dosage inference, Kakao/SMS/native push, or LLM-generated reminder text.
@@ -41,20 +43,20 @@ Easier:
 
 - `N1` can proceed without making P0 depend on PWA install behavior, Service Worker push support, Kakao/SMS contracts, or native app release.
 - The release gate remains aligned with ADR 0001: responsive webapp + Supabase-backed deterministic flow.
-- Reminder dispatch can be tested with server-side integration tests and provider stubs.
+- Reminder dispatch can be tested with server-side integration tests and provider stubs without making production email a release blocker.
 
 Harder:
 
 - Email is not a guaranteed immediate alert channel; users may have delayed inbox checks, spam filtering, or muted mail notifications.
 - The product must set expectations: P0 email is a minimum reminder, not an emergency/medical safety guarantee.
-- A transactional email provider, sending-domain setup, and secret management are still required before `N1` can be fully green.
+- A transactional email provider, sending-domain setup, and scheduler proof are required only when email is re-scoped as a core delivery feature.
 
 Forbidden / deferred:
 
 - Do not implement Web Push, PWA install prompts, Kakao 알림톡, SMS, native push, or sending code in ADR 0004.
 - Do not describe email as sufficient medical safety coverage.
 - Do not include raw clinic memo text, inferred dosage, or unconfirmed LLM output in reminder email copy.
-- Do not block unrelated P0 work if provider setup is delayed; keep ADR 0002's fallback rule: release in-app emphasis first and split email provider work as an `N1` child if needed.
+- Do not block P0 closure if provider/scheduler setup is delayed or de-scoped; keep ADR 0002's fallback rule: release in-app emphasis first and treat email provider/scheduler work as optional expansion.
 
 ## Evidence references
 

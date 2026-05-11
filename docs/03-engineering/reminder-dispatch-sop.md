@@ -23,13 +23,15 @@ The route checks confirmed injection cards whose `scheduled_at` is inside the 30
 
 ## Scheduler decision
 
+**2026-05-11 product decision:** email sending and external scheduler proof are not core to the current SLC. The releasable #52 scope is in-app imminent injection emphasis plus a protected optional dispatch route.
+
 Do **not** add a high-frequency Vercel Cron on the current Hobby deployment. Vercel rejected `* * * * *` during production deploy because Hobby accounts are limited to daily cron jobs.
 
-For #52 full Green, use one of these environment decisions:
+Future reminder expansion can choose one of these paths after the core care loop is proven:
 
 1. Supabase scheduled function / pg_cron invokes the protected route every minute with the secret header.
 2. Upgrade the Vercel project plan and add a one-minute Cron only after the plan supports it.
-3. Explicitly accept SLC with in-app emphasis plus the protected dispatch route, and keep external scheduler/provider send evidence as a child Red.
+3. Replace email with a channel that is product-core and explicitly accepted by stakeholders.
 
 ## Manual production smoke without sending email
 

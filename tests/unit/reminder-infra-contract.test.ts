@@ -6,6 +6,7 @@ describe('reminder infrastructure contract', () => {
     const sop = readFileSync('docs/03-engineering/reminder-dispatch-sop.md', 'utf8');
     expect(sop).toContain('/api/reminders/send-due');
     expect(sop).toContain('Authorization: Bearer');
+    expect(sop).toContain('email sending and external scheduler proof are not core to the current SLC');
     expect(sop).toContain('Vercel rejected `* * * * *`');
   });
 
