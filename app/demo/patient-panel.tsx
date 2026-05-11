@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { Badge, Card, CtaButton } from '../../src/components/ui';
 import type { DemoScenario } from './demo-scenarios';
 import styles from './dual-panel-demo.module.css';
 
@@ -18,7 +19,7 @@ export function PatientPanel({ scenario, checked, onToggle }: PatientPanelProps)
         <span>Fevio</span>
       </div>
 
-      <div className={styles.stageCard}>
+      <Card as="div" className={styles.stageCard}>
         <div>
           <span className={styles.microLabel}>현재 단계</span>
           <strong>{patient.stage}</strong>
@@ -27,13 +28,13 @@ export function PatientPanel({ scenario, checked, onToggle }: PatientPanelProps)
         <div className={styles.progressRing} style={{ '--progress': `${patient.progress}%` } as CSSProperties}>
           <span>{patient.progress}%</span>
         </div>
-      </div>
+      </Card>
 
-      <div className={styles.primaryCard}>
-        <span className={styles.statePill}>{scenario.label}</span>
+      <Card as="div" className={styles.primaryCard}>
+        <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         <h3>{patient.headline}</h3>
-        <button className={styles.mainAction} type="button">{patient.primaryAction}</button>
-      </div>
+        <CtaButton className={styles.mainAction} type="button">{patient.primaryAction}</CtaButton>
+      </Card>
 
       <div className={styles.coreRail} aria-label="v1 필수 기능">
         {scenario.coreTools.map((item) => (
@@ -46,15 +47,15 @@ export function PatientPanel({ scenario, checked, onToggle }: PatientPanelProps)
 
       <div className={styles.metricGrid}>
         {patient.nowStack.map((item) => (
-          <div className={`${styles.metricCard} ${styles[`tone_${item.tone ?? 'neutral'}`]}`} key={item.id}>
+          <Card as="div" className={`${styles.metricCard} ${styles[`tone_${item.tone ?? 'neutral'}`]}`} key={item.id}>
             <span>{item.label}</span>
             <strong>{item.value}</strong>
             {item.meta ? <small>{item.meta}</small> : null}
-          </div>
+          </Card>
         ))}
       </div>
 
-      <div className={styles.utilityCard}>
+      <Card as="div" className={styles.utilityCard}>
         <div className={styles.cardTitleRow}>
           <h4>오늘 체크</h4>
           <span>{countChecked(patient.checklist, checked)}/{patient.checklist.length}</span>
@@ -77,16 +78,16 @@ export function PatientPanel({ scenario, checked, onToggle }: PatientPanelProps)
             );
           })}
         </div>
-      </div>
+      </Card>
 
-      <div className={styles.timelineCard}>
+      <Card as="div" className={styles.timelineCard}>
         {patient.timeline.map((item) => (
           <div className={styles.timelineItem} key={item.id}>
             <span>{item.label}</span>
             <strong>{item.value}</strong>
           </div>
         ))}
-      </div>
+      </Card>
 
       <div className={styles.toolDock}>
         {patient.quickTools.map((item) => (
