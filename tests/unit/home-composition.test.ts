@@ -51,6 +51,25 @@ describe('home composition', () => {
   });
 
 
+
+  it('shows restrained recheck copy for missed important injection cards', () => {
+    const context = computeHomeContext([
+      card({
+        id: 'missed-injection',
+        card_type: 'injection',
+        title: '오비드렐 확인',
+        scheduled_at: '2026-05-10T08:30:00.000Z',
+        user_marked_important: true,
+      }),
+    ], NOW);
+
+    expect(context.cards[0]).toMatchObject({
+      id: 'missed-injection',
+      displaySafetyLevel: 'critical',
+      urgencyCopy: '아직 확인 안 됐어요 · 조용히 다시 확인해 주세요.',
+    });
+  });
+
   it('keeps IVF record cards in the simple home history list without time pressure', () => {
     const context = computeHomeContext([
       card({

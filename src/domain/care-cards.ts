@@ -5,6 +5,7 @@ import type {
   CareContextInput,
   CareDay,
   DisplaySafetyLevel,
+  ReminderFallbackState,
 } from '../types/care-cards.types';
 
 const CARD_TYPE_KEYWORDS: Record<CardType, readonly string[]> = {
@@ -100,6 +101,23 @@ export function computeDisplaySafetyLevel(
 
   if (card.confirmation_required) return 'time_sensitive';
   return 'normal';
+}
+
+export function computeReminderFallbackState(
+  card: CareActionCard | null | undefined,
+  now: Date,
+): ReminderFallbackState {
+  if (!card || card.status !== 'confirmed') return 'none';
+  if (!card.user_marked_important || !card.scheduled_at) return 'none';
+  if (card.card_type !== 'injection' && card.card_type !== 'medication') return 'none';
+
+  const minutesUntil = diffMinutes(new Date(card.scheduled_at), now);
+  return minutesUntil < -15 ? 'needs_recheck' : 'none';
+}
+
+export function reminderFallbackCopy(state: ReminderFallbackState) {
+  if (state === 'needs_recheck') return '아직 확인 안 됐어요 · 조용히 다시 확인해 주세요.';
+  return null;
 }
 
 function hasKeyword(normalized: string, keyword: string) {

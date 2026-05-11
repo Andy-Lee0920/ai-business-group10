@@ -9,6 +9,7 @@ import {
 import {
   computeCareDay,
   computeDisplaySafetyLevel,
+  computeReminderFallbackState,
   inferCardType,
 } from '../../src/domain/care-cards';
 
@@ -59,6 +60,31 @@ describe('care action card domain', () => {
     expect(injection).toEqual(original);
     expect(computeDisplaySafetyLevel(card({ card_type: 'injection', scheduled_at: '2026-05-10T09:31:00.000Z' }), NOW)).toBe('time_sensitive');
     expect(computeDisplaySafetyLevel(card({ card_type: 'medication', scheduled_at: NOW.toISOString() }), NOW)).not.toBe('critical');
+  });
+
+
+  it('computes in-app recheck fallback only for missed important medication or injection cards', () => {
+    expect(computeReminderFallbackState(card({
+      card_type: 'injection',
+      scheduled_at: '2026-05-10T08:40:00.000Z',
+      user_marked_important: true,
+    }), NOW)).toBe('needs_recheck');
+    expect(computeReminderFallbackState(card({
+      card_type: 'injection',
+      scheduled_at: '2026-05-10T08:50:00.000Z',
+      user_marked_important: true,
+    }), NOW)).toBe('none');
+    expect(computeReminderFallbackState(card({
+      card_type: 'medication',
+      scheduled_at: '2026-05-10T08:30:00.000Z',
+      user_marked_important: false,
+    }), NOW)).toBe('none');
+    expect(computeReminderFallbackState(card({
+      card_type: 'medication',
+      scheduled_at: '2026-05-10T08:30:00.000Z',
+      user_marked_important: true,
+      status: 'completed',
+    }), NOW)).toBe('none');
   });
 
   it('handles null, undefined, and empty text boundaries safely', () => {

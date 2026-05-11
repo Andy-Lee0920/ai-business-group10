@@ -57,3 +57,5 @@ export type CareContextInput = {
   now: Date;
   manuallySelectedCareDay?: Extract<CareDay, 'waiting_day'> | null;
 };
+
+export type ReminderFallbackState = 'none' | 'needs_recheck';

@@ -1,4 +1,4 @@
-import { computeCareDay, computeDisplaySafetyLevel } from './care-cards';
+import { computeCareDay, computeDisplaySafetyLevel, computeReminderFallbackState, reminderFallbackCopy } from './care-cards';
 import type { CareActionCard, CareDay, DisplaySafetyLevel } from '../types/care-cards.types';
 
 export type HomeActionCard = {
@@ -32,6 +32,7 @@ export function computeHomeContext(cards: readonly CareActionCard[], now: Date):
 
 function toHomeActionCard(card: CareActionCard, now: Date): HomeActionCard {
   const displaySafetyLevel = computeDisplaySafetyLevel(card, now);
+  const recheckCopy = reminderFallbackCopy(computeReminderFallbackState(card, now));
 
   return {
     id: card.id,
@@ -40,7 +41,7 @@ function toHomeActionCard(card: CareActionCard, now: Date): HomeActionCard {
     scheduledAt: card.scheduled_at,
     displaySafetyLevel,
     accentClassName: displaySafetyLevel === 'critical' ? 'home-card--critical home-card--coral' : 'home-card--calm',
-    urgencyCopy: displaySafetyLevel === 'critical' ? '시간 다 됐어요 · 지금 ±30분' : null,
+    urgencyCopy: recheckCopy ?? (displaySafetyLevel === 'critical' ? '시간 다 됐어요 · 지금 ±30분' : null),
   };
 }
 
