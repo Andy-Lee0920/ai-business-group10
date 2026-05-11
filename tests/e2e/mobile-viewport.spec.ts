@@ -18,7 +18,10 @@ test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll
     return {
       backgroundColor: island.backgroundColor,
       height: island.height,
+      marginTop: island.marginTop,
+      position: island.position,
       top: island.top,
+      transform: island.transform,
       width: island.width,
     };
   });
@@ -37,7 +40,10 @@ test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll
   expect(shellIsland.backgroundColor).toBe('rgb(0, 0, 0)');
   expect(Number.parseFloat(shellIsland.width)).toBeCloseTo(125.67, 1);
   expect(Number.parseFloat(shellIsland.height)).toBeCloseTo(36.67, 1);
+  expect(shellIsland.position).toBe('absolute');
+  expect(shellIsland.marginTop).toBe('0px');
   expect(shellIsland.top).toBe('11px');
+  expect(shellIsland.transform).toContain('matrix');
 });
 
 test('mobile viewport keeps shell readable without horizontal overflow', async ({ page }) => {
