@@ -139,6 +139,124 @@ h2 {
   padding: 12px 14px;
 }
 
+.fevio-selection-chip,
+.fevio-confirm-chip {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(32, 35, 31, 0.09);
+  border-radius: 18px;
+  color: var(--fevio-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 850;
+  justify-content: center;
+  min-height: 44px;
+  padding: 9px 14px;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.fevio-selection-chip:hover,
+.fevio-confirm-chip:hover {
+  transform: translateY(-1px);
+}
+
+.fevio-selection-chip--selected,
+.fevio-confirm-chip--selected {
+  box-shadow: 0 10px 24px rgba(50, 61, 46, 0.12);
+}
+
+.fevio-selection-chip--sage.fevio-selection-chip--selected,
+.fevio-confirm-chip--sage.fevio-confirm-chip--selected {
+  background: rgba(111, 143, 110, 0.14);
+  border-color: rgba(111, 143, 110, 0.34);
+  color: #41543F;
+}
+
+.fevio-selection-chip--lavender.fevio-selection-chip--selected,
+.fevio-confirm-chip--lavender.fevio-confirm-chip--selected {
+  background: rgba(185, 174, 214, 0.24);
+  border-color: rgba(185, 174, 214, 0.42);
+  color: #51496B;
+}
+
+.fevio-selection-chip--coral.fevio-selection-chip--selected,
+.fevio-confirm-chip--coral.fevio-confirm-chip--selected {
+  background: rgba(224, 122, 104, 0.14);
+  border-color: rgba(224, 122, 104, 0.38);
+  color: #8C463A;
+}
+
+.fevio-selection-chip--neutral.fevio-selection-chip--selected,
+.fevio-confirm-chip--neutral.fevio-confirm-chip--selected {
+  background: rgba(32, 35, 31, 0.07);
+  border-color: rgba(32, 35, 31, 0.14);
+  color: var(--fevio-ink);
+}
+
+.fevio-time-input {
+  display: grid;
+  gap: 7px;
+  color: var(--fevio-ink);
+  font-weight: 850;
+}
+
+.fevio-time-input input {
+  min-height: 48px;
+  border: 1px solid rgba(32, 35, 31, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--fevio-ink);
+  font: inherit;
+  padding: 0 13px;
+}
+
+.fevio-time-input input:focus-visible {
+  outline: 3px solid rgba(111, 143, 110, 0.26);
+  outline-offset: 2px;
+}
+
+.fevio-time-input small {
+  color: var(--fevio-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.fevio-status-badge {
+  align-items: center;
+  border-radius: var(--fevio-radius-control);
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 850;
+  min-height: 28px;
+  padding: 4px 10px;
+}
+
+.fevio-status-badge--idle {
+  background: rgba(32, 35, 31, 0.07);
+  color: var(--fevio-muted);
+}
+
+.fevio-status-badge--shared {
+  background: rgba(185, 174, 214, 0.24);
+  color: #51496B;
+}
+
+.fevio-status-badge--synced {
+  background: rgba(111, 143, 110, 0.14);
+  color: #41543F;
+}
+
+.fevio-status-badge--attention {
+  background: rgba(224, 122, 104, 0.15);
+  color: #8C463A;
+}
+
+.fevio-status-badge--done {
+  background: rgba(111, 143, 110, 0.2);
+  color: #41543F;
+}
+
 .fevio-notice,
 .notice {
   border-radius: 16px;
