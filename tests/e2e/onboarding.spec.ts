@@ -4,13 +4,14 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   await page.context().addCookies([{ name: 'fevio_privacy_accepted', value: '1', domain: '127.0.0.1', path: '/' }]);
   await page.goto('/onboarding');
 
-  await expect(page.getByRole('heading', { name: '처음 설정을 같이 해요' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘의 케어를 한 장면씩 시작해요' })).toBeVisible();
+  await expect(page.getByTestId('onboarding-interview-surface')).toBeVisible();
   await expect(page.getByText('환자 앱')).toHaveCount(0);
   await expect(page.getByText('파트너 앱')).toHaveCount(0);
-  await expect(page.getByLabel(/처음 설정 1\/5/u)).toBeVisible();
-  await expect(page.getByRole('heading', { name: '기록 방식은 어떻게 시작할까요?' })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: '오늘 먼저 챙길 케어를 골라주세요' })).toBeVisible();
-  await expect(page.getByText('선택한 흐름에 맞춰 첫 홈과 파트너 역할이 함께 정리됩니다.')).toBeVisible();
+  await expect(page.getByLabel(/처음 설정 1\/4/u)).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘의 기록은 어떤 호흡이 편할까요?' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '오늘은 어떤 흐름으로 시작할까요?' })).toBeVisible();
+  await expect(page.getByText('답한 장면에 맞춰 첫 홈의 분위기와 파트너 역할이 이어집니다.')).toBeVisible();
   await expect(page.getByText('Fevio가 당신을 분류하려는 게 아니에요.')).toHaveCount(0);
   await expect(page.getByText('처음부터 많이 묻지 않을게요')).toHaveCount(0);
   await expect(page.getByText('어디쯤에 있으세요?')).toHaveCount(0);
@@ -19,7 +20,7 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   const layoutMetrics = await page.evaluate(() => {
     const card = document.querySelector('main.app-shell > section.hero-card') as HTMLElement | null;
     const infoBox = Array.from(document.querySelectorAll('.fevio-notice')).find((element) =>
-      element.textContent?.includes('파트너 초대는 선택 사항'),
+      element.textContent?.includes('파트너와 함께 쓰면 역할을 나눌 수 있고'),
     ) as HTMLElement | undefined;
     const badge = Array.from(document.querySelectorAll('.fevio-status-badge')).find((element) =>
       element.textContent?.includes('처음 확인'),
@@ -81,21 +82,19 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   expect(layoutMetrics.firstOptionHelper).toMatchObject({ color: 'rgb(156, 163, 175)', fontSize: '13px' });
 
   await page.getByRole('button', { name: '주사/채취 준비 중' }).click();
-  await expect(page.getByLabel(/처음 설정 2\/5/u)).toBeVisible();
-  await page.getByRole('button', { name: '내가 주로 기록해요' }).click();
-  await expect(page.getByLabel(/처음 설정 3\/5/u)).toBeVisible();
+  await expect(page.getByLabel(/처음 설정 2\/4/u)).toBeVisible();
   await page.getByRole('group', { name: '첫 항목 종류 선택' }).getByRole('button', { name: /주사/u }).click();
-  await page.getByRole('textbox', { name: '첫 실행 항목' }).fill('오늘 밤 9시 주사 확인');
+  await page.getByRole('textbox', { name: '첫 케어 항목' }).fill('오늘 밤 9시 주사 확인');
   await page.getByRole('button', { name: '다음 질문' }).click();
-  await expect(page.getByLabel(/처음 설정 4\/5/u)).toBeVisible();
+  await expect(page.getByLabel(/처음 설정 3\/4/u)).toBeVisible();
   await page.getByRole('button', { name: '지금은 건너뛰기' }).click();
   await page.getByRole('button', { name: '마지막 확인' }).click();
-  await expect(page.getByLabel(/처음 설정 5\/5/u)).toBeVisible();
+  await expect(page.getByLabel(/처음 설정 4\/4/u)).toBeVisible();
   await expect(page.getByText('주사 · 오늘 밤 9시 주사 확인')).toBeVisible();
   await page.getByRole('button', { name: '홈 만들기' }).click();
 
   await expect(page).toHaveURL(/\/home$/u);
-  await expect(page.getByRole('heading', { name: /오늘의 케어 운영/ })).toBeVisible();
-  await expect(page.getByText('병원 밖에서 흩어지는 일정·약·감정')).toBeVisible();
-  await expect(page.getByText('오늘 밤 9시 주사 확인')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘은 시간을 함께 지키는 날' })).toBeVisible();
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
+  await expect(page.getByRole('heading', { name: '오늘 밤 9시 주사 확인' })).toBeVisible();
 });

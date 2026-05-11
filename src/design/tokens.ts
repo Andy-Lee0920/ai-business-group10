@@ -35,6 +35,7 @@ export const fevioTokens = {
     glassEdge: 'rgba(255, 255, 255, 0.42)',
     softShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
     cardShadow: '0 20px 60px rgba(50, 61, 46, 0.12)',
+    grainTexture: 'var(--fevio-grain-texture)',
   },
   typography: {
     koreanFamily: 'var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif',

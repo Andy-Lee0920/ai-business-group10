@@ -1,0 +1,377 @@
+.surfaceFrame {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  min-height: calc(100dvh - 36px);
+  margin: -18px -14px -24px;
+  padding: max(24px, env(safe-area-inset-top, 0px)) 18px calc(96px + env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 82% 8%, var(--phase-bloom-strong), transparent 34%),
+    radial-gradient(circle at 8% 18%, var(--phase-bloom-soft), transparent 40%),
+    linear-gradient(160deg, var(--phase-base-start), var(--phase-base-end));
+  isolation: isolate;
+}
+
+.surfaceFrame::before,
+.surfaceFrame::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+}
+
+.surfaceFrame::before {
+  z-index: -2;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 34%, rgba(32, 35, 31, 0.10)),
+    radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.42), transparent 48%);
+}
+
+.surfaceFrame::after {
+  z-index: -1;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: var(--fevio-grain-texture);
+  background-size: 160px 160px;
+}
+
+.phaseInjection {
+  --phase-base-start: #fff3ec;
+  --phase-base-end: #f7e3d8;
+  --phase-bloom-strong: rgba(255, 142, 114, 0.40);
+  --phase-bloom-soft: rgba(255, 209, 189, 0.54);
+  --phase-ink: #38241f;
+  --phase-muted: #73584d;
+  --phase-accent: #e07a68;
+  --phase-accent-deep: #8c463a;
+  --phase-glass: rgba(255, 255, 255, 0.58);
+}
+
+.phaseClinic {
+  --phase-base-start: #f2f8ef;
+  --phase-base-end: #e3ede1;
+  --phase-bloom-strong: rgba(111, 143, 110, 0.34);
+  --phase-bloom-soft: rgba(240, 249, 255, 0.68);
+  --phase-ink: #22311f;
+  --phase-muted: #54634f;
+  --phase-accent: #6f8f6e;
+  --phase-accent-deep: #3d5c3c;
+  --phase-glass: rgba(255, 255, 255, 0.62);
+}
+
+.phaseWaiting {
+  --phase-base-start: #f4f0ff;
+  --phase-base-end: #eee8f4;
+  --phase-bloom-strong: rgba(185, 174, 214, 0.42);
+  --phase-bloom-soft: rgba(255, 255, 255, 0.58);
+  --phase-ink: #292539;
+  --phase-muted: #625c73;
+  --phase-accent: #b9aed6;
+  --phase-accent-deep: #5a5272;
+  --phase-glass: rgba(255, 255, 255, 0.64);
+}
+
+.phaseRoutine {
+  --phase-base-start: #fbfaf7;
+  --phase-base-end: #ece8de;
+  --phase-bloom-strong: rgba(111, 143, 110, 0.20);
+  --phase-bloom-soft: rgba(185, 174, 214, 0.20);
+  --phase-ink: #20231f;
+  --phase-muted: #686f64;
+  --phase-accent: #6f8f6e;
+  --phase-accent-deep: #3d5c3c;
+  --phase-glass: rgba(255, 255, 255, 0.62);
+}
+
+.momentHero {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: min(760px, calc(100dvh - 122px));
+  padding-top: 16px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--phase-accent-deep);
+  font-size: 0.73rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  max-width: 9.6ch;
+  margin: 0;
+  color: var(--phase-ink);
+  font-size: clamp(3rem, 14vw, 4.35rem);
+  letter-spacing: -0.095em;
+  line-height: 0.93;
+}
+
+.heroFact {
+  max-width: 29ch;
+  margin: 0;
+  color: var(--phase-muted);
+  font-size: 1.02rem;
+  font-weight: 760;
+  line-height: 1.62;
+}
+
+.actionStrip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+  margin-top: auto;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.44);
+  box-shadow:
+    0 18px 54px rgba(50, 61, 46, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(var(--fevio-material-thin-blur));
+}
+
+.stripButton {
+  min-height: 52px;
+  background: var(--phase-accent-deep);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--phase-accent) 30%, transparent);
+}
+
+.actionStrip span {
+  color: var(--phase-muted);
+  font-size: 0.82rem;
+  font-weight: 780;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.ringWrap {
+  position: relative;
+  display: grid;
+  width: min(62vw, 246px);
+  place-items: center;
+  justify-self: center;
+  margin: 4px 0 2px;
+  aspect-ratio: 1;
+}
+
+.ringSvg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ringTrack,
+.ringArc {
+  fill: none;
+  stroke-width: 13;
+  vector-effect: non-scaling-stroke;
+  transform: rotate(-90deg);
+  transform-origin: 120px 120px;
+}
+
+.ringTrack {
+  stroke: rgba(255, 255, 255, 0.48);
+}
+
+.ringArc {
+  stroke: url('#care-moment-ring-gradient');
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 12px rgba(224, 122, 104, 0.30));
+  transition: stroke-dashoffset 420ms ease;
+}
+
+.ringCenter {
+  position: absolute;
+  inset: 17%;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.52);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(var(--fevio-material-thin-blur));
+  text-align: center;
+}
+
+.ringCenter span {
+  color: var(--phase-ink);
+  font-size: clamp(1.85rem, 9vw, 2.55rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+
+.ringCenter strong {
+  max-width: 9.5em;
+  margin-top: 8px;
+  color: var(--phase-accent-deep);
+  font-size: 0.9rem;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.ringCenter p {
+  max-width: 10.5em;
+  margin: 6px 0 0;
+  color: var(--phase-muted);
+  font-size: 0.72rem;
+  font-weight: 780;
+  line-height: 1.25;
+}
+
+.glassSheet {
+  display: grid;
+  gap: 16px;
+  margin: 0 -2px;
+  padding: 20px 16px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  border-radius: 34px 34px 0 0;
+  background: var(--phase-glass);
+  box-shadow:
+    0 -10px 42px rgba(50, 61, 46, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(var(--fevio-material-regular-blur));
+}
+
+.sheetHeader {
+  display: grid;
+  gap: 5px;
+}
+
+.sheetHeader span,
+.quietChecklist small,
+.partnerPulse small {
+  color: var(--phase-accent-deep);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sheetHeader h2,
+.partnerPulse h2 {
+  margin: 0;
+  color: var(--phase-ink);
+  font-size: 1.45rem;
+  letter-spacing: -0.055em;
+  line-height: 1.2;
+}
+
+.sheetHeader p,
+.partnerPulse p {
+  margin: 0;
+  color: var(--phase-muted);
+  font-weight: 720;
+  line-height: 1.55;
+}
+
+.quietChecklist {
+  display: grid;
+  gap: 10px;
+}
+
+.checkItem {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.48);
+  box-shadow: 0 10px 26px rgba(50, 61, 46, 0.06);
+}
+
+.checkMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--phase-accent) 20%, white);
+  color: var(--phase-accent-deep);
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.checkItem h3 {
+  margin: 4px 0 4px;
+  color: var(--phase-ink);
+  font-size: 1rem;
+  letter-spacing: -0.035em;
+  line-height: 1.32;
+}
+
+.checkItem p {
+  margin: 0;
+  color: var(--phase-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.48;
+}
+
+.partnerPulse {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.44);
+}
+
+.pulseOrb {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 30px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: var(--phase-accent);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--phase-accent) 14%, transparent);
+}
+
+.pulseOrb::after {
+  position: absolute;
+  inset: -7px;
+  border: 1px solid color-mix(in srgb, var(--phase-accent) 42%, transparent);
+  border-radius: inherit;
+  animation: presencePulse 2.8s ease-out infinite;
+  content: '';
+}
+
+@keyframes presencePulse {
+  0% { opacity: 0.58; transform: scale(0.86); }
+  72%, 100% { opacity: 0; transform: scale(1.34); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulseOrb::after {
+    animation: none;
+    opacity: 0.26;
+    transform: none;
+  }
+
+  .ringArc {
+    transition: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .surfaceFrame {
+    min-height: calc(var(--fevio-phone-frame-height) - var(--fevio-phone-safe-top) - var(--fevio-phone-safe-bottom));
+    margin: calc(var(--fevio-phone-safe-top) * -1) -14px -24px;
+    padding-top: var(--fevio-phone-safe-top);
+  }
+
+  .momentHero {
+    min-height: min(760px, calc(100dvh - 150px));
+  }
+}

@@ -42,9 +42,17 @@ export function PartnerPanel({
       </Card>
 
       <Card as="div" className={styles.liveMirrorCard} data-testid="partner-sync-mirror">
-        <span className={styles.microLabel}>Live mirror</span>
+        <span className={styles.microLabel}>공유 반응</span>
         <strong>{syncEvent.target === '파트너 화면' ? '내 화면에서 들어온 업데이트' : '내 화면으로 보내는 중'}</strong>
         <p>{syncEvent.label}</p>
+      </Card>
+
+      <Card as="div" className={styles.presencePulseCard} data-testid="demo-partner-presence-pulse">
+        <span aria-hidden="true" />
+        <div>
+          <small>같이 보고 있어요</small>
+          <strong>{careDone ? '내 화면의 완료가 도착했어요' : '내 역할이 열려 있어요'}</strong>
+        </div>
       </Card>
 
       <Card as="div" className={styles.sharedSyncCard}>

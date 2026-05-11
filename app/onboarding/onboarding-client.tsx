@@ -5,15 +5,13 @@ import { CtaButton, Notice, SelectionChip, StatusBadge } from '../../src/compone
 import styles from './onboarding.module.css';
 
 type TreatmentContext = 'ivf_cycle' | 'transfer_wait' | 'early_check' | 'unsure';
-type RoleContext = 'primary_solo' | 'primary_with_partner' | 'shared_later';
 type FirstItemKind = 'schedule' | 'medication' | 'injection';
-type OnboardingStep = 'treatment' | 'role' | 'first_item' | 'partner' | 'review';
+type OnboardingStep = 'treatment' | 'first_item' | 'partner' | 'review';
 
 type CompleteResponse = { redirectTo?: string; error?: string };
 
 const STEPS: Array<{ id: OnboardingStep; label: string }> = [
   { id: 'treatment', label: '상황' },
-  { id: 'role', label: '기록' },
   { id: 'first_item', label: '첫 항목' },
   { id: 'partner', label: '공유' },
   { id: 'review', label: '확인' },
@@ -24,12 +22,6 @@ const TREATMENT_OPTIONS: Array<{ value: TreatmentContext; label: string; helper:
   { value: 'transfer_wait', label: '이식 후 기다리는 중', helper: '조용히 확인할 일정이나 약이 있을 수 있어요.' },
   { value: 'early_check', label: '검사/방문을 앞둠', helper: '방문 일정 확인부터 시작해요.' },
   { value: 'unsure', label: '첫 항목부터 시작', helper: '주사·방문·약 중 하나를 먼저 남겨요.' },
-];
-
-const ROLE_OPTIONS: Array<{ value: RoleContext; label: string; helper: string }> = [
-  { value: 'primary_solo', label: '내가 주로 기록해요', helper: '내 화면을 먼저 만들고, 공유는 나중에 열어요.' },
-  { value: 'primary_with_partner', label: '같이 확인할 예정이에요', helper: '파트너에게 보일 카드 기준을 함께 준비해요.' },
-  { value: 'shared_later', label: '공유는 나중에 할게요', helper: '지금은 부담 없이 내 홈만 시작해요.' },
 ];
 
 const FIRST_ITEM_OPTIONS: Array<{ value: FirstItemKind; label: string; helper: string }> = [
@@ -45,7 +37,7 @@ function labelFor<T extends string>(options: Array<{ value: T; label: string }>,
 export function OnboardingClient() {
   const [activeStep, setActiveStep] = useState<OnboardingStep>('treatment');
   const [treatmentContext, setTreatmentContext] = useState<TreatmentContext | null>(null);
-  const [roleContext, setRoleContext] = useState<RoleContext | null>(null);
+  const roleContext = 'primary_solo';
   const [firstItemKind, setFirstItemKind] = useState<FirstItemKind | null>(null);
   const [firstItemText, setFirstItemText] = useState('');
   const [partnerInviteSkipped, setPartnerInviteSkipped] = useState(true);
@@ -60,11 +52,11 @@ export function OnboardingClient() {
   const summaryItems = useMemo(
     () => [
       { label: '지금 위치', value: labelFor(TREATMENT_OPTIONS, treatmentContext) },
-      { label: '기록 방식', value: labelFor(ROLE_OPTIONS, roleContext) },
-      { label: '첫 실행 항목', value: firstItemKind && trimmedFirstItem ? `${labelFor(FIRST_ITEM_OPTIONS, firstItemKind)} · ${trimmedFirstItem}` : '홈만 먼저 만들기' },
+      { label: '기록 방식', value: '내 화면부터 시작' },
+      { label: '첫 케어 항목', value: firstItemKind && trimmedFirstItem ? `${labelFor(FIRST_ITEM_OPTIONS, firstItemKind)} · ${trimmedFirstItem}` : '홈만 먼저 만들기' },
       { label: '파트너 초대', value: partnerInviteSkipped ? '지금은 건너뛰기' : '공유 준비' },
     ],
-    [firstItemKind, partnerInviteSkipped, roleContext, treatmentContext, trimmedFirstItem],
+    [firstItemKind, partnerInviteSkipped, treatmentContext, trimmedFirstItem],
   );
 
   function goToStep(step: OnboardingStep) {
@@ -79,17 +71,12 @@ export function OnboardingClient() {
 
   function selectTreatment(value: TreatmentContext) {
     setTreatmentContext(value);
-    goToStep('role');
-  }
-
-  function selectRole(value: RoleContext) {
-    setRoleContext(value);
     goToStep('first_item');
   }
 
   function continueFromFirstItem() {
     if (!canAdvanceFirstItem) {
-      setError('첫 실행 항목은 종류와 내용을 함께 적어 주세요. 아직 없다면 종류 선택을 지워 주세요.');
+      setError('첫 케어 항목은 종류와 내용을 함께 적어 주세요. 아직 없다면 종류 선택을 지워 주세요.');
       return;
     }
     goToStep('partner');
@@ -103,7 +90,7 @@ export function OnboardingClient() {
     }
 
     if ((firstItemKind && !trimmedFirstItem) || (!firstItemKind && trimmedFirstItem)) {
-      setError('첫 실행 항목은 종류와 내용을 함께 입력해 주세요.');
+      setError('첫 케어 항목은 종류와 내용을 함께 입력해 주세요.');
       goToStep('first_item');
       return;
     }
@@ -144,8 +131,8 @@ export function OnboardingClient() {
       {activeStep === 'treatment' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="treatment-context-title">
           <StatusBadge state="shared">처음 확인</StatusBadge>
-          <h2 className={styles.sectionTitle} id="treatment-context-title">오늘 먼저 챙길 케어를 골라주세요</h2>
-          <p className={styles.questionLead}>선택한 흐름에 맞춰 첫 홈과 파트너 역할이 함께 정리됩니다.</p>
+          <h2 className={styles.sectionTitle} id="treatment-context-title">오늘은 어떤 흐름으로 시작할까요?</h2>
+          <p className={styles.questionLead}>답한 장면에 맞춰 첫 홈의 분위기와 파트너 역할이 이어집니다.</p>
           <div className={styles.choiceGrid} role="group" aria-label="치료 상황 선택">
             {TREATMENT_OPTIONS.map((option) => (
               <SelectionChip
@@ -163,33 +150,11 @@ export function OnboardingClient() {
         </section>
       ) : null}
 
-      {activeStep === 'role' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="role-context-title">
-          <StatusBadge state="shared">기록 방식</StatusBadge>
-          <h2 className={styles.sectionTitle} id="role-context-title">기록 방식은 어떻게 시작할까요?</h2>
-          <p className={styles.questionLead}>오늘 이어가기 쉬운 방식으로 시작해요.</p>
-          <div className={styles.choiceGrid} role="group" aria-label="기록 방식 선택">
-            {ROLE_OPTIONS.map((option) => (
-              <SelectionChip
-                key={option.value}
-                onClick={() => selectRole(option.value)}
-                selected={roleContext === option.value}
-                className={styles.choiceChip}
-                tone="lavender"
-              >
-                <span>{option.label}</span>
-                <small>{option.helper}</small>
-              </SelectionChip>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
       {activeStep === 'first_item' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="first-item-title">
           <StatusBadge state="shared">첫 케어</StatusBadge>
-          <h2 className={styles.sectionTitle} id="first-item-title">오늘 놓치면 안 되는 것 하나만 남겨볼까요?</h2>
-          <p className={styles.questionLead}>확인한 한 문장을 오늘의 케어 흐름에 올려둘게요.</p>
+          <h2 className={styles.sectionTitle} id="first-item-title">오늘 케어에 올려둘 한 문장이 있나요?</h2>
+          <p className={styles.questionLead}>시간, 약, 방문처럼 이미 확인한 말만 첫 흐름에 올려둘게요.</p>
           <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="첫 항목 종류 선택">
             {FIRST_ITEM_OPTIONS.map((option) => (
               <SelectionChip
@@ -205,7 +170,7 @@ export function OnboardingClient() {
             ))}
           </div>
           <label className="field-label" htmlFor="first-onboarding-item">
-            첫 실행 항목
+            첫 케어 항목
           </label>
           <textarea
             className={styles.textArea}
@@ -226,8 +191,8 @@ export function OnboardingClient() {
       {activeStep === 'partner' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="partner-invite-title">
           <StatusBadge state="shared">파트너</StatusBadge>
-          <h2 className={styles.sectionTitle} id="partner-invite-title">파트너 초대는 지금 할까요?</h2>
-          <p className={styles.partnerCopy}>공유 링크는 나중에 만들어도 돼요. 지금은 홈을 먼저 만들 수 있어요.</p>
+          <h2 className={styles.sectionTitle} id="partner-invite-title">파트너와 역할을 나눌까요?</h2>
+          <p className={styles.partnerCopy}>함께 보면 역할이 나뉘고, 오늘은 내 홈부터 시작해도 흐름은 이어집니다.</p>
           <div className={styles.choiceGrid} role="group" aria-label="파트너 초대 선택">
             <SelectionChip className={styles.choiceChip} onClick={() => setPartnerInviteSkipped(true)} selected={partnerInviteSkipped} tone="lavender">
               <span>지금은 건너뛰기</span>
@@ -248,8 +213,8 @@ export function OnboardingClient() {
       {activeStep === 'review' ? (
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="review-title">
           <StatusBadge state="synced">마지막 확인</StatusBadge>
-          <h2 className={styles.sectionTitle} id="review-title">이 설정으로 홈을 만들까요?</h2>
-          <p className={styles.questionLead}>방금 답한 내용만으로 첫 화면을 만들고, 나중에 언제든 바꿀 수 있어요.</p>
+          <h2 className={styles.sectionTitle} id="review-title">이 흐름으로 첫 홈을 열까요?</h2>
+          <p className={styles.questionLead}>방금 답한 장면을 기준으로 오늘의 첫 화면을 열어요.</p>
           <dl className={styles.reviewList}>
             {summaryItems.map((item) => (
               <div key={item.label}>

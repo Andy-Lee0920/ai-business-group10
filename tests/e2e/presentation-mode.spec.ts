@@ -9,30 +9,59 @@ test('presentation landing opens the dual-view demo without auth steps', async (
   await expect(page.getByText('Privacy Gate부터 보기')).toHaveCount(0);
 });
 
-test('presentation home defaults to the injection-day partner action story', async ({ page }) => {
+test('presentation home defaults to an immersive injection-day care instrument', async ({ page }) => {
   await page.goto('/home');
 
-  const cards = page.getByTestId('home-action-card');
-  await expect(cards).toHaveCount(4);
-  await expect(cards.first()).toContainText(/고날에프|오비트렐/);
-  await expect(page.getByRole('button', { name: '오늘 케어 흐름 확인하기' })).toBeVisible();
-  await expect(page.getByLabel('파트너에게는 “도와줘”가 아니라 역할로 번역돼요').getByText('파트너 역할 번역')).toBeVisible();
-  await expect(page.getByRole('heading', { name: '파트너에게는 “도와줘”가 아니라 역할로 번역돼요' })).toBeVisible();
-  await expect(page.getByText('내 상태가 그대로 던져지는 것이 아니라')).toBeVisible();
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
+  await expect(page.getByTestId('care-moment-hero')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘은 시간을 함께 지키는 날' })).toBeVisible();
+  await expect(page.getByTestId('care-moment-ring')).toBeVisible();
+  await expect(page.getByTestId('care-moment-ring')).toHaveAttribute('aria-label', /고날에프/);
+  await expect(page.getByTestId('care-moment-ring').locator('circle')).toHaveCount(2);
+
+  const ringGeometry = await page.getByTestId('care-moment-ring').locator('circle').evaluateAll((circles) =>
+    circles.map((circle) => ({
+      cx: circle.getAttribute('cx'),
+      cy: circle.getAttribute('cy'),
+      r: circle.getAttribute('r'),
+    })),
+  );
+  expect(ringGeometry).toEqual([
+    { cx: '120', cy: '120', r: '94' },
+    { cx: '120', cy: '120', r: '94' },
+  ]);
+
+  await expect(page.getByLabel('지금 할 수 있는 행동').getByRole('button', { name: '준비물 확인하기' })).toBeVisible();
+  await expect(page.getByLabel('조용한 준비 체크리스트')).toBeVisible();
+  await expect(page.getByTestId('partner-presence-pulse')).toBeVisible();
+  await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+/)).toHaveCount(0);
+
+  const firstCardTop = await page.getByTestId('home-action-card').first().evaluate((element) => element.getBoundingClientRect().top);
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  expect(firstCardTop).toBeGreaterThan(viewportHeight * 0.72);
 });
 
-test('presentation home switches between three treatment situations', async ({ page }) => {
-  await page.goto('/home?care=injection');
-  await expect(page.getByRole('button', { name: '오늘 케어 흐름 확인하기' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '파트너에게는 “도와줘”가 아니라 역할로 번역돼요' })).toBeVisible();
+test('presentation home applies the immersive/adaptive contract to every care day', async ({ page }) => {
+  const scenarios = [
+    { care: 'injection', phase: 'injection', heading: '오늘은 시간을 함께 지키는 날', action: '준비물 확인하기' },
+    { care: 'clinic', phase: 'clinic', heading: '오늘은 확인할 것이 있는 날', action: '방문 메모 열기' },
+    { care: 'waiting', phase: 'waiting', heading: '오늘은 조용히 살피는 날', action: '오늘 상태 남기기' },
+  ];
 
-  await page.goto('/home?care=clinic');
-  await expect(page.getByRole('button', { name: '방문 체크리스트 열기' })).toBeVisible();
-  await expect(page.getByText('오늘은 동행자')).toBeVisible();
+  for (const scenario of scenarios) {
+    await page.goto(`/home?care=${scenario.care}`);
+    await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', scenario.phase);
+    await expect(page.getByTestId('care-moment-hero')).toBeVisible();
+    await expect(page.getByRole('heading', { name: scenario.heading })).toBeVisible();
+    await expect(page.getByLabel('지금 할 수 있는 행동').getByRole('button', { name: scenario.action })).toBeVisible();
+    await expect(page.getByTestId('operational-glass-sheet')).toBeVisible();
+    await expect(page.getByTestId('partner-presence-pulse')).toBeVisible();
+    await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+/)).toHaveCount(0);
 
-  await page.goto('/home?care=waiting');
-  await expect(page.getByRole('button', { name: '차분한 체크인 시작' })).toBeVisible();
-  await expect(page.getByText('오늘은 곁에 있는 사람')).toBeVisible();
+    const firstCardTop = await page.getByTestId('home-action-card').first().evaluate((element) => element.getBoundingClientRect().top);
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    expect(firstCardTop).toBeGreaterThan(viewportHeight * 0.72);
+  }
 });
 
 test('presentation capture pre-fills the clinic memo sample', async ({ page }) => {
@@ -172,7 +201,9 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByText('오늘 어떤 케어 장면을 볼까요?')).toBeVisible();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('선택한 장면에 맞춰 내 화면과 파트너 역할이 함께 바뀌어요.')).toBeVisible();
-  await expect(page.getByText('Live Sync')).toBeVisible();
+  await expect(page.getByText('함께 이어짐')).toBeVisible();
+  await expect(page.getByTestId('demo-partner-presence-pulse')).toHaveCount(2);
+  await expect(page.getByText(/Live Sync|Live mirror|LIVE SYNC/)).toHaveCount(0);
   await expect(patient).toContainText('방금 붙여넣은 메모');
   await expect(patient).toContainText('주사 준비·확인자 역할을 먼저 올렸어요.');
   await expect(partner).toContainText('내가 다시 설명하지 않아도 되는 내용');
@@ -188,7 +219,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
     const patientPanel = document.querySelector('[data-testid="demo-patient-panel"]') as HTMLElement | null;
     const firstCard = patientPanel?.querySelector('.fevio-card') as HTMLElement | null;
     const liveLabel = Array.from(document.querySelectorAll('[data-testid="demo-patient-panel"] span')).find((element) =>
-      element.textContent?.toLowerCase().includes('live mirror'),
+      element.textContent?.includes('공유 반응'),
     ) as HTMLElement | undefined;
     const liveBody = document.querySelector('[data-testid="patient-sync-mirror"] p') as HTMLElement | null;
     const stepBadge = Array.from(document.querySelectorAll('span')).find((element) => element.textContent === '1/3') as HTMLElement | undefined;

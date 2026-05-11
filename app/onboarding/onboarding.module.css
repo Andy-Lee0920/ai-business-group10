@@ -242,3 +242,45 @@
     min-height: 520px;
   }
 }
+
+.onboardingShell {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 84% 8%, rgba(185, 174, 214, 0.34), transparent 34%),
+    radial-gradient(circle at 8% 18%, rgba(255, 209, 189, 0.42), transparent 42%),
+    linear-gradient(160deg, #fff8f3, #f1eee8 72%);
+  isolation: isolate;
+}
+
+.onboardingShell::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: var(--fevio-grain-texture);
+  background-size: 160px 160px;
+  content: '';
+  pointer-events: none;
+}
+
+.onboardingCard {
+  position: relative;
+  z-index: 1;
+  border-color: rgba(255, 255, 255, 0.56);
+  background: rgba(255, 255, 255, 0.48);
+  box-shadow:
+    0 24px 70px rgba(50, 61, 46, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(var(--fevio-material-regular-blur));
+}
+
+.choiceChip {
+  box-shadow: 0 12px 30px rgba(50, 61, 46, 0.07);
+}
+
+.choiceChip:hover,
+.choiceChip:focus-visible {
+  transform: translateY(-2px);
+}

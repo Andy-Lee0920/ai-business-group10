@@ -1,0 +1,222 @@
+import { CtaButton, classNames } from '../../components/ui';
+import type { HomeActionCard } from '../../domain/home-composition';
+import styles from './care-surface-primitives.module.css';
+
+export type CareSurfacePhase = 'injection' | 'clinic' | 'waiting' | 'routine';
+export type CareMomentRingState = 'upcoming' | 'prepare' | 'due' | 'completed' | 'unknown';
+
+const RING_VIEWBOX = 240;
+const RING_CENTER = 120;
+const RING_RADIUS = 94;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+const phaseClass: Record<CareSurfacePhase, string> = {
+  injection: styles.phaseInjection,
+  clinic: styles.phaseClinic,
+  waiting: styles.phaseWaiting,
+  routine: styles.phaseRoutine,
+};
+
+export function CareSurfaceFrame({ phase, children }: { phase: CareSurfacePhase; children: React.ReactNode }) {
+  return (
+    <main className="app-shell">
+      <section className={classNames(styles.surfaceFrame, phaseClass[phase])} data-testid="care-atmosphere-layer" data-phase={phase}>
+        {children}
+      </section>
+    </main>
+  );
+}
+
+export function MomentHero({
+  phase,
+  eyebrow,
+  title,
+  fact,
+  actionLabel,
+  actionHint,
+  children,
+}: {
+  phase: CareSurfacePhase;
+  eyebrow: string;
+  title: string;
+  fact: string;
+  actionLabel: string;
+  actionHint: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <section className={styles.momentHero} data-testid="care-moment-hero" aria-labelledby="home-title">
+      <p className={styles.eyebrow}>{eyebrow}</p>
+      <h1 className={styles.heroTitle} id="home-title">{title}</h1>
+      <p className={styles.heroFact}>{fact}</p>
+      {children}
+      <ActionStrip phase={phase} label={actionLabel} hint={actionHint} />
+    </section>
+  );
+}
+
+export function ActionStrip({ phase, label, hint }: { phase: CareSurfacePhase; label: string; hint: string }) {
+  return (
+    <div className={styles.actionStrip} aria-label="지금 할 수 있는 행동" data-phase={phase}>
+      <CtaButton className={styles.stripButton} type="button">{label}</CtaButton>
+      <span>{hint}</span>
+    </div>
+  );
+}
+
+export function OperationalGlassSheet({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={styles.glassSheet} data-testid="operational-glass-sheet" aria-labelledby="operational-glass-title">
+      <div className={styles.sheetHeader}>
+        <span>CARE FLOW</span>
+        <h2 id="operational-glass-title">{title}</h2>
+        <p>{description}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export function QuietChecklist({
+  label,
+  items,
+}: {
+  label: string;
+  items: Array<{ id: string; title: string; description?: string | null; badge?: string }>;
+}) {
+  return (
+    <section className={styles.quietChecklist} aria-label={label}>
+      {items.map((item, index) => (
+        <article className={styles.checkItem} data-testid="home-action-card" key={item.id}>
+          <span className={styles.checkMark} aria-hidden="true">{index + 1}</span>
+          <div>
+            {item.badge ? <small>{item.badge}</small> : null}
+            <h3>{item.title}</h3>
+            {item.description ? <p>{item.description}</p> : null}
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+export function PartnerPresencePulse({
+  title,
+  description,
+  state = 'shared',
+}: {
+  title: string;
+  description: string;
+  state?: 'shared' | 'seen' | 'unknown';
+}) {
+  const statusCopy = state === 'seen' ? '함께 확인 중' : state === 'unknown' ? '공유 준비됨' : '파트너에게 공유됨';
+  return (
+    <section className={styles.partnerPulse} data-testid="partner-presence-pulse" aria-label="파트너 공유 상태">
+      <span className={styles.pulseOrb} aria-hidden="true" />
+      <div>
+        <small>{statusCopy}</small>
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+    </section>
+  );
+}
+
+export function CareMomentRing({ card, generatedAt }: { card: HomeActionCard | null; generatedAt: string }) {
+  const model = getRingModel(card, generatedAt);
+  const offset = getStrokeOffset(model.progress);
+
+  return (
+    <div className={styles.ringWrap} data-state={model.state}>
+      <svg
+        aria-label={model.ariaLabel}
+        className={styles.ringSvg}
+        data-testid="care-moment-ring"
+        role="img"
+        viewBox={`0 0 ${RING_VIEWBOX} ${RING_VIEWBOX}`}
+      >
+        <defs>
+          <linearGradient id="care-moment-ring-gradient" x1="24" y1="24" x2="216" y2="216" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#FFD1BD" />
+            <stop offset="52%" stopColor="#FF8E72" />
+            <stop offset="100%" stopColor="#B9AED6" />
+          </linearGradient>
+        </defs>
+        <circle className={styles.ringTrack} cx={RING_CENTER} cy={RING_CENTER} r={RING_RADIUS} />
+        <circle
+          className={styles.ringArc}
+          cx={RING_CENTER}
+          cy={RING_CENTER}
+          r={RING_RADIUS}
+          strokeDasharray={RING_CIRCUMFERENCE}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className={styles.ringCenter} aria-hidden="true">
+        <span>{model.timeLabel}</span>
+        <strong>{model.titleLabel}</strong>
+        <p>{model.helper}</p>
+      </div>
+    </div>
+  );
+}
+
+function getStrokeOffset(progress: number) {
+  const clamped = Math.max(0, Math.min(1, progress));
+  return RING_CIRCUMFERENCE * (1 - clamped);
+}
+
+function getRingModel(card: HomeActionCard | null, generatedAt: string): {
+  progress: number;
+  state: CareMomentRingState;
+  timeLabel: string;
+  titleLabel: string;
+  helper: string;
+  ariaLabel: string;
+} {
+  if (!card) {
+    return {
+      progress: 0.12,
+      state: 'unknown',
+      timeLabel: '--:--',
+      titleLabel: '확인할 시간',
+      helper: '확정된 시간이 들어오면 여기에 보여요',
+      ariaLabel: '아직 확정된 주사 시간이 없어요',
+    };
+  }
+
+  const timeLabel = extractTimeLabel(card);
+  const titleLabel = cleanTitle(card.title);
+  const minutesUntil = card.scheduledAt ? (new Date(card.scheduledAt).getTime() - new Date(generatedAt).getTime()) / 60_000 : null;
+  const state: CareMomentRingState = minutesUntil === null ? 'unknown' : minutesUntil <= 5 && minutesUntil >= -30 ? 'due' : minutesUntil <= 30 ? 'prepare' : 'upcoming';
+  const progress = state === 'due' ? 0.94 : state === 'prepare' ? 0.78 : state === 'upcoming' ? 0.42 : 0.16;
+  const helper = state === 'due' ? '지금 함께 확인할 시간이에요' : state === 'prepare' ? '30분 전에 준비를 시작해요' : '준비할 시간을 조용히 남겨둘게요';
+
+  return {
+    progress,
+    state,
+    timeLabel,
+    titleLabel,
+    helper,
+    ariaLabel: `오늘 ${timeLabel} ${titleLabel} 준비 시간`,
+  };
+}
+
+function extractTimeLabel(card: HomeActionCard) {
+  const titleTime = card.title.match(/\b\d{1,2}:\d{2}\b/u)?.[0];
+  if (titleTime) return titleTime;
+  if (!card.scheduledAt) return '--:--';
+  return new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }).format(new Date(card.scheduledAt));
+}
+
+function cleanTitle(title: string) {
+  return title.replace(/^\d{1,2}:\d{2}\s*/u, '').replace(/—.*$/u, '').trim();
+}

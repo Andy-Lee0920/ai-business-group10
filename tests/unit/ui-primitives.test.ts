@@ -10,6 +10,7 @@ describe('Fevio design tokens and UI primitive class contracts', () => {
       cream: '#F6F4F1',
       coral: '#E07A68',
     });
+    expect(fevioTokens.material.grainTexture).toBe('var(--fevio-grain-texture)');
   });
 
   it('renders primitive classes from token-backed contracts', () => {

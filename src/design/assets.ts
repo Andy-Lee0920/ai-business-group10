@@ -3,7 +3,7 @@ export const fevioAssets = {
     actionTimer: {
       path: '/assets/fevio/action-timer.svg',
       label: '시간 확인',
-      role: '주사·약처럼 시간이 중요한 실행 카드',
+      role: '주사·약처럼 시간이 중요한 케어 항목',
       tone: 'coral',
     },
     careHandoff: {

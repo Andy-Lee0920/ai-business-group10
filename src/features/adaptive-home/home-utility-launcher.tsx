@@ -6,7 +6,7 @@ export function HomeUtilityLauncher() {
     <section className={styles.utilityLauncher} aria-labelledby="adaptive-utility-launcher-title">
       <div className={styles.utilityHeader}>
         <p>작은 케어 정리</p>
-        <h2 id="adaptive-utility-launcher-title">흩어진 케어를 한 장의 카드로</h2>
+        <h2 id="adaptive-utility-launcher-title">흩어진 케어를 한 흐름으로</h2>
         <span>병원 안내, 약·주사, 감정 부담, 시술 기록을 각각 가장 짧은 확인 루프로 남깁니다.</span>
       </div>
       <div className={styles.utilityGrid}>
@@ -18,7 +18,7 @@ export function HomeUtilityLauncher() {
         <Link className={styles.utilityLink} href="/medication">
           <span>02</span>
           <strong>약·주사 확인</strong>
-          <small>내가 확인한 용량과 시간만 실행 카드로 저장</small>
+          <small>내가 확인한 용량과 시간만 케어 흐름에 저장</small>
         </Link>
         <Link className={styles.utilityLink} href="/emotion">
           <span>03</span>
@@ -33,7 +33,7 @@ export function HomeUtilityLauncher() {
         <Link className={styles.utilityLink} href="/capture">
           <span>05</span>
           <strong>병원 메모</strong>
-          <small>들은 내용을 확정 전 초안 카드로 나누기</small>
+          <small>들은 내용을 확정 전 초안 흐름으로 나누기</small>
         </Link>
       </div>
       <SharedCareProjectionCard />

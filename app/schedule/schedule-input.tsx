@@ -73,7 +73,7 @@ export function ScheduleInput() {
       <Card className="schedule-card" tone="sage">
         <p className="schedule-eyebrow">Schedule</p>
         <h1 id="schedule-title">일정을 조용히 정리해요</h1>
-        <p className="schedule-lede">확정된 날짜와 시간만 한 장의 실행 카드로 남겨요. 의료 판단이나 압박 없이, 내가 확인한 일정만 저장합니다.</p>
+        <p className="schedule-lede">확정된 날짜와 시간만 오늘 케어 흐름에 남겨요. 의료 판단이나 압박 없이, 내가 확인한 일정만 저장합니다.</p>
         <Notice tone="sage">취소하면 아무것도 저장하지 않아요.</Notice>
 
         <form className="schedule-form" onSubmit={submit}>

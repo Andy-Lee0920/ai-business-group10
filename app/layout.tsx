@@ -14,7 +14,7 @@ const notoSansKR = Noto_Sans_KR({
 export const metadata: Metadata = {
   metadataBase: new URL('https://fevio.app'),
   title: 'Fevio [페비오]',
-  description: '병원에서 들은 말을 오늘의 부부 실행 카드로 바꾸는 IVF care-operation webapp.',
+  description: '병원에서 들은 말을 오늘의 부부 케어 흐름으로 바꾸는 IVF care-operation webapp.',
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Fevio [페비오]',
-    description: '병원 메모를 오늘의 부부 실행 카드로 바꾸는 IVF care-operation 앱',
+    description: '병원 메모를 오늘의 부부 케어 흐름으로 바꾸는 IVF care-operation 앱',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Fevio dual-view care card preview' }],
   },
   appleWebApp: { capable: true, statusBarStyle: 'default' },

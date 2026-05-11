@@ -54,9 +54,17 @@ export function PatientPanel({
       </Card>
 
       <Card as="div" className={styles.liveMirrorCard} data-testid="patient-sync-mirror">
-        <span className={styles.microLabel}>Live mirror</span>
+        <span className={styles.microLabel}>공유 반응</span>
         <strong>{syncEvent.target === '내 화면' ? '파트너에서 들어온 업데이트' : '파트너 화면으로 보내는 중'}</strong>
         <p>{syncEvent.label}</p>
+      </Card>
+
+      <Card as="div" className={styles.presencePulseCard} data-testid="demo-partner-presence-pulse">
+        <span aria-hidden="true" />
+        <div>
+          <small>같이 보고 있어요</small>
+          <strong>{partnerConfirmed ? '파트너 확인이 도착했어요' : '파트너 역할로 이어지는 중'}</strong>
+        </div>
       </Card>
 
       <Card as="div" className={styles.sharedSyncCard}>

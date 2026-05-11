@@ -39,7 +39,7 @@ export function buildReminderEmail({
   const scheduledLabel = formatKoreanTime(candidate.scheduledAt);
   const subject = '[Fevio] 확인할 주사 시간이 가까워졌어요';
   const text = [
-    'Fevio에서 확인할 시간이 가까운 실행 카드를 알려드려요.',
+    'Fevio에서 확인할 시간이 가까운 케어 항목을 알려드려요.',
     '',
     `카드: ${candidate.title}`,
     `시간: ${scheduledLabel}`,
@@ -54,7 +54,7 @@ export function buildReminderEmail({
     text,
     html: [
       '<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;line-height:1.55;color:#1f2937">',
-      '<p>Fevio에서 확인할 시간이 가까운 실행 카드를 알려드려요.</p>',
+      '<p>Fevio에서 확인할 시간이 가까운 케어 항목을 알려드려요.</p>',
       `<p><strong>카드:</strong> ${escapeHtml(candidate.title)}<br/><strong>시간:</strong> ${escapeHtml(scheduledLabel)}</p>`,
       `<p><a href="${escapeHtml(homeUrl)}">앱에서 확인하기</a></p>`,
       '<p style="color:#6b7280;font-size:13px">이 메일은 사용자가 확정한 카드 기준의 1회 리마인드예요. 병원 안내와 직접 확인한 내용을 기준으로 차분히 확인해 주세요.</p>',

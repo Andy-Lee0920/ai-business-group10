@@ -13,8 +13,10 @@ test('memo capture flows through split review, confirm, and home', async ({ page
   await page.goto('/capture');
 
   await expect(page).toHaveURL(/\/capture$/u);
+  await expect(page.getByRole('button', { name: '사진으로 안내문 촬영' })).toBeVisible();
+  await expect(page.getByLabel('병원 안내문 사진 촬영')).toHaveAttribute('accept', 'image/*');
   await page.getByLabel('병원에서 들은 내용').fill('1. 오늘 밤 10시 오비드렐 주사\n2. 남편이 주사 준비 도와주기');
-  await page.getByRole('button', { name: '실행 카드로 나누기' }).click();
+  await page.getByRole('button', { name: '케어 흐름으로 나누기' }).click();
 
   await expect(page).toHaveURL(/\/split-review\?draftId=/u);
   await expect(page.getByText('오늘 밤 10시 오비드렐 주사')).toBeVisible();

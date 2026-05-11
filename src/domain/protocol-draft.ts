@@ -31,7 +31,7 @@ export function createProtocolDraft(rawInstruction: string, baseDate = new Date(
 }
 
 function getUncertaintyReason(sourceText: string, cardType: CardType, scheduledAt: string | null) {
-  if (cardType === 'general_action') return '분류가 애매해요. 실행 카드로 넣기 전 확인이 필요해요.';
+  if (cardType === 'general_action') return '분류가 애매해요. 케어 흐름에 넣기 전 확인이 필요해요.';
   if ((cardType === 'injection' || cardType === 'medication' || cardType === 'clinic_visit') && !scheduledAt && !/오늘|내일|모레|\d{1,2}[/-]\d{1,2}/u.test(sourceText)) {
     return '시간이나 날짜가 빠져 있어요. 확정 전 한 번 더 확인해 주세요.';
   }

@@ -5,7 +5,7 @@ test('confirm screen warns on medical-boundary phrases without blocking save', a
   await page.goto('/capture');
 
   await page.getByLabel('병원에서 들은 내용').fill('용량을 올리세요\n오늘 21시 고날에프 1회');
-  await page.getByRole('button', { name: '실행 카드로 나누기' }).click();
+  await page.getByRole('button', { name: '케어 흐름으로 나누기' }).click();
 
   await expect(page).toHaveURL(/\/split-review\?draftId=/u);
   await expect(page.getByText('의료 판단 표현 확인')).toBeVisible();
