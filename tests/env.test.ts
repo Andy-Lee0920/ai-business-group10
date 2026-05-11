@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPresentationMode } from '../src/config';
+import { isPresentationHost, isPresentationMode, isPresentationRequest } from '../src/config';
 import { requireSupabasePublicConfig } from '../src/lib/env';
 
 describe('Supabase public env contract', () => {
@@ -29,5 +29,19 @@ describe('presentation mode env contract', () => {
 
   it('turns on with a public Vercel-safe flag', () => {
     expect(isPresentationMode({ NEXT_PUBLIC_FEVIO_PRESENTATION_MODE: '1' })).toBe(true);
+  });
+
+  it('turns on for the configured presentation Vercel host even when the flag is missing', () => {
+    expect(isPresentationHost('https://ai-business-group10.vercel.app')).toBe(true);
+    expect(
+      isPresentationRequest({
+        headers: new Headers({ host: 'ai-business-group10.vercel.app' }),
+      }),
+    ).toBe(true);
+  });
+
+  it('keeps unrelated Vercel hosts in the real lane unless explicitly configured', () => {
+    expect(isPresentationHost('project-oznp0.vercel.app')).toBe(false);
+    expect(isPresentationHost('project-oznp0.vercel.app:443')).toBe(false);
   });
 });

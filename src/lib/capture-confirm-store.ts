@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { isPresentationMode } from '../config';
+import { isPresentationRequest } from '../config';
 import { assertSensitiveWriteAllowed } from '../domain/auth-privacy';
 import { inferCardType, type AssignedTo, type CardType } from '../domain/line-split';
 import { createCookieBackedSupabaseClient } from './server-supabase';
@@ -109,7 +109,7 @@ class SupabaseCaptureStore implements CaptureStore {
 }
 
 export async function createCaptureStore(request: Request): Promise<CaptureStore | Response> {
-  if (isPresentationMode() && hasDemoPrivacyCookie(request.headers.get('cookie'))) {
+  if (isPresentationRequest(request) && hasDemoPrivacyCookie(request.headers.get('cookie'))) {
     return new DemoCaptureStore();
   }
 

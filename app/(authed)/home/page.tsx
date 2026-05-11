@@ -1,5 +1,6 @@
+import { headers } from 'next/headers';
 import { Badge, Card } from '../../../src/components/ui';
-import { isPresentationMode } from '../../../src/config';
+import { isPresentationHost, isPresentationMode } from '../../../src/config';
 import { computeDisplaySafetyLevel } from '../../../src/domain/care-cards';
 import { computeHomeContext, type HomeActionCard } from '../../../src/domain/home-composition';
 import { getPresentationCards } from '../../../src/lib/presentation-demo-data';
@@ -10,16 +11,18 @@ export const dynamic = 'force-dynamic';
 
 type RenderableHomeCard = HomeActionCard & { status: CareActionCard['status'] };
 
-export default function DynamicHomePage() {
+export default async function DynamicHomePage() {
   const now = new Date();
-  const cards = isPresentationMode() ? getPresentationCards(now) : makeDemoCards(now);
+  const requestHeaders = await headers();
+  const presentationMode = isPresentationMode() || isPresentationHost(requestHeaders.get('host'));
+  const cards = presentationMode ? getPresentationCards(now) : makeDemoCards(now);
   const context = computeHomeContext(cards, now);
-  const renderedCards = isPresentationMode() ? toPresentationHomeCards(cards, now) : withConfirmedStatus(context.cards);
+  const renderedCards = presentationMode ? toPresentationHomeCards(cards, now) : withConfirmedStatus(context.cards);
 
   return (
     <main className="app-shell">
       <Card aria-labelledby="home-title" className="hero-card">
-        <p className="eyebrow">{isPresentationMode() ? '발표 데모' : 'Dynamic Home'}</p>
+        <p className="eyebrow">{presentationMode ? '발표 데모' : 'Dynamic Home'}</p>
         <h1 id="home-title">오늘의 실행 카드</h1>
         <p className="lead">{context.primaryMessage}</p>
         <div className={styles.homeCardList} aria-label="오늘 카드 목록">
