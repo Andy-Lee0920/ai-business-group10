@@ -259,8 +259,8 @@ Deployment interpretation:
 - [x] Partner share link sanitized — `#27` + `#53`
 - [x] [BOOST] Critical injection 카드가 임박 시 in-app 시각·텍스트 강조 — `#25` + `#26`
 - [x] [BOOST] Partner description 가이드와 행동 단서 보강 — `#54`; whitelist done in `#53`
-- [ ] [BOOST] Email 1회 리마인드 동작 — `#52`; ADR `#59` Done
-- [ ] SLC manual QA checklist all green — `#56`
+- [x] [BOOST] Email 1회 리마인드 동작 — `#52` closed with protected route/RPC evidence; external email/scheduler proof de-scoped as non-core
+- [x] SLC manual QA checklist evidence recorded — `#56`; see `docs/03-engineering/slc-release-gate-run-2026-05-11.md`
 - [x] 일정 모델 ADR 결정 — `#55`
 - [x] 알림 채널 ADR 결정 — `#59`
 
