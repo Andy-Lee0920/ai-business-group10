@@ -1,3 +1,4 @@
+import { Badge, Card } from '../../src/components/ui';
 import type { DemoScenario } from './demo-scenarios';
 import styles from './dual-panel-demo.module.css';
 
@@ -17,11 +18,11 @@ export function PartnerPanel({ scenario, checked, onToggle }: PartnerPanelProps)
         <span>Partner</span>
       </div>
 
-      <div className={styles.partnerHero}>
-        <span className={styles.statePill}>{scenario.label}</span>
+      <Card as="div" className={styles.partnerHero}>
+        <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         <h3>{partner.role}</h3>
         <p>{partner.status}</p>
-      </div>
+      </Card>
 
       <div className={styles.coreRail} aria-label="공유 상태">
         {scenario.coreTools.map((item) => (
@@ -32,16 +33,16 @@ export function PartnerPanel({ scenario, checked, onToggle }: PartnerPanelProps)
         ))}
       </div>
 
-      <div className={styles.contextStrip}>
+      <Card as="div" className={styles.contextStrip}>
         {partner.sharedContext.map((item) => (
           <div key={item.id}>
             <span>{item.label}</span>
             <strong>{item.value}</strong>
           </div>
         ))}
-      </div>
+      </Card>
 
-      <div className={styles.utilityCard}>
+      <Card as="div" className={styles.utilityCard}>
         <div className={styles.cardTitleRow}>
           <h4>도움 행동</h4>
           <span>{countChecked(partner.actions, checked)}/{partner.actions.length}</span>
@@ -63,16 +64,16 @@ export function PartnerPanel({ scenario, checked, onToggle }: PartnerPanelProps)
             );
           })}
         </div>
-      </div>
+      </Card>
 
-      <div className={styles.avoidCard}>
+      <Card as="div" className={styles.avoidCard}>
         <h4>오늘 피하기</h4>
         <div className={styles.chipRow}>
           {partner.avoid.map((item) => (
             <span key={item.id}>{item.label}</span>
           ))}
         </div>
-      </div>
+      </Card>
 
       <div className={styles.partnerToolGrid}>
         {partner.quickTools.map((item) => (

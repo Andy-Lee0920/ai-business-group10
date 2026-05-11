@@ -6,7 +6,7 @@ import { DualPanelDemoClient } from './dual-panel-demo-client';
 
 export const metadata: Metadata = {
   title: 'Fevio dual-view demo',
-  description: '치료 상황에 따라 환자 화면과 파트너 역할이 함께 바뀌는 발표용 데모입니다.',
+  description: '치료 상황에 따라 내 화면과 파트너 역할이 함께 바뀌는 발표용 데모입니다.',
 };
 
 export const dynamic = 'force-dynamic';

@@ -35,7 +35,7 @@ export function DualPanelDemoClient() {
       <header className={styles.compactHeader}>
         <div>
           <p className="eyebrow">Dual-view demo</p>
-          <h1>환자와 파트너가 같은 상황을 봅니다</h1>
+          <h1>내 화면과 파트너 화면이 함께 바뀝니다</h1>
         </div>
         <div className={styles.compactController} role="group" aria-label="치료 상황 선택">
           {DEMO_ORDER.map((value) => (
@@ -53,11 +53,11 @@ export function DualPanelDemoClient() {
         <span className={styles.stepBadge}>{activeIndex}/3</span>
       </header>
 
-      <section className={styles.dualPanel} aria-label="환자와 파트너 동시 화면" key={care}>
+      <section className={styles.dualPanel} aria-label="내 화면과 파트너 동시 화면" key={care}>
         <article className={styles.panel} aria-labelledby="patient-panel-title">
           <div className={styles.panelHeader}>
-            <span className={styles.panelKicker}>Patient</span>
-            <h2 id="patient-panel-title">환자 화면</h2>
+            <span className={styles.panelKicker}>My care</span>
+            <h2 id="patient-panel-title">내 화면</h2>
           </div>
           <PatientPanel
             checked={patientChecks[care]}
