@@ -1,54 +1,101 @@
 .demoShell {
   width: min(1180px, 100vw);
   min-height: 100dvh;
-  padding: 28px clamp(16px, 4vw, 42px) 40px;
+  padding: 16px clamp(12px, 3vw, 32px) 36px;
 }
 
-.hero {
+.compactHeader {
+  position: sticky;
+  top: 10px;
+  z-index: 5;
   display: grid;
-  gap: 14px;
-  max-width: 980px;
-  margin: 0 auto 24px;
-  padding: 24px;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  max-width: 1040px;
+  margin: 0 auto 16px;
+  padding: 10px 12px;
   border: 1px solid rgba(32, 35, 31, 0.08);
-  border-radius: 30px;
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: var(--fevio-shadow-card);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 16px 44px rgba(50, 61, 46, 0.1);
+  backdrop-filter: blur(18px);
 }
 
-.hero h1 {
-  max-width: 760px;
+.compactHeader h1 {
   margin: 0;
-  font-size: clamp(28px, 4vw, 48px);
-  line-height: 1.06;
+  font-size: clamp(18px, 2vw, 24px);
   letter-spacing: -0.04em;
 }
 
-.hero p {
-  max-width: 760px;
-  margin: 0;
-  color: var(--fevio-muted);
-  font-size: 16px;
-  line-height: 1.7;
+.compactController {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(32, 35, 31, 0.06);
 }
 
-.situationCopy {
-  padding: 14px 16px;
-  border-left: 4px solid var(--fevio-sage);
-  border-radius: 18px;
-  background: rgba(111, 143, 110, 0.1);
+.compactController button,
+.stepBadge,
+.toolButton,
+.mainAction,
+.checkTile,
+.actionRow {
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.compactController button {
+  min-width: 58px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fevio-muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.compactController button:hover,
+.toolButton:hover,
+.checkTile:hover,
+.actionRow:hover,
+.mainAction:hover {
+  transform: translateY(-1px);
+}
+
+.compactController .activeStateButton {
+  background: var(--fevio-ink);
+  color: white;
+  box-shadow: 0 8px 20px rgba(32, 35, 31, 0.18);
+}
+
+.stepBadge {
+  display: inline-grid;
+  min-width: 44px;
+  min-height: 34px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(111, 143, 110, 0.14);
+  color: var(--fevio-sage);
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .dualPanel {
   display: grid;
   grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
   gap: clamp(16px, 3vw, 28px);
+  max-width: 1040px;
+  margin: 0 auto;
   align-items: start;
+  animation: panelIn 220ms ease both;
 }
 
 .panel {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -56,184 +103,446 @@
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 12px;
-  padding: 0 6px;
+  gap: 10px;
+  padding: 0 8px;
 }
 
 .panelHeader h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   letter-spacing: -0.03em;
 }
 
-.panelKicker {
+.panelKicker,
+.microLabel {
   color: var(--fevio-muted);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.phoneFrame {
-  display: flex;
-  justify-content: center;
-  min-height: 720px;
+.appScreen {
+  --accent: var(--fevio-sage);
+  display: grid;
+  gap: 12px;
+  min-height: 730px;
   padding: 14px;
   overflow: hidden;
   border: 1px solid rgba(32, 35, 31, 0.1);
   border-radius: 34px;
-  background: linear-gradient(180deg, rgba(32, 35, 31, 0.08), rgba(255, 255, 255, 0.65));
+  background:
+    radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, rgba(246, 244, 241, 0.94) 100%);
   box-shadow: var(--fevio-shadow-card);
 }
 
-.phoneFrame :global(.app-shell) {
-  min-height: auto;
-  border: 1px solid rgba(32, 35, 31, 0.08);
-  border-radius: 28px;
-  background: var(--fevio-cream);
+.partnerApp {
+  background:
+    radial-gradient(circle at 90% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 244, 241, 0.9));
 }
 
-.partnerScreen {
-  display: grid;
-  gap: 18px;
-  min-height: 720px;
-  padding: 28px;
-  border: 1px solid rgba(32, 35, 31, 0.1);
-  border-radius: 34px;
-  background: linear-gradient(180deg, #ffffff 0%, rgba(246, 244, 241, 0.92) 100%);
-  box-shadow: var(--fevio-shadow-card);
-}
+.accent_coral { --accent: var(--fevio-coral); }
+.accent_sage { --accent: var(--fevio-sage); }
+.accent_lavender { --accent: var(--fevio-lavender); }
 
-.partnerLabel {
-  width: fit-content;
-  margin: 0;
-  padding: 8px 12px;
-  border-radius: var(--fevio-radius-control);
-  background: rgba(111, 143, 110, 0.14);
-  color: var(--fevio-sage);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.partnerScreen h3 {
-  margin: 0;
-  font-size: clamp(34px, 4vw, 52px);
-  line-height: 1;
-  letter-spacing: -0.05em;
-}
-
-.partnerSummary {
-  margin: 0;
-  color: var(--fevio-muted);
-  font-size: 18px;
-  line-height: 1.7;
-}
-
-.toneBox,
-.partnerListBlock,
-.avoidBlock {
-  border-radius: 24px;
-  padding: 18px;
-}
-
-.toneBox {
-  display: grid;
-  gap: 6px;
-  background: rgba(185, 174, 214, 0.18);
-}
-
-.toneBox span,
-.partnerListBlock h4,
-.avoidBlock h4 {
-  margin: 0;
-  color: var(--fevio-muted);
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.toneBox strong {
-  font-size: 20px;
-}
-
-.partnerListBlock {
-  background: rgba(111, 143, 110, 0.12);
-}
-
-.avoidBlock {
-  background: rgba(224, 122, 104, 0.1);
-}
-
-.partnerListBlock ul,
-.avoidBlock ul {
-  display: grid;
-  gap: 10px;
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.partnerListBlock li,
-.avoidBlock li {
-  position: relative;
-  padding-left: 28px;
-  color: var(--fevio-ink);
-  font-size: 16px;
-  line-height: 1.6;
-}
-
-.partnerListBlock li::before,
-.avoidBlock li::before {
-  position: absolute;
-  left: 0;
-  top: 0.08em;
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
+.statusBar {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(32, 35, 31, 0.72);
   font-size: 12px;
   font-weight: 900;
 }
 
-.partnerListBlock li::before {
-  content: '✓';
-  background: var(--fevio-sage);
+.stageCard,
+.primaryCard,
+.utilityCard,
+.timelineCard,
+.partnerHero,
+.avoidCard,
+.contextStrip {
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10px 28px rgba(50, 61, 46, 0.08);
+}
+
+.stageCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+}
+
+.stageCard strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 30px;
+  letter-spacing: -0.05em;
+}
+
+.stageCard p,
+.partnerHero p {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.progressRing {
+  --progress: 0%;
+  display: grid;
+  width: 66px;
+  height: 66px;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--progress), rgba(32, 35, 31, 0.08) 0);
+}
+
+.progressRing span {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  background: white;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.primaryCard,
+.partnerHero {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.statePill {
+  width: fit-content;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, white);
+  color: color-mix(in srgb, var(--accent) 78%, var(--fevio-ink));
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.primaryCard h3,
+.partnerHero h3 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.mainAction {
+  min-height: 52px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--accent);
   color: white;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
-.avoidBlock li::before {
-  content: '!';
-  background: rgba(224, 122, 104, 0.18);
-  color: var(--fevio-coral);
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
-@media (max-width: 840px) {
+.metricCard {
+  display: grid;
+  gap: 4px;
+  min-height: 88px;
+  padding: 12px;
+  border: 1px solid rgba(32, 35, 31, 0.07);
+  border-radius: 20px;
+  background: white;
+}
+
+.metricCard span,
+.contextStrip span,
+.toolButton span,
+.cardTitleRow span,
+.timelineItem span {
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.metricCard strong,
+.contextStrip strong,
+.toolButton strong,
+.timelineItem strong {
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.metricCard small,
+.checkTile small {
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tone_coral { border-color: rgba(224, 122, 104, 0.22); }
+.tone_sage { border-color: rgba(111, 143, 110, 0.22); }
+.tone_lavender { border-color: rgba(185, 174, 214, 0.28); }
+
+.utilityCard,
+.avoidCard {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardTitleRow h4,
+.avoidCard h4 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
+
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.checkTile,
+.actionRow,
+.toolButton {
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  background: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+}
+
+.checkTile {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 4px 8px;
+  min-height: 76px;
+  padding: 11px;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.checkTile span,
+.actionRow span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid rgba(32, 35, 31, 0.14);
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.checkTile strong,
+.checkTile small {
+  grid-column: 2;
+}
+
+.isChecked {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, white);
+}
+
+.isChecked span {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.timelineCard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  padding: 8px;
+}
+
+.timelineItem {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(32, 35, 31, 0.035);
+}
+
+.toolDock,
+.partnerToolGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.partnerToolGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.toolButton {
+  display: grid;
+  gap: 3px;
+  min-height: 58px;
+  padding: 10px;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.contextStrip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  padding: 8px;
+}
+
+.contextStrip div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 8%, white);
+}
+
+.actionStack {
+  display: grid;
+  gap: 8px;
+}
+
+.actionRow {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chipRow span {
+  padding: 8px 10px;
+  border: 1px solid rgba(224, 122, 104, 0.2);
+  border-radius: 999px;
+  background: rgba(224, 122, 104, 0.08);
+  color: color-mix(in srgb, var(--fevio-coral) 78%, var(--fevio-ink));
+  font-size: 12px;
+  font-weight: 900;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 880px) {
   .demoShell {
-    padding: 18px 12px 28px;
+    padding: 12px 10px 28px;
   }
 
-  .hero {
-    padding: 20px;
+  .compactHeader {
+    position: static;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .compactController {
+    width: 100%;
+  }
+
+  .compactController button {
+    flex: 1;
+  }
+
+  .stepBadge {
+    display: none;
   }
 
   .dualPanel {
     grid-template-columns: 1fr;
   }
 
-  .phoneFrame,
-  .partnerScreen {
+  .appScreen {
     min-height: auto;
   }
+}
 
-  .phoneFrame {
-    padding: 8px;
+@media (max-width: 430px) {
+  .metricGrid,
+  .contextStrip,
+  .timelineCard,
+  .toolDock,
+  .partnerToolGrid {
+    grid-template-columns: 1fr;
   }
 
-  .partnerScreen {
-    padding: 22px;
+  .checkGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.coreRail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.coreTool {
+  display: grid;
+  gap: 3px;
+  min-height: 58px;
+  padding: 9px 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, rgba(32, 35, 31, 0.08));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 7%, white);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.coreTool:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--accent) 12%, white);
+}
+
+.coreTool span {
+  color: var(--fevio-muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.coreTool strong {
+  font-size: 13px;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 430px) {
+  .coreRail {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
