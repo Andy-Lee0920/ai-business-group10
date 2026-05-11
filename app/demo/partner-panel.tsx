@@ -1,4 +1,4 @@
-import { Badge, Card } from '../../src/components/ui';
+import { Badge, Card, ConfirmChip, StatusBadge } from '../../src/components/ui';
 import type { DemoScenario } from './demo-scenarios';
 import styles from './dual-panel-demo.module.css';
 
@@ -6,9 +6,19 @@ type PartnerPanelProps = {
   scenario: DemoScenario;
   checked: ReadonlySet<string>;
   onToggle: (id: string) => void;
+  careDone: boolean;
+  partnerConfirmed: boolean;
+  onPartnerConfirmToggle: () => void;
 };
 
-export function PartnerPanel({ scenario, checked, onToggle }: PartnerPanelProps) {
+export function PartnerPanel({
+  scenario,
+  checked,
+  onToggle,
+  careDone,
+  partnerConfirmed,
+  onPartnerConfirmToggle,
+}: PartnerPanelProps) {
   const { partner } = scenario;
 
   return (
@@ -22,6 +32,19 @@ export function PartnerPanel({ scenario, checked, onToggle }: PartnerPanelProps)
         <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         <h3>{partner.role}</h3>
         <p>{partner.status}</p>
+      </Card>
+
+      <Card as="div" className={styles.sharedSyncCard}>
+        <div>
+          <span className={styles.microLabel}>공유 상태</span>
+          <strong>{careDone ? '완료됨' : '같이 확인 중'}</strong>
+        </div>
+        <div className={styles.syncActions}>
+          {careDone ? <StatusBadge state="done">완료됨</StatusBadge> : <StatusBadge state="shared">공유중</StatusBadge>}
+          <ConfirmChip selected={partnerConfirmed} tone={scenario.accent} onClick={onPartnerConfirmToggle}>
+            확인 완료
+          </ConfirmChip>
+        </div>
       </Card>
 
       <div className={styles.coreRail} aria-label="공유 상태">
