@@ -68,6 +68,24 @@ export function DualPanelDemoClient() {
         <span className={styles.stepBadge}>{activeIndex}/3</span>
       </header>
 
+      <section className={styles.storyRail} aria-label="발표 내러티브">
+        <article>
+          <span>01 Problem</span>
+          <strong>문제는 부주의가 아니라 전달 구조입니다</strong>
+          <p>병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.</p>
+        </article>
+        <article>
+          <span>02 Input</span>
+          <strong>지친 날엔 긴 입력 대신 한 번만 고릅니다</strong>
+          <p>오늘에 가까운 상황을 고르면 필요한 도구가 먼저 올라옵니다.</p>
+        </article>
+        <article>
+          <span>03 Shared care</span>
+          <strong>선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.</strong>
+          <p>파트너는 “뭘 해야 하지?”가 아니라 바로 행동을 봅니다.</p>
+        </article>
+      </section>
+
       <section className={styles.dualPanel} aria-label="내 화면과 파트너 동시 화면" key={care}>
         <article className={styles.panel} aria-labelledby="patient-panel-title">
           <div className={styles.panelHeader}>

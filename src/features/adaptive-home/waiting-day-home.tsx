@@ -1,4 +1,5 @@
 import { Badge, Card, CtaButton, Notice, classNames } from '../../components/ui';
+import { HomeUtilityLauncher } from './home-utility-launcher';
 import type { AdaptiveStateHomeBaseProps } from './types';
 import styles from './waiting-day-home.module.css';
 
@@ -55,6 +56,7 @@ export function WaitingDayHome({ context }: AdaptiveStateHomeBaseProps) {
           <p className={styles.sectionLabel}>알림 톤</p>
           <p className={styles.notificationCopy}>오늘은 기다리는 날이에요. 다음 일정은 목요일입니다.</p>
         </Notice>
+        <HomeUtilityLauncher />
       </Card>
     </main>
   );

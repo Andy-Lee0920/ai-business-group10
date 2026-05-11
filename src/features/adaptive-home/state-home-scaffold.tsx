@@ -1,4 +1,5 @@
 import { Badge, Card } from '../../components/ui';
+import { HomeUtilityLauncher } from './home-utility-launcher';
 import type { AdaptiveStateHomeBaseProps } from './types';
 
 export function StateHomeScaffold({
@@ -28,6 +29,7 @@ export function StateHomeScaffold({
             </article>
           ))}
         </div>
+        <HomeUtilityLauncher />
       </Card>
     </main>
   );
