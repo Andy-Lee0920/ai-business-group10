@@ -24,19 +24,20 @@ test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll
   });
 
   expect(shellBox).not.toBeNull();
-  expect(shellBox!.width).toBeLessThanOrEqual(402);
-  expect(shellBox!.height).toBeLessThanOrEqual(874);
+  expect(shellBox!.width).toBeLessThanOrEqual(440);
+  expect(shellBox!.width).toBeGreaterThanOrEqual(430);
+  expect(shellBox!.height).toBeLessThanOrEqual(956);
   expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
   expect(documentScrollHeight).toBeLessThanOrEqual(viewportHeight);
   expect(shellOverflowY).toBe('auto');
   expect(bodyBackgroundImage).toContain('gradient');
   expect(bodyBackgroundImage).not.toContain('74, 107, 73');
-  expect(bodyBackgroundColor).toBe('rgb(5, 7, 6)');
+  expect(bodyBackgroundColor).toBe('rgb(247, 244, 238)');
   expect(bodyBackgroundColor).not.toEqual(shellBackgroundColor);
   expect(shellIsland.backgroundColor).toBe('rgb(0, 0, 0)');
-  expect(shellIsland.width).toBe('122px');
-  expect(shellIsland.height).toBe('36px');
-  expect(shellIsland.top).toBe('12px');
+  expect(Number.parseFloat(shellIsland.width)).toBeCloseTo(125.67, 1);
+  expect(Number.parseFloat(shellIsland.height)).toBeCloseTo(36.67, 1);
+  expect(shellIsland.top).toBe('11px');
 });
 
 test('mobile viewport keeps shell readable without horizontal overflow', async ({ page }) => {
