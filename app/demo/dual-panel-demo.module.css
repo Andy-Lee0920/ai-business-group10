@@ -1,0 +1,239 @@
+.demoShell {
+  width: min(1180px, 100vw);
+  min-height: 100dvh;
+  padding: 28px clamp(16px, 4vw, 42px) 40px;
+}
+
+.hero {
+  display: grid;
+  gap: 14px;
+  max-width: 980px;
+  margin: 0 auto 24px;
+  padding: 24px;
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: var(--fevio-shadow-card);
+}
+
+.hero h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+}
+
+.hero p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.situationCopy {
+  padding: 14px 16px;
+  border-left: 4px solid var(--fevio-sage);
+  border-radius: 18px;
+  background: rgba(111, 143, 110, 0.1);
+}
+
+.dualPanel {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+  gap: clamp(16px, 3vw, 28px);
+  align-items: start;
+}
+
+.panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 6px;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.panelKicker {
+  color: var(--fevio-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.phoneFrame {
+  display: flex;
+  justify-content: center;
+  min-height: 720px;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(32, 35, 31, 0.1);
+  border-radius: 34px;
+  background: linear-gradient(180deg, rgba(32, 35, 31, 0.08), rgba(255, 255, 255, 0.65));
+  box-shadow: var(--fevio-shadow-card);
+}
+
+.phoneFrame :global(.app-shell) {
+  min-height: auto;
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: 28px;
+  background: var(--fevio-cream);
+}
+
+.partnerScreen {
+  display: grid;
+  gap: 18px;
+  min-height: 720px;
+  padding: 28px;
+  border: 1px solid rgba(32, 35, 31, 0.1);
+  border-radius: 34px;
+  background: linear-gradient(180deg, #ffffff 0%, rgba(246, 244, 241, 0.92) 100%);
+  box-shadow: var(--fevio-shadow-card);
+}
+
+.partnerLabel {
+  width: fit-content;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--fevio-radius-control);
+  background: rgba(111, 143, 110, 0.14);
+  color: var(--fevio-sage);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.partnerScreen h3 {
+  margin: 0;
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.partnerSummary {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.toneBox,
+.partnerListBlock,
+.avoidBlock {
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.toneBox {
+  display: grid;
+  gap: 6px;
+  background: rgba(185, 174, 214, 0.18);
+}
+
+.toneBox span,
+.partnerListBlock h4,
+.avoidBlock h4 {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.toneBox strong {
+  font-size: 20px;
+}
+
+.partnerListBlock {
+  background: rgba(111, 143, 110, 0.12);
+}
+
+.avoidBlock {
+  background: rgba(224, 122, 104, 0.1);
+}
+
+.partnerListBlock ul,
+.avoidBlock ul {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partnerListBlock li,
+.avoidBlock li {
+  position: relative;
+  padding-left: 28px;
+  color: var(--fevio-ink);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.partnerListBlock li::before,
+.avoidBlock li::before {
+  position: absolute;
+  left: 0;
+  top: 0.08em;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.partnerListBlock li::before {
+  content: '✓';
+  background: var(--fevio-sage);
+  color: white;
+}
+
+.avoidBlock li::before {
+  content: '!';
+  background: rgba(224, 122, 104, 0.18);
+  color: var(--fevio-coral);
+}
+
+@media (max-width: 840px) {
+  .demoShell {
+    padding: 18px 12px 28px;
+  }
+
+  .hero {
+    padding: 20px;
+  }
+
+  .dualPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .phoneFrame,
+  .partnerScreen {
+    min-height: auto;
+  }
+
+  .phoneFrame {
+    padding: 8px;
+  }
+
+  .partnerScreen {
+    padding: 22px;
+  }
+}
