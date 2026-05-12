@@ -349,25 +349,8 @@
   content: "";
 }
 
-.phaseHero_injection {
-  background:
-    radial-gradient(circle at 8% 8%, rgba(255, 225, 211, 0.94), transparent 35%),
-    linear-gradient(145deg, #fff9f6 0%, #fff1ea 58%, #ffffff 100%);
-}
 
-.phaseHero_clinic {
-  background:
-    linear-gradient(90deg, rgba(111, 143, 110, 0.09) 1px, transparent 1px) 0 0 / 28px 28px,
-    radial-gradient(circle at 12% 8%, rgba(222, 238, 221, 0.96), transparent 34%),
-    linear-gradient(145deg, #fbfff9 0%, #eff7ef 62%, #ffffff 100%);
-}
 
-.phaseHero_waiting {
-  background:
-    radial-gradient(circle at 18% 10%, rgba(230, 224, 247, 0.96), transparent 34%),
-    radial-gradient(circle at 78% 4%, rgba(255, 255, 255, 0.84), transparent 24%),
-    linear-gradient(145deg, #fcfbff 0%, #f4f1fb 64%, #ffffff 100%);
-}
 
 .phaseHeroTop,
 .partnerHeroTop {
@@ -537,23 +520,8 @@
     0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.partnerHero_injection {
-  background:
-    radial-gradient(circle at 82% 0%, rgba(255, 215, 198, 0.92), transparent 32%),
-    linear-gradient(145deg, #fffaf7, #fff0e9);
-}
 
-.partnerHero_clinic {
-  background:
-    radial-gradient(circle at 82% 0%, rgba(219, 238, 218, 0.96), transparent 32%),
-    linear-gradient(145deg, #fbfff9, #eff7ef);
-}
 
-.partnerHero_waiting {
-  background:
-    radial-gradient(circle at 82% 0%, rgba(230, 224, 247, 0.96), transparent 34%),
-    linear-gradient(145deg, #fcfbff, #f4f1fb);
-}
 
 .partnerRoleIcon {
   width: 54px;

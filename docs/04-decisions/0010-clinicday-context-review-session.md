@@ -71,9 +71,9 @@ After the visit, Fevio offers fast structured capture for what the clinic actual
 
 These become draft `CycleEvent` candidates. They do not advance phase until confirmed by the user.
 
-## Semi-generative scope
+## State-driven Generative UI scope
 
-Semi-generative UI solves **which context-review modules to show for this visit**, not medical reasoning.
+State-driven Generative UI solves **which context-review modules to show for this visit**, not medical reasoning.
 
 Allowed:
 
@@ -116,7 +116,7 @@ Only `confirmedByUser: true` events may affect `confirmedPhase`.
 - ClinicDay stays useful without adding an unsafe LLM medical layer.
 - Patients get recall support at the moment it matters: the waiting room before the visit.
 - Cycle phase updates have better evidence because after-visit capture is structured.
-- UI can vary by visit through deterministic semi-generative modules.
+- UI can vary by visit through deterministic state-driven Generative UI modules.
 
 ### Harder
 

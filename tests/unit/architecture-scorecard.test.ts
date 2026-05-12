@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const REQUIRED_AREAS = [
   'Shared Care State Foundation',
-  'Semi-Generative UI Engine',
+  'State-driven Generative UI Engine',
   'Role-aware Patient/Partner Translation',
   'Partner Assist Operator Model',
   'Patient-owned Sharing Scope',

@@ -3,7 +3,7 @@ import {
   getPresentationCards,
   getPresentationClinicMemo,
   getPresentationPartnerView,
-} from '../../src/lib/presentation-demo-data';
+} from '../../src/features/adaptive-home/presentation-scenarios';
 import type { CareActionCard } from '../../src/types/care-cards.types';
 
 const NOW = new Date('2026-05-11T20:00:00.000Z');

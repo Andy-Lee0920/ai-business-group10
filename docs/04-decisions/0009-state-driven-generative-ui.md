@@ -1,4 +1,4 @@
-# ADR 0009 — Semi-generative Care Surface via TPO specificity-first rules
+# ADR 0009 — State-driven Generative UI Care Surface via TPO specificity-first rules
 
 ## Status
 
@@ -8,13 +8,13 @@ Accepted — 2026-05-12
 
 Fevio handles sensitive IVF information and the user's emotional load at the same time. A fully generative UI, where AI invents the whole screen, would weaken medical safety, accessibility, QA reproducibility, and brand consistency.
 
-The product still needs to feel personal and cinematic. The right architecture is therefore semi-generative: domain logic may choose the best predesigned component, copy template, visual tone, and input module for the current care context, but it may not invent layout, medical facts, dosage, prognosis, or partner-visible scope.
+The product still needs to feel personal and cinematic. The right architecture is therefore state-driven Generative UI: domain logic may choose the best predesigned component, copy template, visual tone, and input module for the current care context, but it may not invent layout, medical facts, dosage, prognosis, or partner-visible scope.
 
-TreatmentTimeline now provides milestone-first care context, including `phaseCareDay`, `surfaceCareDay`, `overrideReason`, and reserved proximity information. Semi-generative rules sit on top of that confirmed context.
+TreatmentTimeline now provides milestone-first care context, including `phaseCareDay`, `surfaceCareDay`, `overrideReason`, and reserved proximity information. State-driven Generative UI rules sit on top of that confirmed context.
 
 ## Decision
 
-Fevio adopts a **Semi-generative Care OS** architecture:
+Fevio adopts a **State-driven Generative UI Care OS** architecture:
 
 > Fevio does not let AI draw arbitrary medical screens. It projects confirmed care context into strict layout slots, verified components, restrained copy templates, and partner-role translations.
 

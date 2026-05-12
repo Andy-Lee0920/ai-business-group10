@@ -23,7 +23,7 @@ What this makes easier, harder, or forbidden.
 ## Index
 
 - [ADR 0008 — TreatmentTimeline uses confirmed milestones before care-card fallback](0008-treatment-timeline-milestone-first.md)
-- [ADR 0009 — Semi-generative Care Surface via TPO specificity-first rules](0009-semi-generative-care-ui.md)
+- [ADR 0009 — State-driven Generative UI Care Surface via TPO specificity-first rules](0009-state-driven-generative-ui.md)
 - [ADR 0010 — ClinicDay is a care-context review session, not an LLM doctor mediator](0010-clinicday-context-review-session.md)
 
 - [ADR 0011 — CycleEvent state machine](0011-cycle-event-state-machine.md)

@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-describe('Semi-generative Care Surface ADR', () => {
+describe('State-driven Generative UI Care Surface ADR', () => {
   it('documents specificity-first rules, Zod config, intensity, partner signal, and v2 path', () => {
-    const adr = readFileSync('docs/04-decisions/0009-semi-generative-care-ui.md', 'utf8');
+    const adr = readFileSync('docs/04-decisions/0009-state-driven-generative-ui.md', 'utf8');
 
     for (const required of [
       'TPO specificity-first slot selection + Zod-validated JSON config',

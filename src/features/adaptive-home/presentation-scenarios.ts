@@ -1,6 +1,8 @@
 import { computeDisplaySafetyLevel } from '../../domain/care-cards';
+import { serializePartnerViewCards } from '../../services/partner-view';
 import type { CareActionCard, CareCardStatus, CardType } from '../../types/care-cards.types';
 import type { PresentationCareActionCard } from '../../types/presentation-demo.types';
+import type { PartnerActionViewItem } from '../../types/partner-view.types';
 import type { AdaptiveCareDay } from './types';
 
 const COUPLE_ID = 'presentation-couple';
@@ -13,6 +15,24 @@ export function getPresentationScenarioCards(care: PresentationCareParam, now: D
     ...card,
     displaySafetyLevel: computeDisplaySafetyLevel(card, now),
   }));
+}
+
+export function getPresentationCards(now: Date): PresentationCareActionCard[] {
+  return getPresentationScenarioCards('injection', now);
+}
+
+export function getPresentationClinicMemo(): string {
+  return [
+    '21:00 고날에프 — 내가 확인한 용량',
+    '22:00 오비드렐 트리거 확인, 냉장 보관 후 준비',
+    '내일부터 프로게스테론 아침·저녁 복용',
+    '목요일 오전 9시 병원 방문, 채혈과 초음파 확인',
+    '파트너는 주사 30분 전 펜, 알코올솜, 조용한 공간만 함께 확인',
+  ].join('\n');
+}
+
+export function getPresentationPartnerView(): PartnerActionViewItem[] {
+  return serializePartnerViewCards(getPresentationCards(new Date('2026-05-11T12:00:00.000Z')));
 }
 
 export function normalizePresentationCare(value: string | string[] | null | undefined): PresentationCareParam {
@@ -46,6 +66,7 @@ function injectionDaySeeds(now: Date): CareActionCard[] {
     makeCard('injection-ovitrelle', 'injection', '22:00 오비드렐 트리거 확인', minutesFrom(now, 80), '골든타임은 내가 확인한 시간만 기준으로 보여줘요.', 'confirmed', todayUtc(now)),
     makeCard('injection-partner', 'partner_support', '파트너 역할: 준비물과 공간 맡기', minutesFrom(now, 10), '질문을 늘리지 않고 알코올솜, 폐기통, 조용한 공간을 먼저 챙겨요.', 'confirmed', todayUtc(now)),
     makeCard('injection-medication', 'medication', '프로게스테론 복용 — 병원 안내대로', minutesFrom(now, 180), '용량 판단 없이 내가 확인한 복용 시간만 남겨요.', 'confirmed', todayUtc(now)),
+    makeCard('injection-partner-done', 'partner_support', '파트너 주사 준비 역할 완료', minutesFrom(now, -90), '필요한 준비물을 묻기 전에 먼저 확인했어요.', 'completed', todayUtc(now)),
   ];
 }
 

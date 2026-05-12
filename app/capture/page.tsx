@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Card, Notice } from '../../src/components/ui';
 import { isPresentationHost, isPresentationMode } from '../../src/config';
-import { getPresentationClinicMemo } from '../../src/lib/presentation-demo-data';
+import { getPresentationClinicMemo } from '../../src/features/adaptive-home/presentation-scenarios';
 import { CaptureForm } from './capture-form';
 
 export default async function CapturePage() {

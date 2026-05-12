@@ -73,4 +73,15 @@ describe('state-driven demo product surface', () => {
     expect(css).toContain('.productActionRow');
     expect(css).not.toContain('grid-template-columns: 22px 1fr;');
   });
+
+  it('uses 7-stage accent classes only and has no legacy 3-scene phase classes', () => {
+    const css = readFileSync('app/demo/dual-panel-demo.module.css', 'utf8');
+    for (const klass of ['phaseHero_coral', 'phaseHero_sage', 'phaseHero_lavender', 'partnerHero_coral', 'partnerHero_sage', 'partnerHero_lavender']) {
+      expect(css).toContain(`.${klass}`);
+    }
+    for (const legacy of ['phaseHero_injection', 'phaseHero_clinic', 'phaseHero_waiting', 'partnerHero_injection', 'partnerHero_clinic', 'partnerHero_waiting']) {
+      expect(css).not.toContain(legacy);
+    }
+  });
+
 });

@@ -98,7 +98,7 @@ describe('Care OS architecture vertical contracts', () => {
     expect(partner.body).not.toBe(patient.body);
   });
 
-  it('reports rule conflicts before new semi-generative rules silently override a slot', () => {
+  it('reports rule conflicts before new state-driven Generative UI rules silently override a slot', () => {
     const conflicts = detectCareSurfaceRuleConflicts([
       { id: 'a', slot: 'hero', conditions: [{ field: 'careDay', op: 'eq', value: 'injection_day' }], priority: 1 },
       { id: 'b', slot: 'hero', conditions: [{ field: 'careDay', op: 'eq', value: 'injection_day' }], priority: 1 },

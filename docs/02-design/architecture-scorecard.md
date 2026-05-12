@@ -10,7 +10,7 @@ Next target: 80 / 100
 | Area | Points | Current | Pass condition | URL Green condition |
 |---|---:|---:|---|---|
 | Shared Care State Foundation | 10 | 8 | Patient and Partner resolve to the same care cycle state with role-specific membership. | `/home` and `/partner/[token]` show the same cycle day but different role surfaces. |
-| Semi-Generative UI Engine | 15 | 12 | Confirmed care context selects approved slots/components through deterministic rules. | `/home` trigger-shot state shows `CareMomentRing` and `data-intensity="1.00"`. |
+| State-driven Generative UI Engine | 15 | 12 | Confirmed care context selects approved slots/components through deterministic rules. | `/home` trigger-shot state shows `CareMomentRing` and `data-intensity="1.00"`. |
 | Role-aware Patient/Partner Translation | 15 | 10 | Same care state is translated into patient action language and partner assist language. | Patient sees “내가 확인할 시간”; partner sees “내가 도울 역할”. |
 | Partner Assist Operator Model | 12 | 5 | Partner can read/support/assist, but cannot edit medical data. | Partner URL has assist actions but no dosage/prescription edit affordance. |
 | Patient-owned Sharing Scope | 12 | 3 | Patient controls Basic / Care / Emotional partner projection scope. | Lowering scope to Basic removes medication/emotion/memo detail from partner URL. |
@@ -31,4 +31,4 @@ An architecture issue can close only when its Green condition includes:
 
 ## Current interpretation
 
-The closed Semi-Generative Care Surface package covers the engine and privacy boundary well, but does not complete the operation model. The remaining score gap is mostly in patient-owned sharing, partner permission, injection trust logging, and valid live-sync proof.
+The closed State-driven Generative UI Care Surface package covers the engine and privacy boundary well, but does not complete the operation model. The remaining score gap is mostly in patient-owned sharing, partner permission, injection trust logging, and valid live-sync proof.

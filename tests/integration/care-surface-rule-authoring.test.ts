@@ -5,7 +5,7 @@ import { detectCareSurfaceRuleConflicts } from '../../src/domain/care-os-archite
 import { CARE_SURFACE_RULES } from '../../src/domain/care-surface-engine';
 import type { CareSurfaceComponent, CareSurfaceSlot, FevioSurfaceContext } from '../../src/types/care-surface.types';
 
-describe('semi-generative rule authoring guardrails', () => {
+describe('state-driven Generative UI rule authoring guardrails', () => {
   it('keeps bundled rule fixtures deterministic', () => {
     for (const fixture of fixtures) {
       const result = computeCareSurface(fixture.context as FevioSurfaceContext);

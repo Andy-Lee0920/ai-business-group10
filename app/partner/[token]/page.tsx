@@ -1,4 +1,4 @@
-import { getPresentationPartnerView } from '../../../src/lib/presentation-demo-data';
+import { getPresentationPartnerView } from '../../../src/features/adaptive-home/presentation-scenarios';
 import { PartnerActionViewClient } from './PartnerActionViewClient';
 import { PartnerRoleSurface } from './PartnerRoleSurface';
 

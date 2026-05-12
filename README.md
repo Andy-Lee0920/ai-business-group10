@@ -6,6 +6,8 @@ Fevio [페비오]는 난임 치료 중 병원에서 들은 복잡한 지시사�
 
 Fevio는 의료 판단을 대신하지 않습니다. 치료 전략, 용량, 진단, 성공률을 추천하지 않고, 사용자가 병원에서 들은 내용을 안전하게 정리하고 실행하도록 돕습니다.
 
+**Fevio is a state-driven Generative UI Care OS for IVF couples.** See [`docs/01-product/FEVIO_NORTH_STAR.md`](docs/01-product/FEVIO_NORTH_STAR.md).
+
 ---
 
 ## 한눈에 보기

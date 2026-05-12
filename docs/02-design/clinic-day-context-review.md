@@ -50,9 +50,9 @@ These become draft CycleEvent candidates and require user confirmation before th
 
 Partner reads as `동행자` or `기록 도우미`, with two or three concrete actions only: 이동 시간 확인, 접수/귀가 동선 돕기, 진료 후 다음 일정 함께 기록.
 
-## Semi-generative boundary
+## State-driven Generative UI boundary
 
-Semi-generative UI decides which fixed context module is most useful for this visit. It may reorder timeline, medication, symptom, graph, appointment, and capture modules from confirmed records.
+State-driven Generative UI decides which fixed context module is most useful for this visit. It may reorder timeline, medication, symptom, graph, appointment, and capture modules from confirmed records.
 
 It must not generate doctor-facing advice, judge whether clinic information is correct, infer treatment strategy, or use an LLM conversation as the core ClinicDay workflow.
 
