@@ -214,7 +214,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
   await expect(page.getByText('오늘 어떤 케어 장면을 볼까요?')).toBeVisible();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('내 화면은 케어 흐름, 파트너 화면은 역할만 보여줍니다.')).toHaveCount(1);
+  await expect(page.getByText('내 화면은 케어 흐름, 파트너 화면은 역할만 보여줍니다.')).toBeHidden();
   await expect(page.getByText('함께 이어짐')).toBeVisible();
   await expect(page.getByTestId('primary-user-avatar')).toBeVisible();
   await expect(page.getByTestId('partner-avatar')).toBeVisible();
