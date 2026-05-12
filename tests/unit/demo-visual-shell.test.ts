@@ -15,6 +15,7 @@ describe('demo visual shell contract', () => {
     expect(css).not.toContain('rgba(255, 255, 255, 0.58)');
   });
 
+
   it('keeps generated demo copy and surrounding chrome product-safe', () => {
     const client = readFileSync('app/demo/dual-panel-demo-client.tsx', 'utf8');
 
@@ -29,19 +30,18 @@ describe('demo visual shell contract', () => {
     expect(client).not.toContain('처방전 입력');
   });
 
-  it('keeps onboarding low-activation with role-first chips and manual memo as fallback', () => {
+  it('keeps the memo input screen single-purpose instead of an explainer page', () => {
     const input = readFileSync('app/demo/demo-input-screen.tsx', 'utf8');
 
-    expect(input).toContain('먼저 누구로 시작할까요?');
-    expect(input).toContain('환자 본인');
-    expect(input).toContain('배우자·파트너');
-    expect(input).toContain('아직 알아보는 중');
-    expect(input).toContain('interviewAnswerChip');
-    expect(input).toContain('병원 안내를 직접 붙여넣기');
+    expect(input).toContain('병원 안내 붙여넣기');
     expect(input).toContain('케어 화면 만들기');
     expect(input).toContain('예시 넣기');
     expect(input).not.toContain('phoneFunnelTopBar');
     expect(input).not.toContain('Fevio Demo');
+    expect(input).not.toContain('먼저 누구로 시작할까요?');
+    expect(input).not.toContain('환자 본인');
+    expect(input).not.toContain('배우자·파트너');
+    expect(input).not.toContain('interviewAnswerChip');
     expect(input).not.toContain('병원 안내를 그대로 넣어주세요');
     expect(input).not.toContain('약, 방문, 결과 일정이 섞여 있어도');
     expect(input).not.toContain('약 봉투·메모 사진 예시로 채우기');
