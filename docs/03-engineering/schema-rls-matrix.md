@@ -15,6 +15,8 @@ This matrix keeps the final PRD data model aligned before implementation across 
 | `care_action_cards` | #25 / #24; schedule decision #55 / ADR 0003 | card model migration | own couple only for app; anon blocked; partner view only via server token projection; clinic visits stay card-backed for SLC | confirmed constraints; clinic_visit scheduling via `scheduled_at` / `care_date`; card creation; anon direct read denied |
 | `partner_share_links` | #27 | partner migration | authenticated owner can create/revoke; anon cannot direct query; token hash only | one active link, 7-day TTL, raw token absent |
 | `partner_share_events` | #27 | partner migration | server-controlled partner token flow; authenticated owner can observe relevant acknowledgement state if needed | view/ack events record revision seen |
+| `treatment_cycles` | #144 / #147 | treatment timeline migration | own couple only; blocked until Privacy Gate accepted; no anon direct access | cycle insert/select isolation; privacy gate rejection |
+| `treatment_milestones` | #144 / #147 | treatment timeline migration | own couple only using direct `couple_id` plus cycle-match trigger; partner token reads server-side only | milestone insert/select isolation; cycle/couple mismatch rejected |
 | `user_ai_settings` | #28 P1 | llm migration | own user metadata only; raw key in Vault only | raw key not selectable/logged; P0 works without key |
 
 ## Non-negotiable invariants
@@ -29,6 +31,7 @@ This matrix keeps the final PRD data model aligned before implementation across 
 - Partner raw token is never stored; store `SHA-256(token)` only.
 - Partner links expire after 7 days and can be explicitly revoked.
 - ADR 0003 keeps clinic visit scheduling on `care_action_cards` for SLC; do not add `clinic_visits` or `visit_id` before P1 `#44` reopens the decision with concrete recurrence/reschedule requirements.
+- TreatmentTimeline tables are Post-SLC phase hints only. `treatment_milestones` must not expose raw notes to partner token clients and must not store estimated/template dates as active care-surface truth.
 
 ## Minimum integration tests
 

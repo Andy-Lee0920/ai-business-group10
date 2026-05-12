@@ -1,5 +1,7 @@
 import { CtaButton, classNames } from '../../components/ui';
+import { getFevioIcon } from '../../design/icon-map';
 import type { HomeActionCard } from '../../domain/home-composition';
+import type { CardType } from '../../types/care-cards.types';
 import styles from './care-surface-primitives.module.css';
 
 export type CareSurfacePhase = 'injection' | 'clinic' | 'waiting' | 'routine';
@@ -46,6 +48,7 @@ export function MomentHero({
 }) {
   return (
     <section className={styles.momentHero} data-testid="care-moment-hero" aria-labelledby="home-title">
+      <DecorativeIcon className={styles.heroIcon} iconKey={`phase:${phase}`} testId="phase-hero-icon" />
       <p className={styles.eyebrow}>{eyebrow}</p>
       <h1 className={styles.heroTitle} id="home-title">{title}</h1>
       <p className={styles.heroFact}>{fact}</p>
@@ -76,7 +79,7 @@ export function OperationalGlassSheet({
   return (
     <section className={styles.glassSheet} data-testid="operational-glass-sheet" aria-labelledby="operational-glass-title">
       <div className={styles.sheetHeader}>
-        <span>CARE FLOW</span>
+        <span className={styles.sheetLabel}><DecorativeIcon className={styles.sheetIcon} iconKey="component:operationalGlassSheetHeader" testId="sheet-layers-icon" />케어 흐름</span>
         <h2 id="operational-glass-title">{title}</h2>
         <p>{description}</p>
       </div>
@@ -90,15 +93,24 @@ export function QuietChecklist({
   items,
 }: {
   label: string;
-  items: Array<{ id: string; title: string; description?: string | null; badge?: string }>;
+  items: Array<{ id: string; title: string; description?: string | null; badge?: string; cardType?: CardType; completed?: boolean }>;
 }) {
   return (
     <section className={styles.quietChecklist} aria-label={label}>
       {items.map((item, index) => (
         <article className={styles.checkItem} data-testid="home-action-card" key={item.id}>
-          <span className={styles.checkMark} aria-hidden="true">{index + 1}</span>
+          <span className={styles.checkMark} aria-hidden="true">
+            <DecorativeIcon
+              className={styles.checkStateIcon}
+              iconKey={item.completed ? 'component:quietChecklistChecked' : 'component:quietChecklistUnchecked'}
+              testId="quiet-checklist-state-icon"
+            />
+          </span>
           <div>
-            {item.badge ? <small>{item.badge}</small> : null}
+            <div className={styles.checkMeta}>
+              {item.cardType ? <DecorativeIcon className={styles.cardTypeIcon} iconKey={`card:${item.cardType}`} testId="care-card-type-icon" /> : null}
+              {item.badge ? <small>{item.badge}</small> : null}
+            </div>
             <h3>{item.title}</h3>
             {item.description ? <p>{item.description}</p> : null}
           </div>
@@ -120,7 +132,7 @@ export function PartnerPresencePulse({
   const statusCopy = state === 'seen' ? '함께 확인 중' : state === 'unknown' ? '공유 준비됨' : '파트너에게 공유됨';
   return (
     <section className={styles.partnerPulse} data-testid="partner-presence-pulse" aria-label="파트너 공유 상태">
-      <span className={styles.pulseOrb} aria-hidden="true" />
+      <span className={styles.pulseOrb} aria-hidden="true"><DecorativeIcon className={styles.pulseIcon} iconKey="component:partnerPresencePulse" testId="partner-radio-icon" /></span>
       <div>
         <small>{statusCopy}</small>
         <h2>{title}</h2>
@@ -219,4 +231,10 @@ function extractTimeLabel(card: HomeActionCard) {
 
 function cleanTitle(title: string) {
   return title.replace(/^\d{1,2}:\d{2}\s*/u, '').replace(/—.*$/u, '').trim();
+}
+
+function DecorativeIcon({ iconKey, className, testId }: { iconKey: Parameters<typeof getFevioIcon>[0]; className: string; testId?: string }) {
+  const spec = getFevioIcon(iconKey);
+  const Icon = spec.icon;
+  return <Icon aria-hidden="true" className={classNames(className, styles[`iconTone_${spec.tone}`])} data-testid={testId} focusable="false" size={spec.size} strokeWidth={2.2} />;
 }

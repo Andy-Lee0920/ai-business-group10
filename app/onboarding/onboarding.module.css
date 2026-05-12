@@ -285,3 +285,44 @@
 .choiceChip:focus-visible {
   transform: translateY(-2px);
 }
+
+.timelinePreview {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(111, 143, 110, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.timelinePreview strong {
+  color: var(--fevio-sage-dark);
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.timelinePreview span {
+  color: var(--fevio-ink);
+  font-weight: 820;
+  line-height: 1.45;
+}
+
+
+.brandAnchor {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  width: fit-content;
+  padding: 8px 10px;
+  border: 1px solid rgba(111, 143, 110, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--fevio-sage-dark);
+}
+
+.brandAnchor img {
+  width: 24px;
+  height: 24px;
+}

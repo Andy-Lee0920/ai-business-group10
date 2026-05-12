@@ -1,10 +1,12 @@
 import type { HomeActionCard } from '../../domain/home-composition';
+import type { CardType } from '../../types/care-cards.types';
 
 export type QuietChecklistItem = {
   id: string;
   title: string;
   description?: string | null;
   badge?: string;
+  cardType?: CardType;
 };
 
 export function findPrimaryCareCard(cards: readonly HomeActionCard[], preferredTitleFragment?: string) {
@@ -29,6 +31,7 @@ export function toQuietChecklistItems(
     title: card.title,
     description: card.description ?? card.urgencyCopy ?? options.fallbackDescription,
     badge: typeof options.badge === 'function' ? options.badge(card) : options.badge,
+    cardType: card.cardType,
   }));
 }
 

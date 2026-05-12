@@ -1,11 +1,14 @@
 import { computeCareDay, computeDisplaySafetyLevel, computeReminderFallbackState, reminderFallbackCopy } from './care-cards';
+import { computeCareDayV2 } from './treatment-timeline';
 import type { CareActionCard, CareDay, DisplaySafetyLevel } from '../types/care-cards.types';
+import type { CareSurfaceOverrideReason, TimelineCareDay, TreatmentMilestone } from '../types/treatment-timeline.types';
 
 export type HomeActionCard = {
   id: string;
   title: string;
   description: string | null;
   scheduledAt: string | null;
+  cardType: CareActionCard['card_type'];
   displaySafetyLevel: DisplaySafetyLevel;
   accentClassName: string;
   urgencyCopy: string | null;
@@ -13,6 +16,9 @@ export type HomeActionCard = {
 
 export type HomeContext = {
   careDay: CareDay;
+  phaseCareDay?: TimelineCareDay;
+  surfaceCareDay?: TimelineCareDay;
+  overrideReason?: CareSurfaceOverrideReason;
   generatedAt: string;
   primaryMessage: string;
   cards: HomeActionCard[];
@@ -30,6 +36,32 @@ export function computeHomeContext(cards: readonly CareActionCard[], now: Date):
   };
 }
 
+
+export function computeHomeContextV2(
+  cards: readonly CareActionCard[],
+  milestones: readonly TreatmentMilestone[],
+  now: Date,
+): HomeContext {
+  const confirmedCards = cards.filter((card) => card.status === 'confirmed');
+  const today = now.toISOString().slice(0, 10);
+  const surface = computeCareDayV2(milestones, confirmedCards.filter((card) => isCardOnIsoDay(card, today)), today);
+
+  return {
+    careDay: surface.surfaceCareDay,
+    phaseCareDay: surface.phaseCareDay,
+    surfaceCareDay: surface.surfaceCareDay,
+    overrideReason: surface.overrideReason,
+    generatedAt: now.toISOString(),
+    primaryMessage: getPrimaryMessage(surface.surfaceCareDay),
+    cards: surface.foregroundCards.map((card) => toHomeActionCard(card, now)).sort(compareHomeCards),
+  };
+}
+
+function isCardOnIsoDay(card: CareActionCard, today: string) {
+  if (card.care_date === today) return true;
+  return card.scheduled_at?.slice(0, 10) === today;
+}
+
 function toHomeActionCard(card: CareActionCard, now: Date): HomeActionCard {
   const displaySafetyLevel = computeDisplaySafetyLevel(card, now);
   const recheckCopy = reminderFallbackCopy(computeReminderFallbackState(card, now));
@@ -39,6 +71,7 @@ function toHomeActionCard(card: CareActionCard, now: Date): HomeActionCard {
     title: card.title,
     description: card.description,
     scheduledAt: card.scheduled_at,
+    cardType: card.card_type,
     displaySafetyLevel,
     accentClassName: displaySafetyLevel === 'critical' ? 'home-card--critical home-card--coral' : 'home-card--calm',
     urgencyCopy: recheckCopy ?? (displaySafetyLevel === 'critical' ? '시간 다 됐어요 · 지금 ±30분' : null),

@@ -14,6 +14,7 @@ test('presentation home defaults to an immersive injection-day care instrument',
 
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
   await expect(page.getByTestId('care-moment-hero')).toBeVisible();
+  await expect(page.getByTestId('phase-hero-icon')).toBeVisible();
   await expect(page.getByRole('heading', { name: '오늘은 시간을 함께 지키는 날' })).toBeVisible();
   await expect(page.getByTestId('care-moment-ring')).toBeVisible();
   await expect(page.getByTestId('care-moment-ring')).toHaveAttribute('aria-label', /고날에프/);
@@ -33,8 +34,11 @@ test('presentation home defaults to an immersive injection-day care instrument',
 
   await expect(page.getByLabel('지금 할 수 있는 행동').getByRole('button', { name: '준비물 확인하기' })).toBeVisible();
   await expect(page.getByLabel('조용한 준비 체크리스트')).toBeVisible();
+  await expect(page.getByTestId('quiet-checklist-state-icon').first()).toBeVisible();
+  await expect(page.getByTestId('care-card-type-icon').first()).toBeVisible();
   await expect(page.getByTestId('partner-presence-pulse')).toBeVisible();
-  await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+/)).toHaveCount(0);
+  await expect(page.getByTestId('partner-radio-icon')).toBeVisible();
+  await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
 
   const firstCardTop = await page.getByTestId('home-action-card').first().evaluate((element) => element.getBoundingClientRect().top);
   const viewportHeight = await page.evaluate(() => window.innerHeight);
@@ -52,16 +56,42 @@ test('presentation home applies the immersive/adaptive contract to every care da
     await page.goto(`/home?care=${scenario.care}`);
     await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', scenario.phase);
     await expect(page.getByTestId('care-moment-hero')).toBeVisible();
+    await expect(page.getByTestId('phase-hero-icon')).toBeVisible();
     await expect(page.getByRole('heading', { name: scenario.heading })).toBeVisible();
     await expect(page.getByLabel('지금 할 수 있는 행동').getByRole('button', { name: scenario.action })).toBeVisible();
     await expect(page.getByTestId('operational-glass-sheet')).toBeVisible();
+    await expect(page.getByTestId('sheet-layers-icon').first()).toBeVisible();
     await expect(page.getByTestId('partner-presence-pulse')).toBeVisible();
-    await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+/)).toHaveCount(0);
+    await expect(page.getByTestId('partner-radio-icon')).toBeVisible();
+    await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
 
-    const firstCardTop = await page.getByTestId('home-action-card').first().evaluate((element) => element.getBoundingClientRect().top);
-    const viewportHeight = await page.evaluate(() => window.innerHeight);
-    expect(firstCardTop).toBeGreaterThan(viewportHeight * 0.72);
+    if (scenario.care === 'injection' || scenario.care === 'waiting') {
+      const firstCardTop = await page.getByTestId('home-action-card').first().evaluate((element) => element.getBoundingClientRect().top);
+      const viewportHeight = await page.evaluate(() => window.innerHeight);
+      expect(firstCardTop).toBeGreaterThan(viewportHeight * 0.72);
+    }
   }
+});
+
+test('presentation home changes component order by care phase', async ({ page }) => {
+  const orders: Record<string, string[]> = {};
+  const trackedIds = new Set(['care-moment-hero', 'operational-glass-sheet', 'partner-presence-pulse', 'home-action-card']);
+
+  for (const care of ['injection', 'clinic', 'waiting'] as const) {
+    await page.goto(`/home?care=${care}`);
+    orders[care] = await page.evaluate((ids) =>
+      Array.from(document.querySelectorAll('[data-testid]'))
+        .map((element) => element.getAttribute('data-testid') ?? '')
+        .filter((id) => ids.includes(id))
+        .slice(0, 5),
+    Array.from(trackedIds));
+  }
+
+  expect(orders.injection).toEqual(['care-moment-hero', 'operational-glass-sheet', 'home-action-card', 'home-action-card', 'home-action-card']);
+  expect(orders.clinic[0]).toBe('operational-glass-sheet');
+  expect(orders.clinic).not.toEqual(orders.injection);
+  expect(orders.waiting[1]).toBe('partner-presence-pulse');
+  expect(new Set(Object.values(orders).map((order) => order.join('>'))).size).toBe(3);
 });
 
 test('presentation capture pre-fills the clinic memo sample', async ({ page }) => {

@@ -92,6 +92,11 @@
   padding-top: 16px;
 }
 
+.heroIcon {
+  display: block;
+  color: var(--phase-accent-deep);
+}
+
 .eyebrow {
   margin: 0;
   color: var(--phase-accent-deep);
@@ -263,6 +268,16 @@
   line-height: 1.2;
 }
 
+.sheetLabel {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sheetIcon {
+  flex: 0 0 auto;
+}
+
 .sheetHeader p,
 .partnerPulse p {
   margin: 0;
@@ -296,8 +311,20 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--phase-accent) 20%, white);
   color: var(--phase-accent-deep);
-  font-size: 0.82rem;
-  font-weight: 950;
+}
+
+.cardTypeIcon {
+  display: block;
+}
+
+.checkStateIcon {
+  display: block;
+}
+
+.checkMeta {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .checkItem h3 {
@@ -329,13 +356,19 @@
 
 .pulseOrb {
   position: relative;
-  display: block;
+  display: grid;
   width: 30px;
   height: 30px;
   margin-top: 2px;
   border-radius: 999px;
-  background: var(--phase-accent);
+  place-items: center;
+  background: color-mix(in srgb, var(--phase-accent) 18%, white);
+  color: var(--phase-accent-deep);
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--phase-accent) 14%, transparent);
+}
+
+.pulseIcon {
+  display: block;
 }
 
 .pulseOrb::after {
@@ -375,3 +408,9 @@
     min-height: min(760px, calc(100dvh - 150px));
   }
 }
+
+.iconTone_coral { color: #e07a68; }
+.iconTone_sage { color: #3d5c3c; }
+.iconTone_lavender { color: #5a5272; }
+.iconTone_amber { color: #b7791f; }
+.iconTone_neutral { color: #686f64; }

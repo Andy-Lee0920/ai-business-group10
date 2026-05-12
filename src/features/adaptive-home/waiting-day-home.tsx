@@ -28,12 +28,13 @@ export function WaitingDayHome({ context }: AdaptiveStateHomeBaseProps) {
         actionHint="더 많이 묻지 않고, 필요한 신호만 낮게 남깁니다."
       />
 
+      <PartnerPresencePulse
+        title="오늘은 곁에 있는 사람"
+        description="결과를 재촉하지 않고 물, 식사, 쉬는 시간을 먼저 건네는 역할로 보여요."
+      />
+
       <OperationalGlassSheet title="낮은 밀도의 확인" description={context.primaryMessage}>
         <QuietChecklist label="오늘 확인할 일정" items={visibleCards} />
-        <PartnerPresencePulse
-          title="오늘은 곁에 있는 사람"
-          description="결과를 재촉하지 않고 물, 식사, 쉬는 시간을 먼저 건네는 역할로 보여요."
-        />
         <HomeUtilityLauncher />
       </OperationalGlassSheet>
     </CareSurfaceFrame>

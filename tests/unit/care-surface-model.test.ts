@@ -8,6 +8,7 @@ function card(overrides: Partial<HomeActionCard>): HomeActionCard {
     title: overrides.title ?? '21:00 고날에프 확인',
     description: overrides.description ?? null,
     scheduledAt: overrides.scheduledAt ?? null,
+    cardType: overrides.cardType ?? 'general_action',
     displaySafetyLevel: overrides.displaySafetyLevel ?? 'normal',
     accentClassName: overrides.accentClassName ?? 'home-card--calm',
     urgencyCopy: overrides.urgencyCopy ?? null,
@@ -27,8 +28,8 @@ describe('care surface model', () => {
       badge: (item) => (item.displaySafetyLevel === 'critical' ? '먼저 확인' : '다음 차례'),
       limit: 2,
     })).toEqual([
-      { id: 'visit', title: '내일 병원 방문', description: '확인한 내용만 보여요.', badge: '다음 차례' },
-      { id: 'shot', title: '21:00 고날에프 확인', description: '펜과 알코올솜 준비', badge: '먼저 확인' },
+      { id: 'visit', title: '내일 병원 방문', description: '확인한 내용만 보여요.', badge: '다음 차례', cardType: 'general_action' },
+      { id: 'shot', title: '21:00 고날에프 확인', description: '펜과 알코올솜 준비', badge: '먼저 확인', cardType: 'general_action' },
     ]);
   });
 

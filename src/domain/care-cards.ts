@@ -70,6 +70,11 @@ export function inferCardType(
   return suggestedCardType ?? 'general_action';
 }
 
+/**
+ * @deprecated Use `computeCareDayV2` from `src/domain/treatment-timeline.ts` for
+ * TreatmentTimeline work. See ADR 0008: docs/04-decisions/0008-treatment-timeline-milestone-first.md.
+ * This SLC fallback intentionally remains card-based until the v2 vertical slice is wired.
+ */
 export function computeCareDay(input: CareContextInput): CareDay {
   if (!input.hasEverCaptured) return 'onboarding';
   if (input.manuallySelectedCareDay === 'waiting_day') return 'waiting_day';

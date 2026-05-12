@@ -35,6 +35,11 @@ export function ClinicDayHome({ context }: AdaptiveStateHomeBaseProps) {
 
   return (
     <CareSurfaceFrame phase="clinic">
+      <OperationalGlassSheet title="오늘 진료실에 가지고 갈 것들" description="질문 2개 · 지난 7일 케어 기록 · 파트너 동행">
+        <QuietChecklist label="진료 브리핑 항목" items={checklistItems} />
+        <HomeUtilityLauncher />
+      </OperationalGlassSheet>
+
       <MomentHero
         phase="clinic"
         eyebrow="Clinic care"
@@ -44,14 +49,10 @@ export function ClinicDayHome({ context }: AdaptiveStateHomeBaseProps) {
         actionHint="방문 시간, 준비물, 물어볼 말을 같은 흐름에 둡니다."
       />
 
-      <OperationalGlassSheet title="방문 전 확인 흐름" description={context.primaryMessage}>
-        <QuietChecklist label="병원 방문 체크리스트 항목" items={checklistItems} />
-        <PartnerPresencePulse
-          title="오늘은 동행자"
-          description="이동 시간, 접수, 진료 후 다음 일정을 함께 붙잡는 역할로 보여요."
-        />
-        <HomeUtilityLauncher />
-      </OperationalGlassSheet>
+      <PartnerPresencePulse
+        title="오늘은 동행자"
+        description="이동 시간, 접수, 진료 후 다음 일정을 함께 붙잡는 역할로 보여요."
+      />
     </CareSurfaceFrame>
   );
 }

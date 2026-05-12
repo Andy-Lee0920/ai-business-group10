@@ -104,3 +104,44 @@ describe('home composition', () => {
     expectTypeOf(computeHomeContext).returns.toMatchTypeOf<HomeContext>();
   });
 });
+
+import { computeHomeContextV2 } from '../../src/domain/home-composition';
+import type { TreatmentMilestone } from '../../src/types/treatment-timeline.types';
+
+describe('home composition v2 timeline bridge', () => {
+  const now = new Date('2026-05-10T09:00:00.000Z');
+  const milestone: TreatmentMilestone = {
+    id: 'milestone-transfer',
+    cycle_id: 'cycle-1',
+    couple_id: 'couple-1',
+    milestone: 'embryo_transfer',
+    confirmed_at: '2026-05-07',
+    notes: null,
+    created_at: '2026-05-07T00:00:00.000Z',
+  };
+
+  it('keeps waiting-day surface when a routine injection is only a foreground card', () => {
+    const context = computeHomeContextV2([
+      {
+        id: 'progesterone',
+        couple_id: 'couple-1',
+        created_by: 'user-1',
+        assignee_role: 'primary_user',
+        card_type: 'injection',
+        title: '프로게스테론 주사',
+        description: null,
+        source_text: '프로게스테론 주사',
+        scheduled_at: '2026-05-10T09:00:00.000Z',
+        care_date: '2026-05-10',
+        status: 'confirmed',
+        confirmation_required: false,
+        user_marked_important: false,
+        partner_visible: false,
+        revision: 1,
+      },
+    ], [milestone], now);
+
+    expect(context).toMatchObject({ careDay: 'waiting_day', phaseCareDay: 'waiting_day', surfaceCareDay: 'waiting_day', overrideReason: 'none' });
+    expect(context.cards[0]?.cardType).toBe('injection');
+  });
+});
