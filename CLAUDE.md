@@ -326,3 +326,59 @@ Every onboarding question must change at least one of:
 If an onboarding question does not affect the generated care UI, it should not be asked during onboarding.
 
 Onboarding copy tone: Fevio calmly receives hospital instructions. Write short, polite, practical Korean based on what the clinic instructed. Do not use cute reassurance, emotional overreach, internal product terms, or medical-test language.
+
+## Implementation anti-patterns Codex/Claude must reject
+
+These are recurring failure modes in this codebase. Treat them as architectural guardrails, not style preferences.
+
+### 1. Demo flags inside domain logic
+
+Do not solve demo/product differences by spreading `isDemoMode`, `presentationMode`, or similar flags through domain logic or product components.
+
+Correct pattern:
+
+```text
+One domain function.
+Different data injection points.
+/demo feeds fixture data into the same parser/domain contract.
+/onboarding feeds persisted/Supabase data into the same parser/domain contract.
+```
+
+For example, clinic memo parsing should live in one domain module such as `clinic-memo-parser.ts`. `/demo` may pass fixture clinic memo data into it; `/onboarding` may pass Supabase-backed user data into it. The parser must not branch on demo mode.
+
+### 2. UI-variant issues instead of data-contract issues
+
+Do not split future implementation issues by UI variant names such as `clinic-day-home.tsx` vs `injection-day-home.tsx` unless the data contract has already been unified.
+
+Prefer issues framed around:
+
+- input data contract;
+- domain transformation;
+- renderer/projection contract;
+- URL-action-result acceptance;
+- persistence and RLS boundary.
+
+If an issue only asks for a visual variant without naming the shared data contract, stop and rewrite the issue before implementation.
+
+### 3. Weak Definition of Done
+
+Visual inspection of a Vercel URL is required for product UI, but it is not sufficient.
+
+For product behavior or deployed flows, DoD must include the relevant subset of:
+
+- `tsc --noEmit` / `npm run typecheck` passing;
+- targeted unit/integration tests passing;
+- browser/E2E or URL-action-result evidence;
+- Vercel preview/production URL smoke for the changed visible surface;
+- RLS-sensitive API path check on the deployed URL when the change touches Supabase-backed data;
+- confirmation that required `supabase/migrations` are applied remotely, or an explicit deployment gap comment.
+
+Do not close an issue if the acceptance claim depends on RLS, environment variables, or remote migrations that were not verified or explicitly marked as a deployment gap.
+
+### 4. Type widening for implementation convenience
+
+`Record<string, unknown>`, `Record<string, string | number | boolean>`, and `any` are allowed only when the type is genuinely unbounded at the boundary.
+
+They are not allowed as shortcuts inside domain models, demo scenarios, utility-card contracts, or renderer props.
+
+Prefer discriminated unions, exact interfaces, `satisfies`, and exhaustive `never` checks. If a broad record already exists, do not widen it further; either narrow it in the touched slice or leave a concrete follow-up issue.

@@ -1,6 +1,6 @@
 # Fevio [페비오] Agent Mental Model
 
-This is the Codex-readable project instruction surface. It is not a project dashboard. Do not use it to track current progress, issue status, or temporary decisions.
+This file is not a project dashboard. Do not use it to track current progress, issue status, or temporary decisions.
 
 Use this file as the stable mental model for working in this repository: what the product is, what must stay true, and how agents should reason while changing code.
 
@@ -273,3 +273,112 @@ If validation cannot run, state the gap and use the next-best check. Do not desc
 - Feature-specific intent: `docs/specs/`
 
 This file should remain stable unless the product or engineering philosophy changes.
+
+### URL-action-result closure rule
+
+Every issue that changes product behavior or product UI must include at least one Green condition in this form:
+
+```text
+[URL]에서 [사용자 역할]이 [행동]했을 때 [기대 결과]를 본다.
+```
+
+Examples:
+
+- `/partner/[token]`에서 파트너가 링크를 열었을 때 `오늘 내 역할`, `도움 행동`, `오늘 피하기`를 3초 안에 이해한다.
+- `/home?care=injection`에서 사용자가 홈을 열었을 때 첫 viewport가 카드 목록이 아니라 atmosphere + moment hero + primary action으로 보인다.
+- `/capture`에서 사용자가 병원 안내문을 촬영하려고 할 때 `image/*` camera input과 붙여넣기 input이 같은 흐름 안에서 보인다.
+
+Do not accept purely layer-based Green conditions such as "component exists", "API returns 200", or "test passes" unless they are tied back to an actual URL, user action, and expected visible result.
+
+### Epic vertical-slice owner rule
+
+An Epic cannot be closed from component/demo/API evidence alone.
+
+Before closing an Epic, a named vertical slice owner must verify the deployed URL end-to-end and comment with:
+
+- URL verified
+- user role
+- action taken
+- expected result observed
+- automated test evidence
+- production/Vercel smoke evidence or a clearly stated deployment gap
+
+Example:
+
+```text
+Vertical slice owner: Codex
+URL: https://project-oznp0.vercel.app/home?care=waiting
+Role/action/result: primary user opens waiting-day home and sees quiet atmosphere, one moment sentence, one action, then a low-density glass sheet after in-frame scroll.
+Evidence: Playwright test X passed, production smoke screenshot attached.
+```
+
+If a real user URL still exposes raw implementation language, card-grid regression, raw projection fields, or broken mobile frame behavior, the Epic remains open even when all child implementation tickets are individually Green.
+
+## Onboarding Principle
+
+Fevio onboarding does not collect profile data for its own sake.
+
+The purpose of onboarding is to create the user's first care state and configure how that state will generate different utility interfaces for the patient and partner.
+
+Every onboarding question must change at least one of:
+`inferredStage` / `firstCareItem` / `utilityCards` / `roleContext` / `sharingLevel` / `partnerProjection` / `explanationDensity`.
+
+If an onboarding question does not affect the generated care UI, it should not be asked during onboarding.
+
+Onboarding copy tone: Fevio calmly receives hospital instructions. Write short, polite, practical Korean based on what the clinic instructed. Do not use cute reassurance, emotional overreach, internal product terms, or medical-test language.
+
+## Implementation anti-patterns Codex/Claude must reject
+
+These are recurring failure modes in this codebase. Treat them as architectural guardrails, not style preferences.
+
+### 1. Demo flags inside domain logic
+
+Do not solve demo/product differences by spreading `isDemoMode`, `presentationMode`, or similar flags through domain logic or product components.
+
+Correct pattern:
+
+```text
+One domain function.
+Different data injection points.
+/demo feeds fixture data into the same parser/domain contract.
+/onboarding feeds persisted/Supabase data into the same parser/domain contract.
+```
+
+For example, clinic memo parsing should live in one domain module such as `clinic-memo-parser.ts`. `/demo` may pass fixture clinic memo data into it; `/onboarding` may pass Supabase-backed user data into it. The parser must not branch on demo mode.
+
+### 2. UI-variant issues instead of data-contract issues
+
+Do not split future implementation issues by UI variant names such as `clinic-day-home.tsx` vs `injection-day-home.tsx` unless the data contract has already been unified.
+
+Prefer issues framed around:
+
+- input data contract;
+- domain transformation;
+- renderer/projection contract;
+- URL-action-result acceptance;
+- persistence and RLS boundary.
+
+If an issue only asks for a visual variant without naming the shared data contract, stop and rewrite the issue before implementation.
+
+### 3. Weak Definition of Done
+
+Visual inspection of a Vercel URL is required for product UI, but it is not sufficient.
+
+For product behavior or deployed flows, DoD must include the relevant subset of:
+
+- `tsc --noEmit` / `npm run typecheck` passing;
+- targeted unit/integration tests passing;
+- browser/E2E or URL-action-result evidence;
+- Vercel preview/production URL smoke for the changed visible surface;
+- RLS-sensitive API path check on the deployed URL when the change touches Supabase-backed data;
+- confirmation that required `supabase/migrations` are applied remotely, or an explicit deployment gap comment.
+
+Do not close an issue if the acceptance claim depends on RLS, environment variables, or remote migrations that were not verified or explicitly marked as a deployment gap.
+
+### 4. Type widening for implementation convenience
+
+`Record<string, unknown>`, `Record<string, string | number | boolean>`, and `any` are allowed only when the type is genuinely unbounded at the boundary.
+
+They are not allowed as shortcuts inside domain models, demo scenarios, utility-card contracts, or renderer props.
+
+Prefer discriminated unions, exact interfaces, `satisfies`, and exhaustive `never` checks. If a broad record already exists, do not widen it further; either narrow it in the touched slice or leave a concrete follow-up issue.
