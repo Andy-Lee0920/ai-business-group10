@@ -6,6 +6,8 @@ import {
   QuietChecklist,
 } from './care-surface-primitives';
 import { HomeUtilityLauncher } from './home-utility-launcher';
+import { PartnerInviteCard } from './partner-invite-card';
+import { shouldShowPartnerInviteCard, shouldShowPartnerProjection } from './partner-projection';
 import type { AdaptiveStateHomeBaseProps } from './types';
 
 export function ResultProtectionHome({ context, composition }: AdaptiveStateHomeBaseProps) {
@@ -26,7 +28,8 @@ export function ResultProtectionHome({ context, composition }: AdaptiveStateHome
         <summary>{surface.reviewClosedLabel}</summary>
         <p>이번 주기 기록은 사용자가 열 때만 보여요. 확인된 일정과 기록만 차분히 정리합니다.</p>
       </details>
-      <PartnerConnectBar description={surface.partnerGuidance} />
+      {shouldShowPartnerProjection(context) ? <PartnerConnectBar description={surface.partnerGuidance} /> : null}
+      {shouldShowPartnerInviteCard(context) ? <PartnerInviteCard /> : null}
       <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );

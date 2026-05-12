@@ -5,6 +5,9 @@ const FEVIO_STATE_COOKIES = [
   'fevio_privacy_accepted',
   'fevio_onboarding_first_card',
   'fevio_onboarding_role_context',
+  'fevio_onboarding_sharing_level',
+  'fevio_onboarding_partner_invite',
+  'fevio_onboarding_effective_stage',
   'fevio_treatment_milestones',
   'fevio_treatment_cards',
 ] as const;

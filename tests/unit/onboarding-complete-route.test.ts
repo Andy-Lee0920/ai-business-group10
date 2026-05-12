@@ -45,7 +45,7 @@ describe('/api/onboarding/complete', () => {
     const payload = (await response.json()) as { redirectTo: string; careDay: string; createdCardCount: number };
 
     expect(response.status).toBe(200);
-    expect(createCapture).toHaveBeenCalledWith('치료 상황: ivf_cycle\n첫 항목: 오늘 밤 9시 주사 확인');
+    expect(createCapture).toHaveBeenCalledWith('치료 상황: ivf_cycle\n역할 설정: primary_with_partner\n공유 범위: basic\n첫 항목: 오늘 밤 9시 주사 확인');
     expect(confirm).toHaveBeenCalledWith({
       draftId: 'draft-1',
       visitInputId: 'visit-1',
@@ -83,6 +83,8 @@ describe('/api/onboarding/complete', () => {
       '체중: 58kg',
       '주의사항: 갑상선 약 복용 중',
       '치료 상황: ivf_cycle',
+      '역할 설정: primary_solo',
+      '공유 범위: basic',
     ].join('\n'));
     expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ items: [] }));
   });
@@ -105,6 +107,54 @@ describe('/api/onboarding/complete', () => {
     }));
   });
 
+
+
+
+  it('accepts the 4-step onboarding payload without baseline profile and stores stage sharing cookies', async () => {
+    const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
+    const confirm = vi.fn().mockResolvedValue({ createdCardCount: 1 });
+    mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture, confirm } satisfies CaptureStore);
+
+    const response = await completeOnboarding(
+      jsonRequest({
+        treatmentExperience: 'first_ivf',
+        firstCareItem: { selectedIntent: 'medication', rawText: '밤에 주사', attachments: [], medicalNotes: '' },
+        effectiveStage: 'ovarian_stimulation',
+        roleContext: 'primary_with_partner',
+        partnerInvite: { intent: 'prepare_invite' },
+      }),
+    );
+    const payload = await response.json() as { roleContext: string; sharingLevel: string; effectiveStage: string; partnerInvite: string };
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({ roleContext: 'primary_with_partner', sharingLevel: 'care', effectiveStage: 'ovarian_stimulation', partnerInvite: 'prepare_invite' });
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({
+      items: [expect.objectContaining({ sourceText: '밤에 주사', userSelectedCardType: 'injection' })],
+    }));
+    const setCookie = response.headers.get('set-cookie') ?? '';
+    expect(setCookie).toContain('fevio_onboarding_role_context=primary_with_partner');
+    expect(setCookie).toContain('fevio_onboarding_sharing_level=care');
+    expect(setCookie).toContain('fevio_onboarding_partner_invite=prepare_invite');
+  });
+
+  it('keeps pregnancy test partner sharing basic by default', async () => {
+    const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
+    const confirm = vi.fn().mockResolvedValue({ createdCardCount: 1 });
+    mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture, confirm } satisfies CaptureStore);
+
+    const response = await completeOnboarding(
+      jsonRequest({
+        firstCareItem: { selectedIntent: 'pregnancy_test', rawText: '피검 결과는 전화로 안내', attachments: [] },
+        effectiveStage: 'pregnancy_test',
+        roleContext: 'primary_with_partner',
+        partnerInvite: { intent: 'prepare_invite' },
+      }),
+    );
+    const payload = await response.json() as { sharingLevel: string };
+
+    expect(response.status).toBe(200);
+    expect(payload.sharingLevel).toBe('basic');
+  });
 
 
   it('persists role context for role-based home binding', async () => {

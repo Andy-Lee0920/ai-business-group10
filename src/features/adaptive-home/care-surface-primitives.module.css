@@ -629,3 +629,66 @@
   color: var(--phase-muted);
   font-size: 1rem;
 }
+
+.partnerInviteCard {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(185, 174, 214, 0.28);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 36px rgba(50, 61, 46, 0.08);
+}
+
+.partnerInviteCard small,
+.partnerInviteCard h2,
+.partnerInviteCard p {
+  margin: 0;
+}
+
+.partnerInviteCard small {
+  color: var(--fevio-lavender-dark, #6f648c);
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.partnerInviteCard h2 {
+  color: var(--fevio-ink);
+  font-size: 1rem;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.partnerInviteCard p {
+  color: var(--fevio-text-secondary);
+  font-size: 0.88rem;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.partnerInviteActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 8px;
+}
+
+.partnerInviteActions button {
+  min-height: 42px;
+  border: 1px solid rgba(111, 143, 110, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--fevio-sage-dark);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.partnerInviteActions button:first-child {
+  background: var(--fevio-sage);
+  color: #fff;
+}
+
+.partnerInviteMessage {
+  color: var(--fevio-sage-dark) !important;
+}

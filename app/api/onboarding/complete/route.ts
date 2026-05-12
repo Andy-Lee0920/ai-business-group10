@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isPresentationRequest } from '../../../../src/config';
 import { computeCareDay } from '../../../../src/domain/care-cards';
 import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../../src/domain/care-os-architecture';
+import { defaultSharingLevelByStage, inferStageFromCareItem, type IvfStage, type SelectedIntent, type SharingLevel } from '../../../../src/domain/onboarding-care-state';
 import { createCaptureStore, type ConfirmItem } from '../../../../src/lib/capture-confirm-store';
 import type { CardType, CareActionCard } from '../../../../src/types/care-cards.types';
 
@@ -10,6 +10,11 @@ type OnboardingBody = {
   treatmentContext?: unknown;
   treatmentExperience?: unknown;
   baselineProfile?: unknown;
+  firstCareItem?: unknown;
+  inferredStage?: unknown;
+  effectiveStage?: unknown;
+  sharingLevel?: unknown;
+  partnerInvite?: unknown;
   roleContext?: unknown;
   partnerInviteSkipped?: unknown;
   partnerInviteEmail?: unknown;
@@ -19,6 +24,13 @@ type OnboardingBody = {
 type FirstItem = {
   kind: FirstItemKind;
   text: string;
+};
+
+type FirstCareItem = {
+  selectedIntent: SelectedIntent;
+  rawText: string;
+  medicalNotes: string;
+  attachmentCount: number;
 };
 
 type BaselineProfile = {
@@ -40,15 +52,20 @@ export async function POST(request: NextRequest) {
   const treatmentExperience = normalizeText(body.treatmentExperience);
   const baselineProfile = normalizeBaselineProfile(body.baselineProfile);
   const roleContext = normalizeRoleContext(body.roleContext);
-  const firstItem = normalizeFirstItem(body.firstItem);
+  const firstCareItem = normalizeFirstCareItem(body.firstCareItem);
+  const legacyFirstItem = normalizeFirstItem(body.firstItem);
+  const firstItem = firstCareItem ? toFirstItem(firstCareItem) : legacyFirstItem;
+  const effectiveStage = normalizeIvfStage(body.effectiveStage) ?? (firstCareItem ? inferStageFromCareItem({ selectedIntent: firstCareItem.selectedIntent, rawText: firstCareItem.rawText }).inferredStage : null);
+  const sharingLevel = normalizeSharingLevel(body.sharingLevel) ?? (effectiveStage ? defaultSharingLevelByStage(effectiveStage) : 'basic');
+  const partnerInviteIntent = normalizePartnerInviteIntent(body.partnerInvite) ?? (roleContext === 'primary_with_partner' ? 'prepare_invite' : 'skip');
 
-  if (!treatmentContext) return NextResponse.json({ error: 'Treatment context is required.' }, { status: 400 });
+  if (!treatmentContext && !firstCareItem) return NextResponse.json({ error: 'First care item is required.' }, { status: 400 });
   if (firstItem === 'invalid') return NextResponse.json({ error: 'One valid first schedule, medication, or injection item is required.' }, { status: 400 });
 
   const store = await createCaptureStore(request);
   if (store instanceof Response) return store;
 
-  const rawText = buildOnboardingCaptureText({ treatmentContext, treatmentExperience, baselineProfile, firstItem });
+  const rawText = buildOnboardingCaptureText({ treatmentContext, treatmentExperience, baselineProfile, firstItem, firstCareItem, effectiveStage, sharingLevel, roleContext });
   const capture = await store.createCapture(rawText);
   const items = firstItem ? [toConfirmItem(firstItem)] : [];
   const result = await store.confirm({ ...capture, items });
@@ -63,9 +80,11 @@ export async function POST(request: NextRequest) {
     redirectTo: '/home',
     careDay,
     createdCardCount: result.createdCardCount,
-    partnerInvite: 'skipped',
+    partnerInvite: partnerInviteIntent,
     roleContext,
-    homeIntent: deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: body.partnerInviteSkipped !== false }),
+    sharingLevel,
+    effectiveStage,
+    homeIntent: deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: partnerInviteIntent !== 'prepare_invite' }),
   });
 
   response.cookies.set('fevio_onboarding_role_context', roleContext, {
@@ -74,7 +93,11 @@ export async function POST(request: NextRequest) {
     path: '/',
   });
 
-  if (firstItem && isPresentationRequest(request)) {
+  response.cookies.set('fevio_onboarding_sharing_level', sharingLevel, { httpOnly: true, sameSite: 'lax', path: '/' });
+  response.cookies.set('fevio_onboarding_partner_invite', partnerInviteIntent, { httpOnly: true, sameSite: 'lax', path: '/' });
+  if (effectiveStage) response.cookies.set('fevio_onboarding_effective_stage', effectiveStage, { httpOnly: true, sameSite: 'lax', path: '/' });
+
+  if (firstItem) {
     response.cookies.set('fevio_onboarding_first_card', encodeURIComponent(JSON.stringify(toCareActionCard(firstItem, store.coupleId, now))), {
       httpOnly: true,
       sameSite: 'lax',
@@ -88,7 +111,7 @@ export async function POST(request: NextRequest) {
 
 function normalizeRoleContext(value: unknown): RoleContext {
   if (value === 'patient' || value === 'partner' || value === 'together' || value === 'primary_solo' || value === 'primary_with_partner') return value;
-  return 'patient';
+  return 'primary_solo';
 }
 
 function normalizeText(value: unknown) {
@@ -109,6 +132,50 @@ function normalizeFirstItem(value: unknown): FirstItem | 'invalid' | null {
   return { kind, text };
 }
 
+function normalizeFirstCareItem(value: unknown): FirstCareItem | null {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return null;
+  const candidate = value as Record<string, unknown>;
+  const selectedIntent = normalizeSelectedIntent(candidate.selectedIntent);
+  const rawText = normalizeText(candidate.rawText);
+  const medicalNotes = normalizeText(candidate.medicalNotes);
+  const attachments = Array.isArray(candidate.attachments) ? candidate.attachments : [];
+  return { selectedIntent, rawText, medicalNotes, attachmentCount: attachments.length };
+}
+
+function normalizeSelectedIntent(value: unknown): SelectedIntent {
+  if (value === 'medication' || value === 'clinic_visit' || value === 'procedure' || value === 'result_waiting' || value === 'post_transfer' || value === 'pregnancy_test' || value === 'unknown') return value;
+  return 'unknown';
+}
+
+function normalizeIvfStage(value: unknown): IvfStage | null {
+  if (value === 'baseline_testing' || value === 'ovarian_stimulation' || value === 'egg_retrieval' || value === 'fertilization' || value === 'embryo_culture' || value === 'embryo_transfer' || value === 'pregnancy_test') return value;
+  return null;
+}
+
+function normalizeSharingLevel(value: unknown): SharingLevel | null {
+  return value === 'basic' || value === 'care' ? value : null;
+}
+
+function normalizePartnerInviteIntent(value: unknown) {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return null;
+  const intent = (value as Record<string, unknown>).intent;
+  return intent === 'skip' || intent === 'prepare_invite' ? intent : null;
+}
+
+function toFirstItem(firstCareItem: FirstCareItem): FirstItem | null {
+  const text = firstCareItem.rawText || (firstCareItem.attachmentCount > 0 ? '사진으로 추가한 병원 안내' : '');
+  if (!text) return null;
+  return { kind: firstItemKindForIntent(firstCareItem.selectedIntent, text), text };
+}
+
+function firstItemKindForIntent(intent: SelectedIntent, text: string): FirstItemKind {
+  if (intent === 'clinic_visit' || intent === 'procedure' || /방문|검사|예약|채취|시술/u.test(text)) return 'schedule';
+  if (intent === 'medication' && /주사|오비드렐|고날|퓨리곤|세트로|트리거/u.test(text)) return 'injection';
+  if (intent === 'medication') return 'medication';
+  if (intent === 'post_transfer' || intent === 'pregnancy_test' || intent === 'result_waiting') return 'schedule';
+  return /주사/u.test(text) ? 'injection' : 'schedule';
+}
+
 function normalizeBaselineProfile(value: unknown): BaselineProfile | null {
   if (!value || Array.isArray(value) || typeof value !== 'object') return null;
   const candidate = value as Record<string, unknown>;
@@ -125,11 +192,19 @@ function buildOnboardingCaptureText({
   treatmentExperience,
   baselineProfile,
   firstItem,
+  firstCareItem,
+  effectiveStage,
+  sharingLevel,
+  roleContext,
 }: {
   treatmentContext: string;
   treatmentExperience: string;
   baselineProfile: BaselineProfile | null;
   firstItem: FirstItem | null;
+  firstCareItem: FirstCareItem | null;
+  effectiveStage: IvfStage | null;
+  sharingLevel: SharingLevel;
+  roleContext: RoleContext;
 }) {
   const lines = [];
   if (treatmentExperience) lines.push(`시술 경험: ${treatmentExperience}`);
@@ -137,7 +212,13 @@ function buildOnboardingCaptureText({
   if (baselineProfile?.heightCm) lines.push(`신장: ${baselineProfile.heightCm}cm`);
   if (baselineProfile?.weightKg) lines.push(`체중: ${baselineProfile.weightKg}kg`);
   if (baselineProfile?.medicalNotes) lines.push(`주의사항: ${baselineProfile.medicalNotes}`);
-  lines.push(`치료 상황: ${treatmentContext}`);
+  if (firstCareItem?.medicalNotes) lines.push(`주의사항: ${firstCareItem.medicalNotes}`);
+  if (treatmentContext) lines.push(`치료 상황: ${treatmentContext}`);
+  if (firstCareItem) lines.push(`선택 안내: ${firstCareItem.selectedIntent}`);
+  if (effectiveStage) lines.push(`추론 단계: ${effectiveStage}`);
+  lines.push(`역할 설정: ${roleContext}`);
+  lines.push(`공유 범위: ${sharingLevel}`);
+  if (firstCareItem?.attachmentCount) lines.push(`첨부 사진: ${firstCareItem.attachmentCount}개`);
   if (firstItem) lines.push(`첫 항목: ${firstItem.text}`);
   return lines.join('\n');
 }

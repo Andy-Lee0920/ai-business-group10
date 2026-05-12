@@ -1,4 +1,6 @@
 import { HomeUtilityLauncher } from './home-utility-launcher';
+import { PartnerInviteCard } from './partner-invite-card';
+import { shouldShowPartnerInviteCard, shouldShowPartnerProjection } from './partner-projection';
 import {
   CarePhaseStrip,
   CareSurfaceFrame,
@@ -48,6 +50,7 @@ export function RoutineDayHome({ context, composition }: AdaptiveStateHomeBasePr
         <CarePhaseStrip activePhase="routine" />
         <CompactHeroGreeting phase="routine" title="함께 이어질 케어" momentCopy="초대가 연결되면 같은 케어 상태를 서로 다른 역할로 볼 수 있어요." />
         <PartnerConnectBar description="파트너 연결을 확인하고 공유 범위를 조정할 수 있어요" />
+        <PartnerInviteCard />
         <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
       </CareSurfaceFrame>
     );
@@ -60,7 +63,8 @@ export function RoutineDayHome({ context, composition }: AdaptiveStateHomeBasePr
       {showPrimaryCard ? <MissionCardPair primary={primary} secondary={secondary} /> : null}
       {showStats ? <QuickStatRow stats={stats} /> : null}
       {showChecklist && items.length > 0 ? <QuietChecklist label="오늘 케어 흐름" items={items} /> : null}
-      <PartnerConnectBar description="파트너에게는 원문 대신 함께 확인할 역할만 보입니다" />
+      {shouldShowPartnerProjection(context) ? <PartnerConnectBar description="파트너에게는 원문 대신 함께 확인할 역할만 보입니다" /> : null}
+      {shouldShowPartnerInviteCard(context) ? <PartnerInviteCard /> : null}
       <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );

@@ -224,15 +224,15 @@ test('presentation /demo stage URL behaves like utility panels, not text placeho
   await expect(page.getByText(/Live Sync|Live mirror|LIVE SYNC/)).toHaveCount(0);
 
   await expect(patient).toContainText('21:00 주사 기록');
-  await expect(patient).toContainText('MedicationCard');
-  await expect(patient).toContainText('InjectionLog');
+  await expect(patient).toContainText('약 이름과 시간');
+  await expect(patient).toContainText('주사 기록');
   await expect(partner).toContainText('약 이름과 준비물 확인');
-  await expect(partner).toContainText('Permission projection');
-  await expect(partner).toContainText('Partner utility');
+  await expect(partner).toContainText('공유 상태');
+  await expect(partner).toContainText('케어 공유 중');
   await expect(partner).toContainText('용량 변경 제안');
 
   await patient.getByRole('button', { name: /주사 완료 기록/ }).click();
-  await expect(page.getByTestId('shared-care-state-panel')).toContainText('완료 1건');
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('완료된 행동 1건');
   await partner.getByRole('button', { name: /약 이름 확인/ }).click();
   await expect(partner.getByRole('button', { name: /약 이름 확인/ })).toHaveAttribute('aria-pressed', 'true');
 
@@ -240,14 +240,14 @@ test('presentation /demo stage URL behaves like utility panels, not text placeho
   await expect(page.getByTestId('stage-pill-5')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('shared-care-state-panel')).toContainText('배아 배양');
   await expect(patient).toContainText('Day 1·3·5 상태 변경');
-  await expect(patient).toContainText('EmbryoUpdateTimeline');
+  await expect(patient).toContainText('배아 업데이트');
   await expect(partner).toContainText('먼저 묻지 않기');
 
   await page.getByTestId('stage-pill-7').click();
   await expect(page.getByTestId('stage-pill-7')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('shared-care-state-panel')).toContainText('임신 확인');
   await expect(patient).toContainText('결과와 다음 일정 분리');
-  await expect(patient).toContainText('ResultVisibilityControl');
+  await expect(patient).toContainText('공유 범위');
   await expect(partner).toContainText('수치 해석하지 않기');
   await expect(partner).toContainText('다음 검사일');
 });

@@ -313,3 +313,16 @@ Evidence: Playwright test X passed, production smoke screenshot attached.
 ```
 
 If a real user URL still exposes raw implementation language, card-grid regression, raw projection fields, or broken mobile frame behavior, the Epic remains open even when all child implementation tickets are individually Green.
+
+## Onboarding Principle
+
+Fevio onboarding does not collect profile data for its own sake.
+
+The purpose of onboarding is to create the user's first care state and configure how that state will generate different utility interfaces for the patient and partner.
+
+Every onboarding question must change at least one of:
+`inferredStage` / `firstCareItem` / `utilityCards` / `roleContext` / `sharingLevel` / `partnerProjection` / `explanationDensity`.
+
+If an onboarding question does not affect the generated care UI, it should not be asked during onboarding.
+
+Onboarding copy tone: Fevio calmly receives hospital instructions. Write short, polite, practical Korean based on what the clinic instructed. Do not use cute reassurance, emotional overreach, internal product terms, or medical-test language.

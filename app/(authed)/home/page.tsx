@@ -33,7 +33,7 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const hasTimelineCardsCookie = timelineCardsCookie !== undefined;
   const hasTimelinePreview = timelineMilestonePreview.length > 0;
   const useCarePreview = hasCarePreviewQuery || (presentationMode && !hasTimelinePreview);
-  const onboardingCard = presentationMode && !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
+  const onboardingCard = !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
   const persistedCards = useCarePreview || onboardingCard || hasTimelinePreview ? [] : await getPersistedCards();
   const persistedMilestones = useCarePreview || onboardingCard || hasTimelinePreview ? [] : await getPersistedMilestones();
   const milestones = hasTimelinePreview ? timelineMilestonePreview : persistedMilestones;

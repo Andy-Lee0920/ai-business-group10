@@ -17,9 +17,9 @@ export default async function OnboardingPage() {
           <Leaf aria-hidden="true" size={20} strokeWidth={2.2} />
         </div>
         <p className="eyebrow">Fevio interview</p>
-        <h1 className={styles.heroTitle} id="onboarding-title">오늘 필요한 것만 먼저 정리해요</h1>
-        <p className={`lead ${styles.heroLead}`}>병원에서 들은 내용을 편한 만큼만 남겨요.</p>
-        <Notice className={styles.infoBox} tone="sage">확정 전에는 할 일로 표시되지 않아요.</Notice>
+        <h1 className={styles.heroTitle} id="onboarding-title">현재 치료 상황을 확인할게요</h1>
+        <p className={`lead ${styles.heroLead}`}>병원에서 안내받은 약, 방문, 결과 일정을 기준으로 시작합니다.</p>
+        <Notice className={styles.infoBox} tone="sage">안내받은 내용을 남기면 첫 화면으로 정리합니다. 나중에 수정할 수 있습니다.</Notice>
         <OnboardingClient />
       </Card>
     </main>

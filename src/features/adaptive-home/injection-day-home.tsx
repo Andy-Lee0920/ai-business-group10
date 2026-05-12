@@ -1,4 +1,6 @@
 import { HomeUtilityLauncher } from './home-utility-launcher';
+import { PartnerInviteCard } from './partner-invite-card';
+import { shouldShowPartnerInviteCard, shouldShowPartnerProjection } from './partner-projection';
 import {
   CarePhaseStrip,
   CareMomentRing,
@@ -43,11 +45,12 @@ export function InjectionDayHome({ context, composition }: AdaptiveStateHomeBase
       {showRingHero ? <CareMomentRing card={primary} generatedAt={context.generatedAt} /> : <CompactHeroGreeting phase="injection" momentCopy={composition?.momentCopy} />}
       {showPrimaryCard ? <MissionCardPair primary={primaryMission} secondary={secondaryMission} /> : null}
       {showStats ? <QuickStatRow stats={stats} /> : null}
-      <PartnerConnectBar
+      {shouldShowPartnerProjection(context) ? <PartnerConnectBar
         description={sharedCount > 0
           ? `${sharedCount}개의 케어 단서가 파트너에게 행동으로 전달됩니다`
           : '파트너 공유 링크를 연결하면 역할이 자동으로 보여요'}
-      />
+      /> : null}
+      {shouldShowPartnerInviteCard(context) ? <PartnerInviteCard /> : null}
       <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );

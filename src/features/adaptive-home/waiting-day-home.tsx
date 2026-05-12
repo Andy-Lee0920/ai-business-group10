@@ -1,4 +1,6 @@
 import { HomeUtilityLauncher } from './home-utility-launcher';
+import { PartnerInviteCard } from './partner-invite-card';
+import { shouldShowPartnerInviteCard, shouldShowPartnerProjection } from './partner-projection';
 import {
   CarePhaseStrip,
   CareSurfaceFrame,
@@ -25,9 +27,10 @@ export function WaitingDayHome({ context, composition }: AdaptiveStateHomeBasePr
       {showChecklist && visibleCards.length > 0 ? (
         <QuietChecklist label="오늘 확인할 일정" items={visibleCards} />
       ) : null}
-      <PartnerConnectBar
+      {shouldShowPartnerProjection(context) ? <PartnerConnectBar
         description="결과를 묻지 않고 컨디션과 쉬는 시간을 먼저 챙겨요"
-      />
+      /> : null}
+      {shouldShowPartnerInviteCard(context) ? <PartnerInviteCard /> : null}
       <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );
