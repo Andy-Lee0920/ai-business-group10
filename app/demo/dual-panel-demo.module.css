@@ -1,6 +1,7 @@
+/* P0 visual reset: clean iOS material shell. */
 .demoShell {
   --fevio-glass-shadow: 0 4px 16px rgba(49, 45, 42, 0.07), 0 12px 40px rgba(49, 45, 42, 0.1);
-  --demo-device-scale: 0.8;
+  --demo-device-scale: 0.81;
   --demo-device-bezel-width: 3px;
   --demo-device-screen-inset: 7px;
   --demo-dynamic-island-screen-top: 11px;
@@ -1366,25 +1367,6 @@
   color: white;
 }
 
-.homeSurfaceLinks {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  max-width: 980px;
-  margin: -2px auto 8px;
-}
-
-.homeSurfaceLinks a {
-  padding: 7px 12px;
-  border: 1px solid rgba(139, 92, 246, 0.18);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.68);
-  color: #4c1d95;
-  font-size: 12px;
-  font-weight: 900;
-  text-decoration: none;
-}
-
 .sharedStatePanel {
   display: grid;
   gap: 5px;
@@ -2067,42 +2049,23 @@
   display: block;
 }
 
-/* P0 visual rescue: cinematic atmosphere + material shell. */
+/* P0 visual reset: clean iOS material shell. */
 .demoShell {
-  --fevio-card: rgba(255, 255, 255, 0.62);
-  --demo-atmosphere-a: 255, 221, 203;
-  --demo-atmosphere-b: 219, 235, 218;
-  --demo-atmosphere-c: 226, 221, 244;
-  --demo-scrim: rgba(31, 34, 30, 0.1);
+  --fevio-card: #ffffff;
+  --demo-shell-bg: #faf8f2;
+  --demo-shell-wash: rgba(111, 143, 110, 0.08);
+  --demo-shell-accent: rgba(224, 122, 104, 0.08);
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(circle at 16% 8%, rgba(var(--demo-atmosphere-a), 0.98), transparent 29rem),
-    radial-gradient(circle at 84% 12%, rgba(var(--demo-atmosphere-b), 0.86), transparent 30rem),
-    radial-gradient(circle at 50% 100%, rgba(var(--demo-atmosphere-c), 0.74), transparent 34rem),
-    linear-gradient(145deg, #fff8f1 0%, #f9fbf4 46%, #f4f0ff 100%);
+    radial-gradient(circle at 18% 10%, var(--demo-shell-accent), transparent 24rem),
+    radial-gradient(circle at 84% 12%, var(--demo-shell-wash), transparent 26rem),
+    linear-gradient(135deg, #fffaf3 0%, #fbfbf6 52%, #f7f5ef 100%);
 }
 
 .demoShell::before,
 .demoShell::after {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: "";
-}
-
-.demoShell::before {
-  z-index: 0;
-  opacity: 0.045;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.72'/%3E%3C/svg%3E");
-}
-
-.demoShell::after {
-  z-index: 0;
-  background:
-    radial-gradient(circle at 50% 38%, transparent 0 28rem, rgba(255, 255, 255, 0.22) 48rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), var(--demo-scrim));
+  display: none;
 }
 
 .demoShell > * {
@@ -2111,44 +2074,36 @@
 }
 
 .demoShell_coral {
-  --demo-atmosphere-a: 255, 209, 188;
-  --demo-atmosphere-b: 247, 229, 208;
-  --demo-atmosphere-c: 231, 220, 244;
+  --demo-shell-accent: rgba(224, 122, 104, 0.13);
+  --demo-shell-wash: rgba(247, 226, 211, 0.5);
 }
 
 .demoShell_sage {
-  --demo-atmosphere-a: 222, 240, 219;
-  --demo-atmosphere-b: 239, 231, 211;
-  --demo-atmosphere-c: 217, 232, 226;
+  --demo-shell-accent: rgba(111, 143, 110, 0.12);
+  --demo-shell-wash: rgba(221, 235, 219, 0.55);
 }
 
 .demoShell_lavender {
-  --demo-atmosphere-a: 229, 222, 248;
-  --demo-atmosphere-b: 240, 231, 220;
-  --demo-atmosphere-c: 213, 224, 240;
+  --demo-shell-accent: rgba(185, 174, 214, 0.14);
+  --demo-shell-wash: rgba(237, 232, 247, 0.58);
 }
 
 .generatedHeader,
 .memoInputCard,
 .parsingCard,
 .sourceBridge {
-  border-color: rgba(255, 255, 255, 0.58);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.34));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.54),
-    0 18px 46px rgba(59, 52, 45, 0.11),
-    0 42px 92px rgba(78, 72, 66, 0.1);
-  backdrop-filter: blur(24px) saturate(1.22);
+  border-color: rgba(32, 35, 31, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 36px rgba(60, 54, 48, 0.09);
+  backdrop-filter: none;
 }
 
 .appScreen {
-  --fevio-card: rgba(255, 255, 255, 0.62);
+  --fevio-card: #ffffff;
   background:
-    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
-    radial-gradient(circle at 92% 6%, rgba(255, 255, 255, 0.68), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(245, 244, 240, 0.46));
-  backdrop-filter: blur(24px) saturate(1.18);
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 28%),
+    linear-gradient(180deg, #fffefb 0%, #f7f8f4 100%);
+  backdrop-filter: none;
 }
 
 .phaseHero,
@@ -2174,19 +2129,17 @@
 .parsingToken,
 .parsingSource,
 .memoInputCard textarea {
-  border-color: rgba(255, 255, 255, 0.54);
-  background: rgba(255, 255, 255, 0.58);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 12px 32px rgba(60, 54, 48, 0.08);
-  backdrop-filter: blur(24px) saturate(1.18);
+  border-color: rgba(32, 35, 31, 0.08);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(60, 54, 48, 0.07);
+  backdrop-filter: none;
 }
 
 .phaseHero,
 .partnerHero {
   background:
-    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 24%, white), transparent 36%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.62), color-mix(in srgb, var(--accent) 10%, rgba(255, 255, 255, 0.42)));
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent) 12%, white), transparent 32%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(252, 250, 245, 0.92));
 }
 
 .productDeck,
@@ -2201,4 +2154,218 @@
 .primaryCard,
 .partnerHero {
   padding: 18px;
+}
+
+.phoneFunnelShell {
+  --demo-device-scale: 0.84;
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 18px;
+}
+
+.singlePhoneFrame {
+  animation: singlePhoneEnter 520ms cubic-bezier(0.2, 0.84, 0.16, 1) both;
+}
+
+.memoPhoneScreen,
+.parsingPhoneScreen {
+  gap: 14px;
+  align-content: start;
+  padding: var(--device-safe-top) 18px calc(var(--device-safe-bottom) + 18px);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 225, 211, 0.72), transparent 33%),
+    radial-gradient(circle at 82% 8%, rgba(222, 238, 221, 0.62), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 245, 239, 0.95));
+}
+
+.parsingPhoneScreen {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(185, 174, 214, 0.6), transparent 34%),
+    radial-gradient(circle at 14% 12%, rgba(222, 238, 221, 0.48), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 246, 252, 0.96));
+}
+
+.phoneFunnelTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(32, 35, 31, 0.07);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--fevio-shadow-soft);
+}
+
+.phoneFunnelTopBar span {
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.phoneFunnelTopBar strong {
+  color: var(--fevio-ink);
+  font-size: 13px;
+  letter-spacing: -0.03em;
+}
+
+.memoPhoneScreen .memoInputCard,
+.parsingPhoneScreen .parsingCard {
+  width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.memoPhoneScreen .memoInputCard h1,
+.parsingPhoneScreen .parsingCard h1 {
+  font-size: 34px;
+  line-height: 0.98;
+  letter-spacing: -0.07em;
+}
+
+.memoPhoneScreen .memoInputCard > p:not(.eyebrow),
+.parsingPhoneScreen .parsingCard > p:not(.eyebrow) {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.memoPhoneScreen .memoInputCard textarea {
+  min-height: 250px;
+  border-radius: 24px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.memoPhoneScreen .memoInputActions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.memoPhoneScreen .photoSampleButton,
+.memoPhoneScreen .submitMemoButton {
+  width: 100%;
+  min-height: 48px;
+}
+
+.parsingPhoneScreen .parsingToken {
+  grid-template-columns: 78px minmax(0, 1fr);
+  padding: 12px 13px;
+}
+
+.parsingPhoneScreen .parsingToken strong {
+  font-size: 14px;
+}
+
+.parsingPhoneScreen .parsingSilhouette {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.parsingPhoneScreen .parsingSilhouette span {
+  height: 114px;
+  border-radius: 28px;
+}
+
+.dualPanelFromMemo {
+  animation: dualPanelSettle 760ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
+}
+
+.splitPatientFromMemo {
+  animation: splitPatientFromMemo 720ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
+}
+
+.splitPartnerFromMemo {
+  animation: splitPartnerFromMemo 720ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
+}
+
+.splitBridgeFromMemo {
+  animation: splitBridgeFromMemo 640ms cubic-bezier(0.2, 0.84, 0.16, 1) 120ms both;
+}
+
+@keyframes singlePhoneEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dualPanelSettle {
+  from { filter: saturate(0.92); }
+  to { filter: saturate(1); }
+}
+
+@keyframes splitPatientFromMemo {
+  from {
+    opacity: 1;
+    transform: translateX(252px) scale(1.035);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes splitPartnerFromMemo {
+  from {
+    opacity: 0;
+    transform: translateX(-252px) scale(0.96);
+    filter: blur(4px);
+  }
+  42% {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes splitBridgeFromMemo {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (max-width: 880px) {
+  .phoneFunnelShell {
+    --demo-device-scale: 0.78;
+  }
+
+  .splitPatientFromMemo,
+  .splitPartnerFromMemo,
+  .splitBridgeFromMemo {
+    animation-name: generatedReveal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .singlePhoneFrame,
+  .dualPanelFromMemo,
+  .splitPatientFromMemo,
+  .splitPartnerFromMemo,
+  .splitBridgeFromMemo {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none;
+  }
 }

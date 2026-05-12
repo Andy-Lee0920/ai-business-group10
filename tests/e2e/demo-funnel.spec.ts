@@ -9,11 +9,14 @@ test('demo turns a hospital memo into patient and partner care surfaces', async 
 
   await page.getByRole('button', { name: '병원 안내 넣어보기' }).click();
   await expect(page.getByTestId('demo-input-screen')).toBeVisible();
+  await expect(page.getByTestId('demo-device-frame')).toHaveCount(1);
+  await expect(page.getByTestId('demo-dynamic-island')).toBeVisible();
   await page.getByRole('button', { name: '약 봉투·메모 사진 예시로 채우기' }).click();
   await expect(page.getByLabel('병원 안내 메모')).toContainText('고날에프 225IU');
   await page.getByRole('button', { name: 'Fevio에 넣기' }).click();
 
   await expect(page.getByTestId('demo-parsing-screen')).toBeVisible();
+  await expect(page.getByTestId('demo-device-frame')).toHaveCount(1);
   await expect(page.getByText('약·주사')).toBeVisible();
   await expect(page.getByText('고날에프 225IU', { exact: true })).toBeVisible();
   await expect(page.getByText('파트너 역할')).toBeVisible();

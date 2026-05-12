@@ -30,9 +30,23 @@ describe('memo-to-care demo routing', () => {
     expect(source).toContain('START_INPUT');
     expect(source).toContain('SUBMIT_MEMO');
     expect(source).toContain('DemoParsingScreen');
+    expect(source).toContain('generatedFromMemo');
+    expect(source).toContain('splitPatientFromMemo');
     expect(source).toContain('source-to-care-bridge');
     expect(source).toContain('발표자용 단계 전환');
     expect(source).toContain('stage-pill-${stage.index}');
     expect(source).toContain('/demo?mode=stage&stage=');
+  });
+
+  it('keeps the memo funnel inside a single iPhone frame before the generated split', () => {
+    const inputSource = readFileSync('app/demo/demo-input-screen.tsx', 'utf8');
+    const parsingSource = readFileSync('app/demo/demo-parsing-screen.tsx', 'utf8');
+    const cssSource = readFileSync('app/demo/dual-panel-demo.module.css', 'utf8');
+
+    expect(inputSource).toContain('DemoDeviceFrame');
+    expect(parsingSource).toContain('DemoDeviceFrame');
+    expect(cssSource).toContain('singlePhoneFrame');
+    expect(cssSource).toContain('splitPatientFromMemo');
+    expect(cssSource).toContain('splitPartnerFromMemo');
   });
 });
