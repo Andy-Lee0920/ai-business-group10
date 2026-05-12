@@ -1478,15 +1478,10 @@
   background: rgba(255, 255, 255, 0.76);
   box-shadow: var(--fevio-shadow-soft);
   color: var(--fevio-ink);
-  cursor: pointer;
   text-align: left;
   transform: translate(-50%, -50%);
 }
 
-.orbitNode:hover {
-  border-color: rgba(139, 92, 246, 0.42);
-  transform: translate(-50%, calc(-50% - 2px));
-}
 
 .orbitNodePill {
   display: grid;
@@ -1583,7 +1578,7 @@
     gap: 8px;
     width: min(420px, calc(100vw - 32px));
   }
-  .mobileStageList button {
+  .mobileStageList div {
     display: grid;
     grid-template-columns: 34px 1fr;
     gap: 4px 10px;
@@ -1643,4 +1638,431 @@
   background: rgba(255, 255, 255, 0.82);
   font: inherit;
   font-weight: 800;
+}
+
+.memoInputShell,
+.parsingShell {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 24px;
+}
+
+.memoInputCard,
+.parsingCard {
+  display: grid;
+  gap: 18px;
+  width: min(720px, calc(100vw - 32px));
+  padding: clamp(24px, 5vw, 42px);
+  border: 1px solid rgba(255, 255, 255, 0.64);
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 226, 211, 0.5), transparent 34%),
+    rgba(255, 255, 255, 0.76);
+  box-shadow: var(--fevio-glass-shadow);
+  backdrop-filter: blur(var(--fevio-material-regular-blur)) saturate(1.18);
+}
+
+.memoInputCard h1,
+.parsingCard h1 {
+  margin: 0;
+  color: var(--fevio-ink);
+  font-size: clamp(38px, 6vw, 72px);
+  letter-spacing: -0.075em;
+  line-height: 0.98;
+}
+
+.memoInputCard > p:not(.eyebrow),
+.parsingCard > p:not(.eyebrow) {
+  margin: 0;
+  max-width: 560px;
+  color: var(--fevio-text-secondary);
+  font-size: 16px;
+  font-weight: 760;
+  line-height: 1.55;
+}
+
+.memoTextareaLabel {
+  color: var(--fevio-ink);
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.memoInputCard textarea {
+  width: 100%;
+  min-height: 172px;
+  resize: vertical;
+  padding: 18px 20px;
+  border: 1px solid rgba(32, 35, 31, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--fevio-ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 780;
+  line-height: 1.55;
+  outline: none;
+}
+
+.memoInputCard textarea:focus {
+  border-color: rgba(111, 143, 110, 0.58);
+  box-shadow: 0 0 0 4px rgba(111, 143, 110, 0.12);
+}
+
+.memoInputActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.photoSampleButton,
+.submitMemoButton,
+.resetDemoLink {
+  min-height: 44px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.photoSampleButton {
+  border: 1px solid rgba(111, 143, 110, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--fevio-ink);
+  padding: 0 18px;
+}
+
+.submitMemoButton {
+  border: 0;
+  background: var(--fevio-sage);
+  color: white;
+  padding: 0 22px;
+  box-shadow: 0 18px 34px rgba(111, 143, 110, 0.24);
+}
+
+.submitMemoButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.photoSampleNote {
+  margin: -4px 0 0 !important;
+  color: var(--fevio-muted) !important;
+  font-size: 12px !important;
+}
+
+.parsingSource {
+  padding: 14px 16px;
+  border: 1px solid rgba(111, 143, 110, 0.14);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.parsingTokenStack {
+  display: grid;
+  gap: 10px;
+}
+
+.parsingToken {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--fevio-shadow-soft);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: tokenReveal 420ms ease forwards;
+  animation-delay: var(--token-delay, 0ms);
+}
+
+.parsingToken span,
+.sourceBridge span {
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.parsingToken strong {
+  color: var(--fevio-ink);
+  font-size: 16px;
+  letter-spacing: -0.035em;
+}
+
+.parsingFallback {
+  color: var(--fevio-text-secondary) !important;
+  font-size: 13px !important;
+}
+
+.parsingSilhouette {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-top: 6px;
+  opacity: 0;
+  animation: tokenReveal 520ms ease 640ms forwards;
+}
+
+.parsingSilhouette span {
+  display: block;
+  height: 156px;
+  border: 1px solid rgba(32, 35, 31, 0.07);
+  border-radius: 36px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.36)),
+    radial-gradient(circle at 50% 16%, rgba(111, 143, 110, 0.22), transparent 32%);
+}
+
+.generatedHeader {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px 18px;
+  align-items: center;
+  max-width: 980px;
+  margin: 0 auto 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.34));
+  box-shadow: var(--fevio-glass-shadow);
+  backdrop-filter: blur(var(--fevio-material-thin-blur)) saturate(1.22);
+}
+
+.generatedHeader h1 {
+  margin: 0;
+  color: var(--fevio-ink);
+  font-size: clamp(16px, 1.7vw, 22px);
+  line-height: 1.08;
+  letter-spacing: -0.05em;
+}
+
+.generatedHeader :global(.eyebrow) {
+  margin: 0 0 3px;
+  font-size: 10px;
+}
+
+.generatedHeaderMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.generatedHeaderMeta span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(111, 143, 110, 0.12);
+  color: color-mix(in srgb, var(--fevio-sage) 78%, var(--fevio-ink));
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.resetDemoLink {
+  border: 1px solid rgba(32, 35, 31, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--fevio-ink);
+  padding: 0 14px;
+}
+
+.debugStageControl {
+  grid-column: 1 / -1;
+  justify-self: end;
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.debugStageControl summary {
+  cursor: pointer;
+  text-align: right;
+}
+
+.debugStageControl .compactController {
+  margin-top: 8px;
+}
+
+.sourceBridge {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+  min-height: 246px;
+  padding: 14px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(111, 143, 110, 0.18), transparent 42%),
+    rgba(255, 255, 255, 0.62);
+  box-shadow: var(--fevio-glass-shadow);
+  text-align: center;
+  backdrop-filter: blur(var(--fevio-material-thin-blur)) saturate(1.18);
+}
+
+.sourceBridge section {
+  display: grid;
+  gap: 5px;
+}
+
+.sourceBridge strong {
+  color: var(--fevio-ink);
+  font-size: 15px;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+}
+
+.sourceBridge section p {
+  margin: 0;
+  color: color-mix(in srgb, var(--fevio-sage) 72%, var(--fevio-ink));
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.sourceTokenList {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.sourceTokenList p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(32, 35, 31, 0.06);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.sourceTokenList strong {
+  font-size: 12px;
+}
+
+.sourceProofGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.sourceProofGrid div {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border-radius: 16px;
+  background: rgba(111, 143, 110, 0.1);
+}
+
+.sourceLivePulse {
+  margin: 0;
+  padding: 9px 10px;
+  border-radius: 999px;
+  background: rgba(185, 174, 214, 0.16);
+  color: var(--fevio-text-secondary);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.revealPatient,
+.revealBridge,
+.revealPartner {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: generatedReveal 520ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.revealPatient { animation-delay: 0ms; }
+.revealBridge { animation-delay: 150ms; }
+.revealPartner { animation-delay: 300ms; }
+
+@keyframes tokenReveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes generatedReveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 880px) {
+  .generatedHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .generatedHeaderMeta,
+  .debugStageControl {
+    justify-self: stretch;
+    justify-content: flex-start;
+  }
+
+  .sourceBridge {
+    order: 2;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .memoInputCard,
+  .parsingCard {
+    padding: 22px;
+    border-radius: 28px;
+  }
+
+  .memoInputCard h1,
+  .parsingCard h1 {
+    font-size: 38px;
+  }
+
+  .memoInputActions,
+  .generatedHeaderMeta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .photoSampleButton,
+  .submitMemoButton,
+  .resetDemoLink {
+    width: 100%;
+  }
+
+  .parsingToken {
+    grid-template-columns: 1fr;
+  }
+
+  .parsingSilhouette {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parsingToken,
+  .parsingSilhouette,
+  .revealPatient,
+  .revealBridge,
+  .revealPartner {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+.sourceBridge section small,
+.sourceCompletedCount {
+  color: var(--fevio-muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.sourceCompletedCount {
+  display: block;
 }

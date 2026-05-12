@@ -13,12 +13,15 @@ describe('IntroLanding orbit', () => {
     expect(second.top).toBeGreaterThan(top.top);
   });
 
-  it('reuses IVF_STAGES and exposes intro CTA/clickable stage nodes', () => {
+  it('frames the demo around hospital memo input instead of stage switching or internal UI terms', () => {
     const source = readFileSync('app/demo/intro-landing.tsx', 'utf8');
     expect(source).toContain('IVF_STAGES.map');
-    expect(source).toContain('Fevio의 핵심 아키텍처는 Generative UI다');
-    expect(source).toContain('7단계 데모 시작하기');
-    expect(source).toContain('Same app.');
+    expect(source).toContain('병원 안내가 두 개의 케어 화면으로 바뀝니다');
+    expect(source).toContain('병원 안내 넣어보기');
+    expect(source).toContain('One memo.');
+    expect(source).not.toContain('Generative UI');
+    expect(source).not.toContain('7단계 데모 시작하기');
+    expect(source).not.toContain('onSelectStage');
     expect(source).not.toContain('framer-motion');
     expect(source).not.toContain('<svg');
   });

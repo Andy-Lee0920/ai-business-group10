@@ -212,15 +212,13 @@ test('presentation /demo stage URL behaves like utility panels, not text placeho
 
   await expect(page.getByRole('heading', { name: '내 화면', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
-  await expect(page.getByText('Care state', { exact: true })).toBeVisible();
+  await expect(page.getByText('발표자용 단계 전환')).toBeVisible();
   await expect(page.getByTestId('stage-pill-2')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('shared-care-state-panel')).toContainText('배란 유도');
   await expect(page.getByTestId('primary-user-avatar')).toBeVisible();
   await expect(page.getByTestId('partner-avatar')).toBeVisible();
-  await expect(page.getByTestId('couple-avatar-pair')).toBeVisible();
-  await expect(page.locator('[data-testid="primary-user-avatar"] path')).toHaveCount(0);
-  await expect(page.locator('[data-testid="partner-avatar"] path')).toHaveCount(0);
-  await expect(page.locator('[data-testid="couple-avatar-pair"] path')).toHaveCount(0);
+  await expect(page.getByTestId('source-to-care-bridge')).toBeVisible();
+  await expect(page.getByTestId('source-to-care-bridge')).toContainText('Fevio가 읽은 병원 안내');
   await expect(page.getByText(/Live Sync|Live mirror|LIVE SYNC/)).toHaveCount(0);
 
   await expect(patient).toContainText('21:00 주사 기록');
