@@ -46,6 +46,24 @@ Forbidden patterns:
 | 배아 배양 (Culture) | 수정률, 가드너 등급 평가 | 성적표를 기다리는 마음, 일희일비 | 정보 공동 수신자: 리포트를 함께 읽고 맥락 학습 |
 | 이식 후 대기 (TWW) | 착상 유지, 황체기 보조 | 과각성, 희망과 절망 반복 | 정서적 지지자: 섣부른 질문 자제, 가사 전담, 곁 지키기 |
 
+## 3.5 Semi-generative Care OS
+
+Fevio uses **semi-generative UI**, not unconstrained generative UI. The system may adapt which approved component appears, which approved copy template is selected, and how phase-specific visuals are orchestrated. It may not invent medical facts, dosage, treatment urgency, or partner-visible scope.
+
+Quotable product position:
+
+> Fevio does not let AI draw arbitrary medical screens. It projects confirmed care context into strict layout slots, verified components, restrained copy templates, and partner-role translations.
+
+This is a core differentiator from generic fertility calendars, chatbots, and wellness dashboards: Fevio behaves like a State-Based Care OS that turns sensitive IVF context into safe patient actions and privacy-preserving partner roles.
+
+Implementation rules:
+
+- Intent-based projection chooses from existing widgets: medication, schedule, clinic briefing, record, partner action.
+- Contextual editorial copy is Korean-first and template-constrained.
+- Adaptive visuals follow care phase: injection = time/action clarity, clinic = briefing/trust, waiting = low-noise support.
+- Micro-interviews reveal only the next necessary input.
+- All extracted medical content remains draft until the user confirms it.
+
 ## 4. Component strategy
 
 ### Action-first components

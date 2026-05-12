@@ -7,6 +7,12 @@
 
 Fevio should feel like a calm care surface, not a boxed dashboard. Visual depth is allowed only when it makes the next safe action and partner role easier to understand.
 
+## Architecture philosophy
+
+Fevio's cinematic surface is semi-generative: context changes the chosen component, copy, visual tone, and input module, but only inside fixed safety slots. This makes the UI feel personal without allowing arbitrary AI-created medical screens.
+
+> Fevio projects confirmed care context into strict layout slots, verified components, restrained copy templates, and partner-role translations.
+
 ## Rules
 
 1. **Confirmed data first.** Cinematic surfaces may highlight confirmed cards, care-day type, count, and partner-visible status. They must not invent treatment progress, dosage, diagnosis, or prognosis.
