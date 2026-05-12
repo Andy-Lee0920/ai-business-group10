@@ -4,7 +4,8 @@ import { useCallback, useReducer } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ParsedClinicMemo } from '../../src/domain/clinic-memo-parser';
 import { DEMO_SCENARIOS, IVF_STAGES, stageIndexFor, type IvfStage, type IvfStageIndex } from './demo-scenarios';
-import { createInitialDemoState, demoReducer, summarizeSharedCareState, type DemoState, type ActionLogEntry } from './demo-state';
+import { createInitialDemoState, demoReducer, summarizeSharedCareState, type ActionLogEntry, type DemoState } from './demo-state';
+import { DemoDeviceFrame } from './demo-device-frame';
 import { DemoInputScreen } from './demo-input-screen';
 import { DemoParsingScreen } from './demo-parsing-screen';
 import { IntroLanding } from './intro-landing';
@@ -17,6 +18,7 @@ export function DualPanelDemoClient({ initialMode, initialStageIndex }: { initia
   const [state, dispatch] = useReducer(demoReducer, undefined, () => createInitialDemoState(initialStageIndex, initialMode));
   const scenario = DEMO_SCENARIOS[state.selectedStage];
   const summary = summarizeSharedCareState(state);
+  const generatedFromMemo = Boolean(state.parsedResult);
 
   const startInput = useCallback(() => {
     dispatch({ type: 'START_INPUT' });
@@ -91,49 +93,43 @@ export function DualPanelDemoClient({ initialMode, initialStageIndex }: { initia
         </details>
       </header>
 
-      <nav className={styles.homeSurfaceLinks} aria-label="visible product entrypoints">
-        <a href="/onboard/quick-capture">Quick Capture</a>
-        <a href="/onboard/prescription-capture">Prescription Capture</a>
-      </nav>
 
-      <section className={styles.dualPanel} aria-label="내 화면과 파트너 동시 화면" key={`${state.selectedStage}-${state.mode}`}>
-        <article className={`${styles.panel} ${styles.revealPatient}`} data-testid="demo-device-frame" aria-labelledby="patient-panel-title">
-          <DeviceChrome />
+      <section className={`${styles.dualPanel} ${generatedFromMemo ? styles.dualPanelFromMemo : ''}`} aria-label="내 화면과 파트너 동시 화면" key={`${state.selectedStage}-${state.mode}`}>
+        <DemoDeviceFrame className={`${styles.revealPatient} ${generatedFromMemo ? styles.splitPatientFromMemo : ''}`} labelledBy="patient-panel-title">
           <div className={styles.panelHeader}>
             <span className={styles.panelKicker}>Patient</span>
             <h2 id="patient-panel-title">내 화면</h2>
           </div>
           <PatientPanel scenario={scenario} state={state} dispatch={dispatch} />
-        </article>
+        </DemoDeviceFrame>
 
-        <SourceToCareBridge summary={summary} parsedResult={state.parsedResult} actionLog={state.actionLog} />
+        <SourceToCareBridge summary={summary} parsedResult={state.parsedResult} actionLog={state.actionLog} generatedFromMemo={generatedFromMemo} />
 
-        <article className={`${styles.panel} ${styles.revealPartner}`} data-testid="demo-device-frame" aria-labelledby="partner-panel-title">
-          <DeviceChrome />
+        <DemoDeviceFrame className={`${styles.revealPartner} ${generatedFromMemo ? styles.splitPartnerFromMemo : ''}`} labelledBy="partner-panel-title">
           <div className={styles.panelHeader}>
             <span className={styles.panelKicker}>Partner</span>
             <h2 id="partner-panel-title">파트너 화면</h2>
           </div>
           <PartnerPanel scenario={scenario} state={state} dispatch={dispatch} />
-        </article>
+        </DemoDeviceFrame>
       </section>
     </div>
   );
 }
 
-function SourceToCareBridge({ summary, parsedResult, actionLog }: { summary: ReturnType<typeof summarizeSharedCareState>; parsedResult: ParsedClinicMemo | null; actionLog: ActionLogEntry[] }) {
+function SourceToCareBridge({ summary, parsedResult, actionLog, generatedFromMemo }: { summary: ReturnType<typeof summarizeSharedCareState>; parsedResult: ParsedClinicMemo | null; actionLog: ActionLogEntry[]; generatedFromMemo: boolean }) {
   const latest = actionLog.at(-1);
   return (
-    <aside className={`${styles.sourceBridge} ${styles.revealBridge}`} aria-live="polite" data-testid="shared-care-state-panel">
+    <aside className={`${styles.sourceBridge} ${styles.revealBridge} ${generatedFromMemo ? styles.splitBridgeFromMemo : ''}`} aria-live="polite" data-testid="shared-care-state-panel">
       <section>
-        <span>Care state</span>
+        <span>현재 단계</span>
         <strong>{summary.stageLabel}</strong>
         <p>{summary.sharingLabel}</p>
       </section>
 
       <section data-testid="source-to-care-bridge">
         <span>Fevio가 읽은 병원 안내</span>
-        <strong>{parsedResult?.sourceSummary ?? summary.stageLabel}</strong>
+        <strong>{parsedResult ? '입력 메모에서 실행·공유 신호를 추출' : summary.stageLabel}</strong>
         <small>{summary.stageLabel}</small>
       </section>
 
@@ -160,17 +156,5 @@ function SourceToCareBridge({ summary, parsedResult, actionLog }: { summary: Ret
       <small className={styles.sourceCompletedCount}>완료된 행동 {summary.completedCount}건</small>
       <p className={styles.sourceLivePulse}>{latest ? summary.lastEventLabel : '방금 케어 화면으로 옮겼어요'}</p>
     </aside>
-  );
-}
-
-function DeviceChrome() {
-  return (
-    <>
-      <span className={styles.dynamicIsland} data-testid="demo-dynamic-island" aria-hidden="true" />
-      <span className={`${styles.deviceButton} ${styles.deviceButtonLeftTop}`} data-testid="demo-device-button" aria-hidden="true" />
-      <span className={`${styles.deviceButton} ${styles.deviceButtonLeftBottom}`} data-testid="demo-device-button" aria-hidden="true" />
-      <span className={`${styles.deviceButton} ${styles.deviceButtonRightTop}`} data-testid="demo-device-button" aria-hidden="true" />
-      <span className={`${styles.deviceButton} ${styles.deviceButtonRightBottom}`} data-testid="demo-device-button" aria-hidden="true" />
-    </>
   );
 }
