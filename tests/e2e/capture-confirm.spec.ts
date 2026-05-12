@@ -5,7 +5,7 @@ test('privacy unaccepted /capture redirects to /privacy', async ({ page }) => {
   await page.goto('/capture');
 
   await expect(page).toHaveURL(/\/privacy$/u);
-  await expect(page.getByRole('heading', { name: '민감정보와 의료 경계 동의' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '시작 전에 세 가지만 확인해요' })).toBeVisible();
 });
 
 test('memo capture flows through split review, confirm, and home', async ({ page }) => {

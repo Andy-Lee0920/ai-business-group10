@@ -4,14 +4,19 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   await page.context().addCookies([{ name: 'fevio_privacy_accepted', value: '1', domain: '127.0.0.1', path: '/' }]);
   await page.goto('/onboarding');
 
-  await expect(page.getByRole('heading', { name: '오늘의 케어를 한 장면씩 시작해요' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘 필요한 것만 먼저 정리해요' })).toBeVisible();
   await expect(page.getByTestId('onboarding-interview-surface')).toBeVisible();
+  await expect(page.getByText('병원에서 들은 내용을 편한 만큼만 남겨요.')).toBeVisible();
+  await expect(page.getByText('확정 전에는 할 일로 표시되지 않아요.')).toBeVisible();
+  await expect(page.getByText('오늘의 케어를 한 장면씩 시작해요')).toHaveCount(0);
+  await expect(page.getByText('첫 홈의 분위기')).toHaveCount(0);
+  await expect(page.getByText('파트너 역할이 이어집니다')).toHaveCount(0);
   await expect(page.getByText('환자 앱')).toHaveCount(0);
   await expect(page.getByText('파트너 앱')).toHaveCount(0);
   await expect(page.getByLabel(/처음 설정 1\/4/u)).toBeVisible();
   await expect(page.getByRole('heading', { name: '오늘의 기록은 어떤 호흡이 편할까요?' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '오늘은 어떤 흐름으로 시작할까요?' })).toBeVisible();
-  await expect(page.getByText('답한 장면에 맞춰 첫 홈의 분위기와 파트너 역할이 이어집니다.')).toBeVisible();
+  await expect(page.getByText('가장 가까운 일부터 고르면 필요한 화면만 준비할게요.')).toBeVisible();
   await expect(page.getByText('Fevio가 당신을 분류하려는 게 아니에요.')).toHaveCount(0);
   await expect(page.getByText('처음부터 많이 묻지 않을게요')).toHaveCount(0);
   await expect(page.getByText('어디쯤에 있으세요?')).toHaveCount(0);
@@ -20,7 +25,7 @@ test('onboarding is one shared path where partner invite can be skipped and firs
   const layoutMetrics = await page.evaluate(() => {
     const card = document.querySelector('main.app-shell > section.hero-card') as HTMLElement | null;
     const infoBox = Array.from(document.querySelectorAll('.fevio-notice')).find((element) =>
-      element.textContent?.includes('파트너와 함께 쓰면 역할을 나눌 수 있고'),
+      element.textContent?.includes('확정 전에는 할 일로 표시되지 않아요'),
     ) as HTMLElement | undefined;
     const badge = Array.from(document.querySelectorAll('.fevio-status-badge')).find((element) =>
       element.textContent?.includes('처음 확인'),

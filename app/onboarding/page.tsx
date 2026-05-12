@@ -17,9 +17,9 @@ export default async function OnboardingPage() {
           <Leaf aria-hidden="true" size={20} strokeWidth={2.2} />
         </div>
         <p className="eyebrow">Fevio interview</p>
-        <h1 className={styles.heroTitle} id="onboarding-title">오늘의 케어를 한 장면씩 시작해요</h1>
-        <p className={`lead ${styles.heroLead}`}>주사, 병원 방문, 기다림 중 지금 가장 가까운 장면을 따라 첫 홈의 분위기와 파트너 역할이 이어집니다.</p>
-        <Notice className={styles.infoBox} tone="sage">파트너와 함께 쓰면 역할을 나눌 수 있고, 오늘은 내 홈부터 시작할 수도 있어요.</Notice>
+        <h1 className={styles.heroTitle} id="onboarding-title">오늘 필요한 것만 먼저 정리해요</h1>
+        <p className={`lead ${styles.heroLead}`}>병원에서 들은 내용을 편한 만큼만 남겨요.</p>
+        <Notice className={styles.infoBox} tone="sage">확정 전에는 할 일로 표시되지 않아요.</Notice>
         <OnboardingClient />
       </Card>
     </main>

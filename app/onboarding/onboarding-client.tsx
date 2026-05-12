@@ -132,7 +132,7 @@ export function OnboardingClient() {
         <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="treatment-context-title">
           <StatusBadge state="shared">처음 확인</StatusBadge>
           <h2 className={styles.sectionTitle} id="treatment-context-title">오늘은 어떤 흐름으로 시작할까요?</h2>
-          <p className={styles.questionLead}>답한 장면에 맞춰 첫 홈의 분위기와 파트너 역할이 이어집니다.</p>
+          <p className={styles.questionLead}>가장 가까운 일부터 고르면 필요한 화면만 준비할게요.</p>
           <div className={styles.choiceGrid} role="group" aria-label="치료 상황 선택">
             {TREATMENT_OPTIONS.map((option) => (
               <SelectionChip
