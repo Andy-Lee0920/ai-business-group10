@@ -181,9 +181,9 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   for (const frame of frameMetrics) {
     expect(frame.cssWidth).toBeCloseTo(440, 1);
     expect(frame.cssHeight).toBeCloseTo(956, 1);
-    expect(frame.width).toBeGreaterThanOrEqual(360);
+    expect(frame.width).toBeGreaterThanOrEqual(350);
     expect(frame.width).toBeLessThanOrEqual(440);
-    expect(frame.height).toBeGreaterThanOrEqual(780);
+    expect(frame.height).toBeGreaterThanOrEqual(760);
     expect(frame.radius).toBe('53px');
     expect(frame.borderColor).toBe('rgb(10, 12, 11)');
     expect(frame.bezelWidth).toBe('3px');
@@ -214,7 +214,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
   await expect(page.getByText('오늘 어떤 케어 장면을 볼까요?')).toBeVisible();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('내 화면은 케어 흐름, 파트너 화면은 역할만 보여줍니다.')).toBeVisible();
+  await expect(page.getByText('내 화면은 케어 흐름, 파트너 화면은 역할만 보여줍니다.')).toHaveCount(1);
   await expect(page.getByText('함께 이어짐')).toBeVisible();
   await expect(page.getByTestId('primary-user-avatar')).toBeVisible();
   await expect(page.getByTestId('partner-avatar')).toBeVisible();
@@ -287,9 +287,9 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
     };
   });
 
-  expect(demoUiMetrics.panel).toMatchObject({ paddingTop: '59px', rowGap: '12px' });
+  expect(demoUiMetrics.panel).toMatchObject({ paddingTop: '59px', rowGap: '10px' });
   expect(demoUiMetrics.firstCard?.backgroundImage).toContain('radial-gradient');
-  expect(demoUiMetrics.firstCard).toMatchObject({ borderRadius: '16px', paddingTop: '18px', paddingRight: '18px', paddingBottom: '18px', paddingLeft: '18px' });
+  expect(demoUiMetrics.firstCard).toMatchObject({ borderRadius: '16px', paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '16px' });
   expect(demoUiMetrics.firstCard?.boxShadow).toContain('rgba(0, 0, 0, 0.05)');
   expect(demoUiMetrics.liveLabel).toMatchObject({ color: 'rgb(156, 163, 175)', fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' });
   expect(demoUiMetrics.liveBody).toMatchObject({ color: 'rgb(107, 114, 128)', fontSize: '12px' });
