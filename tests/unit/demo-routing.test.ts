@@ -2,10 +2,14 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { normalizeMode, normalizeStage } from '../../app/demo/page';
 
-describe('7-stage demo routing', () => {
-  it('normalizes mode and stage query params', () => {
+describe('memo-to-care demo routing', () => {
+  it('normalizes public funnel modes and keeps legacy stage URLs as generated debug context', () => {
     expect(normalizeMode(undefined)).toBe('intro');
-    expect(normalizeMode('stage')).toBe('stage');
+    expect(normalizeMode('input')).toBe('input');
+    expect(normalizeMode('stage', '5')).toBe('generated');
+    expect(normalizeMode('stage')).toBe('intro');
+    expect(normalizeMode('generated')).toBe('intro');
+    expect(normalizeMode('parsing')).toBe('intro');
     expect(normalizeMode('bad')).toBe('intro');
     expect(normalizeStage(undefined)).toBe('2');
     expect(normalizeStage('5')).toBe('5');
@@ -19,12 +23,16 @@ describe('7-stage demo routing', () => {
     expect(source).toContain('initialStageIndex');
   });
 
-  it('removes the old three SelectionChip controller and uses numbered stage pills', () => {
+  it('uses the memo funnel as the primary route and keeps stage pills only inside presenter debug controls', () => {
     const source = readFileSync('app/demo/dual-panel-demo-client.tsx', 'utf8');
     expect(source).not.toContain('SelectionChip');
     expect(source).not.toContain('useState<PresentationCareParam>');
+    expect(source).toContain('START_INPUT');
+    expect(source).toContain('SUBMIT_MEMO');
+    expect(source).toContain('DemoParsingScreen');
+    expect(source).toContain('source-to-care-bridge');
+    expect(source).toContain('발표자용 단계 전환');
     expect(source).toContain('stage-pill-${stage.index}');
-    expect(source).toContain("/demo?mode=stage&stage=");
-    expect(source).toContain('router.replace');
+    expect(source).toContain('/demo?mode=stage&stage=');
   });
 });

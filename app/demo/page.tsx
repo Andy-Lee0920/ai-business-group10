@@ -5,7 +5,7 @@ import { isPresentationHost, isPresentationMode } from '../../src/config';
 import { DualPanelDemoClient } from './dual-panel-demo-client';
 import type { IvfStageIndex } from './demo-scenarios';
 
-export type DemoMode = 'intro' | 'stage';
+export type DemoMode = 'intro' | 'input' | 'generated';
 
 type DemoPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -27,12 +27,15 @@ export default async function DemoPage({ searchParams }: DemoPageProps) {
   }
 
   const params = await searchParams;
-  return <DualPanelDemoClient initialMode={normalizeMode(getParam(params, 'mode'))} initialStageIndex={normalizeStage(getParam(params, 'stage'))} />;
+  return <DualPanelDemoClient initialMode={normalizeMode(getParam(params, 'mode'), getParam(params, 'stage'))} initialStageIndex={normalizeStage(getParam(params, 'stage'))} />;
 }
 
-export function normalizeMode(mode: string | string[] | undefined): DemoMode {
+export function normalizeMode(mode: string | string[] | undefined, stage?: string | string[] | undefined): DemoMode {
   const value = Array.isArray(mode) ? mode[0] : mode;
-  return value === 'stage' ? 'stage' : 'intro';
+  const stageValue = Array.isArray(stage) ? stage[0] : stage;
+  if (value === 'input') return 'input';
+  if (value === 'stage' && stageValue) return 'generated';
+  return 'intro';
 }
 
 export function normalizeStage(stage: string | string[] | undefined): IvfStageIndex {

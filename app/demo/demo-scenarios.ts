@@ -21,12 +21,14 @@ export type UtilityCardType =
   | 'next_step_planner';
 export type UtilityStatus = 'idle' | 'active' | 'completed' | 'locked';
 export type AccentTone = 'sage' | 'coral' | 'lavender';
+export type UtilityCardValue = string | number | boolean;
+export type UtilityCardValues = { readonly [fieldName: string]: UtilityCardValue };
 
 export type UtilityCardStateSeed = {
   id: string;
   type: UtilityCardType;
   status: UtilityStatus;
-  values?: Record<string, string | number | boolean>;
+  values?: UtilityCardValues;
   completedBy?: Role;
   confirmedByPatient?: boolean;
   visibleToPartner?: boolean;
@@ -99,7 +101,7 @@ export const IVF_STAGES: StageMeta[] = [
   { index: 7, id: 'pregnancy_test', stage: 'pregnancy_test', label: '임신 확인', shortLabel: '피검', description: '결과 공유와 다음 계획을 분리합니다', dominantMode: 'protection', accent: 'lavender' },
 ];
 
-function card(id: string, type: UtilityCardType, label: string, value: string, seedValues: Record<string, string | number | boolean> = {}, requiresSharingLevel?: SharingLevel): UtilityItem {
+function card(id: string, type: UtilityCardType, label: string, value: string, seedValues: UtilityCardValues = {}, requiresSharingLevel?: SharingLevel): UtilityItem {
   return {
     id,
     type,
