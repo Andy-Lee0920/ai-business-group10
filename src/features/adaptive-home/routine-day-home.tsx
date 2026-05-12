@@ -37,7 +37,7 @@ export function RoutineDayHome({ context, composition }: AdaptiveStateHomeBasePr
         <CarePhaseStrip activePhase="routine" />
         <CompactHeroGreeting phase="routine" title="파트너로 도울 일" momentCopy="오늘 연결된 케어를 역할 중심으로 함께 확인해요." />
         <PartnerConnectBar description="환자 화면의 원문이 아니라 지금 도울 역할만 먼저 보여요" />
-        <HomeUtilityLauncher />
+        <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
       </CareSurfaceFrame>
     );
   }
@@ -48,7 +48,7 @@ export function RoutineDayHome({ context, composition }: AdaptiveStateHomeBasePr
         <CarePhaseStrip activePhase="routine" />
         <CompactHeroGreeting phase="routine" title="함께 이어질 케어" momentCopy="초대가 연결되면 같은 케어 상태를 서로 다른 역할로 볼 수 있어요." />
         <PartnerConnectBar description="파트너 연결을 확인하고 공유 범위를 조정할 수 있어요" />
-        <HomeUtilityLauncher />
+        <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
       </CareSurfaceFrame>
     );
   }
@@ -61,7 +61,7 @@ export function RoutineDayHome({ context, composition }: AdaptiveStateHomeBasePr
       {showStats ? <QuickStatRow stats={stats} /> : null}
       {showChecklist && items.length > 0 ? <QuietChecklist label="오늘 케어 흐름" items={items} /> : null}
       <PartnerConnectBar description="파트너에게는 원문 대신 함께 확인할 역할만 보입니다" />
-      <HomeUtilityLauncher />
+      <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );
 }

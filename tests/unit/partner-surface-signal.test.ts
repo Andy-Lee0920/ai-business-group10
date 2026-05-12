@@ -29,6 +29,19 @@ describe('derivePartnerSurfaceSignal', () => {
     expect(derivePartnerSurfaceSignal(composition(intensity), 'injection')).toMatchObject({ urgencyTier: tier, intensity });
   });
 
+
+
+  it('switches partner role into emotional support mode during 2WW', () => {
+    const signal = derivePartnerSurfaceSignal(composition(0.22), 'two_week_wait');
+
+    expect(signal).toMatchObject({
+      phase: 'two_week_wait',
+      urgencyTier: 'quiet',
+      intensity: 0.22,
+    });
+    expect(signal.momentCopy).toContain('결과에 대해 먼저 묻지 않기');
+  });
+
   it('does not expose raw medical trigger, milestone, or proximity fields', () => {
     const signal = derivePartnerSurfaceSignal(composition(1), 'injection');
     const json = JSON.stringify(signal);

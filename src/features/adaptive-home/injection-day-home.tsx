@@ -48,7 +48,7 @@ export function InjectionDayHome({ context, composition }: AdaptiveStateHomeBase
           ? `${sharedCount}개의 케어 단서가 파트너에게 행동으로 전달됩니다`
           : '파트너 공유 링크를 연결하면 역할이 자동으로 보여요'}
       />
-      <HomeUtilityLauncher />
+      <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );
 }

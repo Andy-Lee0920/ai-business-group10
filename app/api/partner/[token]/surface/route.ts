@@ -71,6 +71,8 @@ function phaseForCareDay(careDay: TimelineCareDay, overrideReason: CareSurfaceOv
   if (careDay === 'injection_day') return 'injection';
   if (careDay === 'clinic_day') return 'clinic';
   if (careDay === 'waiting_day') return 'waiting';
+  if (careDay === 'two_week_wait_day') return 'two_week_wait';
+  if (careDay === 'result_protection_day') return 'waiting';
   return 'routine';
 }
 

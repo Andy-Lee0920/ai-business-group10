@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import styles from './home-utility-launcher.module.css';
 
-export function HomeUtilityLauncher() {
+export function HomeUtilityLauncher({ fullSetupPending = false }: { fullSetupPending?: boolean } = {}) {
   return (
     <section className={styles.utilityLauncher} aria-labelledby="adaptive-utility-launcher-title">
       <div className={styles.utilityHeader}>
@@ -9,6 +9,13 @@ export function HomeUtilityLauncher() {
         <h2 id="adaptive-utility-launcher-title">필요한 기록만 빠르게 남기기</h2>
         <span>일정, 약, 주사, 진료 메모를 확정된 내용 중심으로 정리합니다.</span>
       </div>
+      {fullSetupPending ? (
+        <Link className={styles.quickSetupLink} href="/onboard/full-setup" data-testid="full-setup-entrypoint">
+          <span>나머지는 오늘 저녁에</span>
+          <strong>Full Setup 이어서 하기</strong>
+          <small>처방 사진, 약 이름, 용량은 준비됐을 때 직접 확인해요.</small>
+        </Link>
+      ) : null}
       <div className={styles.utilityGrid}>
         <Link className={styles.utilityLink} href="/schedule">
           <span>01</span>

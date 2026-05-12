@@ -12,10 +12,10 @@ This matrix keeps the final PRD data model aligned before implementation across 
 | `visit_inputs` | #24 | capture migration | own couple only; blocked until Privacy Gate accepted | capture creates raw input only; other couple blocked |
 | `action_split_drafts` | #24 | capture migration | own couple only; draft shell created on Capture CTA | draft shell created; classification buttons do not write DB |
 | `split_candidates` | #35 / #24 | schema baseline or capture migration | own couple through parent draft/couple; created only on Confirm | Confirm batch insert; no rows before Confirm |
-| `care_action_cards` | #25 / #24; schedule decision #55 / ADR 0003 | card model migration | own couple only for app; anon blocked; partner view only via server token projection; clinic visits stay card-backed for SLC | confirmed constraints; clinic_visit scheduling via `scheduled_at` / `care_date`; card creation; anon direct read denied |
+| `care_action_cards` | #25 / #24; schedule decision #55 / ADR 0003; #171 | card model migration + prescription capture migration | own couple only for app; anon blocked; partner view only via server token projection; clinic visits stay card-backed for SLC; prescription photos are source evidence only | confirmed constraints; clinic_visit scheduling via `scheduled_at` / `care_date`; prescription_capture_status/photo_url present; card creation; anon direct read denied |
 | `partner_share_links` | #27 | partner migration | authenticated owner can create/revoke; anon cannot direct query; token hash only | one active link, 7-day TTL, raw token absent |
 | `partner_share_events` | #27 | partner migration | server-controlled partner token flow; authenticated owner can observe relevant acknowledgement state if needed | view/ack events record revision seen |
-| `treatment_cycles` | #144 / #147 | treatment timeline migration | own couple only; blocked until Privacy Gate accepted; no anon direct access | cycle insert/select isolation; privacy gate rejection |
+| `treatment_cycles` | #144 / #147 / #170 | treatment timeline migration + result protection metadata | own couple only; blocked until Privacy Gate accepted; no anon direct access; Result Protection metadata remains patient-owned | cycle insert/select isolation; privacy gate rejection; negative result protection columns present |
 | `treatment_milestones` | #144 / #147 | treatment timeline migration | own couple only using direct `couple_id` plus cycle-match trigger; partner token reads server-side only | milestone insert/select isolation; cycle/couple mismatch rejected |
 | `care_memberships` | #158 / #160 / #161 | care OS architecture migration | own couple only; binds treatment cycle to patient/partner role, sharing scope, and assist permission | cycle/member mismatch rejected; partner cannot cross cycles; scope/permission projection covered |
 | `injection_logs` | #162 | care OS architecture migration | own couple only for authenticated patient; partner token writes only through `record_partner_assisted_injection`; patient final confirmation required | partner-assisted record pending; patient confirmation finalizes; anon direct table access denied |
@@ -37,7 +37,9 @@ This matrix keeps the final PRD data model aligned before implementation across 
 - Care OS membership must preserve one shared treatment cycle with role-specific patient/partner surfaces.
 - Patient-owned sharing scope defaults to `care`; `emotional` is opt-in and `basic` hides medication/emotion/memo detail.
 - Partner assist permissions never include medication card edit, dosage change, or prescription modification.
+- Prescription Capture may attach `prescription_photo_url`, but dose/name/time must remain user-confirmed fields; no OCR inference may become medication authority.
 - Injection completion trust comes from `injection_logs`, not a bare completed boolean: `administered_by`, `recorded_by`, and `confirmed_by_patient` must remain distinct.
+- Result Protection Mode is always free and bypasses subscription, Cycle Pass, and promotional gates.
 
 ## Minimum integration tests
 

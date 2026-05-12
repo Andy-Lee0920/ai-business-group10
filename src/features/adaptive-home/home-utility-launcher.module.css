@@ -125,3 +125,31 @@
   font-weight: 720;
   line-height: 1.5;
 }
+
+
+.quickSetupLink {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+  border: 1px solid rgba(61, 102, 66, 0.18);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-ink, #203322);
+  text-decoration: none;
+  box-shadow: 0 16px 40px rgba(31, 51, 36, 0.08);
+}
+
+.quickSetupLink span {
+  color: #8a4b42;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.quickSetupLink strong {
+  font-size: 1.05rem;
+}
+
+.quickSetupLink small {
+  color: rgba(32, 51, 34, 0.68);
+  line-height: 1.45;
+}

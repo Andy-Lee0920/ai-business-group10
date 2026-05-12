@@ -42,6 +42,7 @@ export const CARE_PHASE_ICONS: Record<CareSurfacePhase, FevioIconSpec> = {
   injection: { icon: Syringe, tone: 'coral', size: 32 },
   clinic: { icon: Stethoscope, tone: 'sage', size: 32 },
   waiting: { icon: Leaf, tone: 'lavender', size: 32 },
+  two_week_wait: { icon: Leaf, tone: 'lavender', size: 32 },
   routine: { icon: Sun, tone: 'sage', size: 32 },
 };
 

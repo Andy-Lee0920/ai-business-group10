@@ -25,6 +25,7 @@ export type HomeContext = {
   primaryMessage: string;
   cards: HomeActionCard[];
   roleIntent?: RoleBasedHomeIntent;
+  onboardingQuickCaptureDone?: boolean;
 };
 
 export function computeHomeContext(cards: readonly CareActionCard[], now: Date): HomeContext {
@@ -104,5 +105,7 @@ function getPrimaryMessage(careDay: CareDay) {
   if (careDay === 'injection_day') return '오늘은 시간과 준비물이 흔들리지 않도록, 확인한 내용만 먼저 놓을게요.';
   if (careDay === 'clinic_day') return '방문 전에는 지난 흐름과 다음 안내를 한 번에 차분히 확인해요.';
   if (careDay === 'waiting_day') return '오늘은 더 많이 확인하기보다, 필요한 일정만 조용히 붙잡아 둘게요.';
+  if (careDay === 'two_week_wait_day') return '피검 전까지는 기록은 남기고 판단은 잠시 미뤄둘게요.';
+  if (careDay === 'result_protection_day') return '오늘은 아무것도 결정하지 않아도 됩니다. 필요한 알림만 조용히 남겨둘게요.';
   return '오늘 해야 할 것과 쉬어도 되는 것을 나눠서 보여드릴게요.';
 }

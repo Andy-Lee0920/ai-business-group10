@@ -19,7 +19,7 @@ export type CareSurfaceComponent =
 
 export type CareSurfaceConditionOperator = 'eq' | 'neq' | 'lt' | 'lte' | 'gt' | 'gte' | 'exists';
 
-export type CareSurfacePhase = 'injection' | 'clinic' | 'waiting' | 'routine';
+export type CareSurfacePhase = 'injection' | 'clinic' | 'waiting' | 'two_week_wait' | 'routine';
 
 export type PartnerSurfaceUrgencyTier = 'critical' | 'elevated' | 'routine' | 'quiet';
 

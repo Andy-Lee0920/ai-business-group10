@@ -29,7 +29,7 @@ export function StateHomeScaffold({
             </article>
           ))}
         </div>
-        <HomeUtilityLauncher />
+        <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
       </Card>
     </main>
   );

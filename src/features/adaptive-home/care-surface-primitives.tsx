@@ -17,6 +17,7 @@ const phaseClass: Record<CareSurfacePhase, string> = {
   injection: styles.phaseInjection,
   clinic: styles.phaseClinic,
   waiting: styles.phaseWaiting,
+  two_week_wait: styles.phaseWaiting,
   routine: styles.phaseRoutine,
 };
 
@@ -223,6 +224,7 @@ const PHASE_GREETING: Record<CareSurfacePhase, { title: string; context: string 
   injection: { title: '주사 준비', context: '오늘은 시간을 함께 지키는 날이에요.' },
   clinic: { title: '병원 방문', context: '준비한 것들을 챙겨 가는 날이에요.' },
   waiting: { title: '기다리는 날', context: '오늘은 조용히 살피는 날이에요.' },
+  two_week_wait: { title: '이식 후 기다림', context: '오늘은 기록하고 판단은 미뤄두는 날이에요.' },
   routine: { title: '오늘 케어', context: '확정된 일정과 기록만 차분히 확인해요.' },
 };
 

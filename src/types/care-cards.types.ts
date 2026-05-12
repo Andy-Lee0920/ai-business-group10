@@ -21,6 +21,8 @@ export type CareDay =
   | 'clinic_day'
   | 'injection_day'
   | 'waiting_day'
+  | 'two_week_wait_day'
+  | 'result_protection_day'
   | 'routine_day';
 
 export type DisplaySafetyLevel = 'normal' | 'time_sensitive' | 'critical';
@@ -49,6 +51,9 @@ export type CareActionCard = {
   user_marked_important: boolean;
   partner_visible: boolean;
   revision: number;
+  prescription_photo_url?: string | null;
+  prescription_capture_status?: 'photo_attached' | 'manual_fallback' | 'photo_failed' | null;
+  administered_by?: 'self' | 'partner' | 'clinic' | null;
 };
 
 export type CareContextInput = {

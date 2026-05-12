@@ -55,7 +55,7 @@ export function ClinicDayHome({ context, composition }: AdaptiveStateHomeBasePro
       {showStats ? <QuickStatRow stats={focus.stats(focus.items.length)} /> : null}
       {showChecklist ? <QuietChecklist label={focus.checklistLabel} items={focus.items.slice(0, 3)} /> : null}
       <PartnerConnectBar description={focus.partnerDescription} />
-      <HomeUtilityLauncher />
+      <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );
 }

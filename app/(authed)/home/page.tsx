@@ -57,6 +57,7 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
       ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
       : baseContext),
     roleIntent: roleContext ? deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: false }) : undefined,
+    onboardingQuickCaptureDone: cookieStore.get('fevio_onboarding_quick_capture_done')?.value === '1',
   };
 
   const composition = computeCareSurface(toFevioSurfaceContext(context));

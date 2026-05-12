@@ -28,7 +28,7 @@ export function WaitingDayHome({ context, composition }: AdaptiveStateHomeBasePr
       <PartnerConnectBar
         description="결과를 묻지 않고 컨디션과 쉬는 시간을 먼저 챙겨요"
       />
-      <HomeUtilityLauncher />
+      <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
   );
 }
