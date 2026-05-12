@@ -1,7 +1,7 @@
 # Fevio 아키텍처 리팩토링 계획
 
 > North Star 철학 정합성 확보 + 잡초 제거. 과감한 삭제 허용.
-> 기준: `docs/01-product/FEVIO_NORTH_STAR.md`
+> 기준: `docs/01-product/fevio-product-north-star.md`
 
 ---
 
