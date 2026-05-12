@@ -17,7 +17,7 @@ This matrix keeps the final PRD data model aligned before implementation across 
 | `partner_share_events` | #27 | partner migration | server-controlled partner token flow; authenticated owner can observe relevant acknowledgement state if needed | view/ack events record revision seen |
 | `treatment_cycles` | #144 / #147 / #170 | treatment timeline migration + result protection metadata | own couple only; blocked until Privacy Gate accepted; no anon direct access; Result Protection metadata remains patient-owned | cycle insert/select isolation; privacy gate rejection; negative result protection columns present |
 | `treatment_milestones` | #144 / #147 | treatment timeline migration | own couple only using direct `couple_id` plus cycle-match trigger; partner token reads server-side only | milestone insert/select isolation; cycle/couple mismatch rejected |
-| `care_memberships` | #158 / #160 / #161 | care OS architecture migration | own couple only; binds treatment cycle to patient/partner role, sharing scope, and assist permission | cycle/member mismatch rejected; partner cannot cross cycles; scope/permission projection covered |
+| `care_memberships` | #158 / #160 / #161 / #199 | care OS architecture migration + patient sharing scope migration | own couple only; binds treatment cycle to patient/partner role, patient-owned sharing scope, and assist permission; sharing scope changes only through authenticated patient RPC | cycle/member mismatch rejected; partner cannot cross cycles; scope persistence/projection matrix covered |
 | `injection_logs` | #162 | care OS architecture migration | own couple only for authenticated patient; partner token writes only through `record_partner_assisted_injection`; patient final confirmation required | partner-assisted record pending; patient confirmation finalizes; anon direct table access denied |
 | `user_ai_settings` | #28 P1 | llm migration | own user metadata only; raw key in Vault only | raw key not selectable/logged; P0 works without key |
 
@@ -37,6 +37,7 @@ This matrix keeps the final PRD data model aligned before implementation across 
 - TreatmentTimeline tables are Post-SLC phase hints only. `treatment_milestones` must not expose raw notes to partner token clients and must not store estimated/template dates as active care-surface truth.
 - Care OS membership must preserve one shared treatment cycle with role-specific patient/partner surfaces.
 - Patient-owned sharing scope defaults to `care`; `emotional` is opt-in and `basic` hides medication/emotion/memo detail.
+- Patient-owned sharing scope must persist in `care_memberships` and drive `get_partner_action_view`; demo-only sharing state is not sufficient.
 - Partner assist permissions never include medication card edit, dosage change, or prescription modification.
 - Prescription Capture may attach `prescription_photo_url`, but dose/name/time must remain user-confirmed fields; no OCR inference may become medication authority.
 - Injection completion trust comes from `injection_logs`, not a bare completed boolean: `administered_by`, `recorded_by`, and `confirmed_by_patient` must remain distinct.

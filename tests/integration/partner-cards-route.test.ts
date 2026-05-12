@@ -91,6 +91,41 @@ describe('partner cards API route', () => {
     expect(JSON.stringify(payload)).not.toMatch(/오비드렐|냉장|복부/u);
   });
 
+  it('adds emotional support copy without adding medical interpretation authority', async () => {
+    rpcResponses.push(
+      { data: true, error: null },
+      {
+        data: [
+          {
+            id: '33333333-3333-3333-3333-333333333333',
+            title: '다음 피검 일정',
+            scheduled_at: '2026-05-20T00:30:00.000Z',
+            card_type: 'clinic_confirmation',
+            description: '다음 검사 시간을 함께 확인',
+            display_state: 'current',
+            revision: 1,
+            sharing_scope: 'emotional',
+          },
+        ],
+        error: null,
+      },
+    );
+    const { GET } = await import('../../app/api/partner/[token]/cards/route');
+
+    const response = await GET(new Request('http://localhost/api/partner/live-token/cards'), {
+      params: Promise.resolve({ token: 'live-token' }),
+    });
+    const payload = await response.json();
+    const serialized = JSON.stringify(payload);
+
+    expect(response.status).toBe(200);
+    expect(payload.items[0]).toMatchObject({
+      partner_action: expect.stringContaining('정서 상태를 먼저 살펴 주세요'),
+      visibility: 'partner_safe',
+    });
+    expect(serialized).not.toMatch(/성공|실패|임신|비임신|수치 해석|처방 수정/u);
+  });
+
   it('returns 404 for expired partner tokens', async () => {
     rpcResponses.push({ data: false, error: null });
     const { GET } = await import('../../app/api/partner/[token]/cards/route');

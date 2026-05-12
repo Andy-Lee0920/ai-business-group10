@@ -30,7 +30,7 @@ test('user can revoke a partner share link and see it marked revoked', async ({ 
 
   await page.goto('/settings/sharing');
 
-  await expect(page.getByRole('heading', { name: '파트너 공유 링크' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '파트너 공유 관리' })).toBeVisible();
   await expect(page.getByText('2026-05-17')).toBeVisible();
   await page.getByRole('button', { name: '링크 회수' }).click();
   await expect(page.getByText('이 링크는 즉시 무효화됩니다. 계속할까요?')).toBeVisible();
