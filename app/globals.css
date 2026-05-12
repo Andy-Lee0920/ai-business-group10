@@ -36,7 +36,6 @@
   --fevio-dynamic-island-width: 125.67px;
   --fevio-dynamic-island-height: 36.67px;
   --fevio-dynamic-island-radius: 18.33px;
-  --fevio-bottom-nav-height: 64px;
 }
 
 * {
@@ -92,25 +91,7 @@ body {
 .authed-content {
   width: 100%;
   max-width: 100%;
-  padding-bottom: calc(var(--fevio-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  z-index: 20;
-  display: flex;
-  width: 100%;
-  max-width: 100%;
-  height: calc(var(--fevio-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  transform: translateX(-50%);
-  align-items: center;
-  justify-content: space-around;
-  overflow-x: hidden;
-  border-top: 1px solid rgba(32, 35, 31, 0.08);
-  background: var(--fevio-card);
 }
 
 @media (min-width: 768px) {
@@ -166,13 +147,4 @@ body {
     transform: translateX(-50%);
   }
 
-  .bottom-nav {
-    width: min(100vw, var(--fevio-phone-frame-max));
-    max-width: var(--fevio-phone-frame-max);
-    bottom: 24px;
-    overflow: hidden;
-    border: 1px solid rgba(32, 35, 31, 0.08);
-    border-radius: 0 0 34px 34px;
-    box-shadow: 0 18px 44px rgba(12, 24, 13, 0.18);
-  }
 }

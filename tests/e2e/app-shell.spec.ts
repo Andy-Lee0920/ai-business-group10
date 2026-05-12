@@ -13,7 +13,7 @@ test('mobile visitor sees the Fevio landing shell', async ({ page }) => {
 test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await page.goto('/home?care=injection');
   await expect(page.locator('main.app-shell').last()).toBeVisible();
-  await expect(page.getByRole('navigation', { name: '주 탐색' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: '주 탐색' })).toHaveCount(0);
   await expect(page.getByTestId('compact-hero-greeting')).toContainText('주사 준비');
   await expect(page.getByTestId('compact-hero-greeting')).toContainText('오늘은 시간을 함께 지키는 날이에요.');
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
@@ -21,23 +21,19 @@ test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await expect(page.getByRole('link', { name: /약·주사 확인/ })).toHaveAttribute('href', '/medication');
 });
 
-test('desktop home is constrained to an iPhone 17-width frame with in-frame navigation', async ({ page }) => {
+test('desktop home is constrained to an iPhone 17-width frame without demo bottom navigation', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/home?care=injection');
 
   const shellBox = await page.locator('main.app-shell').first().boundingBox();
-  const navBox = await page.getByRole('navigation', { name: '주 탐색' }).boundingBox();
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   const viewportWidth = await page.evaluate(() => window.innerWidth);
 
   expect(shellBox).not.toBeNull();
-  expect(navBox).not.toBeNull();
   expect(shellBox!.width).toBeLessThanOrEqual(440);
   expect(shellBox!.width).toBeGreaterThanOrEqual(430);
-  expect(navBox!.width).toBeLessThanOrEqual(440);
-  expect(navBox!.width).toBeGreaterThanOrEqual(430);
   expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
-  expect(Math.abs(navBox!.x + navBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  await expect(page.getByRole('navigation', { name: '주 탐색' })).toHaveCount(0);
   expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);
 });
 
