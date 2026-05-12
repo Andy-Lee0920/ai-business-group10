@@ -9,7 +9,7 @@ A care phase is not a theme. A care phase is a different job. The dominant compo
 | Phase | Dominant object | Supporting objects | Demoted / forbidden |
 |---|---|---|---|
 | InjectionDay | Time ring / countdown / preparation urgency | confirmed injection card, preparation checklist, partner confirmer | generic text-first hero, dense briefing document |
-| ClinicDay | Briefing checklist / doctor visit prep document | questions, recent care summary, partner companion, capture affordance | injection-style dominant ring, urgency countdown |
+| ClinicDay | Dynamic focus headline + matching context modules | recent care summary, medication execution, condition notes, next-instruction capture, partner companion | injection-style dominant ring, urgency countdown |
 | WaitingDay | Whitespace / quiet sentence / low-pressure presence | max two required cards, quiet partner support | grids, progress dashboards, many CTA blocks |
 | RoutineDay | Low-density summary | optional next item, capture entry | urgent surfaces, partner pressure |
 
@@ -18,14 +18,14 @@ A care phase is not a theme. A care phase is a different job. The dominant compo
 | Phase | Required | Optional | Demoted | Forbidden |
 |---|---|---|---|---|
 | InjectionDay | Care Moment Ring, one preparation action, quiet checklist | partner confirmer, utility launcher | broad summaries | generic stat grid above fold |
-| ClinicDay | Briefing document, visit/question checklist, capture affordance | partner logistics pulse | atmospheric hero | shot countdown as main shape |
+| ClinicDay | Focus headline, matching recent-care module, capture affordance | partner logistics pulse | atmospheric hero | shot countdown as main shape |
 | WaitingDay | quiet sentence, partner presence, next required date | emotional check-in | checklist density | action-heavy dashboard |
 | RoutineDay | next confirmed item, capture/update affordance | partner summary | phase drama | false urgency |
 
 ## Partner role by phase
 
 - InjectionDay: `확인자` — time, supplies, completion check.
-- ClinicDay: `동행자` / `기록 도우미` — logistics, notes, next instruction capture.
+- ClinicDay: `동행자` / `기록 도우미` — logistics, waiting-room context support, next instruction capture.
 - WaitingDay: `곁에 있는 사람` — do not ask repeatedly, keep presence quiet.
 
 ## E2E guard

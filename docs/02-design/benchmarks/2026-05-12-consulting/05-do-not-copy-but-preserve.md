@@ -40,7 +40,7 @@ Do not copy the exact clinic mockup.
 
 Do preserve:
 
-- the screen reads as a briefing document;
+- the screen reads as a context-review document;
 - questions and recent care summary are first-class;
 - partner is a companion/logistics role;
 - capture affordance exists for next hospital instruction.

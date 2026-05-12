@@ -46,7 +46,7 @@ function injectionDaySeeds(now: Date): CareActionCard[] {
 function clinicDaySeeds(now: Date): CareActionCard[] {
   return [
     makeCard('clinic-visit', 'clinic_visit', '오늘 오전 병원 방문', minutesFrom(now, 60), '채혈과 초음파 확인 예정', 'confirmed', todayUtc(now)),
-    makeCard('clinic-result-note', 'clinic_confirmation', '결과와 다음 방문일 함께 기록', minutesFrom(now, 90), '의사 설명을 한 문장씩 확인해요', 'confirmed', todayUtc(now)),
+    makeCard('clinic-result-note', 'clinic_confirmation', '결과와 다음 방문일 함께 기록', minutesFrom(now, 90), '진료 후 안내를 한 문장씩 확인해요', 'confirmed', todayUtc(now)),
     makeCard('clinic-partner', 'partner_support', '파트너가 이동과 기록 돕기', minutesFrom(now, 30), '이동 시간과 결과 메모를 함께 챙겨요', 'confirmed', todayUtc(now)),
   ];
 }

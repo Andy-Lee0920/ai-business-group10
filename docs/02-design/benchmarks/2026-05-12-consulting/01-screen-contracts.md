@@ -70,21 +70,21 @@ Visit `/partner/demo` or `/demo` injection partner view. The partner understands
 
 ## 3. Clinic Patient
 
-**Dominant object:** Clinical briefing document.
+**Dominant object:** Clinic context review document.
 
 **First fold must show:**
 
-- Eyebrow: `진료 준비`.
-- Title: `오늘 진료실에 가지고 갈 것들`.
+- Eyebrow: `오늘 확인할 핵심`.
+- Dynamic title: `바뀐 약과 주사를 먼저 말해요` / `몸 상태 변화를 빠뜨리지 않아요` / `다음 일정이 바뀌었는지 확인해요`.
 - Facts:
-  - `질문 2개`,
+  - `약/주사 확인`,
   - `지난 7일 케어 기록`,
-  - `파트너 동행`.
-- One CTA: `진료 브리핑 열기`.
+  - `다음 안내 기록`.
+- One CTA follows the focus package: `다음 안내 확인하기`, `약·주사 확인하기`, or `몸 상태 확인하기`.
 
 **Hero content:**
 
-- Numbered briefing list can occupy the hero area.
+- Numbered context-review list can occupy the hero area.
 - It should feel like a calm document, not a dashboard.
 
 **Scroll boundary:**
@@ -99,7 +99,7 @@ Visit `/partner/demo` or `/demo` injection partner view. The partner understands
 
 - Injection-style dominant ring/countdown.
 - Generic visit checklist as the main object.
-- Share/status cards before briefing.
+- Share/status cards before context review.
 - Dense utility grid.
 
 **Green condition:**
@@ -108,7 +108,7 @@ Visit `/home?care=clinic`. A reviewer understands “bring this into the clinic 
 
 ## 4. Clinic Partner
 
-**Dominant object:** Companion mission briefing.
+**Dominant object:** Companion mission context card.
 
 **First fold must show:**
 
@@ -117,12 +117,12 @@ Visit `/home?care=clinic`. A reviewer understands “bring this into the clinic 
 - 3 actions maximum:
   - 출발 시간 확인,
   - 챙길 것 확인,
-  - 같이 말할 질문 확인.
+  - 지난 흐름 함께 확인.
 - One CTA: `동행 준비 완료`.
 
 **Forbidden above first fold:**
 
-- Full mirrored patient briefing.
+- Full mirrored patient context review.
 - Raw memo text unless intentionally shared and transformed.
 - Emotional judgement.
 - Generic “partner support” text without concrete action.

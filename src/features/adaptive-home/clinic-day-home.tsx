@@ -9,23 +9,26 @@ import {
   QuietChecklist,
 } from './care-surface-primitives';
 import { toQuietChecklistItems, withChecklistBadge } from './care-surface-model';
+import { deriveClinicFocus } from './clinic-focus-package';
 import type { AdaptiveStateHomeBaseProps } from './types';
 
-const DEFAULT_VISIT_STEPS = [
+type ClinicChecklistItem = ReturnType<typeof toQuietChecklistItems>[number];
+
+const DEFAULT_VISIT_STEPS: Omit<ClinicChecklistItem, 'badge'>[] = [
   {
     id: 'clinic-visit-arrival',
     title: '방문 시간 확인',
     description: '예약 시간 10분 전 도착을 목표로 이동 시간을 먼저 확인해요.',
   },
   {
-    id: 'clinic-visit-documents',
-    title: '준비물 챙기기',
-    description: '신분증, 진료카드, 최근 복용한 약 이름을 함께 확인해요.',
+    id: 'clinic-visit-medication-review',
+    title: '약·주사 기록 복기',
+    description: '지난 방문 이후 맞은 주사와 바뀐 약을 한 번에 확인해요.',
   },
   {
-    id: 'clinic-visit-questions',
-    title: '진료실 질문 정리',
-    description: '채혈·초음파 결과와 다음 일정에서 꼭 물어볼 내용을 메모해요.',
+    id: 'clinic-visit-condition-review',
+    title: '몸 상태 변화 확인',
+    description: '기록해 둔 증상과 컨디션 변화를 진료 전 차분히 떠올려요.',
   },
 ];
 
@@ -33,15 +36,9 @@ export function ClinicDayHome({ context, composition }: AdaptiveStateHomeBasePro
   const checklistItems = context.cards.length > 0
     ? toQuietChecklistItems(context.cards, { fallbackDescription: '확인된 일정만 차분히 볼게요.', badge: '방문 준비' })
     : withChecklistBadge(DEFAULT_VISIT_STEPS, '방문 준비');
-  const primary = checklistItems[0];
-  const secondary = checklistItems[1] ?? null;
-
-  const stats = [
-    { label: '방문', value: '09:00' },
-    { label: '검사', value: '채혈·초음파' },
-    { label: '질문', value: `${Math.max(checklistItems.length - 1, 1)}개` },
-    { label: '파트너', value: '동행' },
-  ] as const;
+  const focus = deriveClinicFocus(context.cards, checklistItems);
+  const primary = focus.items[0];
+  const secondary = focus.items[1] ?? null;
 
   const showPrimaryCard = composition?.slots.primary_card !== null;
   const showStats = composition?.slots.stats_row !== null;
@@ -50,14 +47,14 @@ export function ClinicDayHome({ context, composition }: AdaptiveStateHomeBasePro
   return (
     <CareSurfaceFrame phase="clinic" context={context} intensity={composition?.intensity} appliedRules={composition?.appliedRules}>
       <CarePhaseStrip activePhase="clinic" />
-      <CompactHeroGreeting phase="clinic" momentCopy={composition?.momentCopy} />
+      <CompactHeroGreeting phase="clinic" momentCopy={composition?.momentCopy ?? focus.context} title={focus.title} />
       {showPrimaryCard ? <MissionCardPair
-        primary={primary ? { title: primary.title, time: '진료 전 확인', cta: '진료 브리핑 열기' } : null}
-        secondary={secondary ? { title: secondary.title, time: '같이 챙기기' } : null}
+        primary={primary ? { label: focus.primaryLabel, title: primary.title, time: focus.primaryTime, cta: focus.primaryCta } : null}
+        secondary={secondary ? { label: focus.secondaryLabel, title: secondary.title, time: focus.secondaryTime } : null}
       /> : null}
-      {showStats ? <QuickStatRow stats={stats} /> : null}
-      {showChecklist ? <QuietChecklist label="진료 브리핑 항목" items={checklistItems.slice(0, 3)} /> : null}
-      <PartnerConnectBar description="이동 시간, 접수, 진료 후 다음 일정을 함께 붙잡는 역할로 보여요" />
+      {showStats ? <QuickStatRow stats={focus.stats(focus.items.length)} /> : null}
+      {showChecklist ? <QuietChecklist label={focus.checklistLabel} items={focus.items.slice(0, 3)} /> : null}
+      <PartnerConnectBar description={focus.partnerDescription} />
       <HomeUtilityLauncher />
     </CareSurfaceFrame>
   );

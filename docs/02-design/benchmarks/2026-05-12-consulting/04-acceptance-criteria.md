@@ -28,9 +28,9 @@ URL: `/home?care=clinic`
 
 Expected:
 
-- First fold shows a clinical briefing document.
-- Questions count, last-7-days care summary, and partner attendance are visible or clearly represented.
-- CTA is `진료 브리핑 열기` or equivalent.
+- First fold shows a clinic context review document.
+- The first visible module matches the dynamic title: medication title → medication module; condition title → symptom module; schedule title → next-instruction module.
+- CTA follows the focus package, e.g. `다음 안내 확인하기`, `약·주사 확인하기`, or `몸 상태 확인하기`.
 - No injection-style dominant countdown.
 
 ### Waiting patient

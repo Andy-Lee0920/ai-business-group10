@@ -18,7 +18,7 @@ If a visual element does not improve situation, next action, partner role, or sa
 |---|---|---|---|
 | `/onboarding` | Pass with caution | Calm interview, not classification | One question at a time; no defensive negative phrasing |
 | `/home?care=injection` | Pass | Time-sensitive preparation | Ring / time / one action before dense cards |
-| `/home?care=clinic` | Pass after #139 | Clinic briefing | Briefing list appears before generic pulse/status |
+| `/home?care=clinic` | Pass after #139 | Clinic context review | Context-review list appears before generic pulse/status |
 | `/home?care=waiting` | Pass after #139 | Quiet support | Partner presence is low-pressure before checklist density |
 | `/demo` | Pass | Role translation proof | Patient action changes partner role/action text |
 | `/partner/demo` | Pass | Partner-safe help surface | Today role, help actions, avoid prompt; no raw sync internals |
@@ -33,7 +33,7 @@ If a visual element does not improve situation, next action, partner role, or sa
 
 ## Component judgment
 
-- Useful: Care Moment Ring, phase-distinct briefing surface, partner role pulse, capture affordance, quiet checklist.
+- Useful: Care Moment Ring, phase-distinct context-review surface, partner role pulse, capture affordance, quiet checklist.
 - Decorative unless tied to a job: generic badges, cute avatars, broad stat grids, repeated glass cards, icons without action meaning.
 - Harmful: raw mirrored patient data, emotion scores, sync revisions, internal tokens, medical instructions not confirmed by the clinic.
 

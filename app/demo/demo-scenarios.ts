@@ -123,17 +123,17 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       inputMoment: {
         prompt: '오늘 일정',
         answer: '오늘 병원 다녀오기',
-        adaptation: '방문 시간과 다음 일정 기록을 함께 챙깁니다.',
+        adaptation: '방문 전 흐름과 진료 후 지시사항을 함께 정리합니다.',
       },
       nowStack: [
         { id: 'visit', label: '예약', value: '09:00', meta: '채혈·초음파', tone: 'sage' },
         { id: 'leave', label: '출발', value: '08:10', meta: '45분 이동', tone: 'lavender' },
-        { id: 'question', label: '질문', value: '2개', meta: '메모 대기', tone: 'neutral' },
+        { id: 'record', label: '지난 기록', value: '7일', meta: '복기', tone: 'neutral' },
       ],
       checklist: [
         { id: 'card', label: '신분증·카드' },
         { id: 'result', label: '지난 결과지' },
-        { id: 'memo', label: '질문 메모' },
+        { id: 'memo', label: '지난 기록 확인' },
         { id: 'next', label: '다음 방문일 기록' },
       ],
       timeline: [
@@ -143,7 +143,7 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       ],
       quickTools: [
         { id: 'route', label: '동선', value: '보기' },
-        { id: 'memo', label: '질문', value: '2개' },
+        { id: 'memo', label: '기록', value: '7일' },
         { id: 'share', label: '결과 공유', value: '대기' },
         { id: 'onboarding', label: '온보딩', value: '완료' },
       ],
@@ -160,12 +160,12 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       sharedContext: [
         { id: 'visit', label: '방문', value: '09:00' },
         { id: 'tests', label: '검사', value: '채혈·초음파' },
-        { id: 'note', label: '기록', value: '다음 일정' },
+        { id: 'note', label: '지시', value: '다음 일정' },
       ],
       actions: [
         { id: 'route', label: '이동 시간 확인' },
         { id: 'listen', label: '결과 같이 듣기' },
-        { id: 'record', label: '다음 일정 기록' },
+        { id: 'record', label: '지시사항 기록' },
       ],
       avoid: [
         { id: 'alone', label: '혼자 기억하게 두기' },

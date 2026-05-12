@@ -33,7 +33,7 @@ test('presentation home defaults to an immersive injection-day care instrument',
 test('presentation home applies the immersive/adaptive contract to every care day', async ({ page }) => {
   const scenarios = [
     { care: 'injection', phase: 'injection', tab: '주사', heading: '주사 준비', action: '준비 체크리스트 보기' },
-    { care: 'clinic', phase: 'clinic', tab: '병원', heading: '병원 방문', action: '진료 브리핑 열기' },
+    { care: 'clinic', phase: 'clinic', tab: '병원', heading: '다음 일정이 바뀌었는지 확인해요', action: '다음 안내 확인하기' },
     { care: 'waiting', phase: 'waiting', tab: '대기', heading: '기다리는 날', action: null },
   ];
 
@@ -310,11 +310,11 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
 
   await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' }).click();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(patient).toContainText('질문과 기록 준비');
+  await expect(patient).toContainText('다음 일정이 바뀌었는지 확인해요');
   await expect(patient).toContainText('방문 체크리스트');
   await expect(patient).toContainText('09:00');
   await expect(partner).toContainText('동행자');
-  await expect(partner).toContainText('다음 일정을 함께 기록');
+  await expect(partner).toContainText('다음 지시사항 함께 기록');
   await expect(partner).toContainText('이동 시간 확인');
 
   await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' }).click();

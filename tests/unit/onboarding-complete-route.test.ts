@@ -79,6 +79,31 @@ describe('/api/onboarding/complete', () => {
     }));
   });
 
+
+
+  it('persists role context for role-based home binding', async () => {
+    const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
+    const confirm = vi.fn().mockResolvedValue({ createdCardCount: 0 });
+    mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture, confirm } satisfies CaptureStore);
+
+    const response = await completeOnboarding(
+      jsonRequest({
+        treatmentContext: 'ivf_cycle',
+        roleContext: 'partner',
+        partnerInviteSkipped: false,
+        firstItem: null,
+      }),
+    );
+    const payload = (await response.json()) as { roleContext: string; homeIntent: { firstFold: string; primaryCta: string } };
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      roleContext: 'partner',
+      homeIntent: { firstFold: 'partner_assist_entry', primaryCta: '오늘 도울 일 보기' },
+    });
+    expect(response.headers.get('set-cookie')).toContain('fevio_onboarding_role_context=partner');
+  });
+
   it('rejects multiple first items so onboarding only creates one starting card', async () => {
     const response = await completeOnboarding(
       jsonRequest({

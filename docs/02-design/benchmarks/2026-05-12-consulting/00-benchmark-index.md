@@ -29,6 +29,6 @@ If phases share the same component order, the implementation fails even if color
 - #135 — icon system must support comprehension, not decoration.
 - #138 — usefulness gate.
 - #139 — layout matrix: data chooses the layout variant.
-- #140 — ClinicDay doctor-trust briefing.
+- #140 — ClinicDay patient context review.
 - #141 — phase-distinct layout composition.
 - #142 — bespoke visual asset kit.

@@ -7,19 +7,19 @@ describe('phase-distinct planning briefs', () => {
     expect(doc).toContain('A care phase is not a theme');
     expect(doc).toContain('Component matrix');
     expect(doc).toContain('Time ring');
-    expect(doc).toContain('Briefing checklist');
+    expect(doc).toContain('Dynamic focus headline');
     expect(doc).toContain('Whitespace');
     expect(doc).toContain('RoutineDay');
     expect(doc).toContain('same top five component test ids must not appear in the same order');
   });
 
-  it('locks the #140 clinic briefing surface contract', () => {
-    const doc = readFileSync('docs/02-design/clinic-day-doctor-trust-briefing.md', 'utf8');
-    expect(doc).toContain('오늘 진료실에 가지고 갈 것들');
-    expect(doc).toContain('지난 7일 케어 기록');
+  it('locks the #140 clinic context-review surface contract', () => {
+    const doc = readFileSync('docs/02-design/clinic-day-context-review.md', 'utf8');
+    expect(doc).toContain('바뀐 약과 주사를 먼저 말해요');
+    expect(doc).toContain('약/주사 확인');
     expect(doc).toContain('동행자');
     expect(doc).toContain('/home?care=clinic');
-    expect(doc).not.toContain('medical recommendation generation, doctor portal, EHR export, or treatment strategy inference.\n\n## Goal');
+    expect(doc).toContain('No LLM medical judgment');
   });
 
   it('locks the #138 usefulness reset gate', () => {
@@ -34,7 +34,7 @@ describe('phase-distinct planning briefs', () => {
     const doc = readFileSync('docs/02-design/fevio-bespoke-visual-asset-kit.md', 'utf8');
     expect(doc).toContain('Tier 1 — Lucide icon');
     expect(doc).toContain('Patient anchor');
-    expect(doc).toContain('Clinic briefing document glyph');
+    expect(doc).toContain('Clinic context document glyph');
     expect(doc).toContain('every circle must share one origin');
     expect(doc).toContain('reject if it becomes a decorative badge');
   });

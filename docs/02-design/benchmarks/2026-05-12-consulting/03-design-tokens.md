@@ -21,7 +21,7 @@ These tokens preserve the benchmark hierarchy without copying pixels.
 | Phase | First-fold max primary CTA | First-fold card count | Dominant object |
 |---|---:|---:|---|
 | Injection | 1 | 1–2 | Ring/time |
-| Clinic | 1 | 1 briefing document | Numbered briefing |
+| Clinic | 1 | 1 context document | Numbered context review |
 | Waiting | 0–1 | 0–1 | Whitespace/sentence |
 
 ## Visual tone tokens
@@ -35,13 +35,13 @@ These tokens preserve the benchmark hierarchy without copying pixels.
 
 ## Elevation / material
 
-- Use soft cards only when they group action or briefing content.
+- Use soft cards only when they group action or context-review content.
 - Do not stack many glass cards above fold.
 - Grain/noise remains subtle: opacity 0.03–0.05.
 - Ring uses SVG circle geometry only: `viewBox="0 0 240 240"`, `cx=120`, `cy=120`, `r=94`.
 
 ## Typography hierarchy
 
-- Dominant object text can be very large only when it is the job: time, briefing title, or quiet sentence.
+- Dominant object text can be very large only when it is the job: time, context title, or quiet sentence.
 - Avoid generic labels as top visual hierarchy.
 - Engineering copy is forbidden.

@@ -17,6 +17,8 @@ This matrix keeps the final PRD data model aligned before implementation across 
 | `partner_share_events` | #27 | partner migration | server-controlled partner token flow; authenticated owner can observe relevant acknowledgement state if needed | view/ack events record revision seen |
 | `treatment_cycles` | #144 / #147 | treatment timeline migration | own couple only; blocked until Privacy Gate accepted; no anon direct access | cycle insert/select isolation; privacy gate rejection |
 | `treatment_milestones` | #144 / #147 | treatment timeline migration | own couple only using direct `couple_id` plus cycle-match trigger; partner token reads server-side only | milestone insert/select isolation; cycle/couple mismatch rejected |
+| `care_memberships` | #158 / #160 / #161 | care OS architecture migration | own couple only; binds treatment cycle to patient/partner role, sharing scope, and assist permission | cycle/member mismatch rejected; partner cannot cross cycles; scope/permission projection covered |
+| `injection_logs` | #162 | care OS architecture migration | own couple only for authenticated patient; partner token writes only through `record_partner_assisted_injection`; patient final confirmation required | partner-assisted record pending; patient confirmation finalizes; anon direct table access denied |
 | `user_ai_settings` | #28 P1 | llm migration | own user metadata only; raw key in Vault only | raw key not selectable/logged; P0 works without key |
 
 ## Non-negotiable invariants
@@ -32,6 +34,10 @@ This matrix keeps the final PRD data model aligned before implementation across 
 - Partner links expire after 7 days and can be explicitly revoked.
 - ADR 0003 keeps clinic visit scheduling on `care_action_cards` for SLC; do not add `clinic_visits` or `visit_id` before P1 `#44` reopens the decision with concrete recurrence/reschedule requirements.
 - TreatmentTimeline tables are Post-SLC phase hints only. `treatment_milestones` must not expose raw notes to partner token clients and must not store estimated/template dates as active care-surface truth.
+- Care OS membership must preserve one shared treatment cycle with role-specific patient/partner surfaces.
+- Patient-owned sharing scope defaults to `care`; `emotional` is opt-in and `basic` hides medication/emotion/memo detail.
+- Partner assist permissions never include medication card edit, dosage change, or prescription modification.
+- Injection completion trust comes from `injection_logs`, not a bare completed boolean: `administered_by`, `recorded_by`, and `confirmed_by_patient` must remain distinct.
 
 ## Minimum integration tests
 

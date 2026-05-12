@@ -37,8 +37,8 @@ const PATIENT_PHASE_HERO: Record<DemoCare, {
   },
   clinic: {
     eyebrow: '진료 전 확인',
-    title: '질문과 기록 준비',
-    body: '검사 일정, 물어볼 질문, 다음 방문일을 한 번에 정리합니다.',
+    title: '다음 일정이 바뀌었는지 확인해요',
+    body: '지난 기록, 방문 시간, 진료 후 지시사항을 한 번에 확인합니다.',
     proof: '진료실 메모',
     iconKey: 'phase:clinic',
   },
@@ -60,7 +60,7 @@ const SHARE_COPY: Record<DemoCare, { title: string; body: string; shared: string
   },
   clinic: {
     title: '동행자가 볼 역할이 정리됐어요',
-    body: '방문 시간, 질문, 다음 일정 기록처럼 함께 챙길 일만 보입니다.',
+    body: '방문 시간, 지난 기록, 다음 지시사항처럼 함께 챙길 일만 보입니다.',
     shared: '진료 메모가 공유됐어요',
     waiting: '동행자 역할을 준비 중',
   },

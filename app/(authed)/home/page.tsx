@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { isPresentationHost, isPresentationMode } from '../../../src/config';
 import { computeHomeContext, computeHomeContextV2, type HomeContext } from '../../../src/domain/home-composition';
 import { computeCareSurface } from '../../../src/domain/care-surface-engine';
+import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../src/domain/care-os-architecture';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
 import { getPresentationScenarioCards, normalizePresentationCare, toAdaptiveCareDay } from '../../../src/features/adaptive-home/presentation-scenarios';
@@ -50,9 +51,13 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const baseContext = milestones.length > 0
     ? computeHomeContextV2(cards, milestones, now)
     : computeHomeContext(cards, now);
-  const context = useCarePreview && !onboardingCard && milestones.length === 0
-    ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
-    : baseContext;
+  const roleContext = normalizeRoleContext(cookieStore.get('fevio_onboarding_role_context')?.value);
+  const context = {
+    ...(useCarePreview && !onboardingCard && milestones.length === 0
+      ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
+      : baseContext),
+    roleIntent: roleContext ? deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: false }) : undefined,
+  };
 
   const composition = computeCareSurface(toFevioSurfaceContext(context));
 
@@ -71,6 +76,11 @@ function toFevioSurfaceContext(context: HomeContext) {
     cardCount: context.cards.length,
     partnerStatus: context.cards.some((card) => card.cardType === 'partner_support') ? 'connected' : 'unknown',
   } as const;
+}
+
+
+function normalizeRoleContext(value: string | undefined): RoleContext | null {
+  return value === 'patient' || value === 'partner' || value === 'together' || value === 'primary_solo' || value === 'primary_with_partner' ? value : null;
 }
 
 function toTimelineCareDay(careDay: HomeContext['careDay']): TimelineCareDay {

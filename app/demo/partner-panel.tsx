@@ -34,8 +34,8 @@ const PARTNER_ROLE_HERO: Record<DemoCare, {
   },
   clinic: {
     eyebrow: '파트너 역할',
-    title: '다음 일정을 함께 기록',
-    body: '진료 내용을 함께 듣고 다음 방문일과 질문을 차분히 남깁니다.',
+    title: '다음 지시사항 함께 기록',
+    body: '진료 후 지시사항과 다음 방문일을 함께 기록합니다.',
     iconKey: 'phase:clinic',
   },
   waiting: {
@@ -57,7 +57,7 @@ const PARTNER_COPY: Record<DemoCare, { label: string; title: string; body: strin
   clinic: {
     label: '공유된 핵심',
     title: '오늘 병원 방문',
-    body: '이동 시간과 다음 방문일 기록을 함께 챙깁니다.',
+    body: '이동 시간과 다음 지시사항 기록을 함께 챙깁니다.',
     idle: '동행 역할이 준비됐어요',
     done: '방문 체크가 전달됐어요',
   },

@@ -33,7 +33,7 @@ export function HomeUtilityLauncher() {
         <Link className={styles.utilityLink} href="/capture">
           <span>05</span>
           <strong>병원 메모</strong>
-          <small>들은 내용을 질문·일정으로 정리</small>
+          <small>들은 지시를 일정·할 일로 정리</small>
         </Link>
       </div>
       <SharedCareProjectionCard />

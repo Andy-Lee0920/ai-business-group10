@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isPresentationRequest } from '../../../../src/config';
 import { computeCareDay } from '../../../../src/domain/care-cards';
+import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../../src/domain/care-os-architecture';
 import { createCaptureStore, type ConfirmItem } from '../../../../src/lib/capture-confirm-store';
 import type { CardType, CareActionCard } from '../../../../src/types/care-cards.types';
 
@@ -27,7 +28,7 @@ const FIRST_ITEM_CARD_TYPE: Record<FirstItemKind, CardType> = {
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as OnboardingBody;
   const treatmentContext = normalizeText(body.treatmentContext);
-  const roleContext = normalizeText(body.roleContext);
+  const roleContext = normalizeRoleContext(body.roleContext);
   const firstItem = normalizeFirstItem(body.firstItem);
 
   if (!treatmentContext) return NextResponse.json({ error: 'Treatment context is required.' }, { status: 400 });
@@ -53,6 +54,13 @@ export async function POST(request: NextRequest) {
     createdCardCount: result.createdCardCount,
     partnerInvite: 'skipped',
     roleContext,
+    homeIntent: deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: body.partnerInviteSkipped !== false }),
+  });
+
+  response.cookies.set('fevio_onboarding_role_context', roleContext, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
   });
 
   if (firstItem && isPresentationRequest(request)) {
@@ -64,6 +72,12 @@ export async function POST(request: NextRequest) {
   }
 
   return response;
+}
+
+
+function normalizeRoleContext(value: unknown): RoleContext {
+  if (value === 'patient' || value === 'partner' || value === 'together' || value === 'primary_solo' || value === 'primary_with_partner') return value;
+  return 'patient';
 }
 
 function normalizeText(value: unknown) {

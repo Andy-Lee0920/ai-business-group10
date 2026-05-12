@@ -29,6 +29,29 @@ export function RoutineDayHome({ context, composition }: AdaptiveStateHomeBasePr
   const showPrimaryCard = composition?.slots.primary_card !== null;
   const showStats = composition?.slots.stats_row !== null;
   const showChecklist = composition?.slots.checklist !== null;
+  const roleIntent = context.roleIntent;
+
+  if (roleIntent?.firstFold === 'partner_assist_entry') {
+    return (
+      <CareSurfaceFrame phase="routine" context={context} intensity={composition?.intensity} appliedRules={composition?.appliedRules}>
+        <CarePhaseStrip activePhase="routine" />
+        <CompactHeroGreeting phase="routine" title="파트너로 도울 일" momentCopy="오늘 연결된 케어를 역할 중심으로 함께 확인해요." />
+        <PartnerConnectBar description="환자 화면의 원문이 아니라 지금 도울 역할만 먼저 보여요" />
+        <HomeUtilityLauncher />
+      </CareSurfaceFrame>
+    );
+  }
+
+  if (roleIntent?.firstFold === 'shared_cycle_invite') {
+    return (
+      <CareSurfaceFrame phase="routine" context={context} intensity={composition?.intensity} appliedRules={composition?.appliedRules}>
+        <CarePhaseStrip activePhase="routine" />
+        <CompactHeroGreeting phase="routine" title="함께 이어질 케어" momentCopy="초대가 연결되면 같은 케어 상태를 서로 다른 역할로 볼 수 있어요." />
+        <PartnerConnectBar description="파트너 연결을 확인하고 공유 범위를 조정할 수 있어요" />
+        <HomeUtilityLauncher />
+      </CareSurfaceFrame>
+    );
+  }
 
   return (
     <CareSurfaceFrame phase="routine" context={context} intensity={composition?.intensity} appliedRules={composition?.appliedRules}>

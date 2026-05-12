@@ -226,17 +226,18 @@ const PHASE_GREETING: Record<CareSurfacePhase, { title: string; context: string 
   routine: { title: '오늘 케어', context: '확정된 일정과 기록만 차분히 확인해요.' },
 };
 
-export function CompactHeroGreeting({ phase, momentCopy }: { phase: CareSurfacePhase; momentCopy?: string }) {
+export function CompactHeroGreeting({ phase, momentCopy, title }: { phase: CareSurfacePhase; momentCopy?: string; title?: string }) {
   const copy = PHASE_GREETING[phase];
   return (
     <div className={styles.compactGreeting} data-testid="compact-hero-greeting">
-      <h1 className={styles.compactGreetingTitle}>{copy.title}</h1>
+      <h1 className={styles.compactGreetingTitle}>{title ?? copy.title}</h1>
       <p className={styles.compactGreetingContext}>{momentCopy ?? copy.context}</p>
     </div>
   );
 }
 
 export type MissionCardData = {
+  label?: string;
   title: string;
   time: string;
   cta?: string;
@@ -253,7 +254,7 @@ export function MissionCardPair({
   return (
     <div className={styles.missionRow} data-testid="mission-card-pair">
       <div className={styles.missionCardPrimary}>
-        <span className={styles.missionCardLabel}>오늘의 미션</span>
+        <span className={styles.missionCardLabel}>{primary.label ?? '오늘의 미션'}</span>
         <h2 className={styles.missionCardTitle}>{primary.title}</h2>
         <span className={styles.missionCardTime}>{primary.time}</span>
         {primary.cta ? (
@@ -265,7 +266,7 @@ export function MissionCardPair({
       </div>
       {secondary ? (
         <div className={styles.missionCardSecondary}>
-          <span className={styles.missionCardLabel}>다음 단계</span>
+          <span className={styles.missionCardLabel}>{secondary.label ?? '다음 단계'}</span>
           <h3 className={styles.missionCardTitle}>{secondary.title}</h3>
           <span className={styles.missionCardTime}>{secondary.time}</span>
         </div>

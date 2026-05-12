@@ -4,6 +4,7 @@ import type { PartnerActionViewItem, PartnerDisplayState } from '../../../../../
 import { hashPartnerShareToken, safePartnerItemId } from '../../../../../src/services/partner-view';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 import { translateCareCardToPartnerRole } from '../../../../../src/domain/partner-role-projection';
+import { projectPartnerItemsBySharingScope, type PatientSharingScope } from '../../../../../src/domain/care-os-architecture';
 
 type PartnerRpcRow = {
   id?: string | null;
@@ -13,6 +14,7 @@ type PartnerRpcRow = {
   description: string | null;
   display_state: string;
   revision?: number | null;
+  sharing_scope?: string | null;
 };
 
 export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -31,7 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   if (error) return NextResponse.json({ error: 'partner_link_unavailable' }, { status: 404 });
 
   return NextResponse.json(
-    { items: toPartnerItems((data as PartnerRpcRow[] | null) ?? []) },
+    { items: toScopedPartnerItems((data as PartnerRpcRow[] | null) ?? []) },
     {
       headers: {
         'cache-control': 'no-store',
@@ -39,6 +41,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
       },
     },
   );
+}
+
+function toScopedPartnerItems(rows: readonly PartnerRpcRow[]): PartnerActionViewItem[] {
+  const items = rows.map(toPartnerItem).filter((item) => item !== null);
+  const scope = normalizeSharingScope(rows.find((row) => normalizeSharingScope(row.sharing_scope) !== 'care')?.sharing_scope);
+  return projectPartnerItemsBySharingScope(items, scope);
 }
 
 function toPartnerItems(rows: readonly PartnerRpcRow[]): PartnerActionViewItem[] {
@@ -72,4 +80,8 @@ function isCardType(value: string): value is PartnerActionViewItem['card_type'] 
 
 function isDisplayState(value: string): value is PartnerDisplayState {
   return ['current', 'new', 'changed_since_ack', 'revoked', 'superseded', 'completed'].includes(value);
+}
+
+function normalizeSharingScope(value: unknown): PatientSharingScope {
+  return value === 'basic' || value === 'emotional' || value === 'care' ? value : 'care';
 }

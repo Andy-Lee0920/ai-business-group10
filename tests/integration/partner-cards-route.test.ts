@@ -58,6 +58,39 @@ describe('partner cards API route', () => {
     expect(JSON.stringify(payload)).not.toContain('token_hash');
   });
 
+
+
+  it('applies patient-owned basic sharing scope before returning partner projection', async () => {
+    rpcResponses.push(
+      { data: true, error: null },
+      {
+        data: [
+          {
+            id: '22222222-2222-2222-2222-222222222222',
+            title: '21:00 오비드렐 트리거 확인',
+            scheduled_at: '2026-05-10T12:30:00.000Z',
+            card_type: 'injection',
+            description: '냉장 보관 후 복부 오른쪽',
+            display_state: 'current',
+            revision: 1,
+            sharing_scope: 'basic',
+          },
+        ],
+        error: null,
+      },
+    );
+    const { GET } = await import('../../app/api/partner/[token]/cards/route');
+
+    const response = await GET(new Request('http://localhost/api/partner/live-token/cards'), {
+      params: Promise.resolve({ token: 'live-token' }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.items[0]).toMatchObject({ title: '오늘 케어 일정', description: null });
+    expect(JSON.stringify(payload)).not.toMatch(/오비드렐|냉장|복부/u);
+  });
+
   it('returns 404 for expired partner tokens', async () => {
     rpcResponses.push({ data: false, error: null });
     const { GET } = await import('../../app/api/partner/[token]/cards/route');

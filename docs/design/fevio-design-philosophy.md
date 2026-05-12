@@ -58,9 +58,9 @@ This is a core differentiator from generic fertility calendars, chatbots, and we
 
 Implementation rules:
 
-- Intent-based projection chooses from existing widgets: medication, schedule, clinic briefing, record, partner action.
+- Intent-based projection chooses from existing widgets: medication, schedule, clinic context review, record, partner action.
 - Contextual editorial copy is Korean-first and template-constrained.
-- Adaptive visuals follow care phase: injection = time/action clarity, clinic = briefing/trust, waiting = low-noise support.
+- Adaptive visuals follow care phase: injection = time/action clarity, clinic = context recall / instruction capture, waiting = low-noise support.
 - Micro-interviews reveal only the next necessary input.
 - All extracted medical content remains draft until the user confirms it.
 
@@ -73,6 +73,17 @@ Use for injection and trigger moments.
 - Countdown and checklist come before explanation.
 - Critical medication cards use clear completion controls.
 - The partner receives an action role, not a medical panic alert.
+
+### ClinicDay context-review components
+
+Use for clinic visit days. The purpose is waiting-room recall, not doctor-facing AI mediation.
+
+- Reconstruct what happened since the last clinic visit from confirmed records.
+- Show medication/injection execution, user-recorded symptoms, previous instructions, and current confirmed cycle context.
+- Use visual timelines, adherence strips, and medication-change tables when they improve recall.
+- Pair the dynamic ClinicDay title with the module set that proves it.
+- After the visit, capture confirmed instructions as draft CycleEvents that require user confirmation.
+- Do not generate medical questions, advice, or correctness judgments as the core loop.
 
 ### Contextual translation components
 
