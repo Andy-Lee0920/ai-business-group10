@@ -38,6 +38,7 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const onboardingCard = !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
   const persistedCards = useCarePreview || onboardingCard || onboardingCycleState || hasTimelinePreview ? [] : await getPersistedCards();
   const persistedMilestones = useCarePreview || onboardingCard || onboardingCycleState || hasTimelinePreview ? [] : await getPersistedMilestones();
+  const partnerConnected = useCarePreview ? false : await getPartnerConnected();
   const milestones = hasTimelinePreview ? timelineMilestonePreview : persistedMilestones;
   const cards = onboardingCard
     ? [onboardingCard]
@@ -64,6 +65,7 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
         : baseContext),
     roleIntent: roleContext ? deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: false }) : undefined,
     onboardingQuickCaptureDone: cookieStore.get('fevio_onboarding_quick_capture_done')?.value === '1',
+    partnerConnected,
   };
 
   const composition = computeCareSurface(toFevioSurfaceContext(context));
@@ -81,7 +83,7 @@ function toFevioSurfaceContext(context: HomeContext) {
     proximityDays: context.proximityDays,
     emotionTrend: undefined,
     cardCount: context.cards.length,
-    partnerStatus: context.cards.some((card) => card.cardType === 'partner_support') ? 'connected' : 'unknown',
+    partnerStatus: context.partnerConnected === true || context.cards.some((card) => card.cardType === 'partner_support') ? 'connected' : 'unknown',
   } as const;
 }
 
@@ -150,6 +152,24 @@ async function getPersistedMilestones(): Promise<TreatmentMilestone[]> {
     return data.filter(isTreatmentMilestone);
   } catch (error) {
     if (error instanceof Error && error.message.includes('Missing Supabase public config')) return [];
+    throw error;
+  }
+}
+
+async function getPartnerConnected(): Promise<boolean> {
+  try {
+    const supabase = await createCookieBackedSupabaseClient();
+    const { data, error } = await supabase
+      .from('care_memberships')
+      .select('id')
+      .eq('role', 'partner')
+      .not('user_id', 'is', null)
+      .limit(1);
+
+    if (error || !Array.isArray(data)) return false;
+    return data.length > 0;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Missing Supabase public config')) return false;
     throw error;
   }
 }

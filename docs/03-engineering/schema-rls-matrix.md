@@ -13,7 +13,7 @@ This matrix keeps the final PRD data model aligned before implementation across 
 | `action_split_drafts` | #24 | capture migration | own couple only; draft shell created on Capture CTA | draft shell created; classification buttons do not write DB |
 | `split_candidates` | #35 / #24 | schema baseline or capture migration | own couple through parent draft/couple; created only on Confirm | Confirm batch insert; no rows before Confirm |
 | `care_action_cards` | #25 / #24; schedule decision #55 / ADR 0003; #171 | card model migration + prescription capture migration | own couple only for app; anon blocked; partner view only via server token projection; clinic visits stay card-backed for SLC; prescription photos are source evidence only | confirmed constraints; clinic_visit scheduling via `scheduled_at` / `care_date`; prescription_capture_status/photo_url present; card creation; anon direct read denied |
-| `partner_share_links` | #27 | partner migration | authenticated owner can create/revoke; anon cannot direct query; token hash only | one active link, 7-day TTL, raw token absent |
+| `partner_share_links` | #27 / #198 | partner migration + partner account join migration | authenticated owner can create/revoke; anon cannot direct query; token hash only; accepted links bind exactly one authenticated partner account via `accepted_by` / `accepted_at` | one active link, 7-day TTL, raw token absent, own/expired/used invite safely rejected |
 | `partner_share_events` | #27 | partner migration | server-controlled partner token flow; authenticated owner can observe relevant acknowledgement state if needed | view/ack events record revision seen |
 | `treatment_cycles` | #144 / #147 / #170 | treatment timeline migration + result protection metadata | own couple only; blocked until Privacy Gate accepted; no anon direct access; Result Protection metadata remains patient-owned | cycle insert/select isolation; privacy gate rejection; negative result protection columns present |
 | `treatment_milestones` | #144 / #147 | treatment timeline migration | own couple only using direct `couple_id` plus cycle-match trigger; partner token reads server-side only | milestone insert/select isolation; cycle/couple mismatch rejected |
@@ -32,6 +32,7 @@ This matrix keeps the final PRD data model aligned before implementation across 
 - Partner view is a sanitized live server projection; no frozen snapshot table for v1.0.
 - Partner raw token is never stored; store `SHA-256(token)` only.
 - Partner links expire after 7 days and can be explicitly revoked.
+- Accepted partner links create `care_memberships` for the shared cycle; they do not grant full medical edit access.
 - ADR 0003 keeps clinic visit scheduling on `care_action_cards` for SLC; do not add `clinic_visits` or `visit_id` before P1 `#44` reopens the decision with concrete recurrence/reschedule requirements.
 - TreatmentTimeline tables are Post-SLC phase hints only. `treatment_milestones` must not expose raw notes to partner token clients and must not store estimated/template dates as active care-surface truth.
 - Care OS membership must preserve one shared treatment cycle with role-specific patient/partner surfaces.
@@ -48,4 +49,5 @@ This matrix keeps the final PRD data model aligned before implementation across 
 - Privacy Gate not accepted → sensitive write rejected.
 - Confirm transaction is atomic.
 - Expired/revoked partner link returns safe state with no card/raw memo leak.
+- Partner account join accepts a token only for a logged-in non-owner and returns partner projection membership, not a patient-home clone.
 - Partner acknowledgement records `card_revision_seen` and `card_updated_at_seen`.

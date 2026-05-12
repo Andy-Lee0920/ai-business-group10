@@ -32,7 +32,7 @@ export function InjectionDayHome({ context, composition }: AdaptiveStateHomeBase
     { label: '주사 시간', value: primaryTime },
     { label: '약 종류', value: drugName },
     { label: '케어 단계', value: '주사' },
-    { label: '파트너', value: sharedCount > 0 ? `${sharedCount}개 공유` : '준비 중' },
+    { label: '파트너', value: context.partnerConnected === true ? '연결됨' : sharedCount > 0 ? `${sharedCount}개 공유` : '준비 중' },
   ] as const;
 
   const showRingHero = composition?.slots.hero === 'CareMomentRing';
@@ -49,6 +49,7 @@ export function InjectionDayHome({ context, composition }: AdaptiveStateHomeBase
         description={sharedCount > 0
           ? `${sharedCount}개의 케어 단서가 파트너에게 행동으로 전달됩니다`
           : '파트너 공유 링크를 연결하면 역할이 자동으로 보여요'}
+        connected={context.partnerConnected === true}
       /> : null}
       {shouldShowPartnerInviteCard(context) ? <PartnerInviteCard /> : null}
       <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />

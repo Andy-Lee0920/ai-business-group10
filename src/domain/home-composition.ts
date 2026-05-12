@@ -26,6 +26,7 @@ export type HomeContext = {
   cards: HomeActionCard[];
   roleIntent?: RoleBasedHomeIntent;
   onboardingQuickCaptureDone?: boolean;
+  partnerConnected?: boolean;
 };
 
 export function computeHomeContext(cards: readonly CareActionCard[], now: Date): HomeContext {

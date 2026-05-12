@@ -295,14 +295,14 @@ export function QuickStatRow({ stats }: { stats: readonly QuickStat[] }) {
   );
 }
 
-export function PartnerConnectBar({ description }: { description: string }) {
+export function PartnerConnectBar({ description, connected = false }: { description: string; connected?: boolean }) {
   return (
     <div className={styles.partnerBar} data-testid="partner-connect-bar" aria-label="파트너 공유 상태">
       <span className={styles.partnerBarIconWrap} aria-hidden="true">
         <DecorativeIcon className={styles.pulseIcon} iconKey="component:partnerPresencePulse" testId="partner-bar-icon" />
       </span>
       <div className={styles.partnerBarContent}>
-        <p className={styles.partnerBarTitle}>파트너와 연결됨</p>
+        <p className={styles.partnerBarTitle}>{connected ? '파트너 계정 연결됨' : '파트너 공유 준비'}</p>
         <p className={styles.partnerBarSub}>{description}</p>
       </div>
       <span className={styles.partnerBarChevron} aria-hidden="true">›</span>

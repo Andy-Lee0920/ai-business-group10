@@ -34,7 +34,7 @@ export function TwoWeekWaitHome({ context, composition }: AdaptiveStateHomeBaseP
           { id: 'mind', title: '마음 상태 한 줄', description: anchor.judgementBoundary, badge: '보류' },
         ]}
       />
-      {shouldShowPartnerProjection(context) ? <PartnerConnectBar description="결과에 대해 먼저 묻지 않고, 쉬는 시간과 루틴만 조용히 함께 챙겨요" /> : null}
+      {shouldShowPartnerProjection(context) ? <PartnerConnectBar description="결과에 대해 먼저 묻지 않고, 쉬는 시간과 루틴만 조용히 함께 챙겨요" connected={context.partnerConnected === true} /> : null}
       {shouldShowPartnerInviteCard(context) ? <PartnerInviteCard /> : null}
       <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>

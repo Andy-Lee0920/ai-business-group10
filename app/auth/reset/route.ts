@@ -9,6 +9,7 @@ const FEVIO_STATE_COOKIES = [
   'fevio_onboarding_partner_invite',
   'fevio_onboarding_effective_stage',
   'fevio_onboarding_care_cycle_state',
+  'fevio_partner_joined_cycle_id',
   'fevio_treatment_milestones',
   'fevio_treatment_cards',
 ] as const;

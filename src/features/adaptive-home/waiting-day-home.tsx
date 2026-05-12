@@ -27,9 +27,7 @@ export function WaitingDayHome({ context, composition }: AdaptiveStateHomeBasePr
       {showChecklist && visibleCards.length > 0 ? (
         <QuietChecklist label="오늘 확인할 일정" items={visibleCards} />
       ) : null}
-      {shouldShowPartnerProjection(context) ? <PartnerConnectBar
-        description="결과를 묻지 않고 컨디션과 쉬는 시간을 먼저 챙겨요"
-      /> : null}
+      {shouldShowPartnerProjection(context) ? <PartnerConnectBar description="결과를 묻지 않고 컨디션과 쉬는 시간을 먼저 챙겨요" connected={context.partnerConnected === true} /> : null}
       {shouldShowPartnerInviteCard(context) ? <PartnerInviteCard /> : null}
       <HomeUtilityLauncher fullSetupPending={context.onboardingQuickCaptureDone === true} />
     </CareSurfaceFrame>
