@@ -1,12 +1,12 @@
 .demoShell {
   --fevio-glass-shadow: 0 4px 16px rgba(49, 45, 42, 0.07), 0 12px 40px rgba(49, 45, 42, 0.1);
-  --demo-device-scale: 0.85;
+  --demo-device-scale: 0.8;
   --demo-device-bezel-width: 3px;
   --demo-device-screen-inset: 7px;
   --demo-dynamic-island-screen-top: 11px;
   width: min(1280px, 100vw);
   min-height: 100dvh;
-  padding: 10px clamp(10px, 2.5vw, 28px) 18px;
+  padding: 8px clamp(10px, 2.5vw, 24px) 14px;
   background:
     radial-gradient(circle at 22% 6%, rgba(255, 232, 219, 0.92), transparent 22rem),
     radial-gradient(circle at 82% 8%, rgba(220, 235, 219, 0.86), transparent 24rem),
@@ -21,14 +21,14 @@
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 10px;
+  grid-template-columns: 0.85fr auto auto;
+  gap: 8px;
   align-items: center;
-  max-width: 1040px;
-  margin: 0 auto 10px;
-  padding: 6px 10px;
-  border: 1px solid var(--fevio-glass-edge);
-  border-radius: 22px;
+  max-width: 980px;
+  margin: 0 auto 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 20px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.28));
   box-shadow: var(--fevio-glass-shadow);
@@ -37,8 +37,9 @@
 
 .compactHeader h1 {
   margin: 0;
-  font-size: clamp(17px, 1.5vw, 20px);
+  font-size: clamp(15px, 1.3vw, 18px);
   letter-spacing: -0.04em;
+  line-height: 1.08;
 }
 
 .compactHeader :global(.eyebrow) {
@@ -49,7 +50,7 @@
 
 .careInput {
   display: grid;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: auto auto;
   gap: 4px 8px;
   align-items: center;
 }
@@ -72,6 +73,7 @@
   font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
+  display: none;
 }
 
 .compactController {
@@ -93,13 +95,13 @@
 
 .compactController button {
   min-width: 54px;
-  min-height: 30px;
+  min-height: 28px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--fevio-muted);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -126,7 +128,7 @@
   border-radius: 99px;
   background: var(--fevio-soft-gray);
   color: #374151;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
 }
 
@@ -134,9 +136,9 @@
   display: grid;
   grid-template-columns:
     calc(440px * var(--demo-device-scale))
-    minmax(96px, 132px)
+    minmax(88px, 116px)
     calc(440px * var(--demo-device-scale));
-  gap: clamp(12px, 2vw, 24px);
+  gap: clamp(10px, 1.5vw, 18px);
   max-width: 1128px;
   height: calc(956px * var(--demo-device-scale));
   margin: 0 auto;
@@ -263,7 +265,7 @@
 .appScreen {
   --accent: var(--fevio-sage);
   display: grid;
-  gap: 12px;
+  gap: 10px;
   height: 100%;
   max-height: 100%;
   padding: var(--device-safe-top) 16px calc(var(--device-safe-bottom) + 16px);
@@ -319,8 +321,8 @@
   position: relative;
   display: grid;
   gap: 14px;
-  min-height: 282px;
-  padding: 18px;
+  min-height: 228px;
+  padding: 16px;
   overflow: hidden;
   border-color: color-mix(in srgb, var(--accent) 30%, rgba(255, 255, 255, 0.72));
   background:
@@ -336,8 +338,8 @@
   position: absolute;
   right: -70px;
   bottom: -82px;
-  width: 190px;
-  height: 190px;
+  width: 150px;
+  height: 150px;
   border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
   border-radius: 50%;
   background: color-mix(in srgb, var(--accent) 8%, transparent);
@@ -402,24 +404,25 @@
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .phaseHeroCopy h3 {
   margin: 0;
   max-width: 320px;
-  font-size: clamp(34px, 6vw, 48px);
-  line-height: 0.95;
-  letter-spacing: -0.08em;
+  font-size: clamp(28px, 4.8vw, 38px);
+  line-height: 1.02;
+  letter-spacing: -0.065em;
+  word-break: keep-all;
 }
 
 .phaseHeroCopy p {
   margin: 0;
   max-width: 320px;
   color: var(--fevio-text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  line-height: 1.5;
+  line-height: 1.42;
 }
 
 .phaseHeroStatus {
@@ -429,7 +432,7 @@
   grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid rgba(255, 255, 255, 0.76);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.72);
@@ -453,7 +456,9 @@
 .phaseHeroAction {
   position: relative;
   z-index: 1;
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 7px;
 }
 
@@ -518,7 +523,7 @@
 
 .partnerHero {
   position: relative;
-  min-height: 248px;
+  min-height: 214px;
   overflow: hidden;
   border-color: color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.74));
   background:
@@ -556,7 +561,7 @@
   display: grid;
   gap: 2px;
   margin-top: auto;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.72);
@@ -612,25 +617,26 @@
 .primaryCard h3,
 .partnerHero h3 {
   margin: 0;
-  font-size: clamp(30px, 4vw, 42px);
-  line-height: 1;
+  font-size: clamp(30px, 4vw, 38px);
+  line-height: 1.05;
   letter-spacing: -0.06em;
+  word-break: keep-all;
 }
 
 .partnerHero p {
   max-width: 312px;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.42;
 }
 
 .mainAction {
-  min-height: 52px;
+  min-height: 44px;
   border: 0;
   border-radius: 18px;
   background: var(--accent);
   color: white;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 900;
   box-shadow: 0 16px 30px color-mix(in srgb, var(--accent) 24%, transparent);
 }
