@@ -410,9 +410,9 @@
 .phaseHeroCopy h3 {
   margin: 0;
   max-width: 320px;
-  font-size: clamp(28px, 4.8vw, 38px);
-  line-height: 1.02;
-  letter-spacing: -0.065em;
+  font-size: clamp(26px, 4.4vw, 35px);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
   word-break: keep-all;
 }
 
@@ -617,9 +617,9 @@
 .primaryCard h3,
 .partnerHero h3 {
   margin: 0;
-  font-size: clamp(30px, 4vw, 38px);
-  line-height: 1.05;
-  letter-spacing: -0.06em;
+  font-size: clamp(26px, 3.5vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -0.055em;
   word-break: keep-all;
 }
 

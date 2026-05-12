@@ -59,13 +59,13 @@ const SHARE_COPY: Record<DemoCare, { title: string; body: string; shared: string
     waiting: '파트너 확인을 기다리는 중',
   },
   clinic: {
-    title: '동행자가 볼 내용이 정리됐어요',
+    title: '동행자가 볼 역할이 정리됐어요',
     body: '방문 시간, 질문, 다음 일정 기록처럼 함께 챙길 일만 보입니다.',
     shared: '진료 메모가 공유됐어요',
     waiting: '동행자 역할을 준비 중',
   },
   waiting: {
-    title: '조용한 지지만 전달돼요',
+    title: '필요한 지지만 전달돼요',
     body: '결과를 묻는 대신 다음 일정과 컨디션 확인만 보입니다.',
     shared: '지지 방식이 정리됐어요',
     waiting: '조용한 공유를 준비 중',

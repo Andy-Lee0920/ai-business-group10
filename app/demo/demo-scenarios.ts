@@ -190,7 +190,7 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       primaryAction: '차분한 체크인',
       inputMoment: {
         prompt: '오늘 상태',
-        answer: '기다리는 중이라 알림을 줄이고 싶어요',
+        answer: '결과 대기 중 — 필수 알림만 유지',
         adaptation: '다음 일정과 컨디션 확인만 남깁니다.',
       },
       nowStack: [
@@ -228,7 +228,7 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       sharedContext: [
         { id: 'next', label: '다음 일정', value: '목요일 09:00' },
         { id: 'mode', label: '모드', value: '조용히' },
-        { id: 'ask', label: '결과 묻기', value: '멈추기' },
+        { id: 'ask', label: '결과 질문', value: '하지 않기' },
       ],
       actions: [
         { id: 'quiet', label: '결과 묻지 않기' },
@@ -236,8 +236,8 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
         { id: 'next', label: '다음 일정만 확인' },
       ],
       avoid: [
-        { id: 'search', label: '사례 공유하기' },
-        { id: 'repeat', label: '괜찮을 거야 반복' },
+        { id: 'search', label: '검색 결과 보내기' },
+        { id: 'repeat', label: '막연한 확신 반복' },
       ],
       quickTools: [
         { id: 'presence', label: '곁에 있음', value: '전달' },
