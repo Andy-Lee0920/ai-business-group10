@@ -6,7 +6,7 @@ import type { AdaptiveCareDay } from './types';
 const COUPLE_ID = 'presentation-couple';
 const USER_ID = 'presentation-primary';
 
-export type PresentationCareParam = 'injection' | 'clinic' | 'waiting';
+export type PresentationCareParam = 'injection' | 'clinic' | 'waiting' | 'two_week_wait_day' | 'result_protection_day';
 
 export function getPresentationScenarioCards(care: PresentationCareParam, now: Date): PresentationCareActionCard[] {
   return scenarioSeeds(care, now).map((card) => ({
@@ -19,18 +19,24 @@ export function normalizePresentationCare(value: string | string[] | null | unde
   const raw = Array.isArray(value) ? value[0] : value;
   if (raw === 'clinic') return 'clinic';
   if (raw === 'waiting') return 'waiting';
+  if (raw === 'two_week_wait_day') return 'two_week_wait_day';
+  if (raw === 'result_protection_day') return 'result_protection_day';
   return 'injection';
 }
 
 export function toAdaptiveCareDay(care: PresentationCareParam): AdaptiveCareDay {
   if (care === 'clinic') return 'clinic_day';
   if (care === 'waiting') return 'waiting_day';
+  if (care === 'two_week_wait_day') return 'two_week_wait_day';
+  if (care === 'result_protection_day') return 'result_protection_day';
   return 'injection_day';
 }
 
 function scenarioSeeds(care: PresentationCareParam, now: Date): CareActionCard[] {
   if (care === 'clinic') return clinicDaySeeds(now);
   if (care === 'waiting') return waitingDaySeeds(now);
+  if (care === 'two_week_wait_day') return twoWeekWaitSeeds(now);
+  if (care === 'result_protection_day') return resultProtectionSeeds(now);
   return injectionDaySeeds(now);
 }
 
@@ -55,6 +61,23 @@ function waitingDaySeeds(now: Date): CareActionCard[] {
   return [
     makeCard('waiting-next-visit', 'clinic_visit', '목요일 오전 9시 다음 확인', daysFrom(now, 2), '오늘은 기다리는 날이에요. 다음 일정만 조용히 확인해요', 'confirmed'),
     makeCard('waiting-partner', 'partner_support', '파트너는 결과를 재촉하지 않기', daysFrom(now, 2), '오늘 필요한 행동은 조용히 곁에 있어 주는 것', 'confirmed'),
+  ];
+}
+
+
+function twoWeekWaitSeeds(now: Date): CareActionCard[] {
+  return [
+    makeCard('two-ww-anchor', 'general_action', 'D+5 피검까지 남은 날 확인', daysFrom(now, 5), '오늘 할 수 있는 일의 경계만 짧게 확인해요.', 'confirmed'),
+    makeCard('two-ww-medication', 'medication', '프로게스테론 22:00 루틴', minutesFrom(now, 120), '반복 약은 병원 안내 시간만 기준으로 보여줘요.', 'confirmed', todayUtc(now)),
+    makeCard('two-ww-partner', 'partner_support', '파트너 역할: 먼저 묻지 않고 곁에 있기', daysFrom(now, 1), '검색이나 해석 대신 오늘 컨디션과 휴식만 확인해요.', 'confirmed'),
+  ];
+}
+
+function resultProtectionSeeds(now: Date): CareActionCard[] {
+  return [
+    makeCard('result-visibility', 'general_action', '결과 공유 범위 선택', minutesFrom(now, 5), '다음 일정만 또는 결과까지 사용자가 직접 고릅니다.', 'confirmed', todayUtc(now)),
+    makeCard('result-next-step', 'clinic_visit', '다음 검사일 확인', daysFrom(now, 2), '수치 해석 없이 다음 병원 일정만 남겨요.', 'confirmed'),
+    makeCard('result-partner', 'partner_support', '파트너 역할: 먼저 단정하지 않기', minutesFrom(now, 15), '결과를 해석하지 않고 사용자의 공유 범위를 존중해요.', 'confirmed', todayUtc(now)),
   ];
 }
 

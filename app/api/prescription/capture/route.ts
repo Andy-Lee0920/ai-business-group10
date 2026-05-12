@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (isPresentationRequest(request) && isDemoRequest(request)) {
-    return NextResponse.json({ cardId: `demo-prescription-${Date.now()}`, status: 'confirmed', persisted: false, createdCardCount: 1, title: draft.title });
+    return NextResponse.json({ cardId: `demo-prescription-${Date.now()}`, status: 'confirmed', persisted: false, createdCardCount: 1, title: draft.title }, { status: 201 });
   }
 
   try {
@@ -86,10 +86,10 @@ export async function POST(request: NextRequest) {
       .single();
     if (card.error || !card.data) throw new Error(card.error?.message ?? 'care_action_cards insert failed');
 
-    return NextResponse.json({ cardId: card.data.id, status: card.data.status, persisted: true, createdCardCount: 1, title: draft.title });
+    return NextResponse.json({ cardId: card.data.id, status: card.data.status, persisted: true, createdCardCount: 1, title: draft.title }, { status: 201 });
   } catch (error) {
     if (isMissingConfigError(error) && isDemoRequest(request)) {
-      return NextResponse.json({ cardId: `demo-prescription-${Date.now()}`, status: 'confirmed', persisted: false, createdCardCount: 1, title: draft.title });
+      return NextResponse.json({ cardId: `demo-prescription-${Date.now()}`, status: 'confirmed', persisted: false, createdCardCount: 1, title: draft.title }, { status: 201 });
     }
     throw error;
   }

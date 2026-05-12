@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     fullSetupHref: '/onboard/full-setup',
     prescriptionPhoto,
     reminder: { kind: 'tomorrow_setup', label: '나머지는 오늘 저녁에 정리해요' },
-  });
+  }, { status: 201 });
 
   response.cookies.set(QUICK_CAPTURE_DONE_COOKIE, '1', { httpOnly: true, sameSite: 'lax', path: '/' });
   if (isPresentationRequest(request)) {

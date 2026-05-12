@@ -29,7 +29,7 @@ describe('/api/onboarding/quick-capture', () => {
     const response = await quickCapture(jsonRequest({ firstMedicationTime: '21:00', nextVisitDate: '2026-05-13' }));
     const payload = (await response.json()) as { redirectTo: string; createdCardCount: number; quickCaptureDone: boolean; fullSetupHref: string; reminder: { kind: string } };
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(createCapture).toHaveBeenCalledWith('Quick Capture\n첫 약/주사 시간: 21:00\n다음 병원 방문: 2026-05-13');
     expect(confirm).toHaveBeenCalledWith({
       draftId: 'draft-1',
@@ -61,7 +61,7 @@ describe('/api/onboarding/quick-capture', () => {
     const response = await quickCapture(jsonRequest({ firstMedicationTime: '08:30', nextVisitDate: '2026-05-14', prescriptionPhotoUploadFailed: true }));
     const payload = (await response.json()) as { prescriptionPhoto: string };
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(payload.prescriptionPhoto).toBe('skipped');
     expect(confirm).toHaveBeenCalledTimes(1);
   });

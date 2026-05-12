@@ -86,7 +86,7 @@ describe('Prescription Capture', () => {
     }));
     const payload = (await response.json()) as { cardId: string; persisted: boolean };
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(cardTable.insert).toHaveBeenCalledWith(expect.objectContaining({
       card_type: 'injection',
       prescription_photo_url: 'https://storage.example/prescriptions/a.jpg',

@@ -360,3 +360,13 @@
   width: 24px;
   height: 24px;
 }
+
+.inlineCheck {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: var(--fevio-text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}

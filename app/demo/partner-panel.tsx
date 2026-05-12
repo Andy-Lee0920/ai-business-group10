@@ -1,97 +1,42 @@
-import { Badge, Card, ConfirmChip, StatusBadge, classNames } from '../../src/components/ui';
+import type { Dispatch } from 'react';
+import { Badge, Card, CtaButton, StatusBadge, classNames } from '../../src/components/ui';
 import { PartnerAvatar } from '../../src/design/couple-avatars';
-import { getFevioIcon, type FevioIconKey } from '../../src/design/icon-map';
-import type { DemoScenario } from './demo-scenarios';
+import type { DemoScenario, IvfStage, UtilityItem } from './demo-scenarios';
+import { getVisiblePartnerCards, type DemoAction, type DemoState, type UtilityCardState } from './demo-state';
 import styles from './dual-panel-demo.module.css';
 
 type PartnerPanelProps = {
   scenario: DemoScenario;
-  checked: ReadonlySet<string>;
-  onToggle: (id: string) => void;
-  careDone: boolean;
-  partnerConfirmed: boolean;
-  onPartnerConfirmToggle: () => void;
-  syncEvent: {
-    source: string;
-    target: string;
-    label: string;
-  };
+  state: DemoState;
+  dispatch: Dispatch<DemoAction>;
 };
 
-type DemoCare = DemoScenario['care'];
+export const RESULT_SHARED_STATUS_LABEL = 'ResultSharedStatus';
+export const DO_NOT_INTERPRET_LABEL = 'DoNotInterpretCard';
 
-const PARTNER_ROLE_HERO: Record<DemoCare, {
-  eyebrow: string;
-  title: string;
-  body: string;
-  iconKey: FevioIconKey;
-}> = {
-  injection: {
-    eyebrow: '파트너 역할',
-    title: '약 이름과 시간을 함께 확인',
-    body: '정해진 시간에 약 이름과 용량을 함께 확인하고, 완료 후 기록만 남깁니다.',
-    iconKey: 'assigned:partner_action',
-  },
-  clinic: {
-    eyebrow: '파트너 역할',
-    title: '다음 지시사항 함께 기록',
-    body: '진료 후 지시사항과 다음 방문일을 함께 기록합니다.',
-    iconKey: 'phase:clinic',
-  },
-  waiting: {
-    eyebrow: '파트너 역할',
-    title: '묻기보다 곁에 있기',
-    body: '결과를 묻지 않고, 다음 일정과 컨디션을 조용히 살핍니다.',
-    iconKey: 'phase:waiting',
-  },
+export const PARTNER_ROLE_HERO: Record<IvfStage, { eyebrow: string; title: string; body: string }> = {
+  baseline_testing: { eyebrow: '파트너 역할', title: '질문을 함께 보기', body: '일정과 질문 목록만 확인합니다.' },
+  ovarian_stimulation: { eyebrow: '파트너 역할', title: '약 이름과 준비물 확인', body: '기록 후 환자 최종 확인을 기다립니다.' },
+  egg_retrieval: { eyebrow: '파트너 역할', title: '귀가와 회복 지원', body: '도움 행동과 상태 확인만 남깁니다.' },
+  fertilization: { eyebrow: '파트너 역할', title: '공유된 일정만 보기', body: '사용자가 연 범위 안에서만 보입니다.' },
+  embryo_culture: { eyebrow: '파트너 역할', title: '먼저 묻지 않기', body: '다음 알림과 조용한 행동만 보입니다.' },
+  embryo_transfer: { eyebrow: '파트너 역할', title: '약 시간 함께 확인', body: '루틴 보조와 휴식 환경을 챙깁니다.' },
+  pregnancy_test: { eyebrow: '파트너 역할', title: '수치 해석하지 않기', body: '공유 여부와 다음 일정만 확인합니다.' },
 };
 
-const PARTNER_COPY: Record<DemoCare, { label: string; title: string; body: string; idle: string; done: string }> = {
-  injection: {
-    label: '공유된 핵심',
-    title: '오늘 21:00 고날에프',
-    body: '확인할 것은 약 이름, 시간, 준비물입니다.',
-    idle: '확인 역할이 준비됐어요',
-    done: '완료 확인이 전달됐어요',
-  },
-  clinic: {
-    label: '공유된 핵심',
-    title: '오늘 병원 방문',
-    body: '이동 시간과 다음 지시사항 기록을 함께 챙깁니다.',
-    idle: '동행 역할이 준비됐어요',
-    done: '방문 체크가 전달됐어요',
-  },
-  waiting: {
-    label: '공유된 핵심',
-    title: '결과 대기 중',
-    body: '묻지 않고 곁에 있을 행동만 남겼습니다.',
-    idle: '조용한 지지 역할이 준비됐어요',
-    done: '확인 상태가 전달됐어요',
-  },
-};
-
-export function PartnerPanel({
-  scenario,
-  checked,
-  onToggle,
-  careDone,
-  partnerConfirmed,
-  onPartnerConfirmToggle,
-  syncEvent,
-}: PartnerPanelProps) {
-  const { partner } = scenario;
-  const hero = PARTNER_ROLE_HERO[scenario.care];
-  const partnerCopy = PARTNER_COPY[scenario.care];
+export function PartnerPanel({ scenario, state, dispatch }: PartnerPanelProps) {
+  const partner = scenario.partner;
+  const hero = PARTNER_ROLE_HERO[scenario.stage];
+  const visibleCards = getVisiblePartnerCards(scenario, state);
+  const completedCount = visibleCards.filter((card) => state.utilityState[card.id]?.status === 'completed').length;
 
   return (
     <section className={`${styles.appScreen} ${styles.partnerApp} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-partner-panel" aria-label="파트너 화면">
-      <Card as="div" className={classNames(styles.partnerHero, styles[`partnerHero_${scenario.care}`])}>
+      <Card as="div" className={classNames(styles.partnerHero, styles[`partnerHero_${scenario.accent}`])}>
         <div className={styles.partnerHeroTop}>
           <div className={styles.identityCluster} aria-label="파트너 케어 화면">
             <PartnerAvatar className={styles.roleAvatar} />
-            <span className={styles.partnerRoleIcon}>
-              <DemoIcon iconKey={hero.iconKey} testId="demo-partner-role-icon" />
-            </span>
+            <span className={styles.partnerRoleIcon}>{scenario.index}</span>
           </div>
           <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         </div>
@@ -100,51 +45,9 @@ export function PartnerPanel({
         <p>{hero.body}</p>
         <div className={styles.roleFocusRail}>
           <span>{partner.status}</span>
-          <strong>{partner.role} 역할</strong>
+          <strong>{partner.role}</strong>
         </div>
       </Card>
-
-      <Card as="div" className={styles.partnerInputMoment}>
-        <span className={styles.microLabel}>{partnerCopy.label}</span>
-        <strong>{partnerCopy.title}</strong>
-        <p>{partnerCopy.body}</p>
-      </Card>
-
-      <Card as="div" className={styles.liveMirrorCard} data-testid="partner-sync-mirror">
-        <span className={styles.microLabel}>내 화면 업데이트</span>
-        <strong>{syncEvent.target === '파트너 화면' ? syncEvent.label : hero.title}</strong>
-        <p>{syncEvent.target === '파트너 화면' ? '내 화면의 확인 상태가 파트너 역할에 반영됐습니다.' : hero.body}</p>
-      </Card>
-
-      <Card as="div" className={styles.presencePulseCard} data-testid="demo-partner-presence-pulse">
-        <span aria-hidden="true" />
-        <div>
-          <small>같이 보고 있어요</small>
-          <strong>{careDone ? partnerCopy.done : partnerCopy.idle}</strong>
-        </div>
-      </Card>
-
-      <Card as="div" className={styles.sharedSyncCard}>
-        <div>
-          <span className={styles.microLabel}>공유 상태</span>
-          <strong>{careDone ? '완료됨' : '같이 확인 중'}</strong>
-        </div>
-        <div className={styles.syncActions}>
-          {careDone ? <StatusBadge state="done">완료됨</StatusBadge> : <StatusBadge state="shared">공유중</StatusBadge>}
-          <ConfirmChip selected={partnerConfirmed} tone={scenario.accent} onClick={onPartnerConfirmToggle}>
-            확인 완료
-          </ConfirmChip>
-        </div>
-      </Card>
-
-      <div className={styles.coreRail} aria-label="공유 상태">
-        {scenario.coreTools.map((item) => (
-          <button className={styles.coreTool} key={item.id} type="button">
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-          </button>
-        ))}
-      </div>
 
       <Card as="div" className={styles.contextStrip}>
         {partner.sharedContext.map((item) => (
@@ -155,57 +58,69 @@ export function PartnerPanel({
         ))}
       </Card>
 
+      <Card as="div" className={styles.sharedSyncCard}>
+        <div>
+          <span className={styles.microLabel}>Permission projection</span>
+          <strong>{sharingCopy(state.sharingLevel)}</strong>
+        </div>
+        <StatusBadge state="shared">{visibleCards.length} cards visible</StatusBadge>
+      </Card>
+
       <Card as="div" className={styles.utilityCard}>
         <div className={styles.cardTitleRow}>
-          <h4>도움 행동</h4>
-          <span>{countChecked(partner.actions, checked)}/{partner.actions.length}</span>
+          <h4>Partner utility</h4>
+          <span>{completedCount}/{visibleCards.length}</span>
         </div>
         <div className={styles.actionStack}>
-          {partner.actions.map((item) => {
-            const selected = checked.has(item.id);
-            return (
-              <button
-                aria-pressed={selected}
-                className={`${styles.actionRow} ${selected ? styles.isChecked : ''}`}
-                key={item.id}
-                onClick={() => onToggle(item.id)}
-                type="button"
-              >
-                <span>{selected ? '✓' : ''}</span>
-                <strong>{item.label}</strong>
-              </button>
-            );
-          })}
+          {visibleCards.map((card) => (
+            <PartnerUtilityCard key={card.id} card={card} state={state.utilityState[card.id]} dispatch={dispatch} />
+          ))}
         </div>
       </Card>
 
       <Card as="div" className={styles.avoidCard}>
         <h4>오늘 피하기</h4>
         <div className={styles.chipRow}>
-          {partner.avoid.map((item) => (
-            <span key={item.id}>{item.label}</span>
-          ))}
+          {partner.avoid.map((item) => <span key={item.id}>{item.label}</span>)}
         </div>
       </Card>
-
-      <div className={styles.partnerToolGrid}>
-        {partner.quickTools.map((item) => (
-          <button className={styles.toolButton} key={item.id} type="button">
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-          </button>
-        ))}
-      </div>
     </section>
   );
 }
 
-function DemoIcon({ iconKey, testId }: { iconKey: FevioIconKey; testId: string }) {
-  const spec = getFevioIcon(iconKey);
-  const Icon = spec.icon;
-  return <Icon aria-hidden="true" data-testid={testId} focusable="false" size={spec.size} strokeWidth={2.25} />;
+function PartnerUtilityCard({ card, state, dispatch }: { card: UtilityItem; state?: UtilityCardState; dispatch: Dispatch<DemoAction> }) {
+  const completed = state?.status === 'completed';
+  const isResultStatus = card.label === RESULT_SHARED_STATUS_LABEL;
+  const isDoNotInterpret = card.label === DO_NOT_INTERPRET_LABEL;
+
+  return (
+    <button
+      aria-pressed={completed}
+      className={classNames(styles.actionRow, completed && styles.isChecked)}
+      type="button"
+      onClick={() => dispatch({ type: 'COMPLETE_CARD', cardId: card.id, actor: 'partner' })}
+    >
+      <span>{completed ? '✓' : ''}</span>
+      <strong>{card.label}</strong>
+      <small>{partnerCardBody(card, isResultStatus, isDoNotInterpret)}</small>
+      {completed ? <StatusBadge state="done">완료</StatusBadge> : null}
+      {card.id === 'stim-log' && completed ? (
+        <CtaButton type="button" variant="ghost" onClick={(event) => { event.stopPropagation(); dispatch({ type: 'COMPLETE_CARD', cardId: 'stim-log', actor: 'partner' }); }}>
+          환자 확인 대기
+        </CtaButton>
+      ) : null}
+    </button>
+  );
 }
 
-function countChecked(items: DemoScenario['partner']['actions'], checked: ReadonlySet<string>) {
-  return items.filter((item) => checked.has(item.id)).length;
+function partnerCardBody(card: UtilityItem, isResultStatus: boolean, isDoNotInterpret: boolean) {
+  if (isResultStatus) return '사용자가 공유한 범위만 표시';
+  if (isDoNotInterpret) return '먼저 단정하지 않기';
+  return card.value ?? '확인';
+}
+
+function sharingCopy(level: DemoState['sharingLevel']) {
+  if (level === 'basic') return '기본 공유';
+  if (level === 'emotional') return '감정 공유';
+  return '케어 공유';
 }

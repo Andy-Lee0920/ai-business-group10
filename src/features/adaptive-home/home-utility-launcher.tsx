@@ -9,6 +9,16 @@ export function HomeUtilityLauncher({ fullSetupPending = false }: { fullSetupPen
         <h2 id="adaptive-utility-launcher-title">필요한 기록만 빠르게 남기기</h2>
         <span>일정, 약, 주사, 진료 메모를 확정된 내용 중심으로 정리합니다.</span>
       </div>
+      <Link className={styles.quickSetupLink} href="/onboard/quick-capture" data-testid="quick-capture-entrypoint">
+        <span>병원 직후 3분</span>
+        <strong>Quick Capture 열기</strong>
+        <small>다음 방문일과 첫 약/주사 시간만 먼저 남깁니다.</small>
+      </Link>
+      <Link className={styles.quickSetupLink} href="/onboard/prescription-capture" data-testid="prescription-capture-entrypoint">
+        <span>처방 사진 확인</span>
+        <strong>Prescription Capture 열기</strong>
+        <small>사진을 붙이고 이름·용량은 사용자가 직접 확인합니다.</small>
+      </Link>
       {fullSetupPending ? (
         <Link className={styles.quickSetupLink} href="/onboard/full-setup" data-testid="full-setup-entrypoint">
           <span>나머지는 오늘 저녁에</span>
