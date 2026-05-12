@@ -45,7 +45,7 @@ describe('/api/onboarding/complete', () => {
     const payload = (await response.json()) as { redirectTo: string; careDay: string; createdCardCount: number };
 
     expect(response.status).toBe(200);
-    expect(createCapture).toHaveBeenCalledWith('치료 상황: ivf_cycle\n역할 설정: primary_with_partner\n공유 범위: basic\n첫 항목: 오늘 밤 9시 주사 확인');
+    expect(createCapture).toHaveBeenCalledWith('치료 상황: ivf_cycle\n추론 단계: ovarian_stimulation\n역할 설정: primary_with_partner\n공유 범위: care\n첫 항목: 오늘 밤 9시 주사 확인');
     expect(confirm).toHaveBeenCalledWith({
       draftId: 'draft-1',
       visitInputId: 'visit-1',
@@ -83,6 +83,7 @@ describe('/api/onboarding/complete', () => {
       '체중: 58kg',
       '주의사항: 갑상선 약 복용 중',
       '치료 상황: ivf_cycle',
+      '추론 단계: baseline_testing',
       '역할 설정: primary_solo',
       '공유 범위: basic',
     ].join('\n'));
@@ -124,10 +125,11 @@ describe('/api/onboarding/complete', () => {
         partnerInvite: { intent: 'prepare_invite' },
       }),
     );
-    const payload = await response.json() as { roleContext: string; sharingLevel: string; effectiveStage: string; partnerInvite: string };
+    const payload = await response.json() as { roleContext: string; sharingLevel: string; inferredStage: string; effectiveStage: string; partnerInvite: string; careDay: string; careCycleState: { careDay: string; stageUserCorrected: boolean; firstCareItem: { rawText: string } } };
 
     expect(response.status).toBe(200);
-    expect(payload).toMatchObject({ roleContext: 'primary_with_partner', sharingLevel: 'care', effectiveStage: 'ovarian_stimulation', partnerInvite: 'prepare_invite' });
+    expect(payload).toMatchObject({ roleContext: 'primary_with_partner', sharingLevel: 'care', inferredStage: 'ovarian_stimulation', effectiveStage: 'ovarian_stimulation', careDay: 'injection_day', partnerInvite: 'prepare_invite' });
+    expect(payload.careCycleState).toMatchObject({ careDay: 'injection_day', stageUserCorrected: false, firstCareItem: { rawText: '밤에 주사' } });
     expect(confirm).toHaveBeenCalledWith(expect.objectContaining({
       items: [expect.objectContaining({ sourceText: '밤에 주사', userSelectedCardType: 'injection' })],
     }));
@@ -135,7 +137,31 @@ describe('/api/onboarding/complete', () => {
     expect(setCookie).toContain('fevio_onboarding_role_context=primary_with_partner');
     expect(setCookie).toContain('fevio_onboarding_sharing_level=care');
     expect(setCookie).toContain('fevio_onboarding_partner_invite=prepare_invite');
+    expect(setCookie).toContain('fevio_onboarding_care_cycle_state=');
   });
+
+  it('uses the user-corrected effective stage for the initial care day instead of the raw first card kind', async () => {
+    const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
+    const confirm = vi.fn().mockResolvedValue({ createdCardCount: 1 });
+    mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture, confirm } satisfies CaptureStore);
+
+    const response = await completeOnboarding(
+      jsonRequest({
+        firstCareItem: { selectedIntent: 'medication', rawText: '밤에 주사', attachments: [], medicalNotes: '' },
+        inferredStage: 'ovarian_stimulation',
+        effectiveStage: 'pregnancy_test',
+        roleContext: 'primary_with_partner',
+        partnerInvite: { intent: 'prepare_invite' },
+      }),
+    );
+    const payload = await response.json() as { inferredStage: string; effectiveStage: string; careDay: string; careCycleState: { stageUserCorrected: boolean; careDay: string } };
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({ inferredStage: 'ovarian_stimulation', effectiveStage: 'pregnancy_test', careDay: 'result_protection_day' });
+    expect(payload.careCycleState).toMatchObject({ stageUserCorrected: true, careDay: 'result_protection_day' });
+    expect(response.headers.get('set-cookie')).toContain('fevio_onboarding_care_cycle_state=');
+  });
+
 
   it('keeps pregnancy test partner sharing basic by default', async () => {
     const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });

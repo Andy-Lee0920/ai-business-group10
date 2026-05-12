@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { isPresentationHost, isPresentationMode } from '../../../src/config';
 import { computeHomeContext, computeHomeContextV2, type HomeContext } from '../../../src/domain/home-composition';
+import type { InitialCareCycleState, OnboardingCareDay } from '../../../src/domain/onboarding-care-state';
 import { computeCareSurface } from '../../../src/domain/care-surface-engine';
 import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../src/domain/care-os-architecture';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
@@ -32,15 +33,18 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const timelineCardPreview = readTimelineCards(timelineCardsCookie);
   const hasTimelineCardsCookie = timelineCardsCookie !== undefined;
   const hasTimelinePreview = timelineMilestonePreview.length > 0;
-  const useCarePreview = hasCarePreviewQuery || (presentationMode && !hasTimelinePreview);
+  const onboardingCycleState = !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCareCycleState(cookieStore.get('fevio_onboarding_care_cycle_state')?.value) : null;
+  const useCarePreview = hasCarePreviewQuery || (presentationMode && !hasTimelinePreview && !onboardingCycleState);
   const onboardingCard = !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
-  const persistedCards = useCarePreview || onboardingCard || hasTimelinePreview ? [] : await getPersistedCards();
-  const persistedMilestones = useCarePreview || onboardingCard || hasTimelinePreview ? [] : await getPersistedMilestones();
+  const persistedCards = useCarePreview || onboardingCard || onboardingCycleState || hasTimelinePreview ? [] : await getPersistedCards();
+  const persistedMilestones = useCarePreview || onboardingCard || onboardingCycleState || hasTimelinePreview ? [] : await getPersistedMilestones();
   const milestones = hasTimelinePreview ? timelineMilestonePreview : persistedMilestones;
   const cards = onboardingCard
     ? [onboardingCard]
     : useCarePreview
       ? getPresentationScenarioCards(presentationCare, now)
+      : onboardingCycleState
+        ? []
       : hasTimelinePreview && hasTimelineCardsCookie
         ? timelineCardPreview
       : timelineCardPreview.length > 0
@@ -53,9 +57,11 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
     : computeHomeContext(cards, now);
   const roleContext = normalizeRoleContext(cookieStore.get('fevio_onboarding_role_context')?.value);
   const context = {
-    ...(useCarePreview && !onboardingCard && milestones.length === 0
-      ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
-      : baseContext),
+    ...(onboardingCycleState
+      ? applyOnboardingCareCycleState(baseContext, onboardingCycleState)
+      : useCarePreview && !onboardingCard && milestones.length === 0
+        ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
+        : baseContext),
     roleIntent: roleContext ? deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: false }) : undefined,
     onboardingQuickCaptureDone: cookieStore.get('fevio_onboarding_quick_capture_done')?.value === '1',
   };
@@ -86,6 +92,26 @@ function normalizeRoleContext(value: string | undefined): RoleContext | null {
 
 function toTimelineCareDay(careDay: HomeContext['careDay']): TimelineCareDay {
   return careDay === 'onboarding' ? 'routine_day' : careDay;
+}
+
+
+function applyOnboardingCareCycleState(context: HomeContext, state: InitialCareCycleState): HomeContext {
+  return {
+    ...context,
+    careDay: state.careDay,
+    phaseCareDay: state.careDay,
+    surfaceCareDay: state.careDay,
+    overrideReason: 'none',
+    primaryMessage: onboardingPrimaryMessage(state.careDay),
+  };
+}
+
+function onboardingPrimaryMessage(careDay: OnboardingCareDay) {
+  if (careDay === 'injection_day') return '오늘은 확인한 약·주사 안내를 먼저 안전하게 실행해요.';
+  if (careDay === 'clinic_day') return '방문 전 확인할 내용만 차분히 정리해요.';
+  if (careDay === 'waiting_day') return '결과를 더 해석하지 않고 다음 알림만 붙잡아요.';
+  if (careDay === 'two_week_wait_day') return '이식 후에는 기록은 남기고 판단은 잠시 미뤄둘게요.';
+  return '오늘은 결과를 해석하지 않고 다음 일정과 보호 모드만 남겨요.';
 }
 
 function getSearchParam(params: HomeSearchParams | undefined, key: string) {
@@ -185,6 +211,27 @@ function isMilestoneKind(value: unknown): value is TreatmentMilestoneKind {
     value === 'embryo_transfer' ||
     value === 'result_day'
   );
+}
+
+
+function readOnboardingCareCycleState(value: string | undefined): InitialCareCycleState | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(value)) as Partial<InitialCareCycleState>;
+    if (parsed.source !== 'onboarding' || parsed.version !== 1) return null;
+    if (!isOnboardingCareDay(parsed.careDay) || !isOnboardingIvfStage(parsed.effectiveStage) || !isOnboardingIvfStage(parsed.inferredStage)) return null;
+    return parsed as InitialCareCycleState;
+  } catch {
+    return null;
+  }
+}
+
+function isOnboardingCareDay(value: unknown): value is OnboardingCareDay {
+  return value === 'injection_day' || value === 'clinic_day' || value === 'waiting_day' || value === 'two_week_wait_day' || value === 'result_protection_day';
+}
+
+function isOnboardingIvfStage(value: unknown): value is InitialCareCycleState['effectiveStage'] {
+  return value === 'baseline_testing' || value === 'ovarian_stimulation' || value === 'egg_retrieval' || value === 'fertilization' || value === 'embryo_culture' || value === 'embryo_transfer' || value === 'pregnancy_test';
 }
 
 function readOnboardingCard(value: string | undefined): CareActionCard | null {

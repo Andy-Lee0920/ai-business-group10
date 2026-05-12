@@ -20,6 +20,27 @@ export type StageInferenceConfidence = 'high' | 'medium' | 'low';
 export type StageInferenceReason = 'intent_match' | 'keyword_match' | 'ambiguous_result_waiting' | 'generic_clinic_visit' | 'unknown';
 export type SharingLevel = 'basic' | 'care';
 
+export type OnboardingCareDay = 'injection_day' | 'clinic_day' | 'waiting_day' | 'two_week_wait_day' | 'result_protection_day';
+
+export type InitialCareCycleState = {
+  source: 'onboarding';
+  version: 1;
+  cycleId: string;
+  inferredStage: IvfStage;
+  effectiveStage: IvfStage;
+  stageUserCorrected: boolean;
+  careDay: OnboardingCareDay;
+  roleContext: 'primary_solo' | 'primary_with_partner' | 'patient' | 'partner' | 'together';
+  sharingLevel: SharingLevel;
+  partnerInvite: 'prepare_invite' | 'skip';
+  firstCareItem: {
+    selectedIntent: SelectedIntent;
+    rawText: string;
+    medicalNotes: string;
+    attachmentCount: number;
+  } | null;
+};
+
 export type StageInference = {
   inferredStage: IvfStage;
   confidence: StageInferenceConfidence;
@@ -140,4 +161,48 @@ function partnerCards(stage: IvfStage) {
   if (stage === 'embryo_transfer') return ['일정 같이 확인', '결과 질문 재촉하지 않기'];
   if (stage === 'pregnancy_test') return ['결과 수치 묻지 않기', '공유된 일정만 확인'];
   return ['일정 같이 확인', '필요한 준비물 챙기기'];
+}
+
+
+export function careDayForOnboardingStage(stage: IvfStage): OnboardingCareDay {
+  switch (stage) {
+    case 'ovarian_stimulation':
+      return 'injection_day';
+    case 'embryo_transfer':
+      return 'two_week_wait_day';
+    case 'pregnancy_test':
+      return 'result_protection_day';
+    case 'embryo_culture':
+      return 'waiting_day';
+    case 'baseline_testing':
+    case 'egg_retrieval':
+    case 'fertilization':
+      return 'clinic_day';
+    default:
+      return 'clinic_day';
+  }
+}
+
+export function buildInitialCareCycleState(input: {
+  cycleId: string;
+  inferredStage: IvfStage;
+  effectiveStage: IvfStage;
+  roleContext: InitialCareCycleState['roleContext'];
+  sharingLevel: SharingLevel;
+  partnerInvite: InitialCareCycleState['partnerInvite'];
+  firstCareItem: InitialCareCycleState['firstCareItem'];
+}): InitialCareCycleState {
+  return {
+    source: 'onboarding',
+    version: 1,
+    cycleId: input.cycleId,
+    inferredStage: input.inferredStage,
+    effectiveStage: input.effectiveStage,
+    stageUserCorrected: input.effectiveStage !== input.inferredStage,
+    careDay: careDayForOnboardingStage(input.effectiveStage),
+    roleContext: input.roleContext,
+    sharingLevel: input.sharingLevel,
+    partnerInvite: input.partnerInvite,
+    firstCareItem: input.firstCareItem,
+  };
 }

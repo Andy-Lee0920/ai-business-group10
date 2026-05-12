@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { computeCareDay } from '../../../../src/domain/care-cards';
 import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../../src/domain/care-os-architecture';
-import { defaultSharingLevelByStage, inferStageFromCareItem, type IvfStage, type SelectedIntent, type SharingLevel } from '../../../../src/domain/onboarding-care-state';
+import { buildInitialCareCycleState, defaultSharingLevelByStage, inferStageFromCareItem, type InitialCareCycleState, type IvfStage, type SelectedIntent, type SharingLevel } from '../../../../src/domain/onboarding-care-state';
 import { createCaptureStore, type ConfirmItem } from '../../../../src/lib/capture-confirm-store';
 import type { CardType, CareActionCard } from '../../../../src/types/care-cards.types';
 
@@ -55,12 +54,13 @@ export async function POST(request: NextRequest) {
   const firstCareItem = normalizeFirstCareItem(body.firstCareItem);
   const legacyFirstItem = normalizeFirstItem(body.firstItem);
   const firstItem = firstCareItem ? toFirstItem(firstCareItem) : legacyFirstItem;
-  const effectiveStage = normalizeIvfStage(body.effectiveStage) ?? (firstCareItem ? inferStageFromCareItem({ selectedIntent: firstCareItem.selectedIntent, rawText: firstCareItem.rawText }).inferredStage : null);
-  const sharingLevel = normalizeSharingLevel(body.sharingLevel) ?? (effectiveStage ? defaultSharingLevelByStage(effectiveStage) : 'basic');
+  const inferredStage = inferOnboardingStage({ firstCareItem, legacyFirstItem: firstItem === 'invalid' ? null : firstItem, clientInferredStage: normalizeIvfStage(body.inferredStage) });
+  const effectiveStage = normalizeIvfStage(body.effectiveStage) ?? inferredStage;
+  const sharingLevel = normalizeSharingLevel(body.sharingLevel) ?? defaultSharingLevelByStage(effectiveStage);
   const partnerInviteIntent = normalizePartnerInviteIntent(body.partnerInvite) ?? (roleContext === 'primary_with_partner' ? 'prepare_invite' : 'skip');
 
-  if (!treatmentContext && !firstCareItem) return NextResponse.json({ error: 'First care item is required.' }, { status: 400 });
-  if (firstItem === 'invalid') return NextResponse.json({ error: 'One valid first schedule, medication, or injection item is required.' }, { status: 400 });
+  if (!treatmentContext && !firstCareItem) return NextResponse.json({ error: '처음 케어 상태를 저장할 병원 안내가 필요합니다.' }, { status: 400 });
+  if (firstItem === 'invalid') return NextResponse.json({ error: '한 개의 유효한 첫 항목만 저장할 수 있어요.' }, { status: 400 });
 
   const store = await createCaptureStore(request);
   if (store instanceof Response) return store;
@@ -70,20 +70,26 @@ export async function POST(request: NextRequest) {
   const items = firstItem ? [toConfirmItem(firstItem)] : [];
   const result = await store.confirm({ ...capture, items });
   const now = new Date();
-  const careDay = computeCareDay({
-    hasEverCaptured: true,
-    cards: firstItem ? [toCareActionCard(firstItem, store.coupleId, now)] : [],
-    now,
+  const initialCareCycleState = buildInitialCareCycleState({
+    cycleId: store.coupleId,
+    inferredStage,
+    effectiveStage,
+    roleContext,
+    sharingLevel,
+    partnerInvite: partnerInviteIntent,
+    firstCareItem: toCareCycleFirstCareItem(firstCareItem, firstItem),
   });
 
   const response = NextResponse.json({
     redirectTo: '/home',
-    careDay,
+    careDay: initialCareCycleState.careDay,
     createdCardCount: result.createdCardCount,
     partnerInvite: partnerInviteIntent,
     roleContext,
     sharingLevel,
+    inferredStage,
     effectiveStage,
+    careCycleState: initialCareCycleState,
     homeIntent: deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: partnerInviteIntent !== 'prepare_invite' }),
   });
 
@@ -95,7 +101,8 @@ export async function POST(request: NextRequest) {
 
   response.cookies.set('fevio_onboarding_sharing_level', sharingLevel, { httpOnly: true, sameSite: 'lax', path: '/' });
   response.cookies.set('fevio_onboarding_partner_invite', partnerInviteIntent, { httpOnly: true, sameSite: 'lax', path: '/' });
-  if (effectiveStage) response.cookies.set('fevio_onboarding_effective_stage', effectiveStage, { httpOnly: true, sameSite: 'lax', path: '/' });
+  response.cookies.set('fevio_onboarding_effective_stage', effectiveStage, { httpOnly: true, sameSite: 'lax', path: '/' });
+  response.cookies.set('fevio_onboarding_care_cycle_state', encodeURIComponent(JSON.stringify(initialCareCycleState)), { httpOnly: true, sameSite: 'lax', path: '/' });
 
   if (firstItem) {
     response.cookies.set('fevio_onboarding_first_card', encodeURIComponent(JSON.stringify(toCareActionCard(firstItem, store.coupleId, now))), {
@@ -160,6 +167,38 @@ function normalizePartnerInviteIntent(value: unknown) {
   if (!value || Array.isArray(value) || typeof value !== 'object') return null;
   const intent = (value as Record<string, unknown>).intent;
   return intent === 'skip' || intent === 'prepare_invite' ? intent : null;
+}
+
+
+function inferOnboardingStage({
+  firstCareItem,
+  legacyFirstItem,
+  clientInferredStage,
+}: {
+  firstCareItem: FirstCareItem | null;
+  legacyFirstItem: FirstItem | null;
+  clientInferredStage: IvfStage | null;
+}): IvfStage {
+  if (firstCareItem) {
+    return inferStageFromCareItem({ selectedIntent: firstCareItem.selectedIntent, rawText: firstCareItem.rawText }).inferredStage;
+  }
+  if (legacyFirstItem) return stageForLegacyFirstItem(legacyFirstItem);
+  return clientInferredStage ?? 'baseline_testing';
+}
+
+function stageForLegacyFirstItem(firstItem: FirstItem): IvfStage {
+  if (firstItem.kind === 'injection' || firstItem.kind === 'medication') return 'ovarian_stimulation';
+  if (/피검|hcg|임신|베타/iu.test(firstItem.text)) return 'pregnancy_test';
+  if (/이식/iu.test(firstItem.text)) return 'embryo_transfer';
+  if (/배아|배양|동결/iu.test(firstItem.text)) return 'embryo_culture';
+  if (/채취|시술/iu.test(firstItem.text)) return 'egg_retrieval';
+  return 'baseline_testing';
+}
+
+function toCareCycleFirstCareItem(firstCareItem: FirstCareItem | null, firstItem: FirstItem | 'invalid' | null): InitialCareCycleState['firstCareItem'] {
+  if (firstCareItem) return firstCareItem;
+  if (!firstItem || firstItem === 'invalid') return null;
+  return { selectedIntent: firstItem.kind === 'schedule' ? 'clinic_visit' : 'medication', rawText: firstItem.text, medicalNotes: '', attachmentCount: 0 };
 }
 
 function toFirstItem(firstCareItem: FirstCareItem): FirstItem | null {

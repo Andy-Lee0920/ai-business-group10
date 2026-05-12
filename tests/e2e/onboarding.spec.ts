@@ -90,3 +90,27 @@ test('onboarding can finish without baseline profile and primary solo hides part
   await expect(page.getByTestId('partner-invite-card')).toHaveCount(0);
   await expect(page.getByTestId('partner-connect-bar')).toHaveCount(0);
 });
+test('onboarding user-corrected stage controls the first home surface', async ({ page }) => {
+  await acceptPrivacyForOnboarding(page);
+  await page.goto('/onboarding');
+
+  await page.getByRole('button', { name: '처음이에요' }).click();
+  await page.getByRole('button', { name: '약·주사 안내' }).click();
+  await page.getByRole('textbox', { name: '직접 입력' }).fill('밤에 주사');
+  await page.getByRole('button', { name: '다음' }).click();
+  await page.getByRole('button', { name: '나 혼자 시작할게요' }).click();
+  await page.getByRole('button', { name: '다음' }).click();
+  await expect(page.getByTestId('inferred-stage-label')).toContainText('2/7 배란 유도');
+
+  await page.getByRole('button', { name: '단계 수정' }).click();
+  await page.getByRole('button', { name: '피검' }).click();
+  await expect(page.getByTestId('inferred-stage-label')).toContainText('7/7 임신 확인');
+
+  await page.getByRole('button', { name: '첫 화면 만들기' }).click();
+  await expect(page).toHaveURL(/\/home$/u, { timeout: 5000 });
+  await expect(page.getByTestId('result-review-gate')).toBeVisible();
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'waiting');
+  await expect(page.getByText('오늘은 보호 모드')).toBeVisible();
+  await expect(page.getByTestId('partner-invite-card')).toHaveCount(0);
+});
+

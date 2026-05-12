@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildInitialCareCycleState,
+  careDayForOnboardingStage,
   defaultSharingLevelByStage,
   getEffectiveStage,
   inferStageFromCareItem,
@@ -29,6 +31,39 @@ describe('onboarding care state inference', () => {
 
   it('uses user corrected stage as the effective stage', () => {
     expect(getEffectiveStage({ inferredStage: 'embryo_culture', confidence: 'medium', reason: 'ambiguous_result_waiting', userCorrectedStage: 'pregnancy_test' })).toBe('pregnancy_test');
+  });
+
+
+
+  it('maps the confirmed/effective IVF stage to the first home care surface', () => {
+    expect(careDayForOnboardingStage('ovarian_stimulation')).toBe('injection_day');
+    expect(careDayForOnboardingStage('embryo_transfer')).toBe('two_week_wait_day');
+    expect(careDayForOnboardingStage('pregnancy_test')).toBe('result_protection_day');
+    expect(careDayForOnboardingStage('embryo_culture')).toBe('waiting_day');
+    expect(careDayForOnboardingStage('baseline_testing')).toBe('clinic_day');
+  });
+
+  it('builds a saveable initial care cycle state from user-confirmed onboarding stage', () => {
+    expect(buildInitialCareCycleState({
+      cycleId: 'couple-1',
+      inferredStage: 'ovarian_stimulation',
+      effectiveStage: 'pregnancy_test',
+      roleContext: 'primary_with_partner',
+      sharingLevel: 'basic',
+      partnerInvite: 'prepare_invite',
+      firstCareItem: { selectedIntent: 'medication', rawText: '밤에 주사', medicalNotes: '', attachmentCount: 0 },
+    })).toMatchObject({
+      source: 'onboarding',
+      version: 1,
+      cycleId: 'couple-1',
+      inferredStage: 'ovarian_stimulation',
+      effectiveStage: 'pregnancy_test',
+      stageUserCorrected: true,
+      careDay: 'result_protection_day',
+      roleContext: 'primary_with_partner',
+      sharingLevel: 'basic',
+      partnerInvite: 'prepare_invite',
+    });
   });
 
   it('keeps sensitive stages on basic sharing and collaborative stages on care sharing', () => {

@@ -16,6 +16,7 @@ function request() {
         'fevio_privacy_accepted=1',
         'fevio_onboarding_first_card=abc',
         'fevio_onboarding_role_context=partner',
+        'fevio_onboarding_care_cycle_state=abc',
         'fevio_treatment_milestones=abc',
         'fevio_treatment_cards=abc',
         'sb-awetgcuczwdytctwfyjl-auth-token=token',
@@ -39,6 +40,7 @@ describe('/auth/reset', () => {
     expect(setCookie).toContain('fevio_privacy_accepted=;');
     expect(setCookie).toContain('fevio_onboarding_first_card=;');
     expect(setCookie).toContain('fevio_onboarding_role_context=;');
+    expect(setCookie).toContain('fevio_onboarding_care_cycle_state=;');
     expect(setCookie).toContain('fevio_treatment_milestones=;');
     expect(setCookie).toContain('fevio_treatment_cards=;');
     expect(setCookie).toContain('sb-awetgcuczwdytctwfyjl-auth-token=;');

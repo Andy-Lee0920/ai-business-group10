@@ -166,7 +166,7 @@ export function OnboardingClient() {
     const payload = (await response.json()) as CompleteResponse;
 
     if (!response.ok) {
-      setError(payload.error ?? '처음 화면을 만들지 못했어요.');
+      setError(payload.error ?? '저장/동기화에 실패했어요. 다시 시도해 주세요.');
       setSubmitting(false);
       setIsGenerating(false);
       return;
