@@ -1,10 +1,15 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-
-const PROTECTED: string[] = [];
+import { isPresentationRequest } from './src/config';
+import { isProtectedAppPath } from './src/config/protected-routes';
+import { shouldResetAppSession } from './src/config/session-refresh';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (shouldResetAppSession(request.nextUrl)) {
+    return NextResponse.redirect(new URL('/auth/reset', request.url));
+  }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -32,10 +37,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isProtected = PROTECTED.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  const isProtected = !isPresentationRequest(request) && isProtectedAppPath(pathname);
 
   if (isProtected && !user) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/auth/sign-in', request.url));
   }
 
   if (pathname === '/' && user) {

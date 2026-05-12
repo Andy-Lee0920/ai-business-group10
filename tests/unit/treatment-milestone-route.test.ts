@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { POST } from '../../app/api/treatment/milestone/route';
 
 function request(body: unknown) {
-  return new NextRequest('http://project-oznp0.vercel.app/api/treatment/milestone', {
+  return new NextRequest('http://ai-business-group10.vercel.app/api/treatment/milestone', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', host: 'project-oznp0.vercel.app', cookie: 'fevio_privacy_accepted=1' },
+    headers: { 'content-type': 'application/json', host: 'ai-business-group10.vercel.app', cookie: 'fevio_privacy_accepted=1' },
     body: JSON.stringify(body),
   });
 }

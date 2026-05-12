@@ -1,6 +1,6 @@
 export type ServerConfigSource = Record<string, string | undefined>;
 
-const DEFAULT_PRESENTATION_HOSTS = ['ai-business-group10.vercel.app', 'project-oznp0.vercel.app'];
+const DEFAULT_PRESENTATION_HOSTS = ['ai-business-group10.vercel.app'];
 
 export function getPrivacyContactEmail(source: ServerConfigSource = process.env) {
   return source.PRIVACY_CONTACT_EMAIL?.trim() || 'privacy@fevio.app';

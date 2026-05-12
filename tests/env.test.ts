@@ -40,8 +40,8 @@ describe('presentation mode env contract', () => {
     ).toBe(true);
   });
 
-  it('turns on for the project-oznp0 production alias used for demo QA', () => {
-    expect(isPresentationHost('project-oznp0.vercel.app')).toBe(true);
-    expect(isPresentationHost('project-oznp0.vercel.app:443')).toBe(true);
+  it('keeps the project-oznp0 production alias in real app mode', () => {
+    expect(isPresentationHost('project-oznp0.vercel.app')).toBe(false);
+    expect(isPresentationHost('project-oznp0.vercel.app:443')).toBe(false);
   });
 });
