@@ -42,3 +42,13 @@ export function withChecklistBadge(items: readonly Omit<QuietChecklistItem, 'bad
 export function countPartnerActionSignals(cards: readonly HomeActionCard[]) {
   return cards.filter((card) => Boolean(card.description)).length;
 }
+
+export function toMissionCardData(card: HomeActionCard): { title: string; time: string } {
+  const titleTime = card.title.match(/\b\d{1,2}:\d{2}\b/u)?.[0];
+  const time = titleTime
+    ?? (card.scheduledAt
+      ? new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }).format(new Date(card.scheduledAt))
+      : '시간 미정');
+  const title = card.title.replace(/^\d{1,2}:\d{2}\s*/u, '').replace(/—.*$/u, '').trim() || card.title;
+  return { title, time };
+}

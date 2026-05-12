@@ -64,7 +64,7 @@ export function DualPanelDemoClient() {
       <header className={styles.compactHeader}>
         <div>
           <p className="eyebrow">함께 보는 케어 데모</p>
-          <h1>내 화면과 파트너 화면이 함께 바뀝니다</h1>
+          <h1>상황이 바뀌면 두 화면도 바뀝니다</h1>
         </div>
         <div className={styles.careInput}>
           <p id="care-input-label">오늘 어떤 케어 장면을 볼까요?</p>

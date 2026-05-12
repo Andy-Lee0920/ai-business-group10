@@ -13,69 +13,49 @@ test('presentation home defaults to an immersive injection-day care instrument',
   await page.goto('/home?care=injection');
 
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
-  await expect(page.getByTestId('care-moment-hero')).toBeVisible();
-  await expect(page.getByTestId('phase-hero-icon')).toBeVisible();
-  await expect(page.getByRole('heading', { name: '오늘은 시간을 함께 지키는 날' })).toBeVisible();
-  await expect(page.getByTestId('care-moment-ring')).toBeVisible();
-  await expect(page.getByTestId('care-moment-ring')).toHaveAttribute('aria-label', /고날에프/);
-  await expect(page.getByTestId('care-moment-ring').locator('circle')).toHaveCount(2);
-
-  const ringGeometry = await page.getByTestId('care-moment-ring').locator('circle').evaluateAll((circles) =>
-    circles.map((circle) => ({
-      cx: circle.getAttribute('cx'),
-      cy: circle.getAttribute('cy'),
-      r: circle.getAttribute('r'),
-    })),
-  );
-  expect(ringGeometry).toEqual([
-    { cx: '120', cy: '120', r: '94' },
-    { cx: '120', cy: '120', r: '94' },
-  ]);
-
-  await expect(page.getByLabel('지금 할 수 있는 행동').getByRole('button', { name: '준비물 확인하기' })).toBeVisible();
-  await expect(page.getByLabel('조용한 준비 체크리스트')).toBeVisible();
-  await expect(page.getByTestId('quiet-checklist-state-icon').first()).toBeVisible();
-  await expect(page.getByTestId('care-card-type-icon').first()).toBeVisible();
-  await expect(page.getByTestId('partner-presence-pulse')).toBeVisible();
-  await expect(page.getByTestId('partner-radio-icon')).toBeVisible();
+  const phaseNav = page.getByRole('navigation', { name: '케어 단계 전환' });
+  await expect(phaseNav).toBeVisible();
+  await expect(phaseNav.getByRole('link', { name: '주사', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('compact-hero-greeting')).toContainText('주사 준비');
+  await expect(page.getByTestId('mission-card-pair')).toContainText('오늘의 미션');
+  await expect(page.getByTestId('mission-card-pair')).toContainText('고날에프');
+  await expect(page.getByTestId('quick-stat-row')).toContainText('파트너');
+  await expect(page.getByTestId('partner-connect-bar')).toBeVisible();
+  await expect(page.getByTestId('partner-bar-icon')).toBeVisible();
+  await expect(page.getByRole('button', { name: /준비 체크리스트 보기/ })).toBeVisible();
   await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
 
-  const firstCardTop = await page.getByTestId('home-action-card').first().evaluate((element) => element.getBoundingClientRect().top);
+  const missionTop = await page.getByTestId('mission-card-pair').evaluate((element) => element.getBoundingClientRect().top);
   const viewportHeight = await page.evaluate(() => window.innerHeight);
-  expect(firstCardTop).toBeGreaterThan(viewportHeight * 0.72);
+  expect(missionTop).toBeLessThan(viewportHeight * 0.36);
 });
 
 test('presentation home applies the immersive/adaptive contract to every care day', async ({ page }) => {
   const scenarios = [
-    { care: 'injection', phase: 'injection', heading: '오늘은 시간을 함께 지키는 날', action: '준비물 확인하기' },
-    { care: 'clinic', phase: 'clinic', heading: '오늘은 확인할 것이 있는 날', action: '방문 메모 열기' },
-    { care: 'waiting', phase: 'waiting', heading: '오늘은 조용히 살피는 날', action: '오늘 상태 남기기' },
+    { care: 'injection', phase: 'injection', tab: '주사', heading: '주사 준비', action: '준비 체크리스트 보기' },
+    { care: 'clinic', phase: 'clinic', tab: '병원', heading: '병원 방문', action: '진료 브리핑 열기' },
+    { care: 'waiting', phase: 'waiting', tab: '대기', heading: '기다리는 날', action: null },
   ];
 
   for (const scenario of scenarios) {
     await page.goto(`/home?care=${scenario.care}`);
+    const scopedPhaseNav = page.getByRole('navigation', { name: '케어 단계 전환' });
     await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', scenario.phase);
-    await expect(page.getByTestId('care-moment-hero')).toBeVisible();
-    await expect(page.getByTestId('phase-hero-icon')).toBeVisible();
-    await expect(page.getByRole('heading', { name: scenario.heading })).toBeVisible();
-    await expect(page.getByLabel('지금 할 수 있는 행동').getByRole('button', { name: scenario.action })).toBeVisible();
-    await expect(page.getByTestId('operational-glass-sheet')).toBeVisible();
-    await expect(page.getByTestId('sheet-layers-icon').first()).toBeVisible();
-    await expect(page.getByTestId('partner-presence-pulse')).toBeVisible();
-    await expect(page.getByTestId('partner-radio-icon')).toBeVisible();
+    await expect(scopedPhaseNav.getByRole('link', { name: scenario.tab, exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByTestId('compact-hero-greeting')).toContainText(scenario.heading);
+    await expect(page.getByTestId('partner-connect-bar')).toBeVisible();
+    await expect(page.getByTestId('partner-bar-icon')).toBeVisible();
     await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
 
-    if (scenario.care === 'injection' || scenario.care === 'waiting') {
-      const firstCardTop = await page.getByTestId('home-action-card').first().evaluate((element) => element.getBoundingClientRect().top);
-      const viewportHeight = await page.evaluate(() => window.innerHeight);
-      expect(firstCardTop).toBeGreaterThan(viewportHeight * 0.72);
+    if (scenario.action) {
+      await expect(page.getByRole('button', { name: new RegExp(scenario.action) })).toBeVisible();
     }
   }
 });
 
 test('presentation home changes component order by care phase', async ({ page }) => {
   const orders: Record<string, string[]> = {};
-  const trackedIds = new Set(['care-moment-hero', 'operational-glass-sheet', 'partner-presence-pulse', 'home-action-card']);
+  const trackedIds = new Set(['compact-hero-greeting', 'mission-card-pair', 'quick-stat-row', 'home-action-card', 'partner-connect-bar']);
 
   for (const care of ['injection', 'clinic', 'waiting'] as const) {
     await page.goto(`/home?care=${care}`);
@@ -87,10 +67,12 @@ test('presentation home changes component order by care phase', async ({ page })
     Array.from(trackedIds));
   }
 
-  expect(orders.injection).toEqual(['care-moment-hero', 'operational-glass-sheet', 'home-action-card', 'home-action-card', 'home-action-card']);
-  expect(orders.clinic[0]).toBe('operational-glass-sheet');
+  expect(orders.injection).toEqual(['compact-hero-greeting', 'mission-card-pair', 'quick-stat-row', 'partner-connect-bar']);
+  expect(orders.clinic[0]).toBe('compact-hero-greeting');
+  expect(orders.clinic).toContain('home-action-card');
   expect(orders.clinic).not.toEqual(orders.injection);
-  expect(orders.waiting[1]).toBe('partner-presence-pulse');
+  expect(orders.waiting[1]).toBe('home-action-card');
+  expect(orders.waiting).toContain('partner-connect-bar');
   expect(new Set(Object.values(orders).map((order) => order.join('>'))).size).toBe(3);
 });
 
@@ -232,8 +214,12 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText('선택한 장면에 맞춰 내 화면과 파트너 역할이 함께 바뀌어요.')).toBeVisible();
   await expect(page.getByText('함께 이어짐')).toBeVisible();
+  await expect(page.getByTestId('demo-phase-icon')).toBeVisible();
+  await expect(page.getByTestId('demo-partner-role-icon')).toBeVisible();
   await expect(page.getByTestId('demo-partner-presence-pulse')).toHaveCount(2);
   await expect(page.getByText(/Live Sync|Live mirror|LIVE SYNC/)).toHaveCount(0);
+  await expect(patient).toContainText('주사는 시간부터 크게 보입니다');
+  await expect(partner).toContainText('확인자는 질문보다 대조합니다');
   await expect(patient).toContainText('방금 붙여넣은 메모');
   await expect(patient).toContainText('주사 준비·확인자 역할을 먼저 올렸어요.');
   await expect(partner).toContainText('내가 다시 설명하지 않아도 되는 내용');
@@ -260,6 +246,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
       const style = getComputedStyle(element);
       return {
         backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
         borderRadius: style.borderRadius,
         boxShadow: style.boxShadow,
         color: style.color,
@@ -293,7 +280,8 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   });
 
   expect(demoUiMetrics.panel).toMatchObject({ paddingTop: '59px', rowGap: '12px' });
-  expect(demoUiMetrics.firstCard).toMatchObject({ backgroundColor: 'rgb(255, 255, 255)', borderRadius: '16px', paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '16px' });
+  expect(demoUiMetrics.firstCard?.backgroundImage).toContain('radial-gradient');
+  expect(demoUiMetrics.firstCard).toMatchObject({ borderRadius: '16px', paddingTop: '18px', paddingRight: '18px', paddingBottom: '18px', paddingLeft: '18px' });
   expect(demoUiMetrics.firstCard?.boxShadow).toContain('rgba(0, 0, 0, 0.05)');
   expect(demoUiMetrics.liveLabel).toMatchObject({ color: 'rgb(156, 163, 175)', fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' });
   expect(demoUiMetrics.liveBody).toMatchObject({ color: 'rgb(107, 114, 128)', fontSize: '12px' });
@@ -314,15 +302,19 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
 
   await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' }).click();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(patient).toContainText('진료 브리핑이 먼저 열립니다');
   await expect(patient).toContainText('방문 체크리스트');
   await expect(patient).toContainText('09:00');
   await expect(partner).toContainText('동행자');
+  await expect(partner).toContainText('동행자는 기억을 나눕니다');
   await expect(partner).toContainText('이동 시간 확인');
 
   await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' }).click();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(patient).toContainText('기다리는 날은 조용해집니다');
   await expect(patient).toContainText('차분한 체크인');
   await expect(patient).toContainText('조용 모드');
   await expect(partner).toContainText('곁에 있는 사람');
+  await expect(partner).toContainText('기다리는 날은 묻지 않고 곁에 있습니다');
   await expect(partner).toContainText('결과 묻지 않기');
 });

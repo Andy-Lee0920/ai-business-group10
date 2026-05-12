@@ -1,4 +1,5 @@
-import { Badge, Card, ConfirmChip, StatusBadge } from '../../src/components/ui';
+import { Badge, Card, ConfirmChip, StatusBadge, classNames } from '../../src/components/ui';
+import { getFevioIcon, type FevioIconKey } from '../../src/design/icon-map';
 import type { DemoScenario } from './demo-scenarios';
 import styles from './dual-panel-demo.module.css';
 
@@ -16,6 +17,34 @@ type PartnerPanelProps = {
   };
 };
 
+type DemoCare = DemoScenario['care'];
+
+const PARTNER_ROLE_HERO: Record<DemoCare, {
+  eyebrow: string;
+  title: string;
+  body: string;
+  iconKey: FevioIconKey;
+}> = {
+  injection: {
+    eyebrow: 'partner role',
+    title: '확인자는 질문보다 대조합니다',
+    body: '약 이름·시간·준비물을 같이 보고, 완료 후 정리만 맡습니다.',
+    iconKey: 'assigned:partner_action',
+  },
+  clinic: {
+    eyebrow: 'partner role',
+    title: '동행자는 기억을 나눕니다',
+    body: '결과를 같이 듣고 다음 방문일을 기록해 환자가 혼자 기억하지 않게 합니다.',
+    iconKey: 'phase:clinic',
+  },
+  waiting: {
+    eyebrow: 'partner role',
+    title: '기다리는 날은 묻지 않고 곁에 있습니다',
+    body: '결과 질문과 성공 사례 공유를 줄이고, 다음 일정만 조용히 확인합니다.',
+    iconKey: 'phase:waiting',
+  },
+};
+
 export function PartnerPanel({
   scenario,
   checked,
@@ -26,13 +55,24 @@ export function PartnerPanel({
   syncEvent,
 }: PartnerPanelProps) {
   const { partner } = scenario;
+  const hero = PARTNER_ROLE_HERO[scenario.care];
 
   return (
     <section className={`${styles.appScreen} ${styles.partnerApp} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-partner-panel" aria-label="파트너 화면">
-      <Card as="div" className={styles.partnerHero}>
-        <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
+      <Card as="div" className={classNames(styles.partnerHero, styles[`partnerHero_${scenario.care}`])}>
+        <div className={styles.partnerHeroTop}>
+          <span className={styles.partnerRoleIcon}>
+            <DemoIcon iconKey={hero.iconKey} testId="demo-partner-role-icon" />
+          </span>
+          <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
+        </div>
+        <span className={styles.microLabel}>{hero.eyebrow}</span>
         <h3>{partner.role}</h3>
-        <p>{partner.status}</p>
+        <p>{hero.body}</p>
+        <div className={styles.roleFocusRail}>
+          <span>{partner.status}</span>
+          <strong>{hero.title}</strong>
+        </div>
       </Card>
 
       <Card as="div" className={styles.partnerInputMoment}>
@@ -129,6 +169,12 @@ export function PartnerPanel({
       </div>
     </section>
   );
+}
+
+function DemoIcon({ iconKey, testId }: { iconKey: FevioIconKey; testId: string }) {
+  const spec = getFevioIcon(iconKey);
+  const Icon = spec.icon;
+  return <Icon aria-hidden="true" data-testid={testId} focusable="false" size={spec.size} strokeWidth={2.25} />;
 }
 
 function countChecked(items: DemoScenario['partner']['actions'], checked: ReadonlySet<string>) {

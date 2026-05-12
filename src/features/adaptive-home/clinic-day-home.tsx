@@ -1,9 +1,11 @@
 import { HomeUtilityLauncher } from './home-utility-launcher';
 import {
+  CarePhaseStrip,
   CareSurfaceFrame,
-  MomentHero,
-  OperationalGlassSheet,
-  PartnerPresencePulse,
+  CompactHeroGreeting,
+  MissionCardPair,
+  PartnerConnectBar,
+  QuickStatRow,
   QuietChecklist,
 } from './care-surface-primitives';
 import { toQuietChecklistItems, withChecklistBadge } from './care-surface-model';
@@ -32,27 +34,27 @@ export function ClinicDayHome({ context }: AdaptiveStateHomeBaseProps) {
     ? toQuietChecklistItems(context.cards, { fallbackDescription: '확인된 일정만 차분히 볼게요.', badge: '방문 준비' })
     : withChecklistBadge(DEFAULT_VISIT_STEPS, '방문 준비');
   const primary = checklistItems[0];
+  const secondary = checklistItems[1] ?? null;
+
+  const stats = [
+    { label: '방문', value: '09:00' },
+    { label: '검사', value: '채혈·초음파' },
+    { label: '질문', value: `${Math.max(checklistItems.length - 1, 1)}개` },
+    { label: '파트너', value: '동행' },
+  ] as const;
 
   return (
     <CareSurfaceFrame phase="clinic">
-      <OperationalGlassSheet title="오늘 진료실에 가지고 갈 것들" description="질문 2개 · 지난 7일 케어 기록 · 파트너 동행">
-        <QuietChecklist label="진료 브리핑 항목" items={checklistItems} />
-        <HomeUtilityLauncher />
-      </OperationalGlassSheet>
-
-      <MomentHero
-        phase="clinic"
-        eyebrow="Clinic care"
-        title="오늘은 확인할 것이 있는 날"
-        fact={`${primary?.title ?? '병원 방문'} · 이동과 질문을 한 번에 정리해요.`}
-        actionLabel="방문 메모 열기"
-        actionHint="방문 시간, 준비물, 물어볼 말을 같은 흐름에 둡니다."
+      <CarePhaseStrip activePhase="clinic" />
+      <CompactHeroGreeting phase="clinic" />
+      <MissionCardPair
+        primary={primary ? { title: primary.title, time: '진료 전 확인', cta: '진료 브리핑 열기' } : null}
+        secondary={secondary ? { title: secondary.title, time: '같이 챙기기' } : null}
       />
-
-      <PartnerPresencePulse
-        title="오늘은 동행자"
-        description="이동 시간, 접수, 진료 후 다음 일정을 함께 붙잡는 역할로 보여요."
-      />
+      <QuickStatRow stats={stats} />
+      <QuietChecklist label="진료 브리핑 항목" items={checklistItems.slice(0, 3)} />
+      <PartnerConnectBar description="이동 시간, 접수, 진료 후 다음 일정을 함께 붙잡는 역할로 보여요" />
+      <HomeUtilityLauncher />
     </CareSurfaceFrame>
   );
 }

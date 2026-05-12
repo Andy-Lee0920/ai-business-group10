@@ -1,47 +1,55 @@
 import { HomeUtilityLauncher } from './home-utility-launcher';
 import {
-  CareMomentRing,
+  CarePhaseStrip,
   CareSurfaceFrame,
-  MomentHero,
-  OperationalGlassSheet,
-  PartnerPresencePulse,
-  QuietChecklist,
+  CompactHeroGreeting,
+  MissionCardPair,
+  PartnerConnectBar,
+  QuickStatRow,
 } from './care-surface-primitives';
-import { countPartnerActionSignals, findPrimaryCareCard, toQuietChecklistItems } from './care-surface-model';
+import { countPartnerActionSignals, findPrimaryCareCard, toMissionCardData } from './care-surface-model';
 import type { AdaptiveStateHomeBaseProps } from './types';
+
+const KNOWN_DRUGS = ['고날에프', '프리날', '루프론', '세트로타이드', '오비드렐', '유트로게스탄', 'HMG', '퓨리곤'];
 
 export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
   const primary = findPrimaryCareCard(context.cards, '고날에프');
+  const secondary = context.cards.find((c) => c !== primary) ?? null;
   const sharedCount = countPartnerActionSignals(context.cards);
-  const checklistItems = toQuietChecklistItems(context.cards, {
-    fallbackDescription: '내가 확인한 내용만 기준으로 볼게요.',
-    badge: (card) => (card.displaySafetyLevel === 'critical' ? '먼저 확인' : '다음 차례'),
-  });
+
+  const primaryMission = primary
+    ? { ...toMissionCardData(primary), cta: '준비 체크리스트 보기' }
+    : null;
+  const secondaryMission = secondary ? toMissionCardData(secondary) : null;
+
+  const primaryTime = primary ? toMissionCardData(primary).time : '--:--';
+  const drugName = primary ? extractDrug(primary.title) : '확인 필요';
+
+  const stats = [
+    { label: '주사 시간', value: primaryTime },
+    { label: '약 종류', value: drugName },
+    { label: '케어 단계', value: '주사' },
+    { label: '파트너', value: sharedCount > 0 ? `${sharedCount}개 공유` : '준비 중' },
+  ] as const;
 
   return (
     <CareSurfaceFrame phase="injection">
-      <MomentHero
-        phase="injection"
-        eyebrow="Injection care"
-        title="오늘은 시간을 함께 지키는 날"
-        fact={`${primary?.title ?? '확인한 주사 시간'} · 준비는 서두르지 않고 30분 전부터 시작해요.`}
-        actionLabel="준비물 확인하기"
-        actionHint="펜, 알코올솜, 조용한 공간만 먼저 맞춰요."
-      >
-        <CareMomentRing card={primary} generatedAt={context.generatedAt} />
-      </MomentHero>
-
-      <OperationalGlassSheet title="조용한 준비 흐름" description="확정된 시간과 준비물만 아래에 두고, 판단이 필요한 내용은 새로 만들지 않아요.">
-        <QuietChecklist
-          label="조용한 준비 체크리스트"
-          items={checklistItems}
-        />
-        <PartnerPresencePulse
-          title="역할이 함께 보이고 있어요"
-          description={`${sharedCount}개의 케어 단서가 파트너에게 행동으로 전달됩니다. 원문 대신 지금 도울 일만 보여요.`}
-        />
-        <HomeUtilityLauncher />
-      </OperationalGlassSheet>
+      <CarePhaseStrip activePhase="injection" />
+      <CompactHeroGreeting phase="injection" />
+      <MissionCardPair primary={primaryMission} secondary={secondaryMission} />
+      <QuickStatRow stats={stats} />
+      <PartnerConnectBar
+        description={sharedCount > 0
+          ? `${sharedCount}개의 케어 단서가 파트너에게 행동으로 전달됩니다`
+          : '파트너 공유 링크를 연결하면 역할이 자동으로 보여요'}
+      />
+      <HomeUtilityLauncher />
     </CareSurfaceFrame>
   );
+}
+
+function extractDrug(title: string): string {
+  return KNOWN_DRUGS.find((d) => title.includes(d))
+    ?? title.replace(/^\d{1,2}:\d{2}\s*/u, '').split(' ')[0]
+    ?? '확인 필요';
 }

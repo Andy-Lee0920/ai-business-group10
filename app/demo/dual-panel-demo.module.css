@@ -297,6 +297,7 @@
 .accent_sage { --accent: var(--fevio-sage); }
 .accent_lavender { --accent: var(--fevio-lavender); }
 
+.phaseHero,
 .stageCard,
 .primaryCard,
 .inputMomentCard,
@@ -312,6 +313,143 @@
   background: var(--fevio-card);
   box-shadow: var(--fevio-shadow-soft);
   backdrop-filter: none;
+}
+
+.phaseHero {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  min-height: 282px;
+  padding: 18px;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--accent) 30%, rgba(255, 255, 255, 0.72));
+  background:
+    radial-gradient(circle at 16% 4%, color-mix(in srgb, var(--accent) 28%, white), transparent 32%),
+    radial-gradient(circle at 92% 16%, rgba(255, 255, 255, 0.86), transparent 25%),
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 16%, white), rgba(255, 255, 255, 0.82));
+  box-shadow:
+    0 18px 42px color-mix(in srgb, var(--accent) 18%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.phaseHero::after {
+  position: absolute;
+  right: -70px;
+  bottom: -82px;
+  width: 190px;
+  height: 190px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  content: "";
+}
+
+.phaseHero_injection {
+  background:
+    radial-gradient(circle at 8% 8%, rgba(255, 225, 211, 0.94), transparent 35%),
+    linear-gradient(145deg, #fff9f6 0%, #fff1ea 58%, #ffffff 100%);
+}
+
+.phaseHero_clinic {
+  background:
+    linear-gradient(90deg, rgba(111, 143, 110, 0.09) 1px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(circle at 12% 8%, rgba(222, 238, 221, 0.96), transparent 34%),
+    linear-gradient(145deg, #fbfff9 0%, #eff7ef 62%, #ffffff 100%);
+}
+
+.phaseHero_waiting {
+  background:
+    radial-gradient(circle at 18% 10%, rgba(230, 224, 247, 0.96), transparent 34%),
+    radial-gradient(circle at 78% 4%, rgba(255, 255, 255, 0.84), transparent 24%),
+    linear-gradient(145deg, #fcfbff 0%, #f4f1fb 64%, #ffffff 100%);
+}
+
+.phaseHeroTop,
+.partnerHeroTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.phaseIconBubble,
+.partnerRoleIcon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, white);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  color: color-mix(in srgb, var(--accent) 82%, var(--fevio-ink));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.phaseHeroCopy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+}
+
+.phaseHeroCopy h3 {
+  margin: 0;
+  max-width: 320px;
+  font-size: clamp(34px, 6vw, 48px);
+  line-height: 0.95;
+  letter-spacing: -0.08em;
+}
+
+.phaseHeroCopy p {
+  margin: 0;
+  max-width: 320px;
+  color: var(--fevio-text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.phaseHeroStatus {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.phaseHeroStatus span,
+.roleFocusRail span {
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.phaseHeroStatus strong,
+.roleFocusRail strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  letter-spacing: -0.03em;
+}
+
+.phaseHeroAction {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 7px;
+}
+
+.phaseHeroAction small {
+  color: color-mix(in srgb, var(--accent) 72%, var(--fevio-ink));
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .stageCard {
@@ -363,6 +501,52 @@
   display: grid;
   gap: 10px;
   padding: 16px;
+}
+
+.partnerHero {
+  position: relative;
+  min-height: 248px;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.74));
+  background:
+    radial-gradient(circle at 88% 2%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 30%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), color-mix(in srgb, var(--accent) 10%, white));
+  box-shadow:
+    0 18px 42px color-mix(in srgb, var(--accent) 15%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.partnerHero_injection {
+  background:
+    radial-gradient(circle at 82% 0%, rgba(255, 215, 198, 0.92), transparent 32%),
+    linear-gradient(145deg, #fffaf7, #fff0e9);
+}
+
+.partnerHero_clinic {
+  background:
+    radial-gradient(circle at 82% 0%, rgba(219, 238, 218, 0.96), transparent 32%),
+    linear-gradient(145deg, #fbfff9, #eff7ef);
+}
+
+.partnerHero_waiting {
+  background:
+    radial-gradient(circle at 82% 0%, rgba(230, 224, 247, 0.96), transparent 34%),
+    linear-gradient(145deg, #fcfbff, #f4f1fb);
+}
+
+.partnerRoleIcon {
+  width: 54px;
+  height: 54px;
+}
+
+.roleFocusRail {
+  display: grid;
+  gap: 2px;
+  margin-top: auto;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .inputMomentCard,
@@ -418,6 +602,12 @@
   font-size: clamp(30px, 4vw, 42px);
   line-height: 1;
   letter-spacing: -0.06em;
+}
+
+.partnerHero p {
+  max-width: 312px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .mainAction {

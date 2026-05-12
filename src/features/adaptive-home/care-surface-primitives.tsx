@@ -181,6 +181,120 @@ export function CareMomentRing({ card, generatedAt }: { card: HomeActionCard | n
   );
 }
 
+// ── Compact layout components (consulting-doc structure) ────────────
+
+const PHASE_TABS = [
+  { key: 'injection' as CareSurfacePhase, label: '주사', href: '/home?care=injection' },
+  { key: 'clinic' as CareSurfacePhase, label: '병원', href: '/home?care=clinic' },
+  { key: 'waiting' as CareSurfacePhase, label: '대기', href: '/home?care=waiting' },
+] as const;
+
+export function CarePhaseStrip({ activePhase }: { activePhase: CareSurfacePhase }) {
+  return (
+    <nav className={styles.phaseStrip} aria-label="케어 단계 전환">
+      {PHASE_TABS.map((tab) => (
+        <a
+          key={tab.key}
+          href={tab.href}
+          className={styles.phaseTab}
+          aria-current={activePhase === tab.key ? 'page' : undefined}
+        >
+          {tab.label}
+        </a>
+      ))}
+      <span className={styles.phaseProgressBadge}>진행 중</span>
+    </nav>
+  );
+}
+
+const PHASE_GREETING: Record<CareSurfacePhase, { title: string; context: string }> = {
+  injection: { title: '주사 준비', context: '오늘은 시간을 함께 지키는 날이에요.' },
+  clinic: { title: '병원 방문', context: '준비한 것들을 챙겨 가는 날이에요.' },
+  waiting: { title: '기다리는 날', context: '오늘은 조용히 살피는 날이에요.' },
+  routine: { title: '일상 케어', context: '확인한 것만 천천히 해요.' },
+};
+
+export function CompactHeroGreeting({ phase }: { phase: CareSurfacePhase }) {
+  const copy = PHASE_GREETING[phase];
+  return (
+    <div className={styles.compactGreeting} data-testid="compact-hero-greeting">
+      <h1 className={styles.compactGreetingTitle}>{copy.title}</h1>
+      <p className={styles.compactGreetingContext}>{copy.context}</p>
+    </div>
+  );
+}
+
+export type MissionCardData = {
+  title: string;
+  time: string;
+  cta?: string;
+};
+
+export function MissionCardPair({
+  primary,
+  secondary,
+}: {
+  primary: MissionCardData | null;
+  secondary: MissionCardData | null;
+}) {
+  if (!primary) return null;
+  return (
+    <div className={styles.missionRow} data-testid="mission-card-pair">
+      <div className={styles.missionCardPrimary}>
+        <span className={styles.missionCardLabel}>오늘의 미션</span>
+        <h2 className={styles.missionCardTitle}>{primary.title}</h2>
+        <span className={styles.missionCardTime}>{primary.time}</span>
+        {primary.cta ? (
+          <button className={styles.missionCardCta} type="button">
+            <span>{primary.cta}</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        ) : null}
+      </div>
+      {secondary ? (
+        <div className={styles.missionCardSecondary}>
+          <span className={styles.missionCardLabel}>다음 단계</span>
+          <h3 className={styles.missionCardTitle}>{secondary.title}</h3>
+          <span className={styles.missionCardTime}>{secondary.time}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export type QuickStat = {
+  label: string;
+  value: string;
+};
+
+export function QuickStatRow({ stats }: { stats: readonly QuickStat[] }) {
+  return (
+    <div className={styles.statRow} data-testid="quick-stat-row" aria-label="오늘 요약">
+      {stats.map((stat) => (
+        <div key={stat.label} className={styles.statCell}>
+          <span className={styles.statLabel}>{stat.label}</span>
+          <span className={styles.statValue}>{stat.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function PartnerConnectBar({ description }: { description: string }) {
+  return (
+    <div className={styles.partnerBar} data-testid="partner-connect-bar" aria-label="파트너 공유 상태">
+      <span className={styles.partnerBarIconWrap} aria-hidden="true">
+        <DecorativeIcon className={styles.pulseIcon} iconKey="component:partnerPresencePulse" testId="partner-bar-icon" />
+      </span>
+      <div className={styles.partnerBarContent}>
+        <p className={styles.partnerBarTitle}>파트너와 연결됨</p>
+        <p className={styles.partnerBarSub}>{description}</p>
+      </div>
+      <span className={styles.partnerBarChevron} aria-hidden="true">›</span>
+    </div>
+  );
+}
+
 function getStrokeOffset(progress: number) {
   const clamped = Math.max(0, Math.min(1, progress));
   return RING_CIRCUMFERENCE * (1 - clamped);
