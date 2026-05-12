@@ -4,7 +4,11 @@
     "slot": "hero",
     "component": "CareMomentRing",
     "conditions": [
-      { "field": "overrideReason", "op": "eq", "value": "trigger_shot" }
+      {
+        "field": "overrideReason",
+        "op": "eq",
+        "value": "trigger_shot"
+      }
     ],
     "priority": 1,
     "intensity": 1.0,
@@ -16,7 +20,11 @@
     "slot": "primary_card",
     "component": null,
     "conditions": [
-      { "field": "cardCount", "op": "eq", "value": 0 }
+      {
+        "field": "cardCount",
+        "op": "eq",
+        "value": 0
+      }
     ],
     "priority": 2,
     "intensity": 0.15,
@@ -27,7 +35,16 @@
     "slot": "hero",
     "component": "CompactHeroGreeting",
     "conditions": [
-      { "field": "careDay", "op": "eq", "value": "waiting_day" }
+      {
+        "field": "careDay",
+        "op": "eq",
+        "value": "waiting_day"
+      },
+      {
+        "field": "cardCount",
+        "op": "gt",
+        "value": 0
+      }
     ],
     "priority": 10,
     "intensity": 0.2,
