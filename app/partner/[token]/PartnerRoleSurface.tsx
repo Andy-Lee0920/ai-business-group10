@@ -1,16 +1,17 @@
 import { Badge, Card, StatusBadge } from '../../../src/components/ui';
 import { PartnerAvatar } from '../../../src/design/couple-avatars';
+import type { PartnerSurfaceSignal } from '../../../src/types/care-surface.types';
 import type { PartnerActionViewItem } from '../../../src/types/partner-view.types';
 import styles from './partner-role-surface.module.css';
 
-export function PartnerRoleSurface({ items, live = false }: { items: PartnerActionViewItem[]; live?: boolean }) {
+export function PartnerRoleSurface({ items, live = false, signal }: { items: PartnerActionViewItem[]; live?: boolean; signal?: PartnerSurfaceSignal }) {
   if (items.length === 0) return <p className="notice">지금 공유된 파트너 할 일이 없어요.</p>;
 
   const primary = items[0];
   const supporting = items.slice(1);
 
   return (
-    <section className={styles.surface} aria-label="파트너 역할 카드" aria-live={live ? 'polite' : undefined}>
+    <section className={styles.surface} aria-label="파트너 역할 카드" aria-live={live ? 'polite' : undefined} style={signal ? ({ '--fevio-surface-intensity': signal.intensity } as React.CSSProperties) : undefined} data-urgency-tier={signal?.urgencyTier} data-intensity={signal?.intensity.toFixed(2)}>
       <Card as="section" className={styles.roleHero} aria-labelledby="partner-primary-role-title">
         <div className={styles.kickerRow}>
           <span className={styles.identityMark}>
@@ -21,6 +22,7 @@ export function PartnerRoleSurface({ items, live = false }: { items: PartnerActi
             {stateLabel(primary.display_state)}
           </StatusBadge>
         </div>
+        {signal ? <p className={styles.signalCopy} data-testid="partner-surface-signal">{signal.momentCopy}</p> : null}
         <h2 id="partner-primary-role-title">오늘 내 역할</h2>
         <strong className={styles.roleName}>{primary.partner_role}</strong>
         <p>{primary.partner_action}</p>

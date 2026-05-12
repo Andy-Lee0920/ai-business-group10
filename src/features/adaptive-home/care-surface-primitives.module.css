@@ -6,9 +6,13 @@
   margin: -18px -14px -24px;
   padding: max(24px, env(safe-area-inset-top, 0px)) 18px calc(96px + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
+  --fevio-surface-intensity: 0.5;
+  --bloom-scale: calc(0.55 + var(--fevio-surface-intensity, 0.5) * 0.75);
+  --grain-opacity: calc(0.02 + var(--fevio-surface-intensity, 0.5) * 0.04);
+  --surface-shadow-spread: calc(8px + var(--fevio-surface-intensity, 0.5) * 20px);
   background:
-    radial-gradient(circle at 82% 8%, var(--phase-bloom-strong), transparent 34%),
-    radial-gradient(circle at 8% 18%, var(--phase-bloom-soft), transparent 40%),
+    radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--phase-bloom-strong) calc(var(--bloom-scale) * 100%), transparent), transparent 34%),
+    radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--phase-bloom-soft) calc(var(--bloom-scale) * 84%), transparent), transparent 40%),
     linear-gradient(160deg, var(--phase-base-start), var(--phase-base-end));
   isolation: isolate;
 }
@@ -30,7 +34,7 @@
 
 .surfaceFrame::after {
   z-index: -1;
-  opacity: 0.04;
+  opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
   background-image: var(--fevio-grain-texture);
   background-size: 160px 160px;
@@ -134,7 +138,7 @@
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.44);
   box-shadow:
-    0 18px 54px rgba(50, 61, 46, 0.12),
+    0 18px calc(38px + var(--surface-shadow-spread)) rgba(50, 61, 46, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.68);
   backdrop-filter: blur(var(--fevio-material-thin-blur));
 }
@@ -239,7 +243,7 @@
   border-radius: 34px 34px 0 0;
   background: var(--phase-glass);
   box-shadow:
-    0 -10px 42px rgba(50, 61, 46, 0.08),
+    0 -10px calc(28px + var(--surface-shadow-spread)) rgba(50, 61, 46, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.76);
   backdrop-filter: blur(var(--fevio-material-regular-blur));
 }

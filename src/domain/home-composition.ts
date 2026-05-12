@@ -19,6 +19,7 @@ export type HomeContext = {
   phaseCareDay?: TimelineCareDay;
   surfaceCareDay?: TimelineCareDay;
   overrideReason?: CareSurfaceOverrideReason;
+  proximityDays?: number;
   generatedAt: string;
   primaryMessage: string;
   cards: HomeActionCard[];
@@ -51,6 +52,7 @@ export function computeHomeContextV2(
     phaseCareDay: surface.phaseCareDay,
     surfaceCareDay: surface.surfaceCareDay,
     overrideReason: surface.overrideReason,
+    proximityDays: surface.proximityDays,
     generatedAt: now.toISOString(),
     primaryMessage: getPrimaryMessage(surface.surfaceCareDay),
     cards: surface.foregroundCards.map((card) => toHomeActionCard(card, now)).sort(compareHomeCards),

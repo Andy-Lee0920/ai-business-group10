@@ -1,11 +1,12 @@
 import { cookies, headers } from 'next/headers';
 import { isPresentationHost, isPresentationMode } from '../../../src/config';
-import { computeHomeContext, computeHomeContextV2 } from '../../../src/domain/home-composition';
+import { computeHomeContext, computeHomeContextV2, type HomeContext } from '../../../src/domain/home-composition';
+import { computeCareSurface } from '../../../src/domain/care-surface-engine';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
 import { getPresentationScenarioCards, normalizePresentationCare, toAdaptiveCareDay } from '../../../src/features/adaptive-home/presentation-scenarios';
 import type { CareActionCard } from '../../../src/types/care-cards.types';
-import type { TreatmentMilestone, TreatmentMilestoneKind } from '../../../src/types/treatment-timeline.types';
+import type { TreatmentMilestone, TreatmentMilestoneKind, TimelineCareDay } from '../../../src/types/treatment-timeline.types';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,8 +25,11 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const careQuery = getSearchParam(query, 'care');
   const presentationCare = normalizePresentationCare(careQuery);
   const hasCarePreviewQuery = careQuery !== undefined;
-  const timelineMilestonePreview = readTimelineMilestones(cookieStore.get(TIMELINE_MILESTONES_COOKIE)?.value);
-  const timelineCardPreview = readTimelineCards(cookieStore.get(TIMELINE_CARDS_COOKIE)?.value);
+  const timelineMilestonesCookie = cookieStore.get(TIMELINE_MILESTONES_COOKIE)?.value;
+  const timelineCardsCookie = cookieStore.get(TIMELINE_CARDS_COOKIE)?.value;
+  const timelineMilestonePreview = readTimelineMilestones(timelineMilestonesCookie);
+  const timelineCardPreview = readTimelineCards(timelineCardsCookie);
+  const hasTimelineCardsCookie = timelineCardsCookie !== undefined;
   const hasTimelinePreview = timelineMilestonePreview.length > 0;
   const useCarePreview = hasCarePreviewQuery || (presentationMode && !hasTimelinePreview);
   const onboardingCard = presentationMode && !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
@@ -36,6 +40,8 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
     ? [onboardingCard]
     : useCarePreview
       ? getPresentationScenarioCards(presentationCare, now)
+      : hasTimelinePreview && hasTimelineCardsCookie
+        ? timelineCardPreview
       : timelineCardPreview.length > 0
         ? timelineCardPreview
       : persistedCards.length > 0
@@ -48,12 +54,28 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
     ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
     : baseContext;
 
-  return <AdaptiveHomeRuntime context={context} demoMode={useCarePreview} />;
+  const composition = computeCareSurface(toFevioSurfaceContext(context));
+
+  return <AdaptiveHomeRuntime context={context} composition={composition} demoMode={useCarePreview} />;
 }
 
 const TIMELINE_MILESTONES_COOKIE = 'fevio_treatment_milestones';
 const TIMELINE_CARDS_COOKIE = 'fevio_treatment_cards';
 
+function toFevioSurfaceContext(context: HomeContext) {
+  return {
+    careDay: toTimelineCareDay(context.careDay),
+    overrideReason: context.overrideReason ?? 'none',
+    proximityDays: context.proximityDays,
+    emotionTrend: undefined,
+    cardCount: context.cards.length,
+    partnerStatus: context.cards.some((card) => card.cardType === 'partner_support') ? 'connected' : 'unknown',
+  } as const;
+}
+
+function toTimelineCareDay(careDay: HomeContext['careDay']): TimelineCareDay {
+  return careDay === 'onboarding' ? 'routine_day' : careDay;
+}
 
 function getSearchParam(params: HomeSearchParams | undefined, key: string) {
   if (!params) return undefined;

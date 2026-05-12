@@ -16,6 +16,7 @@ test('home reflects the confirmed TreatmentTimeline milestone as the care phase'
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase-care-day', 'injection_day');
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-surface-care-day', 'injection_day');
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-override-reason', 'none');
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-intensity', '0.50');
   await expect(page.getByTestId('compact-hero-greeting')).toContainText('주사 준비');
 });
 
@@ -43,8 +44,31 @@ test('home surfaces a trigger shot card above the timeline phase and exposes ove
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase-care-day', 'waiting_day');
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-surface-care-day', 'injection_day');
   await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-override-reason', 'trigger_shot');
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-intensity', '1.00');
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-applied-rules', /trigger-shot-hero/);
+  await expect(page.getByTestId('care-moment-ring')).toBeVisible();
   await expect(page.getByTestId('mission-card-pair')).toContainText('오비드렐 트리거 확인');
   await expect(page.getByText(/Dynamic Home|signalGrid|rev \d+/)).toHaveCount(0);
+});
+
+
+
+test('home suppresses the primary mission card when timeline has no confirmed cards', async ({ page }) => {
+  const today = isoDate(0);
+  await page.context().addCookies([
+    timelineCookie([
+      makeMilestone({ milestone: 'stimulation_start', confirmedAt: today }),
+    ]),
+    timelineCardsCookie([]),
+  ]);
+
+  await page.goto('/home');
+
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-intensity', '0.15');
+  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-applied-rules', /no-cards-suppress-primary/);
+  await expect(page.getByTestId('compact-hero-greeting')).toContainText('오늘은 확인할 케어가 없어요. 쉬어도 좋은 날이에요.');
+  await expect(page.getByTestId('mission-card-pair')).toHaveCount(0);
 });
 
 function timelineCookie(milestones: TreatmentMilestone[]) {

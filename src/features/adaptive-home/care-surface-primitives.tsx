@@ -4,7 +4,8 @@ import type { HomeActionCard, HomeContext } from '../../domain/home-composition'
 import type { CardType } from '../../types/care-cards.types';
 import styles from './care-surface-primitives.module.css';
 
-export type CareSurfacePhase = 'injection' | 'clinic' | 'waiting' | 'routine';
+export type { CareSurfacePhase } from '../../types/care-surface.types';
+import type { CareSurfacePhase } from '../../types/care-surface.types';
 export type CareMomentRingState = 'upcoming' | 'prepare' | 'due' | 'completed' | 'unknown';
 
 const RING_VIEWBOX = 240;
@@ -19,13 +20,17 @@ const phaseClass: Record<CareSurfacePhase, string> = {
   routine: styles.phaseRoutine,
 };
 
-export function CareSurfaceFrame({ phase, context, children }: { phase: CareSurfacePhase; context?: HomeContext; children: React.ReactNode }) {
+export function CareSurfaceFrame({ phase, context, intensity = 0.5, appliedRules = [], children }: { phase: CareSurfacePhase; context?: HomeContext; intensity?: number; appliedRules?: readonly string[]; children: React.ReactNode }) {
+  const clampedIntensity = Math.max(0, Math.min(1, intensity));
   return (
     <main className="app-shell">
       <section
         className={classNames(styles.surfaceFrame, phaseClass[phase])}
+        style={{ '--fevio-surface-intensity': clampedIntensity } as React.CSSProperties}
         data-testid="care-atmosphere-layer"
         data-phase={phase}
+        data-intensity={clampedIntensity.toFixed(2)}
+        data-applied-rules={appliedRules.join(',')}
         data-phase-care-day={context?.phaseCareDay}
         data-surface-care-day={context?.surfaceCareDay}
         data-override-reason={context?.overrideReason}
@@ -221,12 +226,12 @@ const PHASE_GREETING: Record<CareSurfacePhase, { title: string; context: string 
   routine: { title: '오늘 케어', context: '확정된 일정과 기록만 차분히 확인해요.' },
 };
 
-export function CompactHeroGreeting({ phase }: { phase: CareSurfacePhase }) {
+export function CompactHeroGreeting({ phase, momentCopy }: { phase: CareSurfacePhase; momentCopy?: string }) {
   const copy = PHASE_GREETING[phase];
   return (
     <div className={styles.compactGreeting} data-testid="compact-hero-greeting">
       <h1 className={styles.compactGreetingTitle}>{copy.title}</h1>
-      <p className={styles.compactGreetingContext}>{copy.context}</p>
+      <p className={styles.compactGreetingContext}>{momentCopy ?? copy.context}</p>
     </div>
   );
 }

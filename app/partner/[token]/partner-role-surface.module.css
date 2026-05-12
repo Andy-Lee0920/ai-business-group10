@@ -2,7 +2,11 @@
   display: grid;
   gap: 14px;
   margin-top: 22px;
+  --fevio-surface-intensity: 0.35;
+  --partner-bloom-opacity: calc(0.10 + var(--fevio-surface-intensity, 0.35) * 0.18);
+  --partner-shadow: calc(24px + var(--fevio-surface-intensity, 0.35) * 28px);
 }
+
 
 .roleHero,
 .contextCard,
@@ -10,10 +14,10 @@
 .avoidCard {
   border-color: rgba(255, 255, 255, 0.56);
   background:
-    radial-gradient(circle at 100% 0%, rgba(185, 174, 214, 0.18), transparent 36%),
+    radial-gradient(circle at 100% 0%, rgba(185, 174, 214, var(--partner-bloom-opacity)), transparent 36%),
     rgba(255, 255, 255, 0.84);
   box-shadow:
-    0 18px 42px rgba(50, 61, 46, 0.08),
+    0 18px var(--partner-shadow) rgba(50, 61, 46, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
@@ -21,7 +25,7 @@
   display: grid;
   gap: 14px;
   background:
-    radial-gradient(circle at 92% 8%, rgba(111, 143, 110, 0.2), transparent 34%),
+    radial-gradient(circle at 92% 8%, rgba(111, 143, 110, var(--partner-bloom-opacity)), transparent 34%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(246, 244, 241, 0.82));
 }
 
@@ -44,6 +48,18 @@
   flex: 0 0 auto;
   border-radius: 18px;
   filter: drop-shadow(0 10px 18px rgba(111, 143, 110, 0.14));
+}
+
+.signalCopy {
+  margin: -2px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(185, 174, 214, 0.22);
+  border-radius: 16px;
+  background: rgba(185, 174, 214, 0.10);
+  color: #5a5272;
+  font-size: 0.88rem;
+  font-weight: 850;
+  line-height: 1.45;
 }
 
 .roleHero h2 {

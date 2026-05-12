@@ -29,7 +29,7 @@ const DEFAULT_VISIT_STEPS = [
   },
 ];
 
-export function ClinicDayHome({ context }: AdaptiveStateHomeBaseProps) {
+export function ClinicDayHome({ context, composition }: AdaptiveStateHomeBaseProps) {
   const checklistItems = context.cards.length > 0
     ? toQuietChecklistItems(context.cards, { fallbackDescription: '확인된 일정만 차분히 볼게요.', badge: '방문 준비' })
     : withChecklistBadge(DEFAULT_VISIT_STEPS, '방문 준비');
@@ -43,16 +43,20 @@ export function ClinicDayHome({ context }: AdaptiveStateHomeBaseProps) {
     { label: '파트너', value: '동행' },
   ] as const;
 
+  const showPrimaryCard = composition?.slots.primary_card !== null;
+  const showStats = composition?.slots.stats_row !== null;
+  const showChecklist = composition?.slots.checklist !== null;
+
   return (
-    <CareSurfaceFrame phase="clinic" context={context}>
+    <CareSurfaceFrame phase="clinic" context={context} intensity={composition?.intensity} appliedRules={composition?.appliedRules}>
       <CarePhaseStrip activePhase="clinic" />
-      <CompactHeroGreeting phase="clinic" />
-      <MissionCardPair
+      <CompactHeroGreeting phase="clinic" momentCopy={composition?.momentCopy} />
+      {showPrimaryCard ? <MissionCardPair
         primary={primary ? { title: primary.title, time: '진료 전 확인', cta: '진료 브리핑 열기' } : null}
         secondary={secondary ? { title: secondary.title, time: '같이 챙기기' } : null}
-      />
-      <QuickStatRow stats={stats} />
-      <QuietChecklist label="진료 브리핑 항목" items={checklistItems.slice(0, 3)} />
+      /> : null}
+      {showStats ? <QuickStatRow stats={stats} /> : null}
+      {showChecklist ? <QuietChecklist label="진료 브리핑 항목" items={checklistItems.slice(0, 3)} /> : null}
       <PartnerConnectBar description="이동 시간, 접수, 진료 후 다음 일정을 함께 붙잡는 역할로 보여요" />
       <HomeUtilityLauncher />
     </CareSurfaceFrame>

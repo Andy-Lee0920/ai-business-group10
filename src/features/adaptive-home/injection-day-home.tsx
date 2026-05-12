@@ -1,6 +1,7 @@
 import { HomeUtilityLauncher } from './home-utility-launcher';
 import {
   CarePhaseStrip,
+  CareMomentRing,
   CareSurfaceFrame,
   CompactHeroGreeting,
   MissionCardPair,
@@ -12,7 +13,7 @@ import type { AdaptiveStateHomeBaseProps } from './types';
 
 const KNOWN_DRUGS = ['고날에프', '프리날', '루프론', '세트로타이드', '오비드렐', '유트로게스탄', 'HMG', '퓨리곤'];
 
-export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
+export function InjectionDayHome({ context, composition }: AdaptiveStateHomeBaseProps) {
   const primary = findPrimaryCareCard(context.cards, '고날에프');
   const secondary = context.cards.find((c) => c !== primary) ?? null;
   const sharedCount = countPartnerActionSignals(context.cards);
@@ -32,12 +33,16 @@ export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
     { label: '파트너', value: sharedCount > 0 ? `${sharedCount}개 공유` : '준비 중' },
   ] as const;
 
+  const showRingHero = composition?.slots.hero === 'CareMomentRing';
+  const showPrimaryCard = composition?.slots.primary_card !== null;
+  const showStats = composition?.slots.stats_row !== null;
+
   return (
-    <CareSurfaceFrame phase="injection" context={context}>
+    <CareSurfaceFrame phase="injection" context={context} intensity={composition?.intensity} appliedRules={composition?.appliedRules}>
       <CarePhaseStrip activePhase="injection" />
-      <CompactHeroGreeting phase="injection" />
-      <MissionCardPair primary={primaryMission} secondary={secondaryMission} />
-      <QuickStatRow stats={stats} />
+      {showRingHero ? <CareMomentRing card={primary} generatedAt={context.generatedAt} /> : <CompactHeroGreeting phase="injection" momentCopy={composition?.momentCopy} />}
+      {showPrimaryCard ? <MissionCardPair primary={primaryMission} secondary={secondaryMission} /> : null}
+      {showStats ? <QuickStatRow stats={stats} /> : null}
       <PartnerConnectBar
         description={sharedCount > 0
           ? `${sharedCount}개의 케어 단서가 파트너에게 행동으로 전달됩니다`

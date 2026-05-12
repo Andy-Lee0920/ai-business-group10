@@ -41,4 +41,5 @@ export type CareSurfaceContextV2 = {
   surfaceCareDay: TimelineCareDay;
   foregroundCards: CareActionCard[];
   overrideReason: CareSurfaceOverrideReason;
+  proximityDays?: number;
 };

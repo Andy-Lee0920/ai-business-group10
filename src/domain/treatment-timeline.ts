@@ -16,7 +16,8 @@ export function computeCareDayV2(
   today: string,
 ): CareSurfaceContextV2 {
   const confirmedCards = todayCards.filter((card) => card.status === 'confirmed');
-  const phaseCareDay = derivePhaseCareDay(milestones, today) ?? inferFromCards(confirmedCards);
+  const phaseSignal = derivePhaseSignal(milestones, today);
+  const phaseCareDay = phaseSignal?.careDay ?? inferFromCards(confirmedCards);
   const override = findSurfaceOverride(confirmedCards);
   const surfaceCareDay = override?.careDay ?? phaseCareDay;
 
@@ -25,16 +26,18 @@ export function computeCareDayV2(
     surfaceCareDay,
     foregroundCards: rankForegroundCards(confirmedCards),
     overrideReason: override?.reason ?? 'none',
+    proximityDays: phaseSignal?.proximityDays,
   };
 }
 
-function derivePhaseCareDay(milestones: readonly TreatmentMilestone[], today: string): TimelineCareDay | null {
+function derivePhaseSignal(milestones: readonly TreatmentMilestone[], today: string): { careDay: TimelineCareDay; proximityDays: number } | null {
   const active = milestones
     .filter((milestone) => milestone.confirmed_at <= today)
     .sort((left, right) => right.confirmed_at.localeCompare(left.confirmed_at))[0];
 
   if (!active) return null;
-  return phaseForMilestone(active.milestone, daysBetween(active.confirmed_at, today));
+  const proximityDays = daysBetween(active.confirmed_at, today);
+  return { careDay: phaseForMilestone(active.milestone, proximityDays), proximityDays };
 }
 
 function phaseForMilestone(kind: TreatmentMilestoneKind, daysSince: number): TimelineCareDay {
