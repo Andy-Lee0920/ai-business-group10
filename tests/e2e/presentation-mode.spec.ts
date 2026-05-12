@@ -135,9 +135,10 @@ test('presentation /demo stage URL behaves like utility panels, not text placeho
       materialThick: styles.getPropertyValue('--fevio-material-thick-blur').trim(),
     };
   });
-  expect(stageStyles.backgroundColor).toBe('rgb(247, 244, 238)');
+  expect(stageStyles.backgroundColor).toBe('rgba(0, 0, 0, 0)');
   expect(stageStyles.backgroundImage).not.toContain('74, 107, 73');
   expect(stageStyles.backgroundImage).toContain('radial-gradient');
+  expect(stageStyles.backgroundImage).toContain('linear-gradient');
   expect(stageStyles.materialThin).toBe('30px');
   expect(stageStyles.materialRegular).toBe('40px');
   expect(stageStyles.materialThick).toBe('50px');

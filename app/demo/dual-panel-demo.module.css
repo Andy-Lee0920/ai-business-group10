@@ -2066,3 +2066,139 @@
 .sourceCompletedCount {
   display: block;
 }
+
+/* P0 visual rescue: cinematic atmosphere + material shell. */
+.demoShell {
+  --fevio-card: rgba(255, 255, 255, 0.62);
+  --demo-atmosphere-a: 255, 221, 203;
+  --demo-atmosphere-b: 219, 235, 218;
+  --demo-atmosphere-c: 226, 221, 244;
+  --demo-scrim: rgba(31, 34, 30, 0.1);
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 16% 8%, rgba(var(--demo-atmosphere-a), 0.98), transparent 29rem),
+    radial-gradient(circle at 84% 12%, rgba(var(--demo-atmosphere-b), 0.86), transparent 30rem),
+    radial-gradient(circle at 50% 100%, rgba(var(--demo-atmosphere-c), 0.74), transparent 34rem),
+    linear-gradient(145deg, #fff8f1 0%, #f9fbf4 46%, #f4f0ff 100%);
+}
+
+.demoShell::before,
+.demoShell::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+}
+
+.demoShell::before {
+  z-index: 0;
+  opacity: 0.045;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.72'/%3E%3C/svg%3E");
+}
+
+.demoShell::after {
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 38%, transparent 0 28rem, rgba(255, 255, 255, 0.22) 48rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), var(--demo-scrim));
+}
+
+.demoShell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.demoShell_coral {
+  --demo-atmosphere-a: 255, 209, 188;
+  --demo-atmosphere-b: 247, 229, 208;
+  --demo-atmosphere-c: 231, 220, 244;
+}
+
+.demoShell_sage {
+  --demo-atmosphere-a: 222, 240, 219;
+  --demo-atmosphere-b: 239, 231, 211;
+  --demo-atmosphere-c: 217, 232, 226;
+}
+
+.demoShell_lavender {
+  --demo-atmosphere-a: 229, 222, 248;
+  --demo-atmosphere-b: 240, 231, 220;
+  --demo-atmosphere-c: 213, 224, 240;
+}
+
+.generatedHeader,
+.memoInputCard,
+.parsingCard,
+.sourceBridge {
+  border-color: rgba(255, 255, 255, 0.58);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.34));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.54),
+    0 18px 46px rgba(59, 52, 45, 0.11),
+    0 42px 92px rgba(78, 72, 66, 0.1);
+  backdrop-filter: blur(24px) saturate(1.22);
+}
+
+.appScreen {
+  --fevio-card: rgba(255, 255, 255, 0.62);
+  background:
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
+    radial-gradient(circle at 92% 6%, rgba(255, 255, 255, 0.68), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(245, 244, 240, 0.46));
+  backdrop-filter: blur(24px) saturate(1.18);
+}
+
+.phaseHero,
+.stageCard,
+.primaryCard,
+.inputMomentCard,
+.utilityCard,
+.timelineCard,
+.partnerHero,
+.partnerInputMoment,
+.avoidCard,
+.contextStrip,
+.sharedSyncCard,
+.metricCard,
+.coreTool,
+.productCard,
+.productActionRow,
+.toolButton,
+.checkTile,
+.actionRow,
+.sourceTokenList p,
+.sourceProofGrid div,
+.parsingToken,
+.parsingSource,
+.memoInputCard textarea {
+  border-color: rgba(255, 255, 255, 0.54);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 12px 32px rgba(60, 54, 48, 0.08);
+  backdrop-filter: blur(24px) saturate(1.18);
+}
+
+.phaseHero,
+.partnerHero {
+  background:
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 24%, white), transparent 36%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.62), color-mix(in srgb, var(--accent) 10%, rgba(255, 255, 255, 0.42)));
+}
+
+.productDeck,
+.actionStack {
+  gap: 10px;
+}
+
+.productCard,
+.productActionRow,
+.utilityCard,
+.avoidCard,
+.primaryCard,
+.partnerHero {
+  padding: 18px;
+}

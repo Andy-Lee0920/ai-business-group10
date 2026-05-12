@@ -57,7 +57,7 @@ export function DualPanelDemoClient({ initialMode, initialStageIndex }: { initia
   }
 
   return (
-    <div className={styles.demoShell} data-testid="demo-preview-stage">
+    <div className={`${styles.demoShell} ${styles[`demoShell_${scenario.accent}`] ?? ''}`} data-testid="demo-preview-stage">
       <header className={styles.generatedHeader}>
         <div>
           <p className="eyebrow">Memo to Care</p>
