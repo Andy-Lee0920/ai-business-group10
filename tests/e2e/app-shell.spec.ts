@@ -4,7 +4,8 @@ test('mobile visitor sees the Fevio landing shell', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: /Fevio \[페비오\]/ })).toBeVisible();
-  await expect(page.getByText('로그인 없이 발표용 시나리오를 바로 보여주는 Fevio 데모입니다.')).toBeVisible();
+  await expect(page.getByText('하나의 shared care state가 두 사람에게 다른 utility UI로 보이는 데모입니다.')).toBeVisible();
+  await expect(page.getByTestId('north-star-tagline')).toHaveText('Same app. Shared state. Different experience.');
   await expect(page.getByRole('link', { name: '듀얼뷰 데모 바로 보기' })).toHaveAttribute('href', '/demo');
   await expect(page.getByText('Privacy Gate부터 보기')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /Google/ })).toHaveCount(0);

@@ -4,9 +4,10 @@ This folder keeps the product narrative and implementation contract together.
 
 ## Reading order
 
-1. `original-note-hyunjoo.md` — **highest-priority product origin**: IVF treatment is complex, emotionally loaded, and often managed by one person even though it affects a couple.
-2. `prd-v1.0.md` — the implementation-ready PRD after the final decision pass.
-3. `slc-target.md` — the first Simple, Lovable, Complete webapp loop to prove before broadening scope.
+1. `fevio-product-north-star.md` — **production North Star**: same app, shared state, different experience; governed state-driven utility UI, not static mock screens.
+2. `original-note-hyunjoo.md` — **highest-priority product origin**: IVF treatment is complex, emotionally loaded, and often managed by one person even though it affects a couple.
+3. `prd-v1.0.md` — the implementation-ready PRD after the final decision pass.
+4. `slc-target.md` — the first Simple, Lovable, Complete webapp loop to prove before broadening scope.
 
 ## Important interpretation
 

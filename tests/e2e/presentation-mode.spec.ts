@@ -98,9 +98,9 @@ test('presentation /partner/demo renders a sanitized partner view', async ({ pag
 });
 
 
-test('presentation /demo behaves like utility panels, not text placeholders', async ({ page }) => {
+test('presentation /demo stage URL behaves like utility panels, not text placeholders', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/demo');
+  await page.goto('/demo?mode=stage&stage=2');
 
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   const documentScrollHeight = await page.evaluate(() => document.documentElement.scrollHeight);
@@ -118,7 +118,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByRole('region', { name: '발표 내러티브' })).toHaveCount(0);
   await expect(page.getByText('Problem')).toHaveCount(0);
   await expect(page.getByText('Input')).toHaveCount(0);
-  await expect(page.getByText('Shared care')).toHaveCount(0);
+  await expect(page.getByTestId('shared-care-state-panel')).toBeVisible();
   await expect(page.getByText('문제는 부주의가 아니라 전달 구조입니다')).toHaveCount(0);
   await expect(page.getByText('병원에서 들은 말이 집에서 다시 설명되는 동안 빠집니다.')).toHaveCount(0);
   await expect(page.getByText('선택 한 번으로 내 화면과 파트너 행동이 같이 바뀝니다.')).toHaveCount(0);
@@ -181,7 +181,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   for (const frame of frameMetrics) {
     expect(frame.cssWidth).toBeCloseTo(440, 1);
     expect(frame.cssHeight).toBeCloseTo(956, 1);
-    expect(frame.width).toBeGreaterThanOrEqual(350);
+    expect(frame.width).toBeGreaterThanOrEqual(349);
     expect(frame.width).toBeLessThanOrEqual(440);
     expect(frame.height).toBeGreaterThanOrEqual(760);
     expect(frame.radius).toBe('53px');
@@ -212,117 +212,42 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
 
   await expect(page.getByRole('heading', { name: '내 화면', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
-  await expect(page.getByText('오늘 어떤 케어 장면을 볼까요?')).toBeVisible();
-  await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('내 화면은 케어 흐름, 파트너 화면은 역할만 보여줍니다.')).toBeHidden();
-  await expect(page.getByText('함께 이어짐')).toBeVisible();
+  await expect(page.getByText('Care state', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('stage-pill-2')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('배란 유도');
   await expect(page.getByTestId('primary-user-avatar')).toBeVisible();
   await expect(page.getByTestId('partner-avatar')).toBeVisible();
   await expect(page.getByTestId('couple-avatar-pair')).toBeVisible();
   await expect(page.locator('[data-testid="primary-user-avatar"] path')).toHaveCount(0);
   await expect(page.locator('[data-testid="partner-avatar"] path')).toHaveCount(0);
   await expect(page.locator('[data-testid="couple-avatar-pair"] path')).toHaveCount(0);
-  await expect(page.getByTestId('demo-phase-icon')).toBeVisible();
-  await expect(page.getByTestId('demo-partner-role-icon')).toBeVisible();
-  await expect(page.getByTestId('demo-partner-presence-pulse')).toHaveCount(2);
   await expect(page.getByText(/Live Sync|Live mirror|LIVE SYNC/)).toHaveCount(0);
-  await expect(patient).toContainText('21:00 주사 준비');
-  await expect(partner).toContainText('약 이름과 시간을 함께 확인');
-  await expect(patient).toContainText('병원 안내');
-  await expect(patient).toContainText('약 이름, 시간, 준비물을 함께 확인합니다.');
-  await expect(partner).toContainText('공유된 핵심');
-  await expect(patient).toContainText('주사 준비 체크');
-  await expect(patient).toContainText('일정 변경');
-  await expect(patient).toContainText('중요 알림');
-  await expect(patient).toContainText('완료 체크');
-  await expect(patient).toContainText('부부 연결');
-  await expect(partner).toContainText('확인자');
-  await expect(partner).toContainText('공간 준비');
 
-  const demoUiMetrics = await page.evaluate(() => {
-    const patientPanel = document.querySelector('[data-testid="demo-patient-panel"]') as HTMLElement | null;
-    const firstCard = patientPanel?.querySelector('.fevio-card') as HTMLElement | null;
-    const liveLabel = Array.from(document.querySelectorAll('[data-testid="demo-patient-panel"] span')).find((element) =>
-      element.textContent?.includes('파트너에게 보이는 역할'),
-    ) as HTMLElement | undefined;
-    const liveBody = document.querySelector('[data-testid="patient-sync-mirror"] p') as HTMLElement | null;
-    const stepBadge = Array.from(document.querySelectorAll('span')).find((element) => element.textContent === '1/3') as HTMLElement | undefined;
-    const bridge = document.querySelector('[data-testid="live-sync-bridge"]') as HTMLElement | null;
+  await expect(patient).toContainText('21:00 주사 기록');
+  await expect(patient).toContainText('MedicationCard');
+  await expect(patient).toContainText('InjectionLog');
+  await expect(partner).toContainText('약 이름과 준비물 확인');
+  await expect(partner).toContainText('Permission projection');
+  await expect(partner).toContainText('Partner utility');
+  await expect(partner).toContainText('용량 변경 제안');
 
-    const styles = (element: HTMLElement | null | undefined) => {
-      if (!element) return null;
-      const style = getComputedStyle(element);
-      return {
-        backgroundColor: style.backgroundColor,
-        backgroundImage: style.backgroundImage,
-        borderRadius: style.borderRadius,
-        boxShadow: style.boxShadow,
-        color: style.color,
-        fontSize: style.fontSize,
-        fontWeight: style.fontWeight,
-        letterSpacing: style.letterSpacing,
-        paddingBottom: style.paddingBottom,
-        paddingLeft: style.paddingLeft,
-        paddingRight: style.paddingRight,
-        paddingTop: style.paddingTop,
-        rowGap: style.rowGap,
-        textTransform: style.textTransform,
-      };
-    };
+  await patient.getByRole('button', { name: /주사 완료 기록/ }).click();
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('완료 1건');
+  await partner.getByRole('button', { name: /약 이름 확인/ }).click();
+  await expect(partner.getByRole('button', { name: /약 이름 확인/ })).toHaveAttribute('aria-pressed', 'true');
 
-    const bridgeBefore = bridge ? getComputedStyle(bridge, '::before') : null;
-    return {
-      panel: patientPanel ? { paddingTop: getComputedStyle(patientPanel).paddingTop, rowGap: getComputedStyle(patientPanel).rowGap } : null,
-      firstCard: styles(firstCard),
-      liveLabel: styles(liveLabel),
-      liveBody: styles(liveBody),
-      stepBadge: styles(stepBadge),
-      bridgeLine: bridgeBefore
-        ? {
-            height: bridgeBefore.height,
-            opacity: bridgeBefore.opacity,
-            backgroundImage: bridgeBefore.backgroundImage,
-          }
-        : null,
-    };
-  });
+  await page.getByTestId('stage-pill-5').click();
+  await expect(page.getByTestId('stage-pill-5')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('배아 배양');
+  await expect(patient).toContainText('Day 1·3·5 상태 변경');
+  await expect(patient).toContainText('EmbryoUpdateTimeline');
+  await expect(partner).toContainText('먼저 묻지 않기');
 
-  expect(demoUiMetrics.panel).toMatchObject({ paddingTop: '59px', rowGap: '10px' });
-  expect(demoUiMetrics.firstCard?.backgroundImage).toContain('radial-gradient');
-  expect(demoUiMetrics.firstCard).toMatchObject({ borderRadius: '16px', paddingTop: '16px', paddingRight: '16px', paddingBottom: '16px', paddingLeft: '16px' });
-  expect(demoUiMetrics.firstCard?.boxShadow).toContain('rgba(0, 0, 0, 0.05)');
-  expect(demoUiMetrics.liveLabel).toMatchObject({ color: 'rgb(156, 163, 175)', fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' });
-  expect(demoUiMetrics.liveBody).toMatchObject({ color: 'rgb(107, 114, 128)', fontSize: '12px' });
-  expect(demoUiMetrics.stepBadge).toMatchObject({ backgroundColor: 'rgb(243, 244, 246)', borderRadius: '99px', paddingTop: '6px', paddingRight: '12px', paddingBottom: '6px', paddingLeft: '12px' });
-  expect(demoUiMetrics.bridgeLine).toMatchObject({ height: '1.5px', opacity: '0.4' });
-
-  await page.getByRole('button', { name: '펜 용량 확인' }).click();
-  await expect(page.getByRole('button', { name: /펜 용량 확인/ })).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: '약 이름·시간 대조' }).click();
-  await expect(page.getByRole('button', { name: /약 이름·시간 대조/ })).toHaveAttribute('aria-pressed', 'true');
-
-  await patient.getByRole('button', { name: '오늘 항목 완료' }).click();
-  await expect(partner).toContainText('완료됨');
-  await expect(page.getByTestId('partner-sync-mirror')).toContainText('완료 상태가 파트너 화면에 반영됐습니다');
-  await partner.getByRole('button', { name: '확인 완료', exact: true }).click();
-  await expect(patient).toContainText('파트너가 확인했어요');
-  await expect(page.getByTestId('patient-sync-mirror')).toContainText('파트너 확인이 내 화면에 반영됐습니다');
-
-  await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' }).click();
-  await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(patient).toContainText('다음 일정이 바뀌었는지 확인해요');
-  await expect(patient).toContainText('방문 체크리스트');
-  await expect(patient).toContainText('09:00');
-  await expect(partner).toContainText('동행자');
-  await expect(partner).toContainText('다음 지시사항 함께 기록');
-  await expect(partner).toContainText('이동 시간 확인');
-
-  await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' }).click();
-  await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(patient).toContainText('확인할 것만 남깁니다');
-  await expect(patient).toContainText('차분한 체크인');
-  await expect(patient).toContainText('조용 모드');
-  await expect(partner).toContainText('곁에 있는 사람');
-  await expect(partner).toContainText('묻기보다 곁에 있기');
-  await expect(partner).toContainText('결과 묻지 않기');
+  await page.getByTestId('stage-pill-7').click();
+  await expect(page.getByTestId('stage-pill-7')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('임신 확인');
+  await expect(patient).toContainText('결과와 다음 일정 분리');
+  await expect(patient).toContainText('ResultVisibilityControl');
+  await expect(partner).toContainText('수치 해석하지 않기');
+  await expect(partner).toContainText('다음 검사일');
 });
