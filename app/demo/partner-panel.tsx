@@ -29,19 +29,19 @@ const PARTNER_ROLE_HERO: Record<DemoCare, {
   injection: {
     eyebrow: '파트너 역할',
     title: '약 이름과 시간을 함께 확인',
-    body: '약 이름, 시간, 용량을 함께 대조하고 완료 후 기록만 확인합니다.',
+    body: '정해진 시간에 약 이름과 용량을 함께 확인하고, 완료 후 기록만 남깁니다.',
     iconKey: 'assigned:partner_action',
   },
   clinic: {
     eyebrow: '파트너 역할',
     title: '다음 일정을 함께 기록',
-    body: '진료 내용을 함께 듣고 다음 방문일과 질문을 같이 남깁니다.',
+    body: '진료 내용을 함께 듣고 다음 방문일과 질문을 차분히 남깁니다.',
     iconKey: 'phase:clinic',
   },
   waiting: {
     eyebrow: '파트너 역할',
     title: '묻기보다 곁에 있기',
-    body: '결과를 묻기보다 다음 일정과 컨디션을 조용히 챙깁니다.',
+    body: '결과를 묻지 않고, 다음 일정과 컨디션을 조용히 살핍니다.',
     iconKey: 'phase:waiting',
   },
 };
@@ -51,21 +51,21 @@ const PARTNER_COPY: Record<DemoCare, { label: string; title: string; body: strin
     label: '공유된 핵심',
     title: '오늘 21:00 고날에프',
     body: '확인할 것은 약 이름, 시간, 준비물입니다.',
-    idle: '확인 역할이 열려 있어요',
+    idle: '확인 역할이 준비됐어요',
     done: '완료 확인이 전달됐어요',
   },
   clinic: {
     label: '공유된 핵심',
     title: '오늘 병원 방문',
     body: '이동 시간과 다음 방문일 기록을 함께 챙깁니다.',
-    idle: '동행 역할이 열려 있어요',
+    idle: '동행 역할이 준비됐어요',
     done: '방문 체크가 전달됐어요',
   },
   waiting: {
     label: '공유된 핵심',
     title: '결과 대기 중',
     body: '묻지 않고 곁에 있을 행동만 남겼습니다.',
-    idle: '조용한 지지 역할이 열려 있어요',
+    idle: '조용한 지지 역할이 준비됐어요',
     done: '확인 상태가 전달됐어요',
   },
 };
@@ -96,11 +96,11 @@ export function PartnerPanel({
           <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         </div>
         <span className={styles.microLabel}>{hero.eyebrow}</span>
-        <h3>{partner.role}</h3>
+        <h3>{hero.title}</h3>
         <p>{hero.body}</p>
         <div className={styles.roleFocusRail}>
           <span>{partner.status}</span>
-          <strong>{hero.title}</strong>
+          <strong>{partner.role} 역할</strong>
         </div>
       </Card>
 
