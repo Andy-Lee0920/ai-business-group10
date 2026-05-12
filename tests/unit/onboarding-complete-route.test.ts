@@ -61,6 +61,32 @@ describe('/api/onboarding/complete', () => {
     expect(payload).toMatchObject({ redirectTo: '/home', careDay: 'injection_day', createdCardCount: 1 });
   });
 
+  it('stores concise baseline profile context without turning it into action cards', async () => {
+    const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
+    const confirm = vi.fn().mockResolvedValue({ createdCardCount: 0 });
+    mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture, confirm } satisfies CaptureStore);
+
+    await completeOnboarding(
+      jsonRequest({
+        treatmentContext: 'ivf_cycle',
+        treatmentExperience: 'first_ivf',
+        baselineProfile: { age: '36', heightCm: '164', weightKg: '58', medicalNotes: '갑상선 약 복용 중' },
+        partnerInviteSkipped: true,
+        firstItem: null,
+      }),
+    );
+
+    expect(createCapture).toHaveBeenCalledWith([
+      '시술 경험: first_ivf',
+      '나이: 36',
+      '신장: 164cm',
+      '체중: 58kg',
+      '주의사항: 갑상선 약 복용 중',
+      '치료 상황: ivf_cycle',
+    ].join('\n'));
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ items: [] }));
+  });
+
   it('does not write a partner card or invite when partner invite is optional', async () => {
     const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
     const confirm = vi.fn().mockResolvedValue({ createdCardCount: 1 });

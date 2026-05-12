@@ -8,6 +8,8 @@ import type { CardType, CareActionCard } from '../../../../src/types/care-cards.
 type FirstItemKind = 'schedule' | 'medication' | 'injection';
 type OnboardingBody = {
   treatmentContext?: unknown;
+  treatmentExperience?: unknown;
+  baselineProfile?: unknown;
   roleContext?: unknown;
   partnerInviteSkipped?: unknown;
   partnerInviteEmail?: unknown;
@@ -19,6 +21,13 @@ type FirstItem = {
   text: string;
 };
 
+type BaselineProfile = {
+  age: string;
+  heightCm: string;
+  weightKg: string;
+  medicalNotes: string;
+};
+
 const FIRST_ITEM_CARD_TYPE: Record<FirstItemKind, CardType> = {
   schedule: 'clinic_visit',
   medication: 'medication',
@@ -28,6 +37,8 @@ const FIRST_ITEM_CARD_TYPE: Record<FirstItemKind, CardType> = {
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as OnboardingBody;
   const treatmentContext = normalizeText(body.treatmentContext);
+  const treatmentExperience = normalizeText(body.treatmentExperience);
+  const baselineProfile = normalizeBaselineProfile(body.baselineProfile);
   const roleContext = normalizeRoleContext(body.roleContext);
   const firstItem = normalizeFirstItem(body.firstItem);
 
@@ -37,7 +48,7 @@ export async function POST(request: NextRequest) {
   const store = await createCaptureStore(request);
   if (store instanceof Response) return store;
 
-  const rawText = buildOnboardingCaptureText(treatmentContext, firstItem);
+  const rawText = buildOnboardingCaptureText({ treatmentContext, treatmentExperience, baselineProfile, firstItem });
   const capture = await store.createCapture(rawText);
   const items = firstItem ? [toConfirmItem(firstItem)] : [];
   const result = await store.confirm({ ...capture, items });
@@ -98,8 +109,35 @@ function normalizeFirstItem(value: unknown): FirstItem | 'invalid' | null {
   return { kind, text };
 }
 
-function buildOnboardingCaptureText(treatmentContext: string, firstItem: FirstItem | null) {
-  const lines = [`치료 상황: ${treatmentContext}`];
+function normalizeBaselineProfile(value: unknown): BaselineProfile | null {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return null;
+  const candidate = value as Record<string, unknown>;
+  const age = normalizeText(candidate.age);
+  const heightCm = normalizeText(candidate.heightCm);
+  const weightKg = normalizeText(candidate.weightKg);
+  const medicalNotes = normalizeText(candidate.medicalNotes);
+  if (!age && !heightCm && !weightKg && !medicalNotes) return null;
+  return { age, heightCm, weightKg, medicalNotes };
+}
+
+function buildOnboardingCaptureText({
+  treatmentContext,
+  treatmentExperience,
+  baselineProfile,
+  firstItem,
+}: {
+  treatmentContext: string;
+  treatmentExperience: string;
+  baselineProfile: BaselineProfile | null;
+  firstItem: FirstItem | null;
+}) {
+  const lines = [];
+  if (treatmentExperience) lines.push(`시술 경험: ${treatmentExperience}`);
+  if (baselineProfile?.age) lines.push(`나이: ${baselineProfile.age}`);
+  if (baselineProfile?.heightCm) lines.push(`신장: ${baselineProfile.heightCm}cm`);
+  if (baselineProfile?.weightKg) lines.push(`체중: ${baselineProfile.weightKg}kg`);
+  if (baselineProfile?.medicalNotes) lines.push(`주의사항: ${baselineProfile.medicalNotes}`);
+  lines.push(`치료 상황: ${treatmentContext}`);
   if (firstItem) lines.push(`첫 항목: ${firstItem.text}`);
   return lines.join('\n');
 }
