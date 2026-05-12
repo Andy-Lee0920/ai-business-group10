@@ -158,6 +158,7 @@ Demo/UI 변경 시 추가로 확인할 것:
 - Architecture scorecard: [`docs/02-design/architecture-scorecard.md`](docs/02-design/architecture-scorecard.md)
 - Refactor North Star: [`docs/03-engineering/refactor-north-star.md`](docs/03-engineering/refactor-north-star.md)
 - Deployment readiness: [`docs/03-engineering/deployment-readiness.md`](docs/03-engineering/deployment-readiness.md)
+- Release baseline 2026-05-12: [`docs/03-engineering/release-baseline-2026-05-12.md`](docs/03-engineering/release-baseline-2026-05-12.md)
 - Contributor guide: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ---
