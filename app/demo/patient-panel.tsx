@@ -1,4 +1,4 @@
-import type { CSSProperties, Dispatch } from 'react';
+import type { Dispatch } from 'react';
 import { Badge, Card, CtaButton, StatusBadge, classNames } from '../../src/components/ui';
 import { PrimaryUserAvatar } from '../../src/design/couple-avatars';
 import type { DemoScenario, IvfStage, SharingLevel, UtilityItem } from './demo-scenarios';
@@ -22,10 +22,10 @@ export const PATIENT_PHASE_HERO: Record<IvfStage, PatientHeroCopy> = {
   baseline_testing: { eyebrow: '방문 전 흐름 정리', title: '질문과 검사 결과를 한곳에', body: '오늘 확인할 내용만 짧게 모읍니다.', proof: '기초 상담 준비' },
   ovarian_stimulation: { eyebrow: '주사 실행', title: '21:00 주사 기록', body: '약 이름·시간·기록자를 분리합니다.', proof: '환자 최종 확인 필요' },
   egg_retrieval: { eyebrow: '채취·회복', title: '회복 상태 숫자로 기록', body: '판단 없이 증상 변화만 남깁니다.', proof: '동행 행동 반영' },
-  fertilization: { eyebrow: '프라이버시', title: '필요한 일정만 공유', body: '민감한 세부값은 사용자가 직접 선택합니다.', proof: 'permission projection' },
-  embryo_culture: { eyebrow: 'Day 업데이트', title: 'Day 1·3·5 상태 변경', body: '업데이트와 공유 범위를 따로 둡니다.', proof: 'timeline state' },
-  embryo_transfer: { eyebrow: '이식 후 루틴', title: '약 루틴과 피검일 고정', body: '반복 약과 검사 날짜만 붙잡습니다.', proof: 'routine tracker' },
-  pregnancy_test: { eyebrow: '결과 보호', title: '결과와 다음 일정 분리', body: '공유 범위가 파트너 화면을 바꿉니다.', proof: 'no interpretation' },
+  fertilization: { eyebrow: '프라이버시', title: '필요한 일정만 공유', body: '민감한 세부값은 사용자가 직접 선택합니다.', proof: '공유 범위 선택' },
+  embryo_culture: { eyebrow: 'Day 업데이트', title: 'Day 1·3·5 상태 변경', body: '업데이트와 공유 범위를 따로 둡니다.', proof: '시간 앵커' },
+  embryo_transfer: { eyebrow: '이식 후 루틴', title: '약 루틴과 피검일 고정', body: '반복 약과 검사 날짜만 붙잡습니다.', proof: '루틴 기록' },
+  pregnancy_test: { eyebrow: '결과 보호', title: '결과와 다음 일정 분리', body: '공유 범위가 파트너 화면을 바꿉니다.', proof: '해석 금지' },
 };
 
 export const SHARE_COPY: Record<IvfStage, { title: string; body: string; shared: string; waiting: string }> = {
@@ -44,6 +44,7 @@ export function PatientPanel({ scenario, state, dispatch }: PatientPanelProps) {
   const share = SHARE_COPY[scenario.stage];
   const partnerCompleted = Object.values(state.utilityState).some((card) => card.completedBy === 'partner');
   const stimLog = state.utilityState['stim-log'];
+  const visibleCards = patient.utilityCards.slice(0, 3);
 
   return (
     <section className={`${styles.appScreen} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-patient-panel" aria-label="내 화면">
@@ -62,15 +63,6 @@ export function PatientPanel({ scenario, state, dispatch }: PatientPanelProps) {
           <p>{hero.body}</p>
         </div>
 
-        <div className={styles.phaseHeroStatus}>
-          <div>
-            <span>{patient.headline}</span>
-            <strong>{patient.phase}</strong>
-          </div>
-          <div className={styles.progressRing} style={{ '--progress': `${patient.progress}%` } as CSSProperties}>
-            <span>{patient.progress}%</span>
-          </div>
-        </div>
 
         <div className={styles.phaseHeroAction}>
           <CtaButton className={styles.mainAction} type="button" onClick={() => dispatch({ type: 'COMPLETE_CARD', cardId: patient.utilityCards[0]?.id ?? scenario.stage, actor: 'patient' })}>{patient.primaryAction}</CtaButton>
@@ -87,47 +79,23 @@ export function PatientPanel({ scenario, state, dispatch }: PatientPanelProps) {
       {stimLog?.completedBy === 'partner' && !stimLog.confirmedByPatient ? (
         <Card as="div" className={styles.sharedSyncCard}>
           <div>
-            <span className={styles.microLabel}>InjectionLog</span>
-            <strong>administered_by ≠ recorded_by</strong>
+            <span className={styles.microLabel}>환자 확인 필요</span>
+            <strong>파트너가 주사 기록을 남겼어요</strong>
           </div>
-          <CtaButton type="button" onClick={() => dispatch({ type: 'CONFIRM_BY_PATIENT', cardId: 'stim-log' })}>환자 최종 확인</CtaButton>
+          <CtaButton type="button" onClick={() => dispatch({ type: 'CONFIRM_BY_PATIENT', cardId: 'stim-log' })}>최종 확인</CtaButton>
         </Card>
       ) : null}
 
-      <div className={styles.metricGrid}>
-        {patient.nowStack.map((item) => (
-          <Card as="div" className={`${styles.metricCard} ${styles[`tone_${item.tone ?? 'neutral'}`]}`} key={item.id}>
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-          </Card>
+      <div className={styles.productDeck} aria-label="오늘의 유틸리티">
+        {visibleCards.map((card) => (
+          <PatientProductCardRenderer key={card.id} card={card} state={state.utilityState[card.id]} role="patient" sharingLevel={state.sharingLevel} dispatch={dispatch} />
         ))}
       </div>
-
-      <Card as="div" className={styles.utilityCard}>
-        <div className={styles.cardTitleRow}>
-          <h4>Utility components</h4>
-          <span>{state.actionLog.length} events</span>
-        </div>
-        <div className={styles.actionStack}>
-          {patient.utilityCards.map((card) => (
-            <UtilityCardRenderer key={card.id} card={card} state={state.utilityState[card.id]} role="patient" sharingLevel={state.sharingLevel} dispatch={dispatch} />
-          ))}
-        </div>
-      </Card>
-
-      <Card as="div" className={styles.timelineCard}>
-        {patient.timeline.map((item) => (
-          <div className={styles.timelineItem} key={item.id}>
-            <span>{item.label}</span>
-            <strong>{state.utilityState['culture-timeline']?.values?.[item.id] ?? item.value}</strong>
-          </div>
-        ))}
-      </Card>
     </section>
   );
 }
 
-function UtilityCardRenderer({
+function PatientProductCardRenderer({
   card,
   state,
   role,
@@ -142,72 +110,86 @@ function UtilityCardRenderer({
 }) {
   const status = state?.status ?? 'idle';
   const completed = status === 'completed';
-  const isTimeline = card.type === 'timeline' && card.id === 'culture-timeline';
-  const isPrivacy = card.type === 'privacy_control';
-  const isResultInput = card.type === 'result_input';
-  const selectedSharing = String(state?.values?.sharing ?? sharingLevel);
+  const selectedSharing = String(state?.values?.sharing ?? sharingLevel) as SharingLevel;
 
-  if (isTimeline) {
+  if (card.type === 'timeline' && card.id === 'culture-timeline') {
     return (
-      <div className={classNames(styles.actionRow, completed && styles.isChecked)}>
-        <span>{completed ? '✓' : ''}</span>
-        <div>
-          <strong>{card.label}</strong>
-          <small>{timelineLabel(state)}</small>
-          <div className={styles.chipRow}>
-            {['day1', 'day3', 'day5'].map((day) => (
-              <button key={day} type="button" onClick={() => dispatch({ type: 'UPDATE_CARD_VALUE', cardId: card.id, key: day, value: day === 'day5' ? 'active' : 'done', actor: role })}>
-                {day.toUpperCase()} {String(state?.values?.[day] ?? '')}
-              </button>
-            ))}
-          </div>
+      <Card as="div" className={styles.productCard}>
+        <span className={styles.microLabel}>배아 배양</span>
+        <strong>배아 업데이트</strong>
+        <p>Day별 상태만 짧게 붙잡습니다.</p>
+        <div className={styles.productTimeline}>
+          {(['day1', 'day3', 'day5'] as const).map((day) => (
+            <button key={day} type="button" onClick={() => dispatch({ type: 'UPDATE_CARD_VALUE', cardId: card.id, key: day, value: day === 'day5' ? 'active' : 'done', actor: role })}>
+              <span>{day.replace('day', 'Day ')}</span>
+              <strong>{timelineStatusCopy(String(state?.values?.[day] ?? 'upcoming'))}</strong>
+            </button>
+          ))}
         </div>
-      </div>
+      </Card>
     );
   }
 
-  if (isPrivacy) {
+  if (card.type === 'privacy_control') {
     return (
-      <div className={styles.actionRow}>
-        <span>{selectedSharing === 'basic' ? '•' : '✓'}</span>
-        <div>
-          <strong>{card.label}</strong>
-          <small>{sharingCopy(selectedSharing as SharingLevel)}</small>
-          <div className={styles.chipRow}>
-            {(['basic', 'care', 'emotional'] as SharingLevel[]).map((level) => (
-              <button key={level} type="button" aria-pressed={sharingLevel === level} onClick={() => dispatch({ type: 'SET_SHARING_LEVEL', level, actor: role })}>
-                {sharingCopy(level)}
-              </button>
-            ))}
-          </div>
+      <Card as="div" className={styles.productCard}>
+        <span className={styles.microLabel}>공유 설정</span>
+        <strong>{card.label}</strong>
+        <p>{sharingDetail(selectedSharing)}</p>
+        <div className={styles.productChipRow}>
+          {(['basic', 'care', 'emotional'] as SharingLevel[]).map((level) => (
+            <button key={level} type="button" aria-pressed={sharingLevel === level} onClick={() => dispatch({ type: 'SET_SHARING_LEVEL', level, actor: role })}>
+              {sharingCopy(level)}
+            </button>
+          ))}
         </div>
-      </div>
+      </Card>
     );
   }
 
-  if (isResultInput) {
+  if (card.type === 'result_input') {
     const [firstKey] = Object.keys(state?.values ?? { value: '' });
     return (
-      <div className={styles.actionRow}>
-        <span>{completed ? '✓' : ''}</span>
-        <div>
-          <strong>{card.label}</strong>
-          <small>{card.value}</small>
-          <input
-            aria-label={`${card.label} 입력`}
-            className={styles.inlineValueInput}
-            value={String(state?.values?.[firstKey] ?? '')}
-            onChange={(event) => dispatch({ type: 'UPDATE_CARD_VALUE', cardId: card.id, key: firstKey, value: event.target.value, actor: role })}
-          />
+      <Card as="div" className={styles.productCard}>
+        <span className={styles.microLabel}>{inputEyebrow(card.id)}</span>
+        <strong>{card.label}</strong>
+        <p>{card.value}</p>
+        <input
+          aria-label={`${card.label} 입력`}
+          className={styles.inlineValueInput}
+          value={String(state?.values?.[firstKey] ?? '')}
+          onChange={(event) => dispatch({ type: 'UPDATE_CARD_VALUE', cardId: card.id, key: firstKey, value: event.target.value, actor: role })}
+        />
+      </Card>
+    );
+  }
+
+  if (card.type === 'next_step_planner') {
+    return (
+      <Card as="div" className={styles.productCard}>
+        <span className={styles.microLabel}>결과 이후</span>
+        <strong>{card.label}</strong>
+        <p>오늘 결정하지 않아도 되는 항목을 나눕니다.</p>
+        <div className={styles.productActionList}>
+          {[
+            ['second_beta', '2차 피검'],
+            ['ultrasound', '초음파'],
+            ['medication_continue', '약 지속 여부'],
+          ].map(([key, label]) => (
+            <button key={key} className={styles.productActionRow} type="button" onClick={() => dispatch({ type: 'UPDATE_CARD_VALUE', cardId: card.id, key, value: !state?.values?.[key], actor: role })}>
+              <span>{state?.values?.[key] ? '✓' : ''}</span>
+              <strong>{label}</strong>
+            </button>
+          ))}
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
     <button
       aria-pressed={completed}
-      className={classNames(styles.actionRow, completed && styles.isChecked)}
+      className={classNames(styles.productActionRow, completed && styles.isChecked)}
       type="button"
       onClick={() => dispatch({ type: 'COMPLETE_CARD', cardId: card.id, actor: role })}
     >
@@ -219,12 +201,27 @@ function UtilityCardRenderer({
   );
 }
 
-function timelineLabel(state?: UtilityCardState) {
-  return `Day1 ${state?.values?.day1 ?? 'upcoming'} · Day3 ${state?.values?.day3 ?? 'upcoming'} · Day5 ${state?.values?.day5 ?? 'upcoming'}`;
+function inputEyebrow(cardId: string) {
+  if (cardId.includes('hcg')) return '검사 결과';
+  if (cardId.includes('culture')) return '결과 기록';
+  if (cardId.includes('transfer')) return '이식 요약';
+  return '입력';
+}
+
+function timelineStatusCopy(value: string) {
+  if (value === 'done') return '완료';
+  if (value === 'active') return '진행 중';
+  return '예정';
 }
 
 function sharingCopy(level: SharingLevel) {
   if (level === 'basic') return '일정만';
   if (level === 'emotional') return '감정까지';
   return '케어 공유';
+}
+
+function sharingDetail(level: SharingLevel) {
+  if (level === 'basic') return '파트너는 다음 일정만 봅니다.';
+  if (level === 'emotional') return '정서 지원 문구까지 함께 보입니다.';
+  return '약·일정·필요한 도움까지 공유합니다.';
 }

@@ -109,7 +109,7 @@ export function summarizeSharedCareState(state: DemoState) {
     stageLabel: `${meta.index}/7 ${meta.label}`,
     sharingLabel: sharingLabel(state.sharingLevel),
     completedCount,
-    lastEventLabel: lastEvent ? `${actorLabel(lastEvent.actor)}가 ${lastEvent.targetId}을 ${actionLabel(lastEvent.action)}` : '아직 기록된 행동이 없어요',
+    lastEventLabel: lastEvent ? `${actorLabel(lastEvent.actor)}가 ${eventTargetLabel(lastEvent)}을 ${actionLabel(lastEvent.action)}` : '아직 기록된 행동이 없어요',
   };
 }
 
@@ -129,9 +129,28 @@ function appendLog(state: DemoState, event: Omit<ActionLogEntry, 'id' | 'timesta
 }
 
 function sharingLabel(level: SharingLevel) {
-  if (level === 'basic') return '기본 공유';
-  if (level === 'emotional') return '감정 공유';
+  if (level === 'basic') return '일정만';
+  if (level === 'emotional') return '감정까지';
   return '케어 공유';
+}
+
+function eventTargetLabel(event: ActionLogEntry) {
+  if (event.action === 'stage_changed') {
+    const meta = IVF_STAGES.find((stage) => stage.id === event.stage);
+    return meta ? `${meta.index}/7 ${meta.label}` : '단계';
+  }
+
+  const labelById: Record<string, string> = {
+    'sharingLevel': '공유 범위',
+    'stim-log': '주사 기록',
+    'stim-medication': '약 이름과 시간',
+    'culture-timeline': '배아 업데이트',
+    'culture-share': '공유 범위',
+    'beta-hcg-input': 'hCG 결과',
+    'result-visibility': '공유 범위',
+    'next-step-planner': '다음 단계',
+  };
+  return labelById[event.targetId] ?? '오늘 행동';
 }
 
 function actorLabel(actor: Role) {

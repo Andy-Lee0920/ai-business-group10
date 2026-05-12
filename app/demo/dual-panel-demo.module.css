@@ -264,8 +264,11 @@
 
 .appScreen {
   --accent: var(--fevio-sage);
+  word-break: keep-all;
+  overflow-wrap: normal;
   display: grid;
-  gap: 10px;
+  align-content: start;
+  gap: 9px;
   height: 100%;
   max-height: 100%;
   padding: var(--device-safe-top) 16px calc(var(--device-safe-bottom) + 16px);
@@ -320,9 +323,9 @@
 .phaseHero {
   position: relative;
   display: grid;
-  gap: 14px;
-  min-height: 228px;
-  padding: 16px;
+  gap: 10px;
+  min-height: 218px;
+  padding: 14px;
   overflow: hidden;
   border-color: color-mix(in srgb, var(--accent) 30%, rgba(255, 255, 255, 0.72));
   background:
@@ -410,7 +413,7 @@
 .phaseHeroCopy h3 {
   margin: 0;
   max-width: 320px;
-  font-size: clamp(26px, 4.4vw, 35px);
+  font-size: clamp(24px, 3.9vw, 31px);
   line-height: 1.08;
   letter-spacing: -0.055em;
   word-break: keep-all;
@@ -432,7 +435,7 @@
   grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.76);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.72);
@@ -449,7 +452,7 @@
 .roleFocusRail strong {
   display: block;
   margin-top: 3px;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: -0.03em;
 }
 
@@ -496,8 +499,8 @@
 .progressRing {
   --progress: 0%;
   display: grid;
-  width: 66px;
-  height: 66px;
+  width: 34px;
+  height: 34px;
   place-items: center;
   border-radius: 50%;
   background: conic-gradient(var(--accent) var(--progress), rgba(32, 35, 31, 0.08) 0);
@@ -510,7 +513,7 @@
   place-items: center;
   border-radius: 50%;
   background: white;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 900;
 }
 
@@ -571,15 +574,17 @@
 .liveMirrorCard,
 .partnerInputMoment {
   display: grid;
-  gap: 7px;
-  padding: 16px;
+  gap: 5px;
+  padding: 12px;
   background: var(--fevio-card);
 }
 
 .inputMomentCard strong,
 .partnerInputMoment strong {
-  font-size: 16px;
-  letter-spacing: -0.03em;
+  font-size: 13px;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+  white-space: nowrap;
   line-height: 1.35;
 }
 
@@ -630,7 +635,7 @@
 }
 
 .mainAction {
-  min-height: 44px;
+  min-height: 40px;
   border: 0;
   border-radius: 18px;
   background: var(--accent);
@@ -723,7 +728,7 @@
 
 .checkTile {
   display: grid;
-  grid-template-columns: 22px 1fr;
+  grid-template-columns: 28px minmax(0, 1fr);
   gap: 4px 8px;
   min-height: 76px;
   padding: 16px;
@@ -814,9 +819,163 @@
   gap: 12px;
 }
 
+
+.productDeck {
+  display: grid;
+  gap: 8px;
+}
+
+.productCard,
+.productActionRow {
+  min-width: 0;
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--fevio-shadow-soft);
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.productCard {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border-radius: 20px;
+}
+
+.productCard > strong {
+  color: var(--fevio-ink);
+  font-size: 18px;
+  line-height: 1.18;
+  letter-spacing: -0.04em;
+}
+
+.productCard > p {
+  margin: 0;
+  color: var(--fevio-text-secondary);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.38;
+}
+
+.productActionList {
+  display: grid;
+  gap: 5px;
+}
+
+.productActionRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  color: var(--fevio-ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.productActionRow > span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(32, 35, 31, 0.14);
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.productActionRow > strong,
+.productActionRow > small {
+  min-width: 0;
+  grid-column: 2;
+  line-height: 1.25;
+}
+
+.productActionRow > strong {
+  font-size: 15px;
+  letter-spacing: -0.03em;
+}
+
+.productActionRow > small {
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 780;
+}
+
+.productActionRow > :global(.fevio-status-badge) {
+  grid-column: 2;
+  justify-self: start;
+}
+
+.productChipRow,
+.productTimeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.productChipRow button,
+.productTimeline button {
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, rgba(32, 35, 31, 0.08));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 8%, white);
+  color: color-mix(in srgb, var(--accent) 74%, var(--fevio-ink));
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  word-break: keep-all;
+}
+
+.productChipRow button {
+  padding: 8px 10px;
+}
+
+.productChipRow button[aria-pressed='true'] {
+  background: var(--accent);
+  color: white;
+}
+
+.productTimeline button {
+  display: grid;
+  gap: 2px;
+  min-width: 76px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.productTimeline button span {
+  color: var(--fevio-muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.productTimeline button strong {
+  color: var(--fevio-ink);
+  font-size: 13px;
+  letter-spacing: -0.02em;
+}
+
+.productMetaRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 2px;
+  color: var(--fevio-muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.productMetaRow strong {
+  color: var(--fevio-ink);
+}
+
 .actionRow {
   display: grid;
-  grid-template-columns: 22px 1fr;
+  grid-template-columns: 28px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
   min-height: 52px;
@@ -1217,11 +1376,11 @@
 
 .sharedStatePanel {
   display: grid;
-  gap: 6px;
+  gap: 5px;
   align-content: center;
   justify-items: center;
   min-height: 210px;
-  padding: 14px;
+  padding: 12px 8px;
   border: 1px solid rgba(139, 92, 246, 0.18);
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.62);
@@ -1246,7 +1405,7 @@
 .sharedStatePanel p {
   margin: 0;
   color: #6d28d9;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
 }
 

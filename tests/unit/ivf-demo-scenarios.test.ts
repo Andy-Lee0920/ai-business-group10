@@ -36,7 +36,7 @@ describe('7-stage IVF demo scenarios', () => {
 
   it('keeps sensitive stage 4 phrasing private and stage-specific utility fields real', () => {
     const stage4 = JSON.stringify(DEMO_SCENARIOS.fertilization);
-    expect(stage4).toContain('PrivacyRespectNotice');
+    expect(stage4).toContain('필요한 일정만 공유');
     expect(stage4).not.toMatch(/정자|난자|수정률|성공|실패/u);
 
     const injectionLog = DEMO_SCENARIOS.ovarian_stimulation.patient.utilityCards.find((card) => card.type === 'injection_log');

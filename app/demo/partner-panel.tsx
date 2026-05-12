@@ -11,9 +11,6 @@ type PartnerPanelProps = {
   dispatch: Dispatch<DemoAction>;
 };
 
-export const RESULT_SHARED_STATUS_LABEL = 'ResultSharedStatus';
-export const DO_NOT_INTERPRET_LABEL = 'DoNotInterpretCard';
-
 export const PARTNER_ROLE_HERO: Record<IvfStage, { eyebrow: string; title: string; body: string }> = {
   baseline_testing: { eyebrow: '파트너 역할', title: '질문을 함께 보기', body: '일정과 질문 목록만 확인합니다.' },
   ovarian_stimulation: { eyebrow: '파트너 역할', title: '약 이름과 준비물 확인', body: '기록 후 환자 최종 확인을 기다립니다.' },
@@ -27,7 +24,7 @@ export const PARTNER_ROLE_HERO: Record<IvfStage, { eyebrow: string; title: strin
 export function PartnerPanel({ scenario, state, dispatch }: PartnerPanelProps) {
   const partner = scenario.partner;
   const hero = PARTNER_ROLE_HERO[scenario.stage];
-  const visibleCards = getVisiblePartnerCards(scenario, state);
+  const visibleCards = getVisiblePartnerCards(scenario, state).slice(0, 3);
   const completedCount = visibleCards.filter((card) => state.utilityState[card.id]?.status === 'completed').length;
 
   return (
@@ -49,37 +46,24 @@ export function PartnerPanel({ scenario, state, dispatch }: PartnerPanelProps) {
         </div>
       </Card>
 
-      <Card as="div" className={styles.contextStrip}>
-        {partner.sharedContext.map((item) => (
-          <div key={item.id}>
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-          </div>
+      <Card as="div" className={styles.productCard}>
+        <span className={styles.microLabel}>공유 상태</span>
+        <strong>{sharingCopy(state.sharingLevel)}</strong>
+        <p>{projectionCopy(state.sharingLevel)}</p>
+        <div className={styles.productMetaRow}>
+          <span>완료된 도움</span>
+          <strong>{completedCount}/{visibleCards.length}</strong>
+        </div>
+      </Card>
+
+      <div className={styles.productDeck} aria-label="파트너 유틸리티">
+        {visibleCards.map((card) => (
+          <PartnerProductCard key={card.id} card={card} state={state.utilityState[card.id]} dispatch={dispatch} />
         ))}
-      </Card>
-
-      <Card as="div" className={styles.sharedSyncCard}>
-        <div>
-          <span className={styles.microLabel}>Permission projection</span>
-          <strong>{sharingCopy(state.sharingLevel)}</strong>
-        </div>
-        <StatusBadge state="shared">{visibleCards.length} cards visible</StatusBadge>
-      </Card>
-
-      <Card as="div" className={styles.utilityCard}>
-        <div className={styles.cardTitleRow}>
-          <h4>Partner utility</h4>
-          <span>{completedCount}/{visibleCards.length}</span>
-        </div>
-        <div className={styles.actionStack}>
-          {visibleCards.map((card) => (
-            <PartnerUtilityCard key={card.id} card={card} state={state.utilityState[card.id]} dispatch={dispatch} />
-          ))}
-        </div>
-      </Card>
+      </div>
 
       <Card as="div" className={styles.avoidCard}>
-        <h4>오늘 피하기</h4>
+        <h4>오늘 하지 않기</h4>
         <div className={styles.chipRow}>
           {partner.avoid.map((item) => <span key={item.id}>{item.label}</span>)}
         </div>
@@ -88,21 +72,19 @@ export function PartnerPanel({ scenario, state, dispatch }: PartnerPanelProps) {
   );
 }
 
-function PartnerUtilityCard({ card, state, dispatch }: { card: UtilityItem; state?: UtilityCardState; dispatch: Dispatch<DemoAction> }) {
+function PartnerProductCard({ card, state, dispatch }: { card: UtilityItem; state?: UtilityCardState; dispatch: Dispatch<DemoAction> }) {
   const completed = state?.status === 'completed';
-  const isResultStatus = card.label === RESULT_SHARED_STATUS_LABEL;
-  const isDoNotInterpret = card.label === DO_NOT_INTERPRET_LABEL;
 
   return (
     <button
       aria-pressed={completed}
-      className={classNames(styles.actionRow, completed && styles.isChecked)}
+      className={classNames(styles.productActionRow, completed && styles.isChecked)}
       type="button"
       onClick={() => dispatch({ type: 'COMPLETE_CARD', cardId: card.id, actor: 'partner' })}
     >
       <span>{completed ? '✓' : ''}</span>
       <strong>{card.label}</strong>
-      <small>{partnerCardBody(card, isResultStatus, isDoNotInterpret)}</small>
+      <small>{partnerCardBody(card)}</small>
       {completed ? <StatusBadge state="done">완료</StatusBadge> : null}
       {card.id === 'stim-log' && completed ? (
         <CtaButton type="button" variant="ghost" onClick={(event) => { event.stopPropagation(); dispatch({ type: 'COMPLETE_CARD', cardId: 'stim-log', actor: 'partner' }); }}>
@@ -113,14 +95,20 @@ function PartnerUtilityCard({ card, state, dispatch }: { card: UtilityItem; stat
   );
 }
 
-function partnerCardBody(card: UtilityItem, isResultStatus: boolean, isDoNotInterpret: boolean) {
-  if (isResultStatus) return '사용자가 공유한 범위만 표시';
-  if (isDoNotInterpret) return '먼저 단정하지 않기';
+function partnerCardBody(card: UtilityItem) {
+  if (card.id === 'partner-result-status') return '사용자가 공유한 범위만 표시';
+  if (card.id === 'partner-do-not-interpret') return '먼저 단정하지 않기';
   return card.value ?? '확인';
 }
 
 function sharingCopy(level: DemoState['sharingLevel']) {
-  if (level === 'basic') return '기본 공유';
-  if (level === 'emotional') return '감정 공유';
-  return '케어 공유';
+  if (level === 'basic') return '일정만 공유 중';
+  if (level === 'emotional') return '감정까지 공유 중';
+  return '케어 공유 중';
+}
+
+function projectionCopy(level: DemoState['sharingLevel']) {
+  if (level === 'basic') return '다음 일정과 필요한 행동만 보입니다.';
+  if (level === 'emotional') return '정서적 지지 모드까지 열려 있습니다.';
+  return '약·일정·도움 행동이 보입니다.';
 }

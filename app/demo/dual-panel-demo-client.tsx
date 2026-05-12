@@ -98,8 +98,8 @@ function SharedCareStatePanel({ summary }: { summary: ReturnType<typeof summariz
       <CoupleAvatarPair className={styles.syncCoupleAvatar} />
       <span>Shared Care State</span>
       <strong>{summary.stageLabel}</strong>
-      <p>{summary.sharingLabel} · 완료 {summary.completedCount}건</p>
-      <small>마지막 이벤트: {summary.lastEventLabel}</small>
+      <p>{summary.sharingLabel}</p>
+      <small>완료된 행동 {summary.completedCount}건</small>
     </div>
   );
 }
