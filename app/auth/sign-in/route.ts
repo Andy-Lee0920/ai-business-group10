@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const redirectTo = new URL('/auth/callback', appUrl).toString();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo },
+    options: { redirectTo, queryParams: { prompt: 'select_account' } },
   });
 
   if (error || !data.url) {
