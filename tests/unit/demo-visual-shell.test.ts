@@ -15,6 +15,7 @@ describe('demo visual shell contract', () => {
     expect(css).not.toContain('rgba(255, 255, 255, 0.58)');
   });
 
+
   it('keeps generated demo copy and surrounding chrome product-safe', () => {
     const client = readFileSync('app/demo/dual-panel-demo-client.tsx', 'utf8');
 

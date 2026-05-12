@@ -16,6 +16,7 @@ test('demo turns a hospital memo into patient and partner care surfaces', async 
   await expect(page.getByLabel('병원 안내 메모')).toContainText('고날에프 225IU');
   await page.getByRole('button', { name: '케어 화면 만들기' }).click();
 
+
   await expect(page.getByTestId('demo-parsing-screen')).toBeVisible();
   await expect(page.getByTestId('demo-device-frame')).toHaveCount(1);
   await expect(page.getByText('약·주사')).toBeVisible();
