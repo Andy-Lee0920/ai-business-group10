@@ -11,9 +11,10 @@ test('demo turns a hospital memo into patient and partner care surfaces', async 
   await expect(page.getByTestId('demo-input-screen')).toBeVisible();
   await expect(page.getByTestId('demo-device-frame')).toHaveCount(1);
   await expect(page.getByTestId('demo-dynamic-island')).toBeVisible();
-  await page.getByRole('button', { name: '약 봉투·메모 사진 예시로 채우기' }).click();
+  await expect(page.getByRole('heading', { name: '병원 안내 붙여넣기' })).toBeVisible();
+  await page.getByRole('button', { name: '예시 넣기' }).click();
   await expect(page.getByLabel('병원 안내 메모')).toContainText('고날에프 225IU');
-  await page.getByRole('button', { name: 'Fevio에 넣기' }).click();
+  await page.getByRole('button', { name: '케어 화면 만들기' }).click();
 
   await expect(page.getByTestId('demo-parsing-screen')).toBeVisible();
   await expect(page.getByTestId('demo-device-frame')).toHaveCount(1);

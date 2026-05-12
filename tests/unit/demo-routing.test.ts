@@ -44,6 +44,10 @@ describe('memo-to-care demo routing', () => {
     const cssSource = readFileSync('app/demo/dual-panel-demo.module.css', 'utf8');
 
     expect(inputSource).toContain('DemoDeviceFrame');
+    expect(inputSource).toContain('병원 안내 붙여넣기');
+    expect(inputSource).toContain('케어 화면 만들기');
+    expect(inputSource).not.toContain('환자 본인');
+    expect(inputSource).not.toContain('manualMemoDetails');
     expect(parsingSource).toContain('DemoDeviceFrame');
     expect(cssSource).toContain('singlePhoneFrame');
     expect(cssSource).toContain('splitPatientFromMemo');
