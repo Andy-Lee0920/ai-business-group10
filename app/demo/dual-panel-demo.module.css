@@ -830,6 +830,49 @@
   gap: 5px;
 }
 
+.productPillList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.productPillAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, rgba(32, 35, 31, 0.08));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 7%, white);
+  color: color-mix(in srgb, var(--accent) 76%, var(--fevio-ink));
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+
+.productPillAction span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  color: color-mix(in srgb, var(--accent) 78%, var(--fevio-ink));
+  font-size: 11px;
+}
+
+.productPillAction[aria-pressed='true'] {
+  background: var(--accent);
+  color: white;
+}
+
+.productPillAction[aria-pressed='true'] span {
+  color: var(--accent);
+}
+
 .productActionRow {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

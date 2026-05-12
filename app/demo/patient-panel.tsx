@@ -170,14 +170,14 @@ function PatientProductCardRenderer({
         <span className={styles.microLabel}>결과 이후</span>
         <strong>{card.label}</strong>
         <p>오늘 결정하지 않아도 되는 항목을 나눕니다.</p>
-        <div className={styles.productActionList}>
+        <div className={styles.productPillList}>
           {[
             ['second_beta', '2차 피검'],
             ['ultrasound', '초음파'],
-            ['medication_continue', '약 지속 여부'],
+            ['medication_continue', '약 지속'],
           ].map(([key, label]) => (
-            <button key={key} className={styles.productActionRow} type="button" onClick={() => dispatch({ type: 'UPDATE_CARD_VALUE', cardId: card.id, key, value: !state?.values?.[key], actor: role })}>
-              <span>{state?.values?.[key] ? '✓' : ''}</span>
+            <button key={key} className={styles.productPillAction} type="button" aria-pressed={Boolean(state?.values?.[key])} onClick={() => dispatch({ type: 'UPDATE_CARD_VALUE', cardId: card.id, key, value: !state?.values?.[key], actor: role })}>
+              <span>{state?.values?.[key] ? '✓' : '+'}</span>
               <strong>{label}</strong>
             </button>
           ))}

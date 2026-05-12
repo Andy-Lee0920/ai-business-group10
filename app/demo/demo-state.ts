@@ -129,8 +129,8 @@ function appendLog(state: DemoState, event: Omit<ActionLogEntry, 'id' | 'timesta
 }
 
 function sharingLabel(level: SharingLevel) {
-  if (level === 'basic') return '일정만';
-  if (level === 'emotional') return '감정까지';
+  if (level === 'basic') return '일정만 공유';
+  if (level === 'emotional') return '감정까지 공유';
   return '케어 공유';
 }
 

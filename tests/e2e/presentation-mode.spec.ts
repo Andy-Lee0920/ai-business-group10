@@ -251,3 +251,53 @@ test('presentation /demo stage URL behaves like utility panels, not text placeho
   await expect(partner).toContainText('수치 해석하지 않기');
   await expect(partner).toContainText('다음 검사일');
 });
+test('presentation /demo supports every stage deep link without raw component labels or squeezed Korean text', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const forbiddenSurfaceCopy = /BetaHcgInputCard|ResultVisibilityControl|NextStepPlanner|EmbryoUpdateTimeline|SharedUpdateStatus|QuietSupportCard|TransferSummaryCard|LutealMedicationTracker|Permission projection|cards visible|Utility components|scheduled\/actual\/recorded/;
+
+  for (const stage of [1, 2, 3, 4, 5, 6, 7]) {
+    await page.goto(`/demo?mode=stage&stage=${stage}`);
+    await expect(page.getByTestId(`stage-pill-${stage}`)).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('shared-care-state-panel')).toBeVisible();
+    await expect(page.getByText(forbiddenSurfaceCopy)).toHaveCount(0);
+
+    const layout = await page.evaluate(() => {
+      const cards = Array.from(document.querySelectorAll('[class*="productCard"], [class*="productActionRow"]')) as HTMLElement[];
+      return cards.map((element) => {
+        const rect = element.getBoundingClientRect();
+        return { width: rect.width, height: rect.height, text: element.innerText.slice(0, 80) };
+      });
+    });
+
+    expect(layout.length).toBeGreaterThanOrEqual(6);
+    for (const card of layout) {
+      expect(card.width, `${stage}: ${card.text}`).toBeGreaterThan(270);
+      expect(card.height, `${stage}: ${card.text}`).toBeLessThan(190);
+    }
+  }
+});
+
+test('presentation /demo stage 7 changes partner projection when patient changes sharing scope', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/demo?mode=stage&stage=7');
+
+  const partner = page.getByTestId('demo-partner-panel');
+  const patient = page.getByTestId('demo-patient-panel');
+
+  await expect(page.getByTestId('stage-pill-7')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('일정만 공유');
+  await expect(partner).toContainText('일정만 공유 중');
+  await expect(partner).toContainText('다음 검사일');
+  await expect(partner).toContainText('수치 해석하지 않기');
+  await expect(partner.getByRole('button', { name: /공유 상태/ })).toHaveCount(0);
+
+  await patient.getByRole('button', { name: '케어 공유' }).click();
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('케어 공유');
+  await expect(partner).toContainText('케어 공유 중');
+  await expect(partner.getByRole('button', { name: /공유 상태/ })).toBeVisible();
+
+  await patient.getByRole('button', { name: '감정까지' }).click();
+  await expect(page.getByTestId('shared-care-state-panel')).toContainText('감정까지 공유');
+  await expect(partner).toContainText('감정까지 공유 중');
+});
+
