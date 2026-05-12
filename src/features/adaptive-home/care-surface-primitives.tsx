@@ -1,6 +1,6 @@
 import { CtaButton, classNames } from '../../components/ui';
 import { getFevioIcon } from '../../design/icon-map';
-import type { HomeActionCard } from '../../domain/home-composition';
+import type { HomeActionCard, HomeContext } from '../../domain/home-composition';
 import type { CardType } from '../../types/care-cards.types';
 import styles from './care-surface-primitives.module.css';
 
@@ -19,10 +19,17 @@ const phaseClass: Record<CareSurfacePhase, string> = {
   routine: styles.phaseRoutine,
 };
 
-export function CareSurfaceFrame({ phase, children }: { phase: CareSurfacePhase; children: React.ReactNode }) {
+export function CareSurfaceFrame({ phase, context, children }: { phase: CareSurfacePhase; context?: HomeContext; children: React.ReactNode }) {
   return (
     <main className="app-shell">
-      <section className={classNames(styles.surfaceFrame, phaseClass[phase])} data-testid="care-atmosphere-layer" data-phase={phase}>
+      <section
+        className={classNames(styles.surfaceFrame, phaseClass[phase])}
+        data-testid="care-atmosphere-layer"
+        data-phase={phase}
+        data-phase-care-day={context?.phaseCareDay}
+        data-surface-care-day={context?.surfaceCareDay}
+        data-override-reason={context?.overrideReason}
+      >
         {children}
       </section>
     </main>
@@ -211,7 +218,7 @@ const PHASE_GREETING: Record<CareSurfacePhase, { title: string; context: string 
   injection: { title: '주사 준비', context: '오늘은 시간을 함께 지키는 날이에요.' },
   clinic: { title: '병원 방문', context: '준비한 것들을 챙겨 가는 날이에요.' },
   waiting: { title: '기다리는 날', context: '오늘은 조용히 살피는 날이에요.' },
-  routine: { title: '일상 케어', context: '확인한 것만 천천히 해요.' },
+  routine: { title: '오늘 케어', context: '확정된 일정과 기록만 차분히 확인해요.' },
 };
 
 export function CompactHeroGreeting({ phase }: { phase: CareSurfacePhase }) {

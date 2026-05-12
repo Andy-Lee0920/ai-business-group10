@@ -44,7 +44,7 @@ export function ClinicDayHome({ context }: AdaptiveStateHomeBaseProps) {
   ] as const;
 
   return (
-    <CareSurfaceFrame phase="clinic">
+    <CareSurfaceFrame phase="clinic" context={context}>
       <CarePhaseStrip activePhase="clinic" />
       <CompactHeroGreeting phase="clinic" />
       <MissionCardPair

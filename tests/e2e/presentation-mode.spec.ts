@@ -88,6 +88,8 @@ test('presentation /partner/demo renders a sanitized partner view', async ({ pag
   await page.goto('/partner/demo');
 
   await expect(page.getByRole('heading', { name: '파트너 오늘 할 일' })).toBeVisible();
+  await expect(page.getByTestId('partner-avatar')).toBeVisible();
+  await expect(page.locator('[data-testid="partner-avatar"] path')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '오늘 내 역할' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '도움 행동' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '오늘 피하기' })).toBeVisible();
@@ -212,17 +214,23 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
   await expect(page.getByRole('heading', { name: '파트너 화면', exact: true })).toBeVisible();
   await expect(page.getByText('오늘 어떤 케어 장면을 볼까요?')).toBeVisible();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '주사 준비' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('선택한 장면에 맞춰 내 화면과 파트너 역할이 함께 바뀌어요.')).toBeVisible();
+  await expect(page.getByText('내 화면은 케어 흐름, 파트너 화면은 역할만 보여줍니다.')).toBeVisible();
   await expect(page.getByText('함께 이어짐')).toBeVisible();
+  await expect(page.getByTestId('primary-user-avatar')).toBeVisible();
+  await expect(page.getByTestId('partner-avatar')).toBeVisible();
+  await expect(page.getByTestId('couple-avatar-pair')).toBeVisible();
+  await expect(page.locator('[data-testid="primary-user-avatar"] path')).toHaveCount(0);
+  await expect(page.locator('[data-testid="partner-avatar"] path')).toHaveCount(0);
+  await expect(page.locator('[data-testid="couple-avatar-pair"] path')).toHaveCount(0);
   await expect(page.getByTestId('demo-phase-icon')).toBeVisible();
   await expect(page.getByTestId('demo-partner-role-icon')).toBeVisible();
   await expect(page.getByTestId('demo-partner-presence-pulse')).toHaveCount(2);
   await expect(page.getByText(/Live Sync|Live mirror|LIVE SYNC/)).toHaveCount(0);
-  await expect(patient).toContainText('주사는 시간부터 크게 보입니다');
-  await expect(partner).toContainText('확인자는 질문보다 대조합니다');
-  await expect(patient).toContainText('방금 붙여넣은 메모');
-  await expect(patient).toContainText('주사 준비·확인자 역할을 먼저 올렸어요.');
-  await expect(partner).toContainText('내가 다시 설명하지 않아도 되는 내용');
+  await expect(patient).toContainText('21:00 주사 준비');
+  await expect(partner).toContainText('약 이름과 시간을 함께 확인');
+  await expect(patient).toContainText('병원 안내');
+  await expect(patient).toContainText('약 이름, 시간, 준비물을 함께 확인합니다.');
+  await expect(partner).toContainText('공유된 핵심');
   await expect(patient).toContainText('주사 준비 체크');
   await expect(patient).toContainText('일정 변경');
   await expect(patient).toContainText('중요 알림');
@@ -235,7 +243,7 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
     const patientPanel = document.querySelector('[data-testid="demo-patient-panel"]') as HTMLElement | null;
     const firstCard = patientPanel?.querySelector('.fevio-card') as HTMLElement | null;
     const liveLabel = Array.from(document.querySelectorAll('[data-testid="demo-patient-panel"] span')).find((element) =>
-      element.textContent?.includes('공유 반응'),
+      element.textContent?.includes('파트너에게 보이는 역할'),
     ) as HTMLElement | undefined;
     const liveBody = document.querySelector('[data-testid="patient-sync-mirror"] p') as HTMLElement | null;
     const stepBadge = Array.from(document.querySelectorAll('span')).find((element) => element.textContent === '1/3') as HTMLElement | undefined;
@@ -295,26 +303,26 @@ test('presentation /demo behaves like utility panels, not text placeholders', as
 
   await patient.getByRole('button', { name: '오늘 항목 완료' }).click();
   await expect(partner).toContainText('완료됨');
-  await expect(page.getByTestId('partner-sync-mirror')).toContainText('오늘 항목 완료가 파트너 화면에 즉시 반영됐어요');
+  await expect(page.getByTestId('partner-sync-mirror')).toContainText('완료 상태가 파트너 화면에 반영됐습니다');
   await partner.getByRole('button', { name: '확인 완료', exact: true }).click();
   await expect(patient).toContainText('파트너가 확인했어요');
-  await expect(page.getByTestId('patient-sync-mirror')).toContainText('파트너 확인 완료가 내 화면에 바로 도착했어요');
+  await expect(page.getByTestId('patient-sync-mirror')).toContainText('파트너 확인이 내 화면에 반영됐습니다');
 
   await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' }).click();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '병원 다녀오기' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(patient).toContainText('진료 브리핑이 먼저 열립니다');
+  await expect(patient).toContainText('질문과 기록 준비');
   await expect(patient).toContainText('방문 체크리스트');
   await expect(patient).toContainText('09:00');
   await expect(partner).toContainText('동행자');
-  await expect(partner).toContainText('동행자는 기억을 나눕니다');
+  await expect(partner).toContainText('다음 일정을 함께 기록');
   await expect(partner).toContainText('이동 시간 확인');
 
   await page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' }).click();
   await expect(page.getByRole('group', { name: '오늘 어떤 케어 장면을 볼까요?' }).getByRole('button', { name: '기다리는 중' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(patient).toContainText('기다리는 날은 조용해집니다');
+  await expect(patient).toContainText('확인할 것만 남깁니다');
   await expect(patient).toContainText('차분한 체크인');
   await expect(patient).toContainText('조용 모드');
   await expect(partner).toContainText('곁에 있는 사람');
-  await expect(partner).toContainText('기다리는 날은 묻지 않고 곁에 있습니다');
+  await expect(partner).toContainText('묻기보다 곁에 있기');
   await expect(partner).toContainText('결과 묻지 않기');
 });

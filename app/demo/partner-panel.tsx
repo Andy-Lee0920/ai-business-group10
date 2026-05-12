@@ -1,4 +1,5 @@
 import { Badge, Card, ConfirmChip, StatusBadge, classNames } from '../../src/components/ui';
+import { PartnerAvatar } from '../../src/design/couple-avatars';
 import { getFevioIcon, type FevioIconKey } from '../../src/design/icon-map';
 import type { DemoScenario } from './demo-scenarios';
 import styles from './dual-panel-demo.module.css';
@@ -26,22 +27,46 @@ const PARTNER_ROLE_HERO: Record<DemoCare, {
   iconKey: FevioIconKey;
 }> = {
   injection: {
-    eyebrow: 'partner role',
-    title: '확인자는 질문보다 대조합니다',
-    body: '약 이름·시간·준비물을 같이 보고, 완료 후 정리만 맡습니다.',
+    eyebrow: '파트너 역할',
+    title: '약 이름과 시간을 함께 확인',
+    body: '약 이름, 시간, 용량을 함께 대조하고 완료 후 기록만 확인합니다.',
     iconKey: 'assigned:partner_action',
   },
   clinic: {
-    eyebrow: 'partner role',
-    title: '동행자는 기억을 나눕니다',
-    body: '결과를 같이 듣고 다음 방문일을 기록해 환자가 혼자 기억하지 않게 합니다.',
+    eyebrow: '파트너 역할',
+    title: '다음 일정을 함께 기록',
+    body: '진료 내용을 함께 듣고 다음 방문일과 질문을 같이 남깁니다.',
     iconKey: 'phase:clinic',
   },
   waiting: {
-    eyebrow: 'partner role',
-    title: '기다리는 날은 묻지 않고 곁에 있습니다',
-    body: '결과 질문과 성공 사례 공유를 줄이고, 다음 일정만 조용히 확인합니다.',
+    eyebrow: '파트너 역할',
+    title: '묻기보다 곁에 있기',
+    body: '결과를 묻기보다 다음 일정과 컨디션을 조용히 챙깁니다.',
     iconKey: 'phase:waiting',
+  },
+};
+
+const PARTNER_COPY: Record<DemoCare, { label: string; title: string; body: string; idle: string; done: string }> = {
+  injection: {
+    label: '공유된 핵심',
+    title: '오늘 21:00 고날에프',
+    body: '확인할 것은 약 이름, 시간, 준비물입니다.',
+    idle: '확인 역할이 열려 있어요',
+    done: '완료 확인이 전달됐어요',
+  },
+  clinic: {
+    label: '공유된 핵심',
+    title: '오늘 병원 방문',
+    body: '이동 시간과 다음 방문일 기록을 함께 챙깁니다.',
+    idle: '동행 역할이 열려 있어요',
+    done: '방문 체크가 전달됐어요',
+  },
+  waiting: {
+    label: '공유된 핵심',
+    title: '결과 대기 중',
+    body: '묻지 않고 곁에 있을 행동만 남겼습니다.',
+    idle: '조용한 지지 역할이 열려 있어요',
+    done: '확인 상태가 전달됐어요',
   },
 };
 
@@ -56,14 +81,18 @@ export function PartnerPanel({
 }: PartnerPanelProps) {
   const { partner } = scenario;
   const hero = PARTNER_ROLE_HERO[scenario.care];
+  const partnerCopy = PARTNER_COPY[scenario.care];
 
   return (
     <section className={`${styles.appScreen} ${styles.partnerApp} ${styles[`accent_${scenario.accent}`]}`} data-testid="demo-partner-panel" aria-label="파트너 화면">
       <Card as="div" className={classNames(styles.partnerHero, styles[`partnerHero_${scenario.care}`])}>
         <div className={styles.partnerHeroTop}>
-          <span className={styles.partnerRoleIcon}>
-            <DemoIcon iconKey={hero.iconKey} testId="demo-partner-role-icon" />
-          </span>
+          <div className={styles.identityCluster} aria-label="파트너 케어 화면">
+            <PartnerAvatar className={styles.roleAvatar} />
+            <span className={styles.partnerRoleIcon}>
+              <DemoIcon iconKey={hero.iconKey} testId="demo-partner-role-icon" />
+            </span>
+          </div>
           <Badge className={styles.statePill} tone={scenario.accent}>{scenario.label}</Badge>
         </div>
         <span className={styles.microLabel}>{hero.eyebrow}</span>
@@ -76,22 +105,22 @@ export function PartnerPanel({
       </Card>
 
       <Card as="div" className={styles.partnerInputMoment}>
-        <span className={styles.microLabel}>내가 다시 설명하지 않아도 되는 내용</span>
-        <strong>{scenario.patient.inputMoment.answer}</strong>
-        <p>{scenario.patient.inputMoment.adaptation}</p>
+        <span className={styles.microLabel}>{partnerCopy.label}</span>
+        <strong>{partnerCopy.title}</strong>
+        <p>{partnerCopy.body}</p>
       </Card>
 
       <Card as="div" className={styles.liveMirrorCard} data-testid="partner-sync-mirror">
-        <span className={styles.microLabel}>공유 반응</span>
-        <strong>{syncEvent.target === '파트너 화면' ? '내 화면에서 들어온 업데이트' : '내 화면으로 보내는 중'}</strong>
-        <p>{syncEvent.label}</p>
+        <span className={styles.microLabel}>내 화면 업데이트</span>
+        <strong>{syncEvent.target === '파트너 화면' ? syncEvent.label : hero.title}</strong>
+        <p>{syncEvent.target === '파트너 화면' ? '내 화면의 확인 상태가 파트너 역할에 반영됐습니다.' : hero.body}</p>
       </Card>
 
       <Card as="div" className={styles.presencePulseCard} data-testid="demo-partner-presence-pulse">
         <span aria-hidden="true" />
         <div>
           <small>같이 보고 있어요</small>
-          <strong>{careDone ? '내 화면의 완료가 도착했어요' : '내 역할이 열려 있어요'}</strong>
+          <strong>{careDone ? partnerCopy.done : partnerCopy.idle}</strong>
         </div>
       </Card>
 

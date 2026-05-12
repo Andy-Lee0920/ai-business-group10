@@ -27,6 +27,7 @@ type CycleRow = Pick<TreatmentCycle, 'id' | 'couple_id' | 'cycle_number' | 'prot
 type MilestoneRow = Pick<TreatmentMilestone, 'id' | 'cycle_id' | 'couple_id' | 'milestone' | 'confirmed_at' | 'notes' | 'created_at'>;
 
 const DEMO_COOKIE = 'fevio_privacy_accepted=1';
+const TIMELINE_MILESTONES_COOKIE = 'fevio_treatment_milestones';
 const MILESTONE_LABELS: Record<TreatmentMilestoneKind, string> = {
   initial_visit: '초진',
   stimulation_start: '자극 시작',
@@ -43,13 +44,20 @@ export async function POST(request: NextRequest) {
 
   if (isPresentationRequest(request) && hasDemoPrivacyCookie(request.headers.get('cookie'))) {
     const milestone = demoMilestone(input.milestone, input.confirmedAt, input.notes);
-    return NextResponse.json({
+    const response = NextResponse.json({
       persisted: false,
       cycleId: 'demo-treatment-cycle',
       milestoneId: milestone.id,
       careSurface: computeCareDayV2([milestone], [], todayIso()),
       redirectTo: '/home',
     });
+    response.cookies.set(TIMELINE_MILESTONES_COOKIE, encodeURIComponent(JSON.stringify([milestone])), {
+      httpOnly: true,
+      maxAge: 60 * 60,
+      path: '/',
+      sameSite: 'lax',
+    });
+    return response;
   }
 
   const supabase = (await createCookieBackedSupabaseClient()) as unknown as TreatmentSupabaseClient;

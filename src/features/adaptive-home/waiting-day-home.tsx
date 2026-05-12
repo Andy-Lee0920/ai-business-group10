@@ -18,7 +18,7 @@ export function WaitingDayHome({ context }: AdaptiveStateHomeBaseProps) {
   const sharedCount = countPartnerActionSignals(context.cards);
 
   return (
-    <CareSurfaceFrame phase="waiting">
+    <CareSurfaceFrame phase="waiting" context={context}>
       <CarePhaseStrip activePhase="waiting" />
       <CompactHeroGreeting phase="waiting" />
       {visibleCards.length > 0 ? (

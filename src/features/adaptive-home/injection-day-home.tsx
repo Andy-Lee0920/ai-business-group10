@@ -33,7 +33,7 @@ export function InjectionDayHome({ context }: AdaptiveStateHomeBaseProps) {
   ] as const;
 
   return (
-    <CareSurfaceFrame phase="injection">
+    <CareSurfaceFrame phase="injection" context={context}>
       <CarePhaseStrip activePhase="injection" />
       <CompactHeroGreeting phase="injection" />
       <MissionCardPair primary={primaryMission} secondary={secondaryMission} />

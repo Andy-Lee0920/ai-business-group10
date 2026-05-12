@@ -53,9 +53,9 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       headline: '21:00 주사 준비',
       primaryAction: '주사 준비 체크',
       inputMoment: {
-        prompt: '방금 붙여넣은 메모',
+        prompt: '병원 안내',
         answer: '오늘 21시 고날에프, 파트너가 같이 확인',
-        adaptation: '주사 준비·확인자 역할을 먼저 올렸어요.',
+        adaptation: '약 이름, 시간, 준비물을 함께 확인합니다.',
       },
       nowStack: [
         { id: 'time', label: '다음 주사', value: '20분 후', meta: '고날에프', tone: 'coral' },
@@ -121,9 +121,9 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       headline: '09:00 방문 준비',
       primaryAction: '방문 체크리스트',
       inputMoment: {
-        prompt: '짧게 고른 상황',
+        prompt: '오늘 일정',
         answer: '오늘 병원 다녀오기',
-        adaptation: '방문 준비·동행자 역할을 먼저 올렸어요.',
+        adaptation: '방문 시간과 다음 일정 기록을 함께 챙깁니다.',
       },
       nowStack: [
         { id: 'visit', label: '예약', value: '09:00', meta: '채혈·초음파', tone: 'sage' },
@@ -189,9 +189,9 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       headline: '조용한 확인 모드',
       primaryAction: '차분한 체크인',
       inputMoment: {
-        prompt: '오늘의 한 줄',
+        prompt: '오늘 상태',
         answer: '기다리는 중이라 알림을 줄이고 싶어요',
-        adaptation: '필수 확인·조용한 지지 행동만 남겼어요.',
+        adaptation: '다음 일정과 컨디션 확인만 남깁니다.',
       },
       nowStack: [
         { id: 'next', label: '다음 일정', value: '목요일', meta: '09:00', tone: 'sage' },
@@ -228,7 +228,7 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
       sharedContext: [
         { id: 'next', label: '다음 일정', value: '목요일 09:00' },
         { id: 'mode', label: '모드', value: '조용히' },
-        { id: 'ask', label: '결과 질문', value: '하지 않기' },
+        { id: 'ask', label: '결과 묻기', value: '멈추기' },
       ],
       actions: [
         { id: 'quiet', label: '결과 묻지 않기' },
@@ -236,7 +236,7 @@ export const DEMO_SCENARIOS: Record<PresentationCareParam, DemoScenario> = {
         { id: 'next', label: '다음 일정만 확인' },
       ],
       avoid: [
-        { id: 'search', label: '성공 사례 보내기' },
+        { id: 'search', label: '사례 공유하기' },
         { id: 'repeat', label: '괜찮을 거야 반복' },
       ],
       quickTools: [

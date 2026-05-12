@@ -18,6 +18,7 @@ describe('/api/treatment/milestone', () => {
     expect(response.status).toBe(200);
     expect(payload).toMatchObject({ persisted: false, cycleId: 'demo-treatment-cycle', redirectTo: '/home' });
     expect(payload.careSurface).toMatchObject({ phaseCareDay: 'injection_day', surfaceCareDay: 'injection_day' });
+    expect(response.headers.get('set-cookie')).toContain('fevio_treatment_milestones=');
   });
 
   it('rejects invalid dates with a Korean user-facing message', async () => {

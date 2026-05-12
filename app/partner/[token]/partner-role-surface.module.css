@@ -33,6 +33,19 @@
   gap: 10px;
 }
 
+.identityMark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.partnerAvatar {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  filter: drop-shadow(0 10px 18px rgba(111, 143, 110, 0.14));
+}
+
 .roleHero h2 {
   margin: 0;
   color: var(--fevio-ink);

@@ -26,6 +26,8 @@ test('partner view shows confirmed action cue without raw memo leak', async ({ p
 
   await page.goto('/partner/e2e-token');
 
+  await expect(page.getByTestId('partner-avatar')).toBeVisible();
+  await expect(page.locator('[data-testid="partner-avatar"] path')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '오늘 내 역할' })).toBeVisible();
   await expect(page.getByText('확인자')).toBeVisible();
   await expect(page.getByRole('heading', { name: '도움 행동' })).toBeVisible();

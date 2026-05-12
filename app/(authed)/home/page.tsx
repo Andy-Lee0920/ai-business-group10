@@ -1,10 +1,11 @@
 import { cookies, headers } from 'next/headers';
 import { isPresentationHost, isPresentationMode } from '../../../src/config';
-import { computeHomeContext } from '../../../src/domain/home-composition';
+import { computeHomeContext, computeHomeContextV2 } from '../../../src/domain/home-composition';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
 import { getPresentationScenarioCards, normalizePresentationCare, toAdaptiveCareDay } from '../../../src/features/adaptive-home/presentation-scenarios';
 import type { CareActionCard } from '../../../src/types/care-cards.types';
+import type { TreatmentMilestone, TreatmentMilestoneKind } from '../../../src/types/treatment-timeline.types';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,23 +24,35 @@ export default async function DynamicHomePage({ searchParams }: HomePageProps) {
   const careQuery = getSearchParam(query, 'care');
   const presentationCare = normalizePresentationCare(careQuery);
   const hasCarePreviewQuery = careQuery !== undefined;
-  const useCarePreview = presentationMode || hasCarePreviewQuery;
-  const onboardingCard = presentationMode && !hasCarePreviewQuery ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
-  const persistedCards = useCarePreview || onboardingCard ? [] : await getPersistedCards();
+  const timelineMilestonePreview = readTimelineMilestones(cookieStore.get(TIMELINE_MILESTONES_COOKIE)?.value);
+  const timelineCardPreview = readTimelineCards(cookieStore.get(TIMELINE_CARDS_COOKIE)?.value);
+  const hasTimelinePreview = timelineMilestonePreview.length > 0;
+  const useCarePreview = hasCarePreviewQuery || (presentationMode && !hasTimelinePreview);
+  const onboardingCard = presentationMode && !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
+  const persistedCards = useCarePreview || onboardingCard || hasTimelinePreview ? [] : await getPersistedCards();
+  const persistedMilestones = useCarePreview || onboardingCard || hasTimelinePreview ? [] : await getPersistedMilestones();
+  const milestones = hasTimelinePreview ? timelineMilestonePreview : persistedMilestones;
   const cards = onboardingCard
     ? [onboardingCard]
     : useCarePreview
       ? getPresentationScenarioCards(presentationCare, now)
+      : timelineCardPreview.length > 0
+        ? timelineCardPreview
       : persistedCards.length > 0
         ? persistedCards
         : makeDemoCards(now);
-  const baseContext = computeHomeContext(cards, now);
-  const context = useCarePreview && !onboardingCard
+  const baseContext = milestones.length > 0
+    ? computeHomeContextV2(cards, milestones, now)
+    : computeHomeContext(cards, now);
+  const context = useCarePreview && !onboardingCard && milestones.length === 0
     ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
     : baseContext;
 
   return <AdaptiveHomeRuntime context={context} demoMode={useCarePreview} />;
 }
+
+const TIMELINE_MILESTONES_COOKIE = 'fevio_treatment_milestones';
+const TIMELINE_CARDS_COOKIE = 'fevio_treatment_cards';
 
 
 function getSearchParam(params: HomeSearchParams | undefined, key: string) {
@@ -60,6 +73,22 @@ async function getPersistedCards(): Promise<CareActionCard[]> {
 
     if (error || !Array.isArray(data)) return [];
     return data.filter(isCareActionCard);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Missing Supabase public config')) return [];
+    throw error;
+  }
+}
+
+async function getPersistedMilestones(): Promise<TreatmentMilestone[]> {
+  try {
+    const supabase = await createCookieBackedSupabaseClient();
+    const { data, error } = await supabase
+      .from('treatment_milestones')
+      .select('id,cycle_id,couple_id,milestone,confirmed_at,notes,created_at')
+      .order('confirmed_at', { ascending: false });
+
+    if (error || !Array.isArray(data)) return [];
+    return data.filter(isTreatmentMilestone);
   } catch (error) {
     if (error instanceof Error && error.message.includes('Missing Supabase public config')) return [];
     throw error;
@@ -100,6 +129,31 @@ function isCardType(value: unknown): value is CareActionCard['card_type'] {
   );
 }
 
+function isTreatmentMilestone(value: unknown): value is TreatmentMilestone {
+  if (typeof value !== 'object' || value === null) return false;
+  const milestone = value as Partial<TreatmentMilestone>;
+  return (
+    typeof milestone.id === 'string' &&
+    typeof milestone.cycle_id === 'string' &&
+    typeof milestone.couple_id === 'string' &&
+    isMilestoneKind(milestone.milestone) &&
+    typeof milestone.confirmed_at === 'string' &&
+    (typeof milestone.notes === 'string' || milestone.notes === null) &&
+    typeof milestone.created_at === 'string'
+  );
+}
+
+function isMilestoneKind(value: unknown): value is TreatmentMilestoneKind {
+  return (
+    value === 'initial_visit' ||
+    value === 'stimulation_start' ||
+    value === 'trigger_shot' ||
+    value === 'egg_retrieval' ||
+    value === 'embryo_transfer' ||
+    value === 'result_day'
+  );
+}
+
 function readOnboardingCard(value: string | undefined): CareActionCard | null {
   if (!value) return null;
 
@@ -126,6 +180,30 @@ function readOnboardingCard(value: string | undefined): CareActionCard | null {
     };
   } catch {
     return null;
+  }
+}
+
+function readTimelineMilestones(value: string | undefined): TreatmentMilestone[] {
+  return readCookieArray(value).filter(isTreatmentMilestone);
+}
+
+function readTimelineCards(value: string | undefined): CareActionCard[] {
+  return readCookieArray(value).filter(isCareActionCard);
+}
+
+function readCookieArray(value: string | undefined): unknown[] {
+  if (!value) return [];
+  try {
+    const decoded = decodeURIComponent(value);
+    const parsed = JSON.parse(decoded);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
 }
 

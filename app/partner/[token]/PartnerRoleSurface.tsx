@@ -1,4 +1,5 @@
 import { Badge, Card, StatusBadge } from '../../../src/components/ui';
+import { PartnerAvatar } from '../../../src/design/couple-avatars';
 import type { PartnerActionViewItem } from '../../../src/types/partner-view.types';
 import styles from './partner-role-surface.module.css';
 
@@ -12,7 +13,10 @@ export function PartnerRoleSurface({ items, live = false }: { items: PartnerActi
     <section className={styles.surface} aria-label="파트너 역할 카드" aria-live={live ? 'polite' : undefined}>
       <Card as="section" className={styles.roleHero} aria-labelledby="partner-primary-role-title">
         <div className={styles.kickerRow}>
-          <Badge tone={toneFor(primary.card_type)}>오늘의 케어</Badge>
+          <span className={styles.identityMark}>
+            <PartnerAvatar className={styles.partnerAvatar} />
+            <Badge tone={toneFor(primary.card_type)}>오늘의 케어</Badge>
+          </span>
           <StatusBadge state={primary.display_state === 'completed' ? 'done' : 'shared'}>
             {stateLabel(primary.display_state)}
           </StatusBadge>

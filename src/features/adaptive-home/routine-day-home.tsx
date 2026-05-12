@@ -1,39 +1,40 @@
 import { HomeUtilityLauncher } from './home-utility-launcher';
 import {
+  CarePhaseStrip,
   CareSurfaceFrame,
-  MomentHero,
-  OperationalGlassSheet,
-  PartnerPresencePulse,
+  CompactHeroGreeting,
+  MissionCardPair,
+  PartnerConnectBar,
+  QuickStatRow,
   QuietChecklist,
 } from './care-surface-primitives';
-import { toQuietChecklistItems } from './care-surface-model';
+import { toMissionCardData, toQuietChecklistItems } from './care-surface-model';
 import type { AdaptiveStateHomeBaseProps } from './types';
 
 export function RoutineDayHome({ context }: AdaptiveStateHomeBaseProps) {
   const items = toQuietChecklistItems(context.cards, {
-    fallbackDescription: '오늘 필요한 것만 낮은 밀도로 확인해요.',
+    fallbackDescription: '확정된 내용만 차분히 확인해요.',
     badge: '오늘 챙길 일',
+    limit: 3,
   });
+  const primary = context.cards[0] ? { ...toMissionCardData(context.cards[0]), cta: '오늘 케어 보기' } : null;
+  const secondary = context.cards[1] ? toMissionCardData(context.cards[1]) : null;
+  const stats = [
+    { label: '오늘 할 일', value: `${items.length}개` },
+    { label: '공유', value: '준비됨' },
+    { label: '알림', value: '기본' },
+    { label: '기록', value: '가능' },
+  ] as const;
 
   return (
-    <CareSurfaceFrame phase="routine">
-      <MomentHero
-        phase="routine"
-        eyebrow="Daily care"
-        title="오늘은 필요한 것만 남기는 날"
-        fact="해야 할 일과 쉬어도 되는 일을 나눠서 보여드릴게요."
-        actionLabel="오늘 흐름 보기"
-        actionHint="새로 판단하지 않고 확정된 케어만 정리합니다."
-      />
-      <OperationalGlassSheet title="오늘의 낮은 밀도 흐름" description={context.primaryMessage}>
-        {items.length > 0 ? <QuietChecklist label="오늘 케어 흐름" items={items} /> : null}
-        <PartnerPresencePulse
-          state={items.length > 0 ? 'shared' : 'unknown'}
-          title="공유할 준비가 되어 있어요"
-          description="파트너에게 보낼 내용은 원문이 아니라 도움 행동으로 바뀝니다."
-        />
-        <HomeUtilityLauncher />
-      </OperationalGlassSheet>
+    <CareSurfaceFrame phase="routine" context={context}>
+      <CarePhaseStrip activePhase="routine" />
+      <CompactHeroGreeting phase="routine" />
+      <MissionCardPair primary={primary} secondary={secondary} />
+      <QuickStatRow stats={stats} />
+      {items.length > 0 ? <QuietChecklist label="오늘 케어 흐름" items={items} /> : null}
+      <PartnerConnectBar description="파트너에게는 원문 대신 함께 확인할 역할만 보입니다" />
+      <HomeUtilityLauncher />
     </CareSurfaceFrame>
   );
 }
