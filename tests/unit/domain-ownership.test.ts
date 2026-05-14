@@ -30,16 +30,14 @@ describe('domain ownership audit', () => {
     );
   });
 
-  it('keeps Care OS architecture connected to home, onboarding, and partner APIs', () => {
-    const consumers = [
-      'app/(authed)/home/page.tsx',
-      'app/api/onboarding/complete/route.ts',
-      'app/api/partner/[token]/assist/route.ts',
-      'app/api/partner/[token]/cards/route.ts',
-    ];
+  it('keeps SLC Today ownership separated from deprecated Care OS architecture', () => {
+    const home = read('app/(authed)/home/page.tsx');
+    const onboarding = read('app/api/onboarding/route.ts');
 
-    for (const consumer of consumers) {
-      expect(read(consumer)).toContain('care-os-architecture');
-    }
+    expect(home).toContain('TodayScreen');
+    expect(home).toContain('schedule_items');
+    expect(home).not.toContain('care-os-architecture');
+    expect(onboarding).toContain('user_consents');
+    expect(onboarding).toContain('getSeedItems');
   });
 });
