@@ -14,7 +14,8 @@ describe('Clinic Guide visual flow contract', () => {
       '나중에 할게요',
       '✦ Clinic Guide AI',
       'progressbar',
-      '1/4',
+      '01/06',
+      '02/06',
       '그대로',
       '바뀌었어요',
       '잘 모르겠어요',
@@ -27,7 +28,7 @@ describe('Clinic Guide visual flow contract', () => {
       '정리된 내용',
       '불명확한 시간은 저장 전에 다시 확인해요',
       '저장 전 확인해주세요',
-      '<GuideHeader current={6} total={6}',
+      'confirm: 6',
       '저장하고 업데이트',
       '✓ 오늘 일정에 반영했어요',
       '오늘 일정 미리보기',
@@ -41,6 +42,8 @@ describe('Clinic Guide visual flow contract', () => {
     expect(form).toContain('aliases');
     expect(form).toContain('ClinicUpdateSaveResponse');
     expect(form).toContain('payload.scheduleItems');
+    expect(form).not.toContain('1/4');
+    expect(form).not.toContain('total: 4');
     expect(form).toContain("router.push('/home')");
     expect(page).toContain('partnerConnected');
     expect(page).toContain('aliases');

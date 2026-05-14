@@ -34,7 +34,8 @@ interface FormState {
 }
 
 const DIRECT_PREFIX = 'direct:';
-const FIRST_INTERVIEW_STEP_LABEL = '1/4';
+const PROGRESS_TOTAL = 6;
+const REFERENCE_PROGRESS_LABELS = ['01/06', '02/06', '03/06', '04/06', '05/06', '06/06'] as const;
 
 export function ClinicUpdateForm({ medications, partnerConnected = false }: Props) {
   const router = useRouter();
@@ -183,7 +184,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   };
 
   if (step === 'entry') return (
-    <Shell>
+    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
       <div style={{ flex: 1, display: 'grid', alignContent: 'center', gap: 22 }}>
         <p style={badgeStyle}>✦ Clinic Guide AI</p>
         <h1 style={heroTitleStyle}>오늘 병원 업데이트</h1>
@@ -200,7 +201,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   );
 
   if (step === 'same_med') return (
-    <Shell header={<GuideHeader current={progress.current} total={progress.total} firstStepLabel={FIRST_INTERVIEW_STEP_LABEL} />}>
+    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
       <QuestionCard icon="❔" title="같은 약을 계속 사용하나요?" lead="병원에서 오늘 들은 내용만 떠올려도 괜찮아요.">
         {[
           { label: '그대로', icon: '✓', value: true },
@@ -351,7 +352,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   );
 
   return (
-    <Shell header={<GuideHeader current={6} total={6} />}>
+    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
       <h1 style={titleStyle}>저장 전 확인해주세요</h1>
       <p style={subtitleStyle}>아래 내용을 확인한 후 저장하면 오늘 일정에 즉시 반영돼요.</p>
       <SummaryCard icon="📅" label="추가된 일정" value={selectedMedicationNames.length ? `${selectedMedicationNames.join(', ')} 오늘 19:00` : '추가된 약 없음'} onClick={() => setStep('new_med')} />
@@ -362,12 +363,13 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   );
 }
 
-function GuideHeader({ current, total, firstStepLabel }: { current: number; total: number; firstStepLabel?: string }) {
+function GuideHeader({ current, total }: { current: number; total: number }) {
+  const label = REFERENCE_PROGRESS_LABELS[current - 1] ?? `${String(current).padStart(2, '0')}/${String(total).padStart(2, '0')}`;
   return (
     <header style={{ display: 'grid', gap: 12, justifyItems: 'center', marginBottom: 18 }}>
       <strong style={{ fontFamily: 'Georgia, serif', fontSize: 34, fontWeight: 500 }}>Fevio</strong>
       <span style={badgeStyle}>✦ Clinic Guide AI</span>
-      <span aria-label={firstStepLabel} style={{ color: '#C4614A', fontWeight: 900 }}>{current}/{total}</span>
+      <span style={{ color: '#C4614A', fontWeight: 900 }}>{label}</span>
       <div role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={current} style={progressTrackStyle}>
         <i style={{ ...progressFillStyle, width: `${(current / total) * 100}%` }} />
       </div>
@@ -412,8 +414,8 @@ function SummaryCard({ icon, label, value, onClick }: { icon: string; label: str
 }
 
 function progressForStep(step: Step) {
-  const map: Partial<Record<Step, number>> = { same_med: 1, new_med: 2, days: 3, memo: 4 };
-  return { current: map[step] ?? 1, total: 4 };
+  const map: Record<Step, number> = { entry: 1, same_med: 2, new_med: 3, days: 4, memo: 5, confirm: 6, success: 6 };
+  return { current: map[step], total: PROGRESS_TOTAL };
 }
 
 function normalizeSearch(value: string) {
