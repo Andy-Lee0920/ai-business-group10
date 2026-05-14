@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ActionCard } from '../../components/action-card';
 import { ConfirmSheet } from '../../components/confirm-sheet';
 import type { ClinicUpdate, InjectionSite, PartnerLink, ScheduleItem } from '../../types/slc.types';
+import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
 import { getHomePendingItems, resolveHomeFocus, type HomeFocus } from '../../domain/slc-home-focus';
 
@@ -138,8 +139,8 @@ function PartnerRequestCard({ request, onApprove, onReject }: { request: Partner
       <p style={{ fontSize: 16, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 6px' }}>파트너 연결 요청이 있어요</p>
       <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>{displayName} 님이 일정 읽기 권한을 요청했어요.</p>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button type="button" onClick={onApprove} style={{ padding: '9px 16px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>승인</button>
-        <button type="button" onClick={onReject} style={{ padding: '9px 16px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>거절</button>
+        <button type="button" onClick={onApprove} style={{ padding: '9px 16px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>승인하기</button>
+        <button type="button" onClick={onReject} style={{ padding: '9px 16px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>나중에</button>
       </div>
     </div>
   );
@@ -173,7 +174,7 @@ function DayTabs({ selectedDay, onSelect }: { selectedDay: DayOffset; onSelect: 
 function EmptyState({ selectedDay }: { selectedDay: DayOffset }) {
   return (
     <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-      <p style={{ color: '#B5A89E', fontSize: 15 }}>{DAY_LABELS[selectedDay]} 등록된 일정이 없어요</p>
+      <p style={{ color: '#B5A89E', fontSize: 15 }}>{DAY_LABELS[selectedDay]} {SLC_SAFE_COPY.noSchedule}</p>
       <Link href="/add" style={emptyLinkStyle}>일정 추가</Link>
     </div>
   );

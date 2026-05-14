@@ -9,13 +9,17 @@ const partnerView = readFileSync('src/features/partner/partner-view.tsx', 'utf8'
 
 describe('More and partner read-only state contract', () => {
   it('keeps More to six SLC helper menu items plus invite, notification, logout', () => {
-    expect(MORE_MENU_ITEMS).toHaveLength(6);
+    expect(MORE_MENU_ITEMS).toHaveLength(5);
     expect(MORE_MENU_ITEMS.map((item) => item.label)).toEqual([
-      '오늘 홈', '일정 직접 추가', '기록 보기', '병원 후 업데이트', '파트너 상태 보기', '개인정보 안내',
+      '일정 추가', '병원 후 업데이트', '파트너 초대', '알림 설정', '개인정보 및 의료정보 안내',
     ]);
+    expect(MORE_MENU_ITEMS.map((item) => item.label)).not.toContain('오늘 홈');
+    expect(MORE_MENU_ITEMS.map((item) => item.label)).not.toContain('기록 보기');
     expect(moreScreen).toContain('알림 상태');
     expect(moreScreen).toContain('15분 전 표시');
     expect(moreScreen).toContain('로그아웃');
+    expect(moreScreen).toContain('승인하기');
+    expect(moreScreen).toContain('나중에');
     expect(morePage).toContain("redirect('/partner')");
   });
 

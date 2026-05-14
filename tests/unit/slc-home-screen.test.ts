@@ -61,6 +61,26 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).not.toContain('병원 다녀오셨나요?');
     expect(markup).not.toContain('업데이트하기');
   });
+
+  it('renders safe empty-home copy and partner approval actions', () => {
+    const markup = renderToStaticMarkup(React.createElement(TodayScreen, {
+      initialItems: [],
+      initialClinicUpdates: [],
+      userId: 'patient-1',
+      pendingPartnerRequest: {
+        id: 'link-1',
+        patient_id: 'patient-1',
+        partner_id: 'partner-1',
+        invite_code: 'ABC123',
+        status: 'requested',
+        partner_profile: { display_name: '민수' },
+      },
+    }));
+
+    expect(markup).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
+    expect(markup).toContain('승인하기');
+    expect(markup).toContain('나중에');
+  });
 });
 
 function render(initialItems: ScheduleItem[], initialClinicUpdates: ClinicUpdate[] = []) {

@@ -31,4 +31,8 @@ describe('SLC mobile quality gate', () => {
     expect(visibleSlcSources).toContain('disabled=');
     expect(visibleSlcSources).toMatch(/opacity: .*\?/);
   });
+
+  it('keeps premium SLC forms away from native select webform controls', () => {
+    expect(readFileSync('src/features/add/manual-add-form.tsx', 'utf8')).not.toContain('<select');
+  });
 });

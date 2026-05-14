@@ -3,6 +3,7 @@ import { isPresentationMode } from '../../../src/config';
 import { getSeedItems } from '../../../src/lib/seed-helpers';
 import { SLC_CONSENT_COOKIE, SLC_ROLE_COOKIE, fallbackCookieOptions, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
+import { maskTechnicalError } from '../../../src/domain/slc-copy';
 
 type OnboardingRole = 'patient' | 'partner';
 
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   if (profileError) {
     if (isMissingSlcTable(profileError)) return fallbackOnboardingResponse(role);
-    return NextResponse.json({ error: profileError.message }, { status: 500 });
+    return NextResponse.json({ error: maskTechnicalError(profileError.message) }, { status: 500 });
   }
 
   const now = new Date().toISOString();
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   if (consentError) {
     if (isMissingSlcTable(consentError)) return fallbackOnboardingResponse(role);
-    return NextResponse.json({ error: consentError.message }, { status: 500 });
+    return NextResponse.json({ error: maskTechnicalError(consentError.message) }, { status: 500 });
   }
 
   if (role === 'partner' && inviteCode) {
@@ -85,7 +86,7 @@ async function requestPartnerLink(supabase: Awaited<ReturnType<typeof createCook
     .update({ partner_id: partnerId, status: 'requested', requested_at: new Date().toISOString() })
     .eq('id', link.id);
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: maskTechnicalError(updateError.message) }, { status: 500 });
   return null;
 }
 
@@ -100,7 +101,7 @@ async function seedPatientSchedule(supabase: Awaited<ReturnType<typeof createCoo
 
   if (countError) {
     if (isMissingSlcTable(countError)) return null;
-    return NextResponse.json({ error: countError.message }, { status: 500 });
+    return NextResponse.json({ error: maskTechnicalError(countError.message) }, { status: 500 });
   }
   if ((count ?? 0) > 0) return null;
 
@@ -108,7 +109,7 @@ async function seedPatientSchedule(supabase: Awaited<ReturnType<typeof createCoo
   const { error: seedError } = await supabase.from('schedule_items').insert(getSeedItems(patientId, mode));
   if (seedError) {
     if (isMissingSlcTable(seedError)) return null;
-    return NextResponse.json({ error: seedError.message }, { status: 500 });
+    return NextResponse.json({ error: maskTechnicalError(seedError.message) }, { status: 500 });
   }
   return null;
 }

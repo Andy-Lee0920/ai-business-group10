@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import type { ScheduleType, Medication } from '../../types/slc.types';
-import { MANUAL_ADD_TYPE_CONFIG, manualAddConfigFor } from '../../domain/slc-manual-add';
+import { buildManualAddPayload, MANUAL_ADD_TYPE_CONFIG, manualAddConfigFor } from '../../domain/slc-manual-add';
+import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 
 interface Props {
   medications: Pick<Medication, 'id' | 'brand_name_ko' | 'default_unit' | 'default_cta'>[];
@@ -23,13 +24,25 @@ export function ManualAddForm({ medications }: Props) {
 
   const config = manualAddConfigFor(form.type);
 
+  const selectType = (type: ScheduleType) => {
+    const nextConfig = manualAddConfigFor(type);
+    setForm((f) => ({
+      ...f,
+      type,
+      title: '',
+      dose: '',
+      unit: nextConfig.defaultUnit,
+      medicationId: '',
+    }));
+  };
+
   const save = async () => {
     if (!form.title || !form.scheduledAt) return;
     setSaving(true);
     await fetch('/api/schedule/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, scheduledAt: new Date(form.scheduledAt).toISOString() }),
+      body: JSON.stringify(buildManualAddPayload({ ...form, scheduledAt: new Date(form.scheduledAt).toISOString() })),
     });
     setSaving(false);
     router.push('/home');
@@ -54,7 +67,7 @@ export function ManualAddForm({ medications }: Props) {
       <div style={{ display: 'flex', gap: 8 }}>
         {(['injection', 'medication', 'clinic'] as const).map((t) => {
           return (
-            <button key={t} onClick={() => setForm((f) => ({ ...f, type: t, unit: MANUAL_ADD_TYPE_CONFIG[t].defaultUnit || f.unit, medicationId: t === 'clinic' ? '' : f.medicationId }))} style={{
+            <button key={t} onClick={() => selectType(t)} style={{
               padding: '9px 16px', borderRadius: 999,
               background: form.type === t ? '#C4614A' : '#F0EDE8',
               color: form.type === t ? '#fff' : '#9B8E86',
@@ -68,22 +81,34 @@ export function ManualAddForm({ medications }: Props) {
 
       <label style={labelStyle}>{config.titleLabel}</label>
       {config.showMedicationSelect && (
-        <select
-          style={inputStyle}
-          value={form.medicationId}
-          onChange={(e) => {
-            const med = medications.find((m) => m.id === e.target.value);
-            setForm((f) => ({
-              ...f,
-              medicationId: e.target.value,
-              title: med ? med.brand_name_ko : f.title,
-              unit: med ? med.default_unit : f.unit,
-            }));
-          }}
-        >
-          <option value="">직접 입력</option>
-          {medications.map((m) => <option key={m.id} value={m.id}>{m.brand_name_ko}</option>)}
-        </select>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {medications.map((m) => {
+            const selected = form.medicationId === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setForm((f) => ({
+                  ...f,
+                  medicationId: m.id,
+                  title: m.brand_name_ko,
+                  unit: m.default_unit,
+                }))}
+                style={{
+                  ...inputStyle,
+                  borderColor: selected ? '#C4614A' : '#F0EDE8',
+                  background: selected ? '#FFF0EB' : '#fff',
+                  color: selected ? '#C4614A' : '#2A1F1A',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                {m.brand_name_ko}
+              </button>
+            );
+          })}
+          <p style={{ fontSize: 12, color: '#9B8E86', margin: '2px 0 0' }}>{SLC_SAFE_COPY.medicationNotFound}</p>
+        </div>
       )}
       <input
         style={{ ...inputStyle, marginTop: config.showMedicationSelect ? 8 : 0 }}
@@ -102,9 +127,28 @@ export function ManualAddForm({ medications }: Props) {
               value={form.dose}
               onChange={(e) => setForm((f) => ({ ...f, dose: e.target.value }))}
             />
-            <select style={{ ...inputStyle, flex: 1 }} value={form.unit} onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))}>
-              {['IU', 'mg', 'μg', 'ml', '정', '개', 'syringe'].map((u) => <option key={u} value={u}>{u}</option>)}
-            </select>
+            <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {config.unitOptions.map((u) => (
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, unit: u }))}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 999,
+                    border: 'none',
+                    background: form.unit === u ? '#C4614A' : '#F0EDE8',
+                    color: form.unit === u ? '#fff' : '#9B8E86',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {u}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}

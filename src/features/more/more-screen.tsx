@@ -43,7 +43,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
     <div style={{ padding: '60px 24px 24px' }}>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2A1F1A', marginBottom: 24 }}>더보기</h1>
 
-      <section style={{ marginBottom: 32 }}>
+      <section id="partner-invite" style={{ marginBottom: 32 }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>파트너 초대</h2>
         <p style={{ fontSize: 13, color: '#9B8E86', lineHeight: 1.55, margin: '0 0 14px' }}>
           파트너는 오늘 일정과 완료 상태만 읽기 전용으로 봅니다. 일정 추가나 완료 기록은 치료자만 할 수 있어요.
@@ -55,8 +55,8 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
               <div key={req.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ fontSize: 14, color: '#2A1F1A' }}>{partnerDisplayName(req)}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => sendPartnerAction(req.id, 'approve')} style={{ padding: '6px 14px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>승인</button>
-                  <button onClick={() => sendPartnerAction(req.id, 'reject')} style={{ padding: '6px 14px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>거절</button>
+                  <button onClick={() => sendPartnerAction(req.id, 'approve')} style={{ padding: '6px 14px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>승인하기</button>
+                  <button onClick={() => sendPartnerAction(req.id, 'reject')} style={{ padding: '6px 14px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>나중에</button>
                 </div>
               </div>
             ))}
@@ -101,7 +101,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
         ))}
       </section>
 
-      <section style={{ marginBottom: 24, background: '#fff', borderRadius: 16, padding: '16px 20px', border: '1.5px solid #F0EDE8' }}>
+      <section id="notifications" style={{ marginBottom: 24, background: '#fff', borderRadius: 16, padding: '16px 20px', border: '1.5px solid #F0EDE8' }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: '#2A1F1A', margin: '0 0 8px' }}>알림 상태</h2>
         <p style={{ fontSize: 13, color: '#9B8E86', margin: 0 }}>알림 ON / 일정 15분 전 표시 예정</p>
       </section>
