@@ -15,4 +15,16 @@ describe('clinic-guide-ai smoke workflow', () => {
     expect(workflow).toContain('NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}');
     expect(workflow).toContain('NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}');
   });
+
+  it('keeps an optional PR CI fallback smoke step available before merge', () => {
+    const workflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+
+    expect(workflow).toContain('Clinic Guide AI LLM fallback smoke (optional)');
+    expect(workflow).toContain('CLINIC_GUIDE_AI_SMOKE_INPUT');
+    expect(workflow).toContain('CLINIC_GUIDE_AI_EXPECTED_ID');
+    expect(workflow).toContain('npm run verify:clinic-guide-ai');
+    expect(workflow).toContain('--expect-source llm');
+    expect(workflow).toContain('--expect-id');
+  });
+
 });

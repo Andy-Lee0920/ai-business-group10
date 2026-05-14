@@ -38,3 +38,19 @@ jobs:
 
       - name: E2E smoke
         run: npm run test:e2e
+
+      - name: Clinic Guide AI LLM fallback smoke (optional)
+        run: |
+          if [ -z "${CLINIC_GUIDE_AI_SMOKE_INPUT}" ] || [ -z "${CLINIC_GUIDE_AI_EXPECTED_ID}" ]; then
+            echo "Skipping Clinic Guide LLM fallback smoke; set CLINIC_GUIDE_AI_SMOKE_INPUT and CLINIC_GUIDE_AI_EXPECTED_ID repository variables to enable it."
+            exit 0
+          fi
+          npm run verify:clinic-guide-ai -- \
+            --input "${CLINIC_GUIDE_AI_SMOKE_INPUT}" \
+            --expect-source llm \
+            --expect-id "${CLINIC_GUIDE_AI_EXPECTED_ID}"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          CLINIC_GUIDE_AI_SMOKE_INPUT: ${{ vars.CLINIC_GUIDE_AI_SMOKE_INPUT }}
+          CLINIC_GUIDE_AI_EXPECTED_ID: ${{ vars.CLINIC_GUIDE_AI_EXPECTED_ID }}
