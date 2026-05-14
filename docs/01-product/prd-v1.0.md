@@ -1187,6 +1187,31 @@ The system may not generate:
 - “성공 가능성이 높습니다”
 - “병원에 가지 않아도 됩니다”
 
+### 16.4 Clinic Guide AI Boundary
+
+Clinic Guide AI is a user-input assistant for the post-clinic update flow. It may help the user map what they typed into existing product data, but it must not become a treatment planner or hidden writer.
+
+Allowed Clinic Guide AI behavior:
+
+- 약품명 문자열 → medications 테이블 행 정규화
+- 다음 인터뷰 질문 제안
+- 사용자 입력 보조 (자동완성 힌트)
+
+Forbidden Clinic Guide AI behavior:
+
+- 약 용량 추론 또는 확정
+- 투약 시간 자동 결정
+- 치료 단계 판단
+- 의학적 조언 (“이 약을 맞아야 합니다” 류)
+- 일정 자동 저장 (사용자 확인 없이)
+
+Policy:
+
+- `requiresUserConfirmation: true` is mandatory for AI-produced drafts.
+- AI-produced drafts are saved only after 사용자 명시적 확인 후에만 저장한다.
+- OpenRouter API 키는 클라이언트 번들에 절대 포함되지 않는다.
+- OpenRouter API keys exist only as Supabase Edge Function 환경변수 or server-controlled secret storage and are never logged or returned to the client.
+
 ---
 
 ## 17. Engineering Implementation Issues

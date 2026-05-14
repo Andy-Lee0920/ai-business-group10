@@ -10,6 +10,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/privacy?mode=presentation', request.url));
   }
 
+  if (request.cookies.get('fevio_privacy_gate_v1')?.value !== 'accepted') {
+    return NextResponse.redirect(new URL('/privacy?next=/auth/sign-in', request.url));
+  }
+
   let supabase;
 
   try {

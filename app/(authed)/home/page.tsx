@@ -1,337 +1,91 @@
-import { cookies, headers } from 'next/headers';
-import { isPresentationHost, isPresentationMode } from '../../../src/config';
-import { computeHomeContext, computeHomeContextV2, type HomeContext } from '../../../src/domain/home-composition';
-import type { InitialCareCycleState, OnboardingCareDay } from '../../../src/domain/onboarding-care-state';
-import { computeCareSurface } from '../../../src/domain/care-surface-engine';
-import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../src/domain/care-os-architecture';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { isPresentationMode } from '../../../src/config';
+import { TodayScreen } from '../../../src/features/today/today-screen';
+import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
-import { AdaptiveHomeRuntime } from '../../../src/features/adaptive-home/adaptive-home-runtime';
-import { getPresentationScenarioCards, normalizePresentationCare, toAdaptiveCareDay } from '../../../src/features/adaptive-home/presentation-scenarios';
-import type { CareActionCard } from '../../../src/types/care-cards.types';
-import type { TreatmentMilestone, TreatmentMilestoneKind, TimelineCareDay } from '../../../src/types/treatment-timeline.types';
+import { SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
+import type { ClinicUpdate, PartnerLink, ScheduleItem } from '../../../src/types/slc.types';
 
 export const dynamic = 'force-dynamic';
 
-type HomeSearchParams = Record<string, string | string[] | undefined> | URLSearchParams;
+export default async function HomePage() {
+  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+    const userId = 'presentation-user';
+    return <TodayScreen initialItems={fallbackScheduleItems(userId)} userId={userId} pendingPartnerRequest={null} initialClinicUpdates={[]} />;
+  }
 
-type HomePageProps = {
-  searchParams?: Promise<HomeSearchParams> | HomeSearchParams;
-};
+  const supabase = await createCookieBackedSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/sign-in');
 
-export default async function DynamicHomePage({ searchParams }: HomePageProps) {
-  const now = new Date();
-  const requestHeaders = await headers();
+  const { data: profile, error: profileError } = await supabase
+    .from('user_profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
   const cookieStore = await cookies();
-  const presentationMode = isPresentationMode() || isPresentationHost(requestHeaders.get('host'));
-  const query = await searchParams;
-  const careQuery = getSearchParam(query, 'care');
-  const presentationCare = normalizePresentationCare(careQuery);
-  const hasCarePreviewQuery = careQuery !== undefined;
-  const timelineMilestonesCookie = cookieStore.get(TIMELINE_MILESTONES_COOKIE)?.value;
-  const timelineCardsCookie = cookieStore.get(TIMELINE_CARDS_COOKIE)?.value;
-  const timelineMilestonePreview = readTimelineMilestones(timelineMilestonesCookie);
-  const timelineCardPreview = readTimelineCards(timelineCardsCookie);
-  const hasTimelineCardsCookie = timelineCardsCookie !== undefined;
-  const hasTimelinePreview = timelineMilestonePreview.length > 0;
-  const onboardingCycleState = !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCareCycleState(cookieStore.get('fevio_onboarding_care_cycle_state')?.value) : null;
-  const useCarePreview = hasCarePreviewQuery || (presentationMode && !hasTimelinePreview && !onboardingCycleState);
-  const onboardingCard = !hasCarePreviewQuery && !hasTimelinePreview ? readOnboardingCard(cookieStore.get('fevio_onboarding_first_card')?.value) : null;
-  const persistedCards = useCarePreview || onboardingCard || onboardingCycleState || hasTimelinePreview ? [] : await getPersistedCards();
-  const persistedMilestones = useCarePreview || onboardingCard || onboardingCycleState || hasTimelinePreview ? [] : await getPersistedMilestones();
-  const partnerConnected = useCarePreview ? false : await getPartnerConnected();
-  const milestones = hasTimelinePreview ? timelineMilestonePreview : persistedMilestones;
-  const cards = onboardingCard
-    ? [onboardingCard]
-    : useCarePreview
-      ? getPresentationScenarioCards(presentationCare, now)
-      : onboardingCycleState
-        ? []
-      : hasTimelinePreview && hasTimelineCardsCookie
-        ? timelineCardPreview
-      : timelineCardPreview.length > 0
-        ? timelineCardPreview
-      : persistedCards.length > 0
-        ? persistedCards
-        : makeDemoCards(now);
-  const baseContext = milestones.length > 0
-    ? computeHomeContextV2(cards, milestones, now)
-    : computeHomeContext(cards, now);
-  const roleContext = normalizeRoleContext(cookieStore.get('fevio_onboarding_role_context')?.value);
-  const context = {
-    ...(onboardingCycleState
-      ? applyOnboardingCareCycleState(baseContext, onboardingCycleState)
-      : useCarePreview && !onboardingCard && milestones.length === 0
-        ? { ...baseContext, careDay: toAdaptiveCareDay(presentationCare) }
-        : baseContext),
-    roleIntent: roleContext ? deriveRoleBasedHomeIntent({ roleContext, partnerInviteSkipped: false }) : undefined,
-    onboardingQuickCaptureDone: cookieStore.get('fevio_onboarding_quick_capture_done')?.value === '1',
-    partnerConnected,
-  };
+  const fallbackRole = cookieStore.get(SLC_ROLE_COOKIE)?.value;
 
-  const composition = computeCareSurface(toFevioSurfaceContext(context));
+  if ((isMissingSlcTable(profileError) ? fallbackRole : profile?.role) === 'partner') redirect('/partner');
 
-  return <AdaptiveHomeRuntime context={context} composition={composition} demoMode={useCarePreview} />;
-}
+  const [itemsRes, clinicUpdatesRes, pendingPartnerRequest] = await Promise.all([
+    supabase
+      .from('schedule_items')
+      .select('*')
+      .eq('patient_id', user.id)
+      .gte('scheduled_at', dayStart(0).toISOString())
+      .lte('scheduled_at', dayEnd(2).toISOString())
+      .order('scheduled_at', { ascending: true }),
+    supabase
+      .from('clinic_updates')
+      .select('*')
+      .eq('patient_id', user.id)
+      .gte('created_at', dayStart(0).toISOString())
+      .order('created_at', { ascending: false }),
+    getPendingPartnerRequest(supabase, user.id),
+  ]);
 
-const TIMELINE_MILESTONES_COOKIE = 'fevio_treatment_milestones';
-const TIMELINE_CARDS_COOKIE = 'fevio_treatment_cards';
-
-function toFevioSurfaceContext(context: HomeContext) {
-  return {
-    careDay: toTimelineCareDay(context.careDay),
-    overrideReason: context.overrideReason ?? 'none',
-    proximityDays: context.proximityDays,
-    emotionTrend: undefined,
-    cardCount: context.cards.length,
-    partnerStatus: context.partnerConnected === true || context.cards.some((card) => card.cardType === 'partner_support') ? 'connected' : 'unknown',
-  } as const;
-}
-
-
-function normalizeRoleContext(value: string | undefined): RoleContext | null {
-  return value === 'patient' || value === 'partner' || value === 'together' || value === 'primary_solo' || value === 'primary_with_partner' ? value : null;
-}
-
-function toTimelineCareDay(careDay: HomeContext['careDay']): TimelineCareDay {
-  return careDay === 'onboarding' ? 'routine_day' : careDay;
-}
-
-
-function applyOnboardingCareCycleState(context: HomeContext, state: InitialCareCycleState): HomeContext {
-  return {
-    ...context,
-    careDay: state.careDay,
-    phaseCareDay: state.careDay,
-    surfaceCareDay: state.careDay,
-    overrideReason: 'none',
-    primaryMessage: onboardingPrimaryMessage(state.careDay),
-  };
-}
-
-function onboardingPrimaryMessage(careDay: OnboardingCareDay) {
-  if (careDay === 'injection_day') return '오늘은 확인한 약·주사 안내를 먼저 안전하게 실행해요.';
-  if (careDay === 'clinic_day') return '방문 전 확인할 내용만 차분히 정리해요.';
-  if (careDay === 'waiting_day') return '결과를 더 해석하지 않고 다음 알림만 붙잡아요.';
-  if (careDay === 'two_week_wait_day') return '이식 후에는 기록은 남기고 판단은 잠시 미뤄둘게요.';
-  return '오늘은 결과를 해석하지 않고 다음 일정과 보호 모드만 남겨요.';
-}
-
-function getSearchParam(params: HomeSearchParams | undefined, key: string) {
-  if (!params) return undefined;
-  if (params instanceof URLSearchParams) return params.get(key) ?? undefined;
-  const value = params[key];
-  return Array.isArray(value) ? value[0] : value;
-}
-
-async function getPersistedCards(): Promise<CareActionCard[]> {
-  try {
-    const supabase = await createCookieBackedSupabaseClient();
-    const { data, error } = await supabase
-      .from('care_action_cards')
-      .select('id,couple_id,created_by,assignee_role,card_type,title,description,source_text,scheduled_at,care_date,status,confirmation_required,user_marked_important,partner_visible,revision')
-      .eq('status', 'confirmed')
-      .order('scheduled_at', { ascending: true, nullsFirst: false });
-
-    if (error || !Array.isArray(data)) return [];
-    return data.filter(isCareActionCard);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Missing Supabase public config')) return [];
-    throw error;
+  if (itemsRes.error) {
+    return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} pendingPartnerRequest={pendingPartnerRequest} initialClinicUpdates={[]} />;
   }
-}
-
-async function getPersistedMilestones(): Promise<TreatmentMilestone[]> {
-  try {
-    const supabase = await createCookieBackedSupabaseClient();
-    const { data, error } = await supabase
-      .from('treatment_milestones')
-      .select('id,cycle_id,couple_id,milestone,confirmed_at,notes,created_at')
-      .order('confirmed_at', { ascending: false });
-
-    if (error || !Array.isArray(data)) return [];
-    return data.filter(isTreatmentMilestone);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Missing Supabase public config')) return [];
-    throw error;
-  }
-}
-
-async function getPartnerConnected(): Promise<boolean> {
-  try {
-    const supabase = await createCookieBackedSupabaseClient();
-    const { data, error } = await supabase
-      .from('care_memberships')
-      .select('id')
-      .eq('role', 'partner')
-      .not('user_id', 'is', null)
-      .limit(1);
-
-    if (error || !Array.isArray(data)) return false;
-    return data.length > 0;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Missing Supabase public config')) return false;
-    throw error;
-  }
-}
-
-function isCareActionCard(value: unknown): value is CareActionCard {
-  if (typeof value !== 'object' || value === null) return false;
-  const card = value as Partial<CareActionCard>;
   return (
-    typeof card.id === 'string' &&
-    typeof card.couple_id === 'string' &&
-    typeof card.created_by === 'string' &&
-    (card.assignee_role === 'primary_user' || card.assignee_role === 'partner' || card.assignee_role === 'both') &&
-    isCardType(card.card_type) &&
-    typeof card.title === 'string' &&
-    (typeof card.description === 'string' || card.description === null) &&
-    typeof card.source_text === 'string' &&
-    (typeof card.scheduled_at === 'string' || card.scheduled_at === null) &&
-    (typeof card.care_date === 'string' || card.care_date === null) &&
-    card.status === 'confirmed' &&
-    typeof card.confirmation_required === 'boolean' &&
-    typeof card.user_marked_important === 'boolean' &&
-    typeof card.partner_visible === 'boolean' &&
-    typeof card.revision === 'number'
+    <TodayScreen
+      initialItems={(itemsRes.data ?? []) as ScheduleItem[]}
+      userId={user.id}
+      pendingPartnerRequest={pendingPartnerRequest}
+      initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
+    />
   );
 }
 
-function isCardType(value: unknown): value is CareActionCard['card_type'] {
-  return (
-    value === 'injection' ||
-    value === 'medication' ||
-    value === 'clinic_visit' ||
-    value === 'clinic_confirmation' ||
-    value === 'partner_support' ||
-    value === 'record' ||
-    value === 'general_action'
-  );
+async function getPendingPartnerRequest(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  patientId: string,
+): Promise<PartnerLink | null> {
+  const { data: request, error } = await supabase
+    .from('partner_links')
+    .select('*, partner_profile:user_profiles!partner_id(display_name)')
+    .eq('patient_id', patientId)
+    .eq('status', 'requested')
+    .order('requested_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) return null;
+  return request as PartnerLink | null;
 }
 
-function isTreatmentMilestone(value: unknown): value is TreatmentMilestone {
-  if (typeof value !== 'object' || value === null) return false;
-  const milestone = value as Partial<TreatmentMilestone>;
-  return (
-    typeof milestone.id === 'string' &&
-    typeof milestone.cycle_id === 'string' &&
-    typeof milestone.couple_id === 'string' &&
-    isMilestoneKind(milestone.milestone) &&
-    typeof milestone.confirmed_at === 'string' &&
-    (typeof milestone.notes === 'string' || milestone.notes === null) &&
-    typeof milestone.created_at === 'string'
-  );
+function dayStart(offset: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offset);
+  return date;
 }
 
-function isMilestoneKind(value: unknown): value is TreatmentMilestoneKind {
-  return (
-    value === 'initial_visit' ||
-    value === 'stimulation_start' ||
-    value === 'trigger_shot' ||
-    value === 'egg_retrieval' ||
-    value === 'embryo_transfer' ||
-    value === 'result_day'
-  );
-}
-
-
-function readOnboardingCareCycleState(value: string | undefined): InitialCareCycleState | null {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(decodeURIComponent(value)) as Partial<InitialCareCycleState>;
-    if (parsed.source !== 'onboarding' || parsed.version !== 1) return null;
-    if (!isOnboardingCareDay(parsed.careDay) || !isOnboardingIvfStage(parsed.effectiveStage) || !isOnboardingIvfStage(parsed.inferredStage)) return null;
-    return parsed as InitialCareCycleState;
-  } catch {
-    return null;
-  }
-}
-
-function isOnboardingCareDay(value: unknown): value is OnboardingCareDay {
-  return value === 'injection_day' || value === 'clinic_day' || value === 'waiting_day' || value === 'two_week_wait_day' || value === 'result_protection_day';
-}
-
-function isOnboardingIvfStage(value: unknown): value is InitialCareCycleState['effectiveStage'] {
-  return value === 'baseline_testing' || value === 'ovarian_stimulation' || value === 'egg_retrieval' || value === 'fertilization' || value === 'embryo_culture' || value === 'embryo_transfer' || value === 'pregnancy_test';
-}
-
-function readOnboardingCard(value: string | undefined): CareActionCard | null {
-  if (!value) return null;
-
-  try {
-    const parsed = JSON.parse(decodeURIComponent(value)) as Partial<CareActionCard>;
-    if (typeof parsed.id !== 'string' || typeof parsed.title !== 'string' || typeof parsed.source_text !== 'string') return null;
-    if (parsed.status !== 'confirmed' || !isCardType(parsed.card_type)) return null;
-    return {
-      id: parsed.id,
-      couple_id: typeof parsed.couple_id === 'string' ? parsed.couple_id : 'onboarding-couple',
-      created_by: typeof parsed.created_by === 'string' ? parsed.created_by : 'onboarding',
-      assignee_role: parsed.assignee_role === 'partner' || parsed.assignee_role === 'both' ? parsed.assignee_role : 'primary_user',
-      card_type: parsed.card_type,
-      title: parsed.title,
-      description: typeof parsed.description === 'string' ? parsed.description : null,
-      source_text: parsed.source_text,
-      scheduled_at: typeof parsed.scheduled_at === 'string' ? parsed.scheduled_at : null,
-      care_date: typeof parsed.care_date === 'string' ? parsed.care_date : null,
-      status: 'confirmed',
-      confirmation_required: parsed.confirmation_required === true,
-      user_marked_important: parsed.user_marked_important === true,
-      partner_visible: parsed.partner_visible === true,
-      revision: typeof parsed.revision === 'number' ? parsed.revision : 1,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function readTimelineMilestones(value: string | undefined): TreatmentMilestone[] {
-  return readCookieArray(value).filter(isTreatmentMilestone);
-}
-
-function readTimelineCards(value: string | undefined): CareActionCard[] {
-  return readCookieArray(value).filter(isCareActionCard);
-}
-
-function readCookieArray(value: string | undefined): unknown[] {
-  if (!value) return [];
-  try {
-    const decoded = decodeURIComponent(value);
-    const parsed = JSON.parse(decoded);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-}
-
-function makeDemoCards(now: Date): CareActionCard[] {
-  const imminent = new Date(now.getTime() + 20 * 60_000).toISOString();
-  const later = new Date(now.getTime() + 3 * 60 * 60_000).toISOString();
-  return [
-    makeCard('routine', 'medication', '프로게스테론 복용', later),
-    makeCard('injection', 'injection', '21:00 고날에프 — 내가 확인한 용량', imminent),
-  ];
-}
-
-function makeCard(id: string, cardType: CareActionCard['card_type'], title: string, scheduledAt: string): CareActionCard {
-  return {
-    id,
-    couple_id: 'demo-couple',
-    created_by: 'demo-user',
-    assignee_role: 'primary_user',
-    card_type: cardType,
-    title,
-    description: null,
-    source_text: title,
-    scheduled_at: scheduledAt,
-    care_date: null,
-    status: 'confirmed',
-    confirmation_required: false,
-    user_marked_important: false,
-    partner_visible: true,
-    revision: 1,
-  };
+function dayEnd(offset: number) {
+  const date = new Date();
+  date.setHours(23, 59, 59, 999);
+  date.setDate(date.getDate() + offset);
+  return date;
 }

@@ -1,0 +1,53 @@
+name: Clinic Guide AI smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      medication_input:
+        description: Non-alias medication expression that should require OpenRouter fallback
+        required: true
+        default: gonalf typo
+      expected_medication_id:
+        description: Expected normalized medication id returned by the fallback
+        required: true
+        default: gonal-f
+
+jobs:
+  verify-llm-fallback:
+    name: verify deployed clinic-guide-ai llm fallback
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify secret precondition
+        run: |
+          if [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] || [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY}" ]; then
+            echo "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY GitHub secrets are required." >&2
+            exit 1
+          fi
+          echo "OPENROUTER_API_KEY must be registered in Supabase secrets before this workflow is run."
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Smoke deployed Edge Function LLM fallback
+        run: >-
+          npm run verify:clinic-guide-ai --
+          --input "${{ inputs.medication_input }}"
+          --expect-source llm
+          --expect-id "${{ inputs.expected_medication_id }}"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}

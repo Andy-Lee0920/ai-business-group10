@@ -28,7 +28,7 @@ export default async function LandingPage() {
           ) : (
             <>
               <Link className="primary-cta" href="/auth/sign-in">
-                Google로 시작하기
+                Google로 계속하기
               </Link>
               <Link className="secondary-cta" href="/privacy">
                 개인정보 처리방침
@@ -36,6 +36,11 @@ export default async function LandingPage() {
             </>
           )}
         </div>
+        {!presentationMode && (
+          <p style={{ margin: '16px 0 0', color: '#9B8E86', fontSize: 12, lineHeight: 1.5 }}>
+            Fevio는 의료 판단을 하지 않습니다. 병원에서 받은 안내와 직접 입력한 일정을 확인하는 도구입니다.
+          </p>
+        )}
       </Card>
     </main>
   );

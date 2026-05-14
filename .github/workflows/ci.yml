@@ -4,6 +4,16 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      clinic_guide_ai_smoke_input:
+        description: Optional non-alias medication expression for Clinic Guide LLM fallback smoke
+        required: false
+        default: ''
+      clinic_guide_ai_expected_id:
+        description: Expected medication id for the optional Clinic Guide LLM fallback smoke
+        required: false
+        default: ''
 
 jobs:
   verify:
@@ -38,3 +48,19 @@ jobs:
 
       - name: E2E smoke
         run: npm run test:e2e
+
+      - name: Clinic Guide AI LLM fallback smoke (optional)
+        run: |
+          if [ -z "${CLINIC_GUIDE_AI_SMOKE_INPUT}" ] || [ -z "${CLINIC_GUIDE_AI_EXPECTED_ID}" ]; then
+            echo "Skipping Clinic Guide LLM fallback smoke; dispatch CI with clinic_guide_ai_smoke_input and clinic_guide_ai_expected_id or set CLINIC_GUIDE_AI_SMOKE_INPUT and CLINIC_GUIDE_AI_EXPECTED_ID repository variables to enable it."
+            exit 0
+          fi
+          npm run verify:clinic-guide-ai -- \
+            --input "${CLINIC_GUIDE_AI_SMOKE_INPUT}" \
+            --expect-source llm \
+            --expect-id "${CLINIC_GUIDE_AI_EXPECTED_ID}"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          CLINIC_GUIDE_AI_SMOKE_INPUT: ${{ github.event.inputs.clinic_guide_ai_smoke_input || vars.CLINIC_GUIDE_AI_SMOKE_INPUT }}
+          CLINIC_GUIDE_AI_EXPECTED_ID: ${{ github.event.inputs.clinic_guide_ai_expected_id || vars.CLINIC_GUIDE_AI_EXPECTED_ID }}

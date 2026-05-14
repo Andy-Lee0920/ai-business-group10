@@ -1,64 +1,61 @@
 import Link from 'next/link';
-import { getPrivacyContactEmail } from '../../src/config';
-import { Badge, Card, Notice } from '../../src/components/ui';
-import styles from './privacy.module.css';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-export default function PrivacyPage() {
-  const privacyContactEmail = getPrivacyContactEmail();
+const PRIVACY_GATE_COOKIE = 'fevio_privacy_gate_v1';
+
+interface PrivacyPageProps {
+  searchParams?: Promise<{ next?: string }>;
+}
+
+export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
+  const params = await searchParams;
+  const nextPath = safeNextPath(params?.next);
+  const cookieStore = await cookies();
+
+  if (cookieStore.get(PRIVACY_GATE_COOKIE)?.value === 'accepted') {
+    redirect(nextPath);
+  }
+
+  async function acceptPrivacy(formData: FormData) {
+    'use server';
+    const cookieStore = await cookies();
+    cookieStore.set(PRIVACY_GATE_COOKIE, 'accepted', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    const requestedNext = formData.get('next');
+    redirect(safeNextPath(typeof requestedNext === 'string' ? requestedNext : undefined));
+  }
 
   return (
-    <main className={`app-shell ${styles.privacyShell}`}>
-      <Card aria-labelledby="privacy-title" className={styles.privacyCard} data-testid="privacy-gate-card">
-        <header className={styles.privacyHeader}>
-          <p className={styles.privacyEyebrow}>Privacy Gate</p>
-          <h1 className={styles.privacyTitle} id="privacy-title">시작 전에 세 가지만 확인해요</h1>
-          <p className={styles.privacyLead}>병원 메모를 저장하기 전에, 무엇이 저장되고 어디까지 공유되는지만 짧게 확인합니다.</p>
-        </header>
-
-        <ul className={styles.consentList} data-testid="privacy-consent-list" aria-label="Privacy Gate 핵심 확인 항목">
-          <li>
-            <Badge tone="sage">정보</Badge>
-            <span>
-              <strong>병원 메모와 치료 일정</strong>
-              <p>동의 후에만 저장하고, 내 케어 화면을 만드는 데 사용합니다.</p>
-            </span>
-          </li>
-          <li>
-            <Badge tone="lavender">공유</Badge>
-            <span>
-              <strong>파트너에게 보이는 범위</strong>
-              <p>사용자가 고른 카드만 역할과 행동으로 바꿔 보여줍니다.</p>
-            </span>
-          </li>
-          <li>
-            <Badge tone="coral">경계</Badge>
-            <span>
-              <strong>의료 판단은 병원 기준</strong>
-              <p>Fevio는 진단, 용량 추천, 치료 판단을 대신하지 않습니다.</p>
-            </span>
-          </li>
-        </ul>
-
-        <details className={styles.detailPanel}>
-          <summary>보관·삭제·공유 세부 안내</summary>
-          <div className={styles.detailBody}>
-            <Notice tone="sage">
-              삭제 요청은 {privacyContactEmail}로 보내주시면 접수 후 처리합니다. 자동 삭제는 v1.x 예정입니다.
-              파트너 연결 해제는 <Link href="/settings/sharing">공유 링크 설정</Link>에서 먼저 할 수 있어요.
-            </Notice>
-            <Notice tone="coral">동의 전에는 병원 메모, 할 일 카드, 파트너 공유 링크를 만들 수 없습니다.</Notice>
-          </div>
-        </details>
-
-        <form action="/api/privacy/accept" className={`cta-row ${styles.privacyActions}`} method="post">
-          <button className="fevio-button fevio-button--primary" type="submit">
-            동의하고 시작
+    <main className="app-shell" style={{ background: 'var(--slc-bg)', display: 'grid', placeItems: 'center' }}>
+      <section data-testid="privacy-gate-card" aria-labelledby="privacy-title" style={{ width: '100%', maxWidth: 390, background: 'var(--slc-card)', border: '1px solid var(--slc-border)', borderRadius: 28, padding: 24, boxShadow: '0 18px 48px rgba(106, 72, 58, 0.12)' }}>
+        <p style={{ margin: '0 0 8px', color: 'var(--slc-coral)', fontWeight: 700, fontSize: 13 }}>개인정보 보호 안내</p>
+        <h1 id="privacy-title" style={{ margin: '0 0 18px', color: 'var(--slc-text)', fontSize: 24, lineHeight: 1.25 }}>시작 전에 저장 범위를 확인해 주세요</h1>
+        <div style={{ display: 'grid', gap: 12, color: '#6B5E55', fontSize: 15, lineHeight: 1.6 }}>
+          <p style={{ margin: 0 }}>Fevio는 로그인 상태와 사용자가 직접 입력한 일정, 약명, 완료 여부를 저장합니다.</p>
+          <p style={{ margin: 0 }}>이 정보는 오늘 할 일, 기록, 파트너 읽기 전용 화면을 만들기 위해 사용됩니다.</p>
+          <p style={{ margin: 0 }}>자세한 내용은 <Link href="/privacy#details" style={{ color: 'var(--slc-coral)', fontWeight: 700 }}>개인정보 안내</Link>에서 확인할 수 있습니다.</p>
+        </div>
+        <form action={acceptPrivacy} style={{ marginTop: 24 }}>
+          <input type="hidden" name="next" value={nextPath} />
+          <button type="submit" style={{ width: '100%', minHeight: 52, border: 0, borderRadius: 999, background: 'var(--slc-coral)', color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+            확인하고 계속
           </button>
-          <Link className="secondary-cta" href="/">
-            동의하지 않고 돌아가기
-          </Link>
         </form>
-      </Card>
+        <p id="details" style={{ margin: '14px 0 0', color: '#9B8E86', fontSize: 12, lineHeight: 1.5 }}>
+          Fevio는 의료 판단을 하지 않고 병원 안내를 기록·확인하는 도구입니다.
+        </p>
+      </section>
     </main>
   );
+}
+
+function safeNextPath(next: string | undefined) {
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/privacy')) return '/onboarding';
+  return next;
 }

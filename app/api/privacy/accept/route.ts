@@ -11,6 +11,7 @@ function isMissingConfig(error: unknown) {
 function redirectWithDemoCookie(request: NextRequest) {
   const response = NextResponse.redirect(new URL('/onboarding', request.url), { status: 303 });
   response.cookies.set('fevio_privacy_accepted', '1', { httpOnly: true, sameSite: 'lax', path: '/' });
+  response.cookies.set('fevio_privacy_gate_v1', 'accepted', { httpOnly: true, sameSite: 'lax', path: '/' });
   return response;
 }
 

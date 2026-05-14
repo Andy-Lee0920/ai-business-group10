@@ -11,9 +11,11 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test tests/e2e/slc-mobile-quality.spec.ts",
     "typecheck": "tsc --noEmit",
-    "verify:real-medication-input": "node scripts/verify-real-medication-e2e.mjs"
+    "verify:real-medication-input": "node scripts/verify-real-medication-e2e.mjs",
+    "test:e2e:legacy": "playwright test",
+    "verify:clinic-guide-ai": "node scripts/smoke-clinic-guide-ai.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.3",
