@@ -23,6 +23,24 @@ test.describe('SLC mobile quality smoke', () => {
     expect(SLC_MOBILE_ROUTES).toEqual(['/privacy', '/onboarding', '/home', '/add', '/records', '/clinic-update', '/partner', '/more']);
   });
 
+  test('renders the full SLC route set in presentation mode without technical copy', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const route of SLC_MOBILE_ROUTES) {
+      const response = await page.goto(route);
+      expect(response?.ok(), `${route} should respond successfully`).toBe(true);
+
+      const visibleText = await page.locator('body').innerText();
+      expect(visibleText.trim().length, `${route} should render user-facing content`).toBeGreaterThan(0);
+      expect(visibleText, `${route} should not show a generic app error`).not.toMatch(/Application error|Unhandled Runtime Error|This page could not be found/i);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+        `${route} should not overflow the mobile viewport`,
+      ).toBeLessThanOrEqual(390);
+      for (const forbidden of SLC_FORBIDDEN_VISIBLE_COPY) expect(visibleText, route).not.toContain(forbidden);
+    }
+  });
+
   test('Clinic Guide update flow exposes the reference UI path in presentation mode', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/clinic-update');
