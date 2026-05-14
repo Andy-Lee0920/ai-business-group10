@@ -12,9 +12,6 @@ export default async function AddPage() {
     .eq('is_slc_seed', true)
     .order('brand_name_en', { ascending: true });
 
-  if (error) {
-    if (isMissingSlcTable(error)) return <ManualAddForm medications={fallbackMedications()} />;
-    throw new Error(error.message);
-  }
+  if (error) return <ManualAddForm medications={fallbackMedications()} />;
   return <ManualAddForm medications={medications ?? []} />;
 }

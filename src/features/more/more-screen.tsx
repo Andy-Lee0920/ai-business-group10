@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { PartnerLink } from '../../types/slc.types';
+import { MORE_MENU_ITEMS } from './more-menu';
 
 interface Props {
   userId: string;
@@ -43,7 +44,10 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2A1F1A', marginBottom: 24 }}>더보기</h1>
 
       <section style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>파트너 연결</h2>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>파트너 초대</h2>
+        <p style={{ fontSize: 13, color: '#9B8E86', lineHeight: 1.55, margin: '0 0 14px' }}>
+          파트너는 오늘 일정과 완료 상태만 읽기 전용으로 봅니다. 일정 추가나 완료 기록은 치료자만 할 수 있어요.
+        </p>
         {pendingRequests.length > 0 && (
           <div style={{ background: '#FFF8F5', borderRadius: 16, padding: '16px 20px', border: '1.5px solid #F4D4C8', marginBottom: 16 }}>
             <p style={{ fontSize: 14, fontWeight: 600, color: '#C4614A', marginBottom: 12 }}>파트너 연결 요청이 있어요</p>
@@ -71,7 +75,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
         {inviteCode ? (
           <div style={{ background: '#fff', borderRadius: 16, padding: '16px 20px', border: '1.5px solid #F0EDE8' }}>
-            <p style={{ fontSize: 13, color: '#9B8E86', marginBottom: 8 }}>초대 링크</p>
+            <p style={{ fontSize: 13, color: '#9B8E86', marginBottom: 8 }}>초대 코드 · 읽기 전용 연결</p>
             <p style={{ fontSize: 13, color: '#C4614A', fontFamily: 'monospace', marginBottom: 12, wordBreak: 'break-all' }}>
               {typeof window !== 'undefined' ? `${window.location.origin}/invite/${inviteCode}` : `/invite/${inviteCode}`}
             </p>
@@ -91,11 +95,20 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       </section>
 
       <section style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>바로가기</h2>
-        <Link href="/clinic-update" style={{ display: 'block', padding: '14px 20px', background: '#fff', borderRadius: 14, border: '1.5px solid #F0EDE8', color: '#2A1F1A', textDecoration: 'none', fontSize: 15, fontWeight: 500, marginBottom: 8 }}>진료 결과 업데이트</Link>
-        <Link href="/add" style={{ display: 'block', padding: '14px 20px', background: '#fff', borderRadius: 14, border: '1.5px solid #F0EDE8', color: '#2A1F1A', textDecoration: 'none', fontSize: 15, fontWeight: 500, marginBottom: 8 }}>일정 직접 추가</Link>
-        <Link href="/privacy" style={{ display: 'block', padding: '14px 20px', background: '#fff', borderRadius: 14, border: '1.5px solid #F0EDE8', color: '#9B8E86', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>개인정보 및 의료 안내</Link>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>SLC 보조 메뉴</h2>
+        {MORE_MENU_ITEMS.map((item) => (
+          <Link key={item.href} href={item.href} style={{ display: 'block', padding: '14px 20px', background: '#fff', borderRadius: 14, border: '1.5px solid #F0EDE8', color: '#2A1F1A', textDecoration: 'none', fontSize: 15, fontWeight: 500, marginBottom: 8 }}>{item.label}</Link>
+        ))}
       </section>
+
+      <section style={{ marginBottom: 24, background: '#fff', borderRadius: 16, padding: '16px 20px', border: '1.5px solid #F0EDE8' }}>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#2A1F1A', margin: '0 0 8px' }}>알림 상태</h2>
+        <p style={{ fontSize: 13, color: '#9B8E86', margin: 0 }}>알림 ON / 일정 15분 전 표시 예정</p>
+      </section>
+
+      <Link href="/auth/reset" style={{ display: 'block', padding: '14px 20px', background: '#F0EDE8', borderRadius: 999, color: '#9B8E86', textDecoration: 'none', textAlign: 'center', fontSize: 14, fontWeight: 700 }}>
+        로그아웃
+      </Link>
     </div>
   );
 }

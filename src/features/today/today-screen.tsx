@@ -3,21 +3,27 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ActionCard } from '../../components/action-card';
 import { ConfirmSheet } from '../../components/confirm-sheet';
-import type { InjectionSite, PartnerLink, ScheduleItem } from '../../types/slc.types';
-import { getClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
-import { getHomePendingItems } from '../../domain/slc-home-focus';
+import type { ClinicUpdate, InjectionSite, PartnerLink, ScheduleItem } from '../../types/slc.types';
+import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
+import { getHomePendingItems, resolveHomeFocus, type HomeFocus } from '../../domain/slc-home-focus';
 
 interface TodayScreenProps {
   initialItems: ScheduleItem[];
   userId: string;
   pendingPartnerRequest?: PartnerLink | null;
+  initialClinicUpdates?: ClinicUpdate[];
 }
 
 type DayOffset = 0 | 1 | 2;
 
 const DAY_LABELS = ['오늘', '내일', '모레'] as const;
 
-export function TodayScreen({ initialItems, userId: _userId, pendingPartnerRequest: initialPendingPartnerRequest = null }: TodayScreenProps) {
+export function TodayScreen({
+  initialItems,
+  userId: _userId,
+  pendingPartnerRequest: initialPendingPartnerRequest = null,
+  initialClinicUpdates = [],
+}: TodayScreenProps) {
   const [items, setItems] = useState<ScheduleItem[]>(initialItems);
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
@@ -33,14 +39,17 @@ export function TodayScreen({ initialItems, userId: _userId, pendingPartnerReque
     [items, selectedDay],
   );
 
-  const pending = useMemo(() => getHomePendingItems(visibleItems), [visibleItems]);
+  const focusItems = selectedDay === 0 ? items : visibleItems;
+  const homeFocus = useMemo(() => resolveHomeFocus(focusItems), [focusItems]);
+  const pending = useMemo(() => getHomePendingItems(focusItems), [focusItems]);
   const clinicFollowUpItem = useMemo(
-    () => selectedDay === 0 ? getClinicFollowUpPrompt(visibleItems) : null,
-    [selectedDay, visibleItems],
+    () => selectedDay === 0 ? resolveClinicFollowUpPrompt(visibleItems, initialClinicUpdates) : null,
+    [selectedDay, visibleItems, initialClinicUpdates],
   );
   const completed = visibleItems.filter((item) => item.status === 'completed');
-  const mainItem = pending[0];
-  const nextItem = pending[1];
+  const cardItems = clinicFollowUpItem ? pending.filter((item) => item.id !== clinicFollowUpItem.id) : pending;
+  const mainItem = cardItems[0];
+  const nextItem = cardItems[1];
 
   const handleComplete = useCallback(async (site?: InjectionSite) => {
     if (!activeItem) return;
@@ -78,9 +87,10 @@ export function TodayScreen({ initialItems, userId: _userId, pendingPartnerReque
             onReject={() => handlePartnerRequest('reject')}
           />
         )}
-        {visibleItems.length === 0 ? <EmptyState selectedDay={selectedDay} /> : (
+        {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
+        <FocusHero focus={homeFocus} />
+        {pending.length === 0 && visibleItems.length === 0 ? <EmptyState selectedDay={selectedDay} /> : (
           <>
-            {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
             {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
             {nextItem && <NextItem item={nextItem} onCta={setActiveItem} />}
             {completed.map((item) => <ActionCard key={item.id} item={item} onCta={() => undefined} compact />)}
@@ -89,6 +99,33 @@ export function TodayScreen({ initialItems, userId: _userId, pendingPartnerReque
       </section>
       {activeItem && <ConfirmSheet item={activeItem} onComplete={handleComplete} onClose={() => setActiveItem(null)} />}
     </div>
+  );
+}
+
+function FocusHero({ focus }: { focus: HomeFocus }) {
+  return (
+    <section
+      aria-label="홈 핵심 상태"
+      data-testid="home-focus-hero"
+      data-focus-kind={focus.kind}
+      style={{
+        padding: '18px 20px',
+        background: focus.kind.startsWith('clinic') ? '#FFF8F5' : '#FFFFFF',
+        borderRadius: 24,
+        border: focus.kind.startsWith('clinic') ? '1.5px solid #F4D4C8' : '1.5px solid #EFE7E0',
+        boxShadow: '0 4px 24px rgba(80, 50, 40, 0.07)',
+      }}
+    >
+      <p style={{ fontSize: 12, color: focus.kind.startsWith('clinic') ? 'var(--slc-coral)' : 'var(--slc-muted)', fontWeight: 900, margin: '0 0 8px' }}>
+        {focus.badgeLabel}
+      </p>
+      <h2 style={{ fontSize: 21, color: 'var(--slc-text)', fontWeight: 900, lineHeight: 1.25, margin: '0 0 8px' }}>
+        {focus.heading}
+      </h2>
+      <p style={{ fontSize: 13, color: 'var(--slc-muted)', lineHeight: 1.5, margin: 0 }}>
+        {focus.description}
+      </p>
+    </section>
   );
 }
 

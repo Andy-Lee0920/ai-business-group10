@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ScheduleItem } from '../../src/types/slc.types';
-import { getClinicFollowUpPrompt } from '../../src/domain/slc-clinic-followup';
+import type { ClinicUpdate, ScheduleItem } from '../../src/types/slc.types';
+import { getClinicFollowUpPrompt, resolveClinicFollowUpPrompt } from '../../src/domain/slc-clinic-followup';
 
 const clinicItem = (overrides: Partial<ScheduleItem> = {}): ScheduleItem => ({
   id: 'clinic-1',
@@ -17,15 +17,28 @@ const clinicItem = (overrides: Partial<ScheduleItem> = {}): ScheduleItem => ({
   ...overrides,
 });
 
+const clinicUpdate = (overrides: Partial<ClinicUpdate> = {}): ClinicUpdate => ({
+  id: 'update-1',
+  patient_id: 'patient-1',
+  same_medication: true,
+  added_medication_ids: [],
+  medication_days: null,
+  next_visit_at: null,
+  trigger_plan: null,
+  memo: null,
+  created_at: '2026-05-14T10:05:00.000Z',
+  ...overrides,
+});
+
 describe('SLC clinic follow-up prompt', () => {
-  it('does not show before scheduled time plus one hour has passed', () => {
-    const now = new Date('2026-05-14T10:00:00.000Z');
+  it('does not show at scheduled time plus 59 minutes', () => {
+    const now = new Date('2026-05-14T09:59:00.000Z');
 
     expect(getClinicFollowUpPrompt([clinicItem()], now)).toBeNull();
   });
 
-  it('shows for an incomplete clinic schedule after scheduled time plus one hour', () => {
-    const now = new Date('2026-05-14T10:01:00.000Z');
+  it('shows for an incomplete clinic schedule at scheduled time plus 60 minutes', () => {
+    const now = new Date('2026-05-14T10:00:00.000Z');
 
     expect(getClinicFollowUpPrompt([clinicItem()], now)?.id).toBe('clinic-1');
   });
@@ -42,5 +55,21 @@ describe('SLC clinic follow-up prompt', () => {
     const yesterdayClinic = clinicItem({ id: 'clinic-yesterday', scheduled_at: '2026-05-13T09:00:00.000Z' });
 
     expect(getClinicFollowUpPrompt([medication, yesterdayClinic], now)).toBeNull();
+  });
+
+  it('hides after a relevant clinic update exists even if the clinic item is not completed', () => {
+    const now = new Date('2026-05-14T10:30:00.000Z');
+
+    expect(resolveClinicFollowUpPrompt([clinicItem()], [clinicUpdate()], now)).toBeNull();
+  });
+
+  it('does not hide from an older clinic update saved before the clinic appointment', () => {
+    const now = new Date('2026-05-14T10:30:00.000Z');
+
+    expect(resolveClinicFollowUpPrompt(
+      [clinicItem()],
+      [clinicUpdate({ id: 'older-update', created_at: '2026-05-14T08:00:00.000Z' })],
+      now,
+    )?.id).toBe('clinic-1');
   });
 });

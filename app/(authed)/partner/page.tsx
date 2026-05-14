@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { PartnerView } from '../../../src/features/partner/partner-view';
+import { partnerStateCopy, type PartnerProjectionState } from '../../../src/features/partner/partner-state';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { cookies } from 'next/headers';
@@ -27,11 +28,9 @@ export default async function PartnerPage() {
     .eq('partner_id', user.id)
     .maybeSingle();
 
-  if (linkError) {
-    if (isMissingSlcTable(linkError)) return <PartnerEmptyState />;
-    throw new Error(linkError.message);
-  }
-  if (!link || link.status !== 'approved') return <PartnerEmptyState />;
+  if (linkError) return <PartnerEmptyState state="not_linked" />;
+  if (!link) return <PartnerEmptyState state="not_linked" />;
+  if (link.status !== 'approved') return <PartnerEmptyState state="requested" />;
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -50,22 +49,19 @@ export default async function PartnerPage() {
   ]);
 
   if (itemsRes.error || completionsRes.error || clinicRes.error) {
-    if (isMissingSlcTable(itemsRes.error) || isMissingSlcTable(completionsRes.error) || isMissingSlcTable(clinicRes.error)) {
-      return <PartnerView items={[]} completions={[]} latestClinicUpdate={null} />;
-    }
-    if (itemsRes.error) throw new Error(itemsRes.error.message);
-    if (completionsRes.error) throw new Error(completionsRes.error.message);
-    if (clinicRes.error) throw new Error(clinicRes.error.message);
+    return <PartnerView items={[]} completions={[]} latestClinicUpdate={null} />;
   }
 
   return <PartnerView items={itemsRes.data ?? []} completions={completionsRes.data ?? []} latestClinicUpdate={clinicRes.data?.[0] ?? null} />;
 }
 
-function PartnerEmptyState() {
+function PartnerEmptyState({ state }: { state: Exclude<PartnerProjectionState, 'linked_no_schedule' | 'linked_with_schedule'> }) {
+  const copy = partnerStateCopy(state);
+  const refreshHint = state === 'requested' ? ' 새로고침해서 확인해 주세요' : '';
   return (
     <div style={{ minHeight: '100dvh', padding: '72px 24px', background: 'var(--slc-bg)', textAlign: 'center' }}>
-      <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 8 }}>연결 대기 중</p>
-      <p style={{ fontSize: 14, color: 'var(--slc-muted)', lineHeight: 1.6 }}>치료자가 요청을 승인하면 오늘 일정과 완료 상태를 읽기 전용으로 볼 수 있어요. 승인 후 이 화면을 새로고침해서 확인해 주세요.</p>
+      <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 8 }}>{copy.title}</p>
+      <p style={{ fontSize: 14, color: 'var(--slc-muted)', lineHeight: 1.6 }}>{copy.description}{refreshHint}</p>
     </div>
   );
 }

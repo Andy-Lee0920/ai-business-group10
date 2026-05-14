@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import type { Medication } from '../../types/slc.types';
+import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../domain/slc-clinic-update';
 
 interface Props {
   medications: Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'default_unit' | 'default_cta'>[];
@@ -17,6 +18,7 @@ interface FormState {
   nextVisitAt: string;
   triggerPlan: string;
   memo: string;
+  directMedicationTitle: string;
 }
 
 export function ClinicUpdateForm({ medications }: Props) {
@@ -30,19 +32,22 @@ export function ClinicUpdateForm({ medications }: Props) {
     nextVisitAt: '',
     triggerPlan: '',
     memo: '',
+    directMedicationTitle: '',
   });
 
   const prefillNextVisit = (days: number) => {
-    const date = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    setForm((f) => ({ ...f, medicationDays: days, nextVisitAt: `${yyyy}-${mm}-${dd}` }));
+    setForm((f) => ({ ...f, medicationDays: days, nextVisitAt: prefillNextVisitDate(days) }));
     setStep('next_visit');
   };
 
   const save = async () => {
     setSaving(true);
+    const selectedMedications = medications
+      .filter((medication) => form.addedMedicationIds.includes(medication.id))
+      .map((medication) => ({ id: medication.id, title: medication.brand_name_ko, unit: medication.default_unit }));
+    const directMedication = form.directMedicationTitle.trim()
+      ? [{ id: null, title: form.directMedicationTitle.trim(), unit: null }]
+      : [];
     await fetch('/api/clinic-update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -53,6 +58,10 @@ export function ClinicUpdateForm({ medications }: Props) {
         nextVisitAt: form.nextVisitAt ? new Date(form.nextVisitAt).toISOString() : null,
         triggerPlan: form.triggerPlan,
         memo: form.memo,
+        newScheduleItems: buildClinicUpdateScheduleItems({
+          nextVisitAt: form.nextVisitAt,
+          addedMedications: [...selectedMedications, ...directMedication],
+        }),
       }),
     });
     setSaving(false);
@@ -79,18 +88,19 @@ export function ClinicUpdateForm({ medications }: Props) {
 
   if (step === 'same_med') return (
     <div style={containerStyle}>
-      <h2 style={titleStyle}>같은 약을 계속 사용하나요?</h2>
+      <h1 style={titleStyle}>병원에서 바뀐 내용을 업데이트해요</h1>
+      <h2 style={{ ...titleStyle, fontSize: 18 }}>같은 약을 계속 사용하나요?</h2>
       <p style={subtitleStyle}>병원에서 처방이 변경되었는지 확인해 주세요</p>
-      <button style={optionStyle(false)} onClick={() => { setForm((f) => ({ ...f, sameMedication: true })); setStep('days'); }}>그대로예요</button>
-      <button style={optionStyle(false)} onClick={() => { setForm((f) => ({ ...f, sameMedication: false })); setStep('new_med'); }}>변경됐어요</button>
-      <button style={optionStyle(false)} onClick={() => { setForm((f) => ({ ...f, sameMedication: null })); setStep('days'); }}>잘 모르겠어요</button>
+      <button style={optionStyle(false)} onClick={() => { setForm((f) => ({ ...f, sameMedication: true })); setStep('days'); }}>그대로</button>
+      <button style={optionStyle(false)} onClick={() => { setForm((f) => ({ ...f, sameMedication: false })); setStep('new_med'); }}>변경</button>
+      <button style={optionStyle(false)} onClick={() => { setForm((f) => ({ ...f, sameMedication: null })); setStep('days'); }}>모르겠어요</button>
     </div>
   );
 
   if (step === 'new_med') return (
     <div style={containerStyle}>
       <h2 style={titleStyle}>새 약을 처방받았나요?</h2>
-      <p style={subtitleStyle}>해당하는 약을 선택해 주세요</p>
+      <p style={subtitleStyle}>해당하는 약을 선택하거나 직접 적어주세요</p>
       {medications.map((med) => {
         const selected = form.addedMedicationIds.includes(med.id);
         return (
@@ -104,6 +114,15 @@ export function ClinicUpdateForm({ medications }: Props) {
           </button>
         );
       })}
+      <label style={{ display: 'block', marginTop: 8, marginBottom: 16 }}>
+        <span style={{ fontSize: 14, color: '#9B8E86', display: 'block', marginBottom: 8 }}>직접 추가</span>
+        <input
+          value={form.directMedicationTitle}
+          onChange={(e) => setForm((f) => ({ ...f, directMedicationTitle: e.target.value }))}
+          placeholder="약 이름만 적어두기"
+          style={{ width: '100%', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #F0EDE8', fontSize: 16, fontFamily: 'inherit', background: '#fff', boxSizing: 'border-box' }}
+        />
+      </label>
       <button onClick={() => setStep('days')} style={ctaStyle}>다음</button>
     </div>
   );
@@ -182,7 +201,7 @@ export function ClinicUpdateForm({ medications }: Props) {
         />
       </label>
       <button onClick={save} disabled={saving} style={{ ...ctaStyle, opacity: saving ? 0.7 : 1 }}>
-        {saving ? '저장 중...' : '변경 저장'}
+        {saving ? '저장 중...' : '병원 업데이트 저장'}
       </button>
     </div>
   );

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 import { randomBytes } from 'crypto';
 import { isMissingSlcTable } from '../../../../src/lib/slc-fallback';
+import { maskTechnicalError } from '../../../../src/domain/slc-copy';
 
 export async function POST() {
   const supabase = await createCookieBackedSupabaseClient();
@@ -26,7 +27,7 @@ export async function POST() {
 
   if (error) {
     if (isMissingSlcTable(error)) return NextResponse.json({ inviteCode, fallback: 'missing_slc_schema' });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
   }
   return NextResponse.json({ inviteCode });
 }

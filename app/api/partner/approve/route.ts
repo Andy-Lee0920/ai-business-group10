@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
+import { maskTechnicalError } from '../../../../src/domain/slc-copy';
 
 type PartnerApprovalAction = 'approve' | 'reject' | 'revoke';
 
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     .eq('id', linkId)
     .eq('patient_id', user.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
   return NextResponse.json({ ok: true, action });
 }
 

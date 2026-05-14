@@ -1,5 +1,6 @@
 import type { ScheduleItem, CompletionRecord, ClinicUpdate } from '../../types/slc.types';
 import { completedLabel } from '../../types/slc.types';
+import { partnerStateCopy } from './partner-state';
 
 interface Props {
   items: ScheduleItem[];
@@ -12,10 +13,13 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
   const completedItems = items.filter((it) => completionSet.has(it.id) || it.status === 'completed');
   const pendingItems = items.filter((it) => !completionSet.has(it.id) && it.status !== 'completed');
 
+  const stateCopy = partnerStateCopy(items.length === 0 ? 'linked_no_schedule' : 'linked_with_schedule');
+
   return (
     <div style={{ padding: '60px 24px 24px' }}>
       <p style={{ fontSize: 13, color: '#B5A89E', marginBottom: 4 }}>파트너 뷰 · 읽기 전용</p>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2A1F1A', marginBottom: 24 }}>오늘 상황</h1>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2A1F1A', marginBottom: 8 }}>{stateCopy.title}</h1>
+      <p style={{ fontSize: 14, color: '#9B8E86', lineHeight: 1.55, margin: '0 0 24px' }}>{stateCopy.description}</p>
 
       {latestClinicUpdate && (
         <div style={{ background: '#FFF8F5', borderRadius: 16, padding: '14px 18px', border: '1.5px solid #F4D4C8', marginBottom: 20 }}>
@@ -66,7 +70,7 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
 
       {items.length === 0 && (
         <p style={{ color: '#B5A89E', textAlign: 'center', fontSize: 15, marginTop: 60 }}>
-          오늘은 확인만 하면 됩니다
+          {stateCopy.title}
         </p>
       )}
     </div>

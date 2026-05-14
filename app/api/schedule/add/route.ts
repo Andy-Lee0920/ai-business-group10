@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 import { isMissingSlcTable } from '../../../../src/lib/slc-fallback';
 import type { ScheduleType } from '../../../../src/types/slc.types';
+import { maskTechnicalError } from '../../../../src/domain/slc-copy';
 
 export async function POST(request: NextRequest) {
   const supabase = await createCookieBackedSupabaseClient();
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (isMissingSlcTable(error)) {
       return NextResponse.json({ item: { id: `fallback-${Date.now()}`, patient_id: user.id, status: 'upcoming', source: 'manual', ...body }, fallback: 'missing_slc_schema' });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
   }
   return NextResponse.json({ item: data });
 }

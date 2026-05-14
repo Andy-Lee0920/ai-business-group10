@@ -10,20 +10,18 @@ export default async function RecordsPage() {
   if (!user) return null;
 
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const [itemsRes, completionsRes] = await Promise.all([
+  const [itemsRes, completionsRes, clinicRes] = await Promise.all([
     supabase.from('schedule_items').select('*').eq('patient_id', user.id)
       .gte('scheduled_at', since).order('scheduled_at', { ascending: false }),
     supabase.from('completion_records').select('*').eq('patient_id', user.id)
       .gte('completed_at', since).order('completed_at', { ascending: false }),
+    supabase.from('clinic_updates').select('*').eq('patient_id', user.id)
+      .gte('created_at', since).order('created_at', { ascending: false }),
   ]);
 
-  if (itemsRes.error || completionsRes.error) {
-    if (isMissingSlcTable(itemsRes.error) || isMissingSlcTable(completionsRes.error)) {
-      return <RecordsScreen items={[]} completions={[]} />;
-    }
-    if (itemsRes.error) throw new Error(itemsRes.error.message);
-    if (completionsRes.error) throw new Error(completionsRes.error.message);
+  if (itemsRes.error || completionsRes.error || clinicRes.error) {
+    return <RecordsScreen items={[]} completions={[]} clinicUpdates={[]} />;
   }
 
-  return <RecordsScreen items={itemsRes.data ?? []} completions={completionsRes.data ?? []} />;
+  return <RecordsScreen items={itemsRes.data ?? []} completions={completionsRes.data ?? []} clinicUpdates={clinicRes.data ?? []} />;
 }

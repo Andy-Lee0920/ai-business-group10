@@ -12,9 +12,6 @@ export default async function ClinicUpdatePage() {
     .eq('is_slc_seed', true)
     .order('brand_name_en', { ascending: true });
 
-  if (error) {
-    if (isMissingSlcTable(error)) return <ClinicUpdateForm medications={fallbackMedications()} />;
-    throw new Error(error.message);
-  }
+  if (error) return <ClinicUpdateForm medications={fallbackMedications()} />;
   return <ClinicUpdateForm medications={medications ?? []} />;
 }

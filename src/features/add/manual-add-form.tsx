@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import type { ScheduleType, Medication } from '../../types/slc.types';
+import { MANUAL_ADD_TYPE_CONFIG, manualAddConfigFor } from '../../domain/slc-manual-add';
 
 interface Props {
   medications: Pick<Medication, 'id' | 'brand_name_ko' | 'default_unit' | 'default_cta'>[];
@@ -19,6 +20,8 @@ export function ManualAddForm({ medications }: Props) {
     scheduledAt: '',
     medicationId: '',
   });
+
+  const config = manualAddConfigFor(form.type);
 
   const save = async () => {
     if (!form.title || !form.scheduledAt) return;
@@ -50,47 +53,48 @@ export function ManualAddForm({ medications }: Props) {
       <label style={labelStyle}>종류</label>
       <div style={{ display: 'flex', gap: 8 }}>
         {(['injection', 'medication', 'clinic'] as const).map((t) => {
-          const labels: Record<ScheduleType, string> = { injection: '주사', medication: '복용약', clinic: '병원' };
           return (
-            <button key={t} onClick={() => setForm((f) => ({ ...f, type: t }))} style={{
+            <button key={t} onClick={() => setForm((f) => ({ ...f, type: t, unit: MANUAL_ADD_TYPE_CONFIG[t].defaultUnit || f.unit, medicationId: t === 'clinic' ? '' : f.medicationId }))} style={{
               padding: '9px 16px', borderRadius: 999,
               background: form.type === t ? '#C4614A' : '#F0EDE8',
               color: form.type === t ? '#fff' : '#9B8E86',
               border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
             }}>
-              {labels[t]}
+              {MANUAL_ADD_TYPE_CONFIG[t].label}
             </button>
           );
         })}
       </div>
 
-      <label style={labelStyle}>약명 또는 일정명</label>
-      <select
-        style={inputStyle}
-        value={form.medicationId}
-        onChange={(e) => {
-          const med = medications.find((m) => m.id === e.target.value);
-          setForm((f) => ({
-            ...f,
-            medicationId: e.target.value,
-            title: med ? med.brand_name_ko : f.title,
-            unit: med ? med.default_unit : f.unit,
-          }));
-        }}
-      >
-        <option value="">직접 입력</option>
-        {medications.map((m) => <option key={m.id} value={m.id}>{m.brand_name_ko}</option>)}
-      </select>
+      <label style={labelStyle}>{config.titleLabel}</label>
+      {config.showMedicationSelect && (
+        <select
+          style={inputStyle}
+          value={form.medicationId}
+          onChange={(e) => {
+            const med = medications.find((m) => m.id === e.target.value);
+            setForm((f) => ({
+              ...f,
+              medicationId: e.target.value,
+              title: med ? med.brand_name_ko : f.title,
+              unit: med ? med.default_unit : f.unit,
+            }));
+          }}
+        >
+          <option value="">직접 입력</option>
+          {medications.map((m) => <option key={m.id} value={m.id}>{m.brand_name_ko}</option>)}
+        </select>
+      )}
       <input
-        style={{ ...inputStyle, marginTop: 8 }}
-        placeholder="약명 또는 일정명"
+        style={{ ...inputStyle, marginTop: config.showMedicationSelect ? 8 : 0 }}
+        placeholder={config.titlePlaceholder}
         value={form.title}
         onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
       />
 
-      {form.type !== 'clinic' && (
+      {config.showDose && (
         <>
-          <label style={labelStyle}>용량 (선택)</label>
+          <label style={labelStyle}>{config.doseLabel}</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               style={{ ...inputStyle, flex: 2 }}
@@ -105,7 +109,7 @@ export function ManualAddForm({ medications }: Props) {
         </>
       )}
 
-      <label style={labelStyle}>날짜 · 시간</label>
+      <label style={labelStyle}>{config.timeLabel}</label>
       <input
         type="datetime-local" style={inputStyle}
         value={form.scheduledAt}

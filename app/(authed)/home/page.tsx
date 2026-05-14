@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { TodayScreen } from '../../../src/features/today/today-screen';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
-import type { PartnerLink, ScheduleItem } from '../../../src/types/slc.types';
+import type { ClinicUpdate, PartnerLink, ScheduleItem } from '../../../src/types/slc.types';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +22,7 @@ export default async function HomePage() {
 
   if ((isMissingSlcTable(profileError) ? fallbackRole : profile?.role) === 'partner') redirect('/partner');
 
-  const [itemsRes, pendingPartnerRequest] = await Promise.all([
+  const [itemsRes, clinicUpdatesRes, pendingPartnerRequest] = await Promise.all([
     supabase
       .from('schedule_items')
       .select('*')
@@ -30,14 +30,26 @@ export default async function HomePage() {
       .gte('scheduled_at', dayStart(0).toISOString())
       .lte('scheduled_at', dayEnd(2).toISOString())
       .order('scheduled_at', { ascending: true }),
+    supabase
+      .from('clinic_updates')
+      .select('*')
+      .eq('patient_id', user.id)
+      .gte('created_at', dayStart(0).toISOString())
+      .order('created_at', { ascending: false }),
     getPendingPartnerRequest(supabase, user.id),
   ]);
 
   if (itemsRes.error) {
-    if (isMissingSlcTable(itemsRes.error)) return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} pendingPartnerRequest={pendingPartnerRequest} />;
-    throw new Error(itemsRes.error.message);
+    return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} pendingPartnerRequest={pendingPartnerRequest} initialClinicUpdates={[]} />;
   }
-  return <TodayScreen initialItems={(itemsRes.data ?? []) as ScheduleItem[]} userId={user.id} pendingPartnerRequest={pendingPartnerRequest} />;
+  return (
+    <TodayScreen
+      initialItems={(itemsRes.data ?? []) as ScheduleItem[]}
+      userId={user.id}
+      pendingPartnerRequest={pendingPartnerRequest}
+      initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
+    />
+  );
 }
 
 async function getPendingPartnerRequest(
@@ -53,10 +65,7 @@ async function getPendingPartnerRequest(
     .limit(1)
     .maybeSingle();
 
-  if (error) {
-    if (isMissingSlcTable(error)) return null;
-    throw new Error(error.message);
-  }
+  if (error) return null;
   return request as PartnerLink | null;
 }
 

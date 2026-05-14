@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const days = parseInt(url.searchParams.get('days') ?? '7');
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  const [itemsRes, completionsRes] = await Promise.all([
+  const [itemsRes, completionsRes, clinicRes] = await Promise.all([
     supabase
       .from('schedule_items')
       .select('*')
@@ -25,10 +25,17 @@ export async function GET(request: NextRequest) {
       .eq('patient_id', user.id)
       .gte('created_at', since)
       .order('completed_at', { ascending: false }),
+    supabase
+      .from('clinic_updates')
+      .select('*')
+      .eq('patient_id', user.id)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false }),
   ]);
 
   return NextResponse.json({
     items: itemsRes.data ?? [],
     completions: completionsRes.data ?? [],
+    clinicUpdates: clinicRes.data ?? [],
   });
 }
