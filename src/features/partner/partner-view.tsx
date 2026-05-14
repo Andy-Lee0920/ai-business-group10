@@ -39,8 +39,8 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
                 background: '#F7F5F2', borderRadius: 14, padding: '12px 16px',
                 marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
-                <span style={{ fontSize: 15, color: '#6B5E55' }}>{time} {item.title}</span>
-                <span style={{ fontSize: 12, color: '#C4614A', fontWeight: 600 }}>{completedLabel(item.type)}</span>
+                <span style={{ fontSize: 15, color: '#6B5E55' }}>{time} {item.title} {completedLabel(item.type)}했어요</span>
+                <span style={{ fontSize: 12, color: '#C4614A', fontWeight: 600 }}>읽기 전용</span>
               </div>
             );
           })}
@@ -60,8 +60,8 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
                 marginBottom: 8, border: '1.5px solid #F0EDE8',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
-                <span style={{ fontSize: 15, color: '#2A1F1A', fontWeight: 500 }}>{time} {item.title}</span>
-                <span style={{ fontSize: 12, color: '#9B8E86' }}>예정</span>
+                <span style={{ fontSize: 15, color: '#2A1F1A', fontWeight: 500 }}>다음은 {time} {item.title} 예정이에요</span>
+                <span style={{ fontSize: 12, color: '#9B8E86' }}>읽기 전용</span>
               </div>
             );
           })}
