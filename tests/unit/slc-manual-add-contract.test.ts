@@ -22,6 +22,9 @@ describe('SLC manual add type-specific form contract', () => {
     expect(manualAddConfigFor('injection').unitOptions).toEqual(['IU', 'μg', 'mg', 'ml', 'syringe']);
     expect(manualAddConfigFor('medication').unitOptions).toEqual(['정', '개', 'mg', 'ml']);
     expect(manualAddConfigFor('clinic').unitOptions).toEqual([]);
+    expect(manualAddConfigFor('injection').routeFilter).toEqual(['subcutaneous_injection', 'intramuscular_injection']);
+    expect(manualAddConfigFor('medication').routeFilter).toEqual(['oral', 'vaginal', 'other']);
+    expect(manualAddConfigFor('clinic').routeFilter).toEqual([]);
 
     expect(buildManualAddPayload({
       type: 'clinic',
@@ -30,12 +33,43 @@ describe('SLC manual add type-specific form contract', () => {
       unit: 'IU',
       scheduledAt: '2026-05-14T09:00:00.000Z',
       medicationId: 'gonal-f',
+      selectedCategory: null,
+      scheduleMode: 'single',
+      startDate: '',
+      endDate: '',
+      dailyTime: '',
     })).toMatchObject({
       type: 'clinic',
       title: '난포 확인',
       dose: null,
       unit: null,
       medicationId: null,
+    });
+  });
+
+  it('preserves medication category and range repeat fields for stimulation schedules', () => {
+    expect(buildManualAddPayload({
+      type: 'injection',
+      title: '고날에프',
+      dose: '150',
+      unit: 'IU',
+      scheduledAt: '',
+      medicationId: 'gonal-f',
+      selectedCategory: 'stimulation',
+      scheduleMode: 'range',
+      startDate: '2026-05-15',
+      endDate: '2026-05-19',
+      dailyTime: '21:00',
+    })).toMatchObject({
+      type: 'injection',
+      title: '고날에프',
+      dose: '150',
+      unit: 'IU',
+      medicationId: 'gonal-f',
+      selectedCategory: 'stimulation',
+      startDate: '2026-05-15',
+      endDate: '2026-05-19',
+      dailyTime: '21:00',
     });
   });
 });

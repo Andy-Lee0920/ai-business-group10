@@ -14,7 +14,7 @@ export default async function AddPage() {
   const supabase = await createCookieBackedSupabaseClient();
   const { data: medications, error } = await supabase
     .from('medications')
-    .select('id, brand_name_ko, brand_name_en, default_unit, default_cta')
+    .select('id, brand_name_ko, brand_name_en, aliases, category, route, default_unit, default_cta')
     .eq('is_slc_seed', true)
     .order('brand_name_en', { ascending: true });
 
