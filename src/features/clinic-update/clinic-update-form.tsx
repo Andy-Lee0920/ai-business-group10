@@ -10,6 +10,7 @@ import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../doma
 type MedicationOption = Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'aliases' | 'default_unit' | 'default_cta'>;
 
 type Step = 'entry' | 'same_med' | 'new_med' | 'days' | 'memo' | 'confirm' | 'success';
+type MedicationChangeAnswer = 'same' | 'changed' | 'unknown' | null;
 type NewMedicationIntent = 'yes' | 'no' | null;
 type SavedScheduleItem = { title: string; scheduledAt: string; unit: string | null };
 type ClinicUpdateSaveScheduleItem = { title: string; scheduledAt?: string; scheduled_at?: string; unit: string | null };
@@ -21,7 +22,7 @@ interface Props {
 }
 
 interface FormState {
-  sameMedication: boolean | null;
+  medicationChange: MedicationChangeAnswer;
   addedMedicationIds: string[];
   medicationDays: number | null;
   nextVisitAt: string;
@@ -34,8 +35,8 @@ interface FormState {
 }
 
 const DIRECT_PREFIX = 'direct:';
-const PROGRESS_TOTAL = 6;
-const REFERENCE_PROGRESS_LABELS = ['01/06', '02/06', '03/06', '04/06', '05/06', '06/06'] as const;
+const INTERVIEW_PROGRESS_TOTAL = 4;
+const INTERVIEW_PROGRESS_LABELS = ['1/4', '2/4', '3/4', '4/4'] as const;
 
 export function ClinicUpdateForm({ medications, partnerConnected = false }: Props) {
   const router = useRouter();
@@ -47,7 +48,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [savedScheduleItems, setSavedScheduleItems] = useState<SavedScheduleItem[]>([]);
   const [form, setForm] = useState<FormState>({
-    sameMedication: null,
+    medicationChange: null,
     addedMedicationIds: [],
     medicationDays: null,
     nextVisitAt: '',
@@ -75,8 +76,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   }, [form.medicationSearch, medicationOptions]);
 
   const selectedMedicationNames = resolveSelectedMedicationNames(medicationOptions, form.addedMedicationIds, form.directMedicationTitle);
+  const selectedSchedulePreview = buildSelectedSchedulePreview(medicationOptions, form.addedMedicationIds, form.directMedicationTitle);
   const nextVisitPreview = form.nextVisitAt ? formatKoreanVisitDate(form.nextVisitAt) : '미정';
-  const progress = progressForStep(step);
 
   useEffect(() => {
     if (step !== 'new_med' || form.newMedicationIntent !== 'yes') return;
@@ -126,8 +127,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
     }));
   };
 
-  const addDirectMedication = () => {
-    const title = form.directMedicationTitle.trim() || form.medicationSearch.trim();
+  const syncDirectMedication = (rawTitle: string) => {
+    const title = rawTitle.trim();
     if (!title) {
       setShowDirectInput(true);
       return;
@@ -136,9 +137,40 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
     setForm((current) => ({
       ...current,
       directMedicationTitle: title,
-      addedMedicationIds: current.addedMedicationIds.includes(directId) ? current.addedMedicationIds : [...current.addedMedicationIds, directId],
+      addedMedicationIds: [...current.addedMedicationIds.filter((id) => !id.startsWith(DIRECT_PREFIX)), directId],
     }));
     setShowDirectInput(true);
+  };
+
+  const addDirectMedication = () => syncDirectMedication(form.directMedicationTitle || form.medicationSearch);
+
+  const updateDirectMedicationTitle = (rawTitle: string) => {
+    const title = rawTitle.trim();
+    setForm((current) => ({
+      ...current,
+      directMedicationTitle: rawTitle,
+      addedMedicationIds: title
+        ? [...current.addedMedicationIds.filter((id) => !id.startsWith(DIRECT_PREFIX)), `${DIRECT_PREFIX}${title}`]
+        : current.addedMedicationIds.filter((id) => !id.startsWith(DIRECT_PREFIX)),
+    }));
+  };
+
+  const setNewMedicationIntent = (intent: Exclude<NewMedicationIntent, null>) => {
+    setForm((current) => ({
+      ...current,
+      newMedicationIntent: intent,
+      ...(intent === 'no'
+        ? {
+          addedMedicationIds: [],
+          directMedicationTitle: '',
+          medicationSearch: '',
+        }
+        : {}),
+    }));
+    if (intent === 'no') {
+      setShowDirectInput(false);
+      setNormalizedMedication(null);
+    }
   };
 
   const chooseDays = (days: number) => {
@@ -167,7 +199,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sameMedication: form.sameMedication ?? true,
+        sameMedication: form.medicationChange === 'same' ? true : form.medicationChange === 'changed' ? false : null,
         addedMedicationIds: form.addedMedicationIds.filter((id) => !id.startsWith(DIRECT_PREFIX)),
         medicationDays: form.medicationDays,
         nextVisitAt: form.nextVisitAt ? new Date(form.nextVisitAt).toISOString() : null,
@@ -184,9 +216,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   };
 
   if (step === 'entry') return (
-    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
+    <Shell>
       <div style={{ flex: 1, display: 'grid', alignContent: 'center', gap: 22 }}>
-        <p style={badgeStyle}>✦ Clinic Guide AI</p>
         <h1 style={heroTitleStyle}>오늘 병원 업데이트</h1>
         <p style={subtitleStyle}>몇 가지만 확인하면 오늘 일정에 반영할 수 있어요.</p>
         <div style={landingCardStyle} aria-label="병원 업데이트 안내">
@@ -195,35 +226,35 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
         </div>
         <p style={safeNoteStyle}>ⓘ 챗봇이 아니라 질문 카드로 진행돼요</p>
       </div>
-      <button type="button" onClick={() => setStep('same_med')} style={ctaStyle}>시작하기</button>
+      <button type="button" onClick={() => setStep('same_med')} style={ctaStyle()}>시작하기</button>
       <button type="button" onClick={() => router.push('/home')} style={textButtonStyle}>나중에 할게요</button>
     </Shell>
   );
 
   if (step === 'same_med') return (
-    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
+    <Shell header={<GuideHeader current={1} total={INTERVIEW_PROGRESS_TOTAL} />}>
       <QuestionCard icon="❔" title="같은 약을 계속 사용하나요?" lead="병원에서 오늘 들은 내용만 떠올려도 괜찮아요.">
         {[
-          { label: '그대로', icon: '✓', value: true },
-          { label: '바뀌었어요', icon: '💊', value: false },
-          { label: '잘 모르겠어요', icon: '?', value: null },
+          { label: '그대로', icon: '✓', value: 'same' },
+          { label: '바뀌었어요', icon: '💊', value: 'changed' },
+          { label: '잘 모르겠어요', icon: '?', value: 'unknown' },
         ].map((option) => (
-          <button key={option.label} type="button" style={optionStyle(form.sameMedication === option.value)} onClick={() => setForm((current) => ({ ...current, sameMedication: option.value }))}>
+          <button key={option.label} type="button" style={optionStyle(form.medicationChange === option.value)} onClick={() => setForm((current) => ({ ...current, medicationChange: option.value as MedicationChangeAnswer }))}>
             <span style={iconPillStyle}>{option.icon}</span>{option.label}
           </button>
         ))}
       </QuestionCard>
       <p style={safeNoteStyle}>ⓘ 선택에 따라 다음 질문이 달라져요</p>
-      <button type="button" onClick={() => setStep(form.sameMedication === false ? 'new_med' : 'days')} style={ctaStyle}>다음</button>
+      <button type="button" disabled={!form.medicationChange} onClick={() => setStep(form.medicationChange === 'changed' ? 'new_med' : 'days')} style={ctaStyle(!form.medicationChange)}>다음</button>
     </Shell>
   );
 
   if (step === 'new_med') return (
-    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
+    <Shell header={<GuideHeader current={2} total={INTERVIEW_PROGRESS_TOTAL} />}>
       <QuestionCard title="새로 받은 약이 있나요?" lead="목록에서 찾거나, 없으면 직접 입력할 수 있어요.">
         <div style={chipRowStyle}>
           {(['yes', 'no'] as const).map((intent) => (
-            <button key={intent} type="button" style={chipStyle(form.newMedicationIntent === intent)} onClick={() => setForm((current) => ({ ...current, newMedicationIntent: intent }))}>{intent === 'yes' ? '네' : '아니요'}</button>
+            <button key={intent} type="button" style={chipStyle(form.newMedicationIntent === intent)} onClick={() => setNewMedicationIntent(intent)}>{intent === 'yes' ? '네' : '아니요'}</button>
           ))}
         </div>
       </QuestionCard>
@@ -232,6 +263,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
         <section style={panelStyle}>
           <input
             aria-label="약 이름 검색"
+            type="search"
             value={form.medicationSearch}
             onChange={(event) => setForm((current) => ({ ...current, medicationSearch: event.target.value }))}
             placeholder="약 이름을 검색하세요"
@@ -244,6 +276,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
                 <span><strong>{medication.brand_name_ko}</strong><small>{medication.brand_name_en}</small></span>
               </button>
             ))}
+            {!filteredMedications.length ? <p style={emptyListStyle}>검색 결과가 없어요. 직접 입력으로 추가할 수 있어요.</p> : null}
             <button type="button" style={rowStyle(showDirectInput)} onClick={addDirectMedication}>
               <span style={iconPillStyle}>✏️</span><strong>직접 입력</strong>
             </button>
@@ -252,8 +285,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
             <input
               aria-label="직접 입력 약 이름"
               value={form.directMedicationTitle}
-              onChange={(event) => setForm((current) => ({ ...current, directMedicationTitle: event.target.value }))}
-              onBlur={addDirectMedication}
+              onChange={(event) => updateDirectMedicationTitle(event.target.value)}
+              onBlur={() => syncDirectMedication(form.directMedicationTitle)}
               placeholder="목록에 없는 약 이름"
               style={{ ...inputStyle, marginTop: 10 }}
             />
@@ -267,12 +300,12 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
         </section>
       )}
 
-      <button type="button" onClick={() => setStep('days')} style={ctaStyle}>약 선택 완료</button>
+      <button type="button" onClick={() => setStep('days')} style={ctaStyle()}>약 선택 완료</button>
     </Shell>
   );
 
   if (step === 'days') return (
-    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
+    <Shell header={<GuideHeader current={3} total={INTERVIEW_PROGRESS_TOTAL} />}>
       <QuestionCard icon="💊" title="며칠치 처방받았나요?" lead="선택하면 다음 방문일 제안만 먼저 만들어요.">
         <div style={chipRowStyle}>
           {[1, 2, 3].map((days) => <button key={days} type="button" style={chipStyle(form.medicationDays === days)} onClick={() => chooseDays(days)}>{days}일</button>)}
@@ -309,12 +342,12 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
         </section>
       ) : null}
 
-      <button type="button" onClick={() => setStep('memo')} style={ctaStyle}>다음</button>
+      <button type="button" onClick={() => setStep('memo')} style={ctaStyle()}>다음</button>
     </Shell>
   );
 
   if (step === 'memo') return (
-    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
+    <Shell header={<GuideHeader current={4} total={INTERVIEW_PROGRESS_TOTAL} />}>
       <h1 style={titleStyle}>추가로 남길 내용이 있나요?</h1>
       <p style={subtitleStyle}>필요한 경우에만 메모를 남겨주세요.</p>
       <label style={{ position: 'relative', display: 'block' }}>
@@ -330,7 +363,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
       </label>
       <DraftPanel medicationNames={selectedMedicationNames} nextVisit={nextVisitPreview} memo={form.memo} />
       <p style={warningStyle}>⚠ 불명확한 시간은 저장 전에 다시 확인해요</p>
-      <button type="button" onClick={() => setStep('confirm')} style={ctaStyle}>저장 전 확인</button>
+      <button type="button" onClick={() => setStep('confirm')} style={ctaStyle()}>저장 전 확인</button>
       <p style={safeNoteStyle}>🔒 언제든 수정할 수 있어요</p>
     </Shell>
   );
@@ -347,24 +380,24 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
         ))}
         {partnerConnected ? <button type="button" style={rowStyle(false)}><span style={iconPillStyle}>👥</span><strong>파트너 공유 상태</strong><small>파트너가 읽기 전용으로 확인 중</small></button> : null}
       </section>
-      <button type="button" onClick={() => router.push('/home')} style={ctaStyle}>홈으로 이동</button>
+      <button type="button" onClick={() => router.push('/home')} style={ctaStyle()}>홈으로 이동</button>
     </Shell>
   );
 
   return (
-    <Shell header={<GuideHeader current={progress.current} total={progress.total} />}>
+    <Shell>
       <h1 style={titleStyle}>저장 전 확인해주세요</h1>
       <p style={subtitleStyle}>아래 내용을 확인한 후 저장하면 오늘 일정에 즉시 반영돼요.</p>
-      <SummaryCard icon="📅" label="추가된 일정" value={selectedMedicationNames.length ? `${selectedMedicationNames.join(', ')} 오늘 19:00` : '추가된 약 없음'} onClick={() => setStep('new_med')} />
+      <SummaryCard icon="📅" label="추가된 일정" value={selectedSchedulePreview.length ? selectedSchedulePreview.join(', ') : '추가된 약 없음'} onClick={() => setStep('new_med')} />
       <SummaryCard icon="🕐" label="다음 방문" value={nextVisitPreview} onClick={() => setStep('days')} />
       <SummaryCard icon="📄" label="메모" value={form.memo || '없음'} onClick={() => setStep('memo')} />
-      <button type="button" onClick={save} disabled={saving} style={{ ...ctaStyle, opacity: saving ? 0.7 : 1 }}>{saving ? '저장 중...' : '저장하고 업데이트'}</button>
+      <button type="button" onClick={save} disabled={saving} style={ctaStyle(saving)}>{saving ? '저장 중...' : '저장하고 업데이트'}</button>
     </Shell>
   );
 }
 
 function GuideHeader({ current, total }: { current: number; total: number }) {
-  const label = REFERENCE_PROGRESS_LABELS[current - 1] ?? `${String(current).padStart(2, '0')}/${String(total).padStart(2, '0')}`;
+  const label = INTERVIEW_PROGRESS_LABELS[current - 1] ?? `${current}/${total}`;
   return (
     <header style={{ display: 'grid', gap: 12, justifyItems: 'center', marginBottom: 18 }}>
       <strong style={{ fontFamily: 'Georgia, serif', fontSize: 34, fontWeight: 500 }}>Fevio</strong>
@@ -413,11 +446,6 @@ function SummaryCard({ icon, label, value, onClick }: { icon: string; label: str
   );
 }
 
-function progressForStep(step: Step) {
-  const map: Record<Step, number> = { entry: 1, same_med: 2, new_med: 3, days: 4, memo: 5, confirm: 6, success: 6 };
-  return { current: map[step], total: PROGRESS_TOTAL };
-}
-
 function normalizeSearch(value: string) {
   return value.toLocaleLowerCase('ko-KR').replace(/[\s\-_()]/gu, '');
 }
@@ -425,6 +453,20 @@ function normalizeSearch(value: string) {
 function resolveSelectedMedicationNames(medications: Pick<Medication, 'id' | 'brand_name_ko'>[], ids: string[], directTitle: string) {
   const directIds = ids.filter((id) => id.startsWith(DIRECT_PREFIX)).map((id) => id.slice(DIRECT_PREFIX.length));
   return [...resolveMedicationNames(medications, ids.filter((id) => !id.startsWith(DIRECT_PREFIX))), ...directIds].filter((name) => name || directTitle);
+}
+
+function buildSelectedSchedulePreview(
+  medications: Pick<Medication, 'id' | 'brand_name_ko' | 'default_unit'>[],
+  ids: string[],
+  directTitle: string,
+) {
+  const medicationPreview = medications
+    .filter((medication) => ids.includes(medication.id))
+    .map((medication) => `${medication.brand_name_ko}${medication.default_unit ? ` ${medication.default_unit}` : ''} 오늘 19:00`);
+  const directPreview = ids
+    .filter((id) => id.startsWith(DIRECT_PREFIX))
+    .map((id) => `${id.slice(DIRECT_PREFIX.length) || directTitle} 오늘 19:00`);
+  return [...medicationPreview, ...directPreview].filter(Boolean);
 }
 
 function directMedicationForSave(form: FormState) {
@@ -438,22 +480,29 @@ function normalizeSavedScheduleItem(item: ClinicUpdateSaveScheduleItem): SavedSc
 }
 
 function previewScheduleItems(names: string[], nextVisitAt: string) {
-  const visitAt = nextVisitAt ? `${nextVisitAt}T09:00:00.000` : new Date().toISOString();
+  const visitAt = nextVisitAt ? `${nextVisitAt}T09:00:00.000` : todayAtLocalTime('19:00');
   return names.length
-    ? names.map((title) => ({ title, scheduledAt: visitAt, unit: null }))
+    ? names.map((title) => ({ title, scheduledAt: todayAtLocalTime('19:00'), unit: null }))
     : [{ title: '다음 병원 방문', scheduledAt: visitAt, unit: null }];
 }
 
 function formatKoreanVisitDate(value: string) {
   const date = new Date(`${value}T10:00:00`);
   if (Number.isNaN(date.getTime())) return '미정';
-  return `${date.getMonth() + 1}월 ${date.getDate()}일 오전 10:00`;
+  return `${date.getFullYear()}년 ${String(date.getMonth() + 1).padStart(2, '0')}월 ${String(date.getDate()).padStart(2, '0')}일 오전 10:00`;
 }
 
 function formatTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '09:00';
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function todayAtLocalTime(time: '19:00') {
+  const [hours, minutes] = time.split(':');
+  const date = new Date();
+  date.setHours(Number(hours), Number(minutes), 0, 0);
+  return date.toISOString();
 }
 
 const containerStyle: CSSProperties = { padding: '54px 24px 112px', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #FFFCF7 0%, #F8F1E9 100%)', color: '#2A1F1A' };
@@ -477,7 +526,8 @@ const counterStyle: CSSProperties = { position: 'absolute', right: 14, bottom: 1
 const listStyle: CSSProperties = { display: 'grid', gap: 8, marginTop: 12 };
 const rowStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 14px', borderRadius: 14, border: `1.5px solid ${active ? '#C4614A' : '#EFE4DC'}`, background: active ? '#FFF0EB' : '#fff', color: '#2A1F1A', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' });
 const summaryCardStyle: CSSProperties = { ...rowStyle(false), marginBottom: 10, minHeight: 76 };
-const ctaStyle: CSSProperties = { marginTop: 18, width: '100%', border: 'none', borderRadius: 16, padding: '16px 0', background: 'linear-gradient(180deg, #D86C57, #C95842)', color: '#fff', fontSize: 17, fontWeight: 900, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 12px 24px rgba(196,97,74,0.20)' };
+const emptyListStyle: CSSProperties = { margin: '4px 0', padding: '12px 14px', borderRadius: 14, background: '#FFFCFA', border: '1px dashed #F0EDE8', color: '#9B8E86', fontSize: 13, fontWeight: 800 };
+const ctaStyle = (disabled = false): CSSProperties => ({ marginTop: 18, width: '100%', minHeight: 52, border: 'none', borderRadius: 16, padding: '16px 0', background: 'linear-gradient(180deg, #D86C57, #C95842)', color: '#fff', fontSize: 17, fontWeight: 900, fontFamily: 'inherit', cursor: disabled ? 'default' : 'pointer', boxShadow: '0 12px 24px rgba(196,97,74,0.20)', opacity: disabled ? 0.55 : 1 });
 const textButtonStyle: CSSProperties = { marginTop: 14, border: 0, background: 'transparent', color: '#74675F', fontSize: 14, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 4 };
 const safeNoteStyle: CSSProperties = { margin: '12px 0 0', textAlign: 'center', color: '#74675F', fontSize: 13, fontWeight: 700 };
 const warningStyle: CSSProperties = { margin: '14px 0 0', padding: '12px 14px', borderRadius: 14, background: '#FFF3EA', color: '#6B5E55', fontSize: 13, fontWeight: 800 };

@@ -46,13 +46,13 @@ test.describe('SLC mobile quality smoke', () => {
     await page.goto('/clinic-update');
 
     await expect(page.getByRole('heading', { name: '오늘 병원 업데이트' })).toBeVisible();
-    await expect(page.getByText('01/06')).toBeVisible();
     await page.getByRole('button', { name: '시작하기' }).click();
-    await expect(page.getByText('02/06')).toBeVisible();
+    await expect(page.getByText('1/4')).toBeVisible();
     await expect(page.getByText('✦ Clinic Guide AI')).toBeVisible();
 
     await page.getByRole('button', { name: '바뀌었어요' }).click();
     await page.getByRole('button', { name: '다음' }).click();
+    await expect(page.getByText('2/4')).toBeVisible();
     await page.getByRole('button', { name: '네' }).click();
     await page.getByLabel('약 이름 검색').fill('고날');
     await expect(page.getByText('고날에프')).toBeVisible();
@@ -69,7 +69,6 @@ test.describe('SLC mobile quality smoke', () => {
     await expect(page.getByLabel('정리된 내용')).toContainText('트리거는 내일 오후 예정이라고 들었어요');
     await page.getByRole('button', { name: '저장 전 확인' }).click();
 
-    await expect(page.getByText('06/06')).toBeVisible();
     await expect(page.getByRole('heading', { name: '저장 전 확인해주세요' })).toBeVisible();
     await expect(page.getByRole('button', { name: /저장하고 업데이트/ })).toBeVisible();
   });

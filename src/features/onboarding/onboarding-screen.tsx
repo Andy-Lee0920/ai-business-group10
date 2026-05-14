@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { RoleButton, backButtonStyle, checkStyle, ctaStyle, errorStyle, inputStyle, leadStyle, screenStyle, titleStyle } from './onboarding-ui';
+import { RoleButton, backButtonStyle, checkStyle, ctaStyle, errorStyle, inputStyle, leadStyle, onboardingTokens, screenStyle, titleStyle } from './onboarding-ui';
 import { useRouter } from 'next/navigation';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 
@@ -71,14 +71,14 @@ export function OnboardingScreen({ inviteCode }: Props) {
   if (step === 'welcome') return (
     <div style={screenStyle}>
       <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 8px', color: 'var(--slc-coral)', fontSize: 13, fontWeight: 800 }}>Fevio</p>
-        <div aria-hidden style={{ display: 'grid', placeItems: 'center', width: 132, height: 132, borderRadius: 999, margin: '0 auto 28px', background: 'radial-gradient(circle, #FCE1D8, #FFF7EF 70%)', fontSize: 64 }}>🌿</div>
+        <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>Fevio</p>
+        <div aria-hidden style={{ display: 'grid', placeItems: 'center', width: 132, height: 132, borderRadius: onboardingTokens.radiusPill, margin: '0 auto 28px', background: 'radial-gradient(circle, #FCE1D8, #FFF7EF 70%)', fontSize: 64 }}>🌿♡</div>
         <h1 style={{ ...titleStyle, textAlign: 'center', fontFamily: 'Georgia, serif', fontSize: 36 }}>Fevio</h1>
-        <p style={{ ...leadStyle, textAlign: 'center', fontSize: 18, color: 'var(--slc-text)' }}>오늘의 주사와 약을 조용히 챙겨드릴게요</p>
+        <p style={{ ...leadStyle, textAlign: 'center', fontSize: 18, color: onboardingTokens.textMain }}>오늘의 주사와 약을 조용히 챙겨드릴게요</p>
         <p style={{ ...leadStyle, textAlign: 'center' }}>여러분의 하루가 더 가볍고 안정될 수 있도록 함께합니다.</p>
         <div style={{ marginTop: 28, display: 'grid', gap: 10 }}>
           {['오늘 일정 확인', '주사·복용 완료 기록', '파트너 읽기 전용 공유'].map((label) => (
-            <div key={label} style={{ padding: '14px 16px', borderRadius: 16, background: '#fff', border: '1.5px solid #F0EDE8', color: '#6B5E55', fontWeight: 700 }}>
+            <div key={label} style={{ minHeight: 44, padding: '14px 16px', borderRadius: onboardingTokens.radiusCard, background: '#fff', border: `1.5px solid ${onboardingTokens.border}`, color: '#6B5E55', fontWeight: 700 }}>
               {label}
             </div>
           ))}
@@ -93,7 +93,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
     <div style={screenStyle}>
       <button type="button" onClick={() => setStep('welcome')} style={backButtonStyle}>← 처음으로</button>
       <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 8px', color: 'var(--slc-coral)', fontSize: 13, fontWeight: 800 }}>역할 선택</p>
+        <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>역할 선택</p>
         <h1 style={titleStyle}>어떤 역할로 시작하시나요?</h1>
         <p style={leadStyle}>역할에 따라 오늘 보이는 화면과 공유 범위가 달라집니다.</p>
 
@@ -121,7 +121,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
     <div style={screenStyle}>
       <button type="button" onClick={() => setStep('role')} style={backButtonStyle}>← 역할 선택</button>
       <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 8px', color: 'var(--slc-coral)', fontSize: 13, fontWeight: 800 }}>동의 확인</p>
+        <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>동의 확인</p>
         <h1 style={titleStyle}>Fevio 민감정보 동의</h1>
         <p style={leadStyle}>아래 항목은 직접 체크해야 시작할 수 있습니다.</p>
 
@@ -145,7 +145,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
                 type="checkbox"
                 checked={accepted[index] === true}
                 onChange={(event) => setAccepted((prev) => ({ ...prev, [index]: event.target.checked }))}
-                style={{ width: 18, height: 18, accentColor: 'var(--slc-coral)', flex: '0 0 auto' }}
+                style={{ width: 18, height: 18, accentColor: onboardingTokens.primary, flex: '0 0 auto' }}
               />
               <span>{label}</span>
             </label>
@@ -171,7 +171,7 @@ function stepDots(activeIndex: number) {
   return (
     <div aria-label="온보딩 단계" style={{ display: 'flex', justifyContent: 'center', gap: 6, margin: '18px 0 4px' }}>
       {[0, 1, 2].map((index) => (
-        <span key={index} style={{ width: index === activeIndex ? 18 : 6, height: 6, borderRadius: 999, background: index === activeIndex ? 'var(--slc-coral)' : '#E6D9CF' }} />
+        <span key={index} style={{ width: index === activeIndex ? 18 : 6, height: 6, borderRadius: onboardingTokens.radiusPill, background: index === activeIndex ? onboardingTokens.primary : '#E6D9CF' }} />
       ))}
     </div>
   );

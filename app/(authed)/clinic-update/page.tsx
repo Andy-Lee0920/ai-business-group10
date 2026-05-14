@@ -26,6 +26,8 @@ export default async function ClinicUpdatePage() {
       .in('status', ['requested', 'approved'])
     : { data: [] };
 
-  if (error) return <ClinicUpdateForm medications={fallbackMedications()} partnerConnected={Boolean(partnerLinks?.length)} />;
-  return <ClinicUpdateForm medications={medications ?? []} partnerConnected={Boolean(partnerLinks?.length)} />;
+  const partnerConnected = partnerLinks?.some((link) => link.status === 'approved') === true;
+
+  if (error) return <ClinicUpdateForm medications={fallbackMedications()} partnerConnected={partnerConnected} />;
+  return <ClinicUpdateForm medications={medications ?? []} partnerConnected={partnerConnected} />;
 }

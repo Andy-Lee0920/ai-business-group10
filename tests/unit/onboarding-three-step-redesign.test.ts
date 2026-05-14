@@ -8,6 +8,7 @@ describe('onboarding 3-step redesign contract', () => {
     for (const copy of [
       '오늘의 주사와 약을 조용히 챙겨드릴게요',
       '여러분의 하루가 더 가볍고 안정될 수 있도록 함께합니다.',
+      '🌿♡',
       'stepDots',
       '나는 치료를 받고 있어요',
       '나는 파트너예요',
@@ -19,6 +20,8 @@ describe('onboarding 3-step redesign contract', () => {
     ]) {
       expect(screen).toContain(copy);
     }
+    expect(screen).toContain('onboardingTokens.primary');
+    expect(screen).not.toContain('var(--slc');
     expect(screen).not.toContain('파트너를 연결하면 오늘 일정과 완료 상태가 read-only로 공유될 수 있음을 이해했습니다.');
   });
 });

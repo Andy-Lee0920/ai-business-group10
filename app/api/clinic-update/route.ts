@@ -9,10 +9,10 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const body = await request.json() as {
-    sameMedication: boolean;
+    sameMedication: boolean | null;
     addedMedicationIds: string[];
-    medicationDays: number;
-    nextVisitAt: string;
+    medicationDays: number | null;
+    nextVisitAt: string | null;
     triggerPlan: string;
     memo?: string;
     newScheduleItems?: Array<{
