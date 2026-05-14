@@ -351,7 +351,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   );
 
   return (
-    <Shell header={<GuideHeader current={4} total={4} />}>
+    <Shell header={<GuideHeader current={6} total={6} />}>
       <h1 style={titleStyle}>저장 전 확인해주세요</h1>
       <p style={subtitleStyle}>아래 내용을 확인한 후 저장하면 오늘 일정에 즉시 반영돼요.</p>
       <SummaryCard icon="📅" label="추가된 일정" value={selectedMedicationNames.length ? `${selectedMedicationNames.join(', ')} 오늘 19:00` : '추가된 약 없음'} onClick={() => setStep('new_med')} />

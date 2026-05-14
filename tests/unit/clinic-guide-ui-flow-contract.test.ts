@@ -27,6 +27,7 @@ describe('Clinic Guide visual flow contract', () => {
       '정리된 내용',
       '불명확한 시간은 저장 전에 다시 확인해요',
       '저장 전 확인해주세요',
+      '<GuideHeader current={6} total={6}',
       '저장하고 업데이트',
       '✓ 오늘 일정에 반영했어요',
       '오늘 일정 미리보기',
