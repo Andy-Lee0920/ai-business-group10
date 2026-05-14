@@ -98,7 +98,7 @@ describe('Prescription Capture', () => {
   });
 
   it('adds RLS-backed schema fields and keeps partner confirmation in injection logs', () => {
-    const migration = readFileSync('supabase/migrations/202605120004_prescription_capture.sql', 'utf8');
+    const migration = readFileSync('supabase/migrations/202605120006_prescription_capture.sql', 'utf8');
     const matrix = readFileSync('docs/03-engineering/schema-rls-matrix.md', 'utf8');
 
     expect(migration).toContain('prescription_photo_url');

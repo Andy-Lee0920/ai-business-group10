@@ -1,6 +1,7 @@
 'use client';
 import type { ScheduleItem } from '../types/slc.types';
-import { computeStatus, ctaLabel, completedLabel } from '../types/slc.types';
+import { ctaLabel, completedLabel } from '../types/slc.types';
+import { getSchedulePresentation, type ScheduleBadgeTone } from '../domain/slc-home-focus';
 import { CountdownRing } from './countdown-ring';
 
 interface ActionCardProps {
@@ -11,9 +12,11 @@ interface ActionCardProps {
 }
 
 export function ActionCard({ item, onCta, compact = false, showCountdown = true }: ActionCardProps) {
-  const status = item.status === 'completed' ? 'completed' : computeStatus(item.scheduled_at);
+  const presentation = getSchedulePresentation(item);
+  const status = presentation.status;
   const isCompleted = status === 'completed';
   const isDueSoon = status === 'due_soon' || status === 'due';
+  const isWithinHour = presentation.badgeTone === 'amber';
   const timeStr = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', {
     hour: '2-digit', minute: '2-digit', hour12: false,
   });
@@ -30,7 +33,9 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
         ? '1.5px solid #E8E4DF'
         : isDueSoon
           ? '1.5px solid #E8A898'
-          : '1.5px solid transparent',
+          : isWithinHour
+            ? '1.5px solid #E9B75F'
+            : '1.5px solid transparent',
       position: 'relative',
       opacity: isCompleted ? 0.7 : 1,
       transition: 'all 0.3s ease',
@@ -41,6 +46,7 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
         </div>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span data-testid="schedule-status-badge" data-tone={presentation.badgeTone} style={badgeStyle(presentation.badgeTone)}>{presentation.badgeLabel}</span>
         <span style={{ fontSize: 13, color: '#9B8E86', fontWeight: 500 }}>{timeStr}</span>
         <span style={{
           fontSize: compact ? 17 : 20,
@@ -81,4 +87,25 @@ function formatTitle(item: ScheduleItem) {
   const suffix = item.dose && item.unit ? `${item.dose} ${item.unit}` : '';
   if (!suffix || item.title.includes(suffix)) return item.title;
   return `${item.title} ${suffix}`;
+}
+
+function badgeStyle(tone: ScheduleBadgeTone) {
+  const colors = {
+    coral: { background: '#FFF0EB', color: '#C4614A', border: '#E8A898' },
+    amber: { background: '#FFF7E8', color: '#A86F10', border: '#E9B75F' },
+    completed: { background: '#F7F5F2', color: '#9B8E86', border: '#E8E4DF' },
+    default: { background: '#F8F4F0', color: '#9B8E86', border: '#EFE7E0' },
+  }[tone];
+
+  return {
+    alignSelf: 'flex-start',
+    padding: '4px 9px',
+    borderRadius: 999,
+    border: `1px solid ${colors.border}`,
+    background: colors.background,
+    color: colors.color,
+    fontSize: 12,
+    fontWeight: 800,
+    lineHeight: 1,
+  } as const;
 }

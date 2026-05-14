@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { TodayScreen } from '../../../src/features/today/today-screen';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
-import type { ScheduleItem } from '../../../src/types/slc.types';
+import type { PartnerLink, ScheduleItem } from '../../../src/types/slc.types';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,19 +22,42 @@ export default async function HomePage() {
 
   if ((isMissingSlcTable(profileError) ? fallbackRole : profile?.role) === 'partner') redirect('/partner');
 
-  const { data: items, error } = await supabase
-    .from('schedule_items')
-    .select('*')
-    .eq('patient_id', user.id)
-    .gte('scheduled_at', dayStart(0).toISOString())
-    .lte('scheduled_at', dayEnd(2).toISOString())
-    .order('scheduled_at', { ascending: true });
+  const [itemsRes, pendingPartnerRequest] = await Promise.all([
+    supabase
+      .from('schedule_items')
+      .select('*')
+      .eq('patient_id', user.id)
+      .gte('scheduled_at', dayStart(0).toISOString())
+      .lte('scheduled_at', dayEnd(2).toISOString())
+      .order('scheduled_at', { ascending: true }),
+    getPendingPartnerRequest(supabase, user.id),
+  ]);
+
+  if (itemsRes.error) {
+    if (isMissingSlcTable(itemsRes.error)) return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} pendingPartnerRequest={pendingPartnerRequest} />;
+    throw new Error(itemsRes.error.message);
+  }
+  return <TodayScreen initialItems={(itemsRes.data ?? []) as ScheduleItem[]} userId={user.id} pendingPartnerRequest={pendingPartnerRequest} />;
+}
+
+async function getPendingPartnerRequest(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  patientId: string,
+): Promise<PartnerLink | null> {
+  const { data: request, error } = await supabase
+    .from('partner_links')
+    .select('*, partner_profile:user_profiles!partner_id(display_name)')
+    .eq('patient_id', patientId)
+    .eq('status', 'requested')
+    .order('requested_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (error) {
-    if (isMissingSlcTable(error)) return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} />;
+    if (isMissingSlcTable(error)) return null;
     throw new Error(error.message);
   }
-  return <TodayScreen initialItems={(items ?? []) as ScheduleItem[]} userId={user.id} />;
+  return request as PartnerLink | null;
 }
 
 function dayStart(offset: number) {

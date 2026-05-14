@@ -6,7 +6,7 @@ import type { PartnerLink } from '../../types/slc.types';
 interface Props {
   userId: string;
   existingLink: PartnerLink | null;
-  pendingRequests: Array<PartnerLink & { partner?: { email?: string } | null }>;
+  pendingRequests: PartnerLink[];
 }
 
 export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: Props) {
@@ -29,7 +29,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const approvePending = async (linkId: string, action: 'approve' | 'reject') => {
+  const sendPartnerAction = async (linkId: string, action: 'approve' | 'reject' | 'revoke') => {
     await fetch('/api/partner/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -49,13 +49,23 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
             <p style={{ fontSize: 14, fontWeight: 600, color: '#C4614A', marginBottom: 12 }}>파트너 연결 요청이 있어요</p>
             {pendingRequests.map((req) => (
               <div key={req.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 14, color: '#2A1F1A' }}>{req.partner?.email ?? '파트너'}</span>
+                <span style={{ fontSize: 14, color: '#2A1F1A' }}>{partnerDisplayName(req)}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => approvePending(req.id, 'approve')} style={{ padding: '6px 14px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>승인</button>
-                  <button onClick={() => approvePending(req.id, 'reject')} style={{ padding: '6px 14px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>거절</button>
+                  <button onClick={() => sendPartnerAction(req.id, 'approve')} style={{ padding: '6px 14px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>승인</button>
+                  <button onClick={() => sendPartnerAction(req.id, 'reject')} style={{ padding: '6px 14px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>거절</button>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {existingLink?.status === 'approved' && (
+          <div style={{ background: '#fff', borderRadius: 16, padding: '16px 20px', border: '1.5px solid #F0EDE8', marginBottom: 16 }}>
+            <p style={{ fontSize: 13, color: '#9B8E86', marginBottom: 6 }}>연결된 파트너</p>
+            <p style={{ fontSize: 15, color: '#2A1F1A', fontWeight: 800, margin: '0 0 12px' }}>{partnerDisplayName(existingLink)}</p>
+            <button onClick={() => sendPartnerAction(existingLink.id, 'revoke')} style={{ background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              연결 해제
+            </button>
           </div>
         )}
 
@@ -88,4 +98,8 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       </section>
     </div>
   );
+}
+
+function partnerDisplayName(link: PartnerLink) {
+  return link.partner_profile?.display_name?.trim() || '파트너';
 }

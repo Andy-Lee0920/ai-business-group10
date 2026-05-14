@@ -13,6 +13,7 @@ const slcMigrations = [
   '202605130006_slc_user_profiles.sql',
   '202605130007_slc_user_consents.sql',
   '202605130008_slc_partner_read_rls.sql',
+  '202605140001_slc_partner_profile_identity.sql',
 ];
 
 function readMigration(fileName: string) {
@@ -74,5 +75,16 @@ describe('SLC Supabase migrations', () => {
     ]) {
       expect(migrationText).toContain(`create table if not exists ${tableName}`);
     }
+  });
+
+  it('keeps partner approval identity joinable and readable by the patient owner', () => {
+    const identity = readMigration('202605140001_slc_partner_profile_identity.sql');
+
+    expect(identity).toContain('partner_links_partner_profile_fkey');
+    expect(identity).toContain('foreign key (partner_id)');
+    expect(identity).toContain('references public.user_profiles(id)');
+    expect(identity).toContain('patient_read_linked_partner_profiles');
+    expect(identity).toContain('partner_links.patient_id = auth.uid()');
+    expect(identity).toContain("partner_links.status in ('requested', 'approved')");
   });
 });

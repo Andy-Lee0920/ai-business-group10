@@ -37,7 +37,7 @@ describe('Result Protection Mode', () => {
   });
 
   it('adds protected cycle outcome columns without anon access', () => {
-    const migration = readFileSync('supabase/migrations/202605120003_result_protection_mode.sql', 'utf8');
+    const migration = readFileSync('supabase/migrations/202605120005_result_protection_mode.sql', 'utf8');
     const matrix = readFileSync('docs/03-engineering/schema-rls-matrix.md', 'utf8');
 
     expect(migration).toContain('cycle_outcome');

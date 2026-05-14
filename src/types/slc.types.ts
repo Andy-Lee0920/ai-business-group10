@@ -64,6 +64,13 @@ export interface PartnerLink {
   partner_id: string | null;
   invite_code: string;
   status: 'pending' | 'requested' | 'approved' | 'rejected';
+  requested_at?: string | null;
+  approved_at?: string | null;
+  partner_profile?: PartnerIdentity | null;
+}
+
+export interface PartnerIdentity {
+  display_name: string | null;
 }
 
 export function computeStatus(scheduledAt: string): ScheduleStatus {

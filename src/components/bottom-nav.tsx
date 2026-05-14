@@ -2,8 +2,8 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
-const NAV_ITEMS = [
-  { href: '/home', label: '오늘', icon: '○' },
+export const NAV_ITEMS = [
+  { href: '/home', label: '홈', icon: '○' },
   { href: '/records', label: '기록', icon: '≡' },
   { href: '/more', label: '더보기', icon: '⋯' },
 ] as const;

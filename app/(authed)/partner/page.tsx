@@ -65,7 +65,7 @@ function PartnerEmptyState() {
   return (
     <div style={{ minHeight: '100dvh', padding: '72px 24px', background: 'var(--slc-bg)', textAlign: 'center' }}>
       <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 8 }}>연결 대기 중</p>
-      <p style={{ fontSize: 14, color: 'var(--slc-muted)', lineHeight: 1.6 }}>치료자가 요청을 승인하면 오늘 일정과 완료 상태를 읽기 전용으로 볼 수 있어요.</p>
+      <p style={{ fontSize: 14, color: 'var(--slc-muted)', lineHeight: 1.6 }}>치료자가 요청을 승인하면 오늘 일정과 완료 상태를 읽기 전용으로 볼 수 있어요. 승인 후 이 화면을 새로고침해서 확인해 주세요.</p>
     </div>
   );
 }

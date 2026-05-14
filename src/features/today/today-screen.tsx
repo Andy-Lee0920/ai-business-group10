@@ -3,22 +3,25 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ActionCard } from '../../components/action-card';
 import { ConfirmSheet } from '../../components/confirm-sheet';
-import type { InjectionSite, ScheduleItem } from '../../types/slc.types';
-import { computeStatus } from '../../types/slc.types';
+import type { InjectionSite, PartnerLink, ScheduleItem } from '../../types/slc.types';
+import { getClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
+import { getHomePendingItems } from '../../domain/slc-home-focus';
 
 interface TodayScreenProps {
   initialItems: ScheduleItem[];
   userId: string;
+  pendingPartnerRequest?: PartnerLink | null;
 }
 
 type DayOffset = 0 | 1 | 2;
 
 const DAY_LABELS = ['오늘', '내일', '모레'] as const;
 
-export function TodayScreen({ initialItems, userId: _userId }: TodayScreenProps) {
+export function TodayScreen({ initialItems, userId: _userId, pendingPartnerRequest: initialPendingPartnerRequest = null }: TodayScreenProps) {
   const [items, setItems] = useState<ScheduleItem[]>(initialItems);
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
+  const [pendingPartnerRequest, setPendingPartnerRequest] = useState<PartnerLink | null>(initialPendingPartnerRequest);
 
   useEffect(() => {
     const id = setInterval(() => setItems((prev) => [...prev]), 30_000);
@@ -30,7 +33,11 @@ export function TodayScreen({ initialItems, userId: _userId }: TodayScreenProps)
     [items, selectedDay],
   );
 
-  const pending = visibleItems.filter((item) => item.status !== 'completed' && computeStatus(item.scheduled_at) !== 'completed');
+  const pending = useMemo(() => getHomePendingItems(visibleItems), [visibleItems]);
+  const clinicFollowUpItem = useMemo(
+    () => selectedDay === 0 ? getClinicFollowUpPrompt(visibleItems) : null,
+    [selectedDay, visibleItems],
+  );
   const completed = visibleItems.filter((item) => item.status === 'completed');
   const mainItem = pending[0];
   const nextItem = pending[1];
@@ -47,21 +54,56 @@ export function TodayScreen({ initialItems, userId: _userId }: TodayScreenProps)
     });
   }, [activeItem]);
 
+  const handlePartnerRequest = useCallback(async (action: 'approve' | 'reject') => {
+    if (!pendingPartnerRequest) return;
+    const linkId = pendingPartnerRequest.id;
+    setPendingPartnerRequest(null);
+    const response = await fetch('/api/partner/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ linkId, action }),
+    });
+    if (!response.ok) setPendingPartnerRequest(pendingPartnerRequest);
+  }, [pendingPartnerRequest]);
+
   return (
     <div style={{ minHeight: '100dvh', padding: '0 0 16px', background: 'var(--slc-bg)' }}>
       <Header />
       <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
       <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {pendingPartnerRequest && (
+          <PartnerRequestCard
+            request={pendingPartnerRequest}
+            onApprove={() => handlePartnerRequest('approve')}
+            onReject={() => handlePartnerRequest('reject')}
+          />
+        )}
         {visibleItems.length === 0 ? <EmptyState selectedDay={selectedDay} /> : (
           <>
+            {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
             {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
             {nextItem && <NextItem item={nextItem} onCta={setActiveItem} />}
             {completed.map((item) => <ActionCard key={item.id} item={item} onCta={() => undefined} compact />)}
           </>
         )}
       </section>
-      <ClinicUpdatePrompt />
       {activeItem && <ConfirmSheet item={activeItem} onComplete={handleComplete} onClose={() => setActiveItem(null)} />}
+    </div>
+  );
+}
+
+function PartnerRequestCard({ request, onApprove, onReject }: { request: PartnerLink; onApprove: () => void; onReject: () => void }) {
+  const displayName = request.partner_profile?.display_name?.trim() || '파트너';
+
+  return (
+    <div data-testid="pending-partner-request-card" style={{ padding: '16px 20px', background: '#FFF8F5', borderRadius: 18, border: '1.5px solid #F4D4C8' }}>
+      <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 800, margin: '0 0 6px' }}>파트너 연결 요청</p>
+      <p style={{ fontSize: 16, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 6px' }}>파트너 연결 요청이 있어요</p>
+      <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>{displayName} 님이 일정 읽기 권한을 요청했어요.</p>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="button" onClick={onApprove} style={{ padding: '9px 16px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>승인</button>
+        <button type="button" onClick={onReject} style={{ padding: '9px 16px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>거절</button>
+      </div>
     </div>
   );
 }
@@ -109,10 +151,16 @@ function NextItem({ item, onCta }: { item: ScheduleItem; onCta: (item: ScheduleI
   );
 }
 
-function ClinicUpdatePrompt() {
+function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
+  const timeStr = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', {
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+
   return (
-    <div style={{ margin: '20px 16px 0', padding: '16px 20px', background: '#FFF8F5', borderRadius: 18, border: '1.5px solid #F4D4C8' }}>
-      <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 8px' }}>병원 다녀오셨나요?</p>
+    <div data-testid="clinic-follow-up-prompt" style={{ padding: '16px 20px', background: '#FFF8F5', borderRadius: 18, border: '1.5px solid #F4D4C8' }}>
+      <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 700, margin: '0 0 6px' }}>오늘 {timeStr} 병원 일정</p>
+      <p style={{ fontSize: 16, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 6px' }}>병원 다녀오셨나요?</p>
+      <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 10px', lineHeight: 1.5 }}>바뀐 내용만 간단히 반영해요.</p>
       <Link href="/clinic-update" style={{ fontSize: 14, color: 'var(--slc-coral)', fontWeight: 800, textDecoration: 'none' }}>업데이트하기 →</Link>
     </div>
   );
