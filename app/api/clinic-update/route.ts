@@ -60,5 +60,5 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, scheduleItems: body.newScheduleItems ?? [] });
 }

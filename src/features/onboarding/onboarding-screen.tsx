@@ -13,15 +13,13 @@ interface Props {
 }
 
 const PATIENT_CONSENTS = [
-  'Fevio는 의료 판단을 하지 않으며, 병원에서 받은 처방과 직접 입력한 일정만 기록합니다.',
-  '약명, 시간, 완료 여부, 병원 방문 일정이 저장될 수 있음을 이해했습니다.',
-  '파트너를 연결하면 오늘 일정과 완료 상태가 read-only로 공유될 수 있음을 이해했습니다.',
+  '개인정보 수집 동의 — 필수 서비스 제공을 위해 사용돼요.',
+  '민감정보 처리 동의 — 치료 관련 정보를 안전하게 처리해요.',
 ] as const;
 
 const PARTNER_CONSENTS = [
-  'Fevio는 의료 판단을 하지 않으며, 치료자의 입력 정보를 read-only로 보여줍니다.',
-  '나는 처방을 수정하거나 의료적 판단을 대신하지 않습니다.',
-  '치료자가 공유한 오늘 일정과 완료 상태만 확인할 수 있음을 이해했습니다.',
+  '개인정보 수집 동의 — 파트너 연결을 위해 사용돼요.',
+  '민감정보 처리 동의 — 공유된 오늘 일정만 읽기 전용으로 확인해요.',
 ] as const;
 
 export function OnboardingScreen({ inviteCode }: Props) {
@@ -62,7 +60,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
         setError(SLC_SAFE_COPY.onboardingSaveFailed);
         return;
       }
-      router.replace(data.role === 'partner' ? '/partner' : '/home');
+      router.replace('/home');
     } catch {
       setError(SLC_SAFE_COPY.onboardingSaveFailed);
     } finally {
@@ -74,8 +72,10 @@ export function OnboardingScreen({ inviteCode }: Props) {
     <div style={screenStyle}>
       <div style={{ flex: 1 }}>
         <p style={{ margin: '0 0 8px', color: 'var(--slc-coral)', fontSize: 13, fontWeight: 800 }}>Fevio</p>
-        <h1 style={titleStyle}>Fevio가 병원 안내를 오늘 할 일로 정리해 드릴게요</h1>
-        <p style={leadStyle}>처음에는 역할과 필요한 동의만 확인합니다. 병원 안내와 완료 기록은 사용자가 직접 확인한 내용만 저장됩니다.</p>
+        <div aria-hidden style={{ display: 'grid', placeItems: 'center', width: 132, height: 132, borderRadius: 999, margin: '0 auto 28px', background: 'radial-gradient(circle, #FCE1D8, #FFF7EF 70%)', fontSize: 64 }}>🌿</div>
+        <h1 style={{ ...titleStyle, textAlign: 'center', fontFamily: 'Georgia, serif', fontSize: 36 }}>Fevio</h1>
+        <p style={{ ...leadStyle, textAlign: 'center', fontSize: 18, color: 'var(--slc-text)' }}>오늘의 주사와 약을 조용히 챙겨드릴게요</p>
+        <p style={{ ...leadStyle, textAlign: 'center' }}>여러분의 하루가 더 가볍고 안정될 수 있도록 함께합니다.</p>
         <div style={{ marginTop: 28, display: 'grid', gap: 10 }}>
           {['오늘 일정 확인', '주사·복용 완료 기록', '파트너 읽기 전용 공유'].map((label) => (
             <div key={label} style={{ padding: '14px 16px', borderRadius: 16, background: '#fff', border: '1.5px solid #F0EDE8', color: '#6B5E55', fontWeight: 700 }}>
@@ -84,6 +84,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
           ))}
         </div>
       </div>
+      {stepDots(0)}
       <button type="button" onClick={() => setStep('role')} style={ctaStyle(false)}>시작하기</button>
     </div>
   );
@@ -98,17 +99,20 @@ export function OnboardingScreen({ inviteCode }: Props) {
 
         <RoleButton
           active={role === 'patient'}
+          icon="♡"
           title="나는 치료를 받고 있어요"
-          description="오늘 일정 확인, 완료 기록, 병원 변경 반영"
+          description="오늘의 주사와 약 복용을 쉽게 관리할 수 있어요."
           onClick={() => selectRole('patient')}
         />
         <RoleButton
           active={role === 'partner'}
+          icon="👥"
           title="나는 파트너예요"
-          description="공유된 오늘 상태를 읽기 전용으로 확인"
+          description="소중한 사람의 치료 여정을 함께 응원할 수 있어요."
           onClick={() => selectRole('partner')}
         />
       </div>
+      {stepDots(1)}
       <button type="button" onClick={() => setStep('consent')} disabled={!role} style={ctaStyle(!role)}>다음</button>
     </div>
   );
@@ -123,7 +127,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
 
         {role === 'partner' && (
           <label style={{ display: 'block', marginTop: 18 }}>
-            <span style={{ display: 'block', marginBottom: 8, color: '#9B8E86', fontSize: 14 }}>초대 코드</span>
+            <span style={{ display: 'block', marginBottom: 8, color: '#9B8E86', fontSize: 14 }}>초대 코드 입력</span>
             <input
               aria-label="초대 코드"
               placeholder="치료자가 공유한 초대 코드"
@@ -149,6 +153,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
         </section>
       </div>
 
+      {stepDots(2)}
       {error && <p style={errorStyle}>{error}</p>}
       <button
         type="button"
@@ -158,6 +163,16 @@ export function OnboardingScreen({ inviteCode }: Props) {
       >
         {saving ? '저장 중...' : role === 'partner' ? '동의하고 연결하기' : '동의하고 시작하기'}
       </button>
+    </div>
+  );
+}
+
+function stepDots(activeIndex: number) {
+  return (
+    <div aria-label="온보딩 단계" style={{ display: 'flex', justifyContent: 'center', gap: 6, margin: '18px 0 4px' }}>
+      {[0, 1, 2].map((index) => (
+        <span key={index} style={{ width: index === activeIndex ? 18 : 6, height: 6, borderRadius: 999, background: index === activeIndex ? 'var(--slc-coral)' : '#E6D9CF' }} />
+      ))}
     </div>
   );
 }

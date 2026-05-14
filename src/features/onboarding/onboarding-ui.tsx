@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-export function RoleButton({ active, title, description, onClick }: { active: boolean; title: string; description: string; onClick: () => void }) {
+export function RoleButton({ active, icon, title, description, onClick }: { active: boolean; icon?: string; title: string; description: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} style={{
       display: 'block', width: '100%', padding: '20px 22px',
@@ -9,6 +9,7 @@ export function RoleButton({ active, title, description, onClick }: { active: bo
       borderRadius: 22, marginBottom: 14, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
       boxShadow: active ? '0 14px 30px rgba(196, 97, 74, 0.12)' : 'none',
     }}>
+      {icon ? <span style={{ display: 'inline-grid', placeItems: 'center', width: 40, height: 40, marginBottom: 10, borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', fontWeight: 900 }}>{icon}</span> : null}
       <span style={{ display: 'block', fontSize: 17, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 4 }}>{title}</span>
       <span style={{ display: 'block', fontSize: 13, color: 'var(--slc-muted)' }}>{description}</span>
     </button>

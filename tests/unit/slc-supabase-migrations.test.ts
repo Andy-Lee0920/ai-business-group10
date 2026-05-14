@@ -14,6 +14,7 @@ const slcMigrations = [
   '202605130007_slc_user_consents.sql',
   '202605130008_slc_partner_read_rls.sql',
   '202605140001_slc_partner_profile_identity.sql',
+  '202605140002_slc_clinic_guide_medication_aliases.sql',
 ];
 
 function readMigration(fileName: string) {
@@ -74,6 +75,29 @@ describe('SLC Supabase migrations', () => {
       'user_consents',
     ]) {
       expect(migrationText).toContain(`create table if not exists ${tableName}`);
+    }
+  });
+
+  it('seeds Clinic Guide aliases for the required 10 IVF medications', () => {
+    const aliases = readMigration('202605140002_slc_clinic_guide_medication_aliases.sql');
+
+    for (const brandName of [
+      'Gonal-F',
+      'Menopur',
+      'Cetrotide',
+      'Ovitrelle',
+      'Decapeptyl',
+      'Cyclogest',
+      'Utrogestan',
+      'Pergoveris',
+      'Elonva',
+      'Bemfola',
+    ]) {
+      expect(aliases).toContain(`where brand_name_en = '${brandName}'`);
+    }
+
+    for (const alias of ['고날에프', '폴리트로핀 알파', '메노퓨어', '세트로렐릭스', '오비드렐', '트립토렐린', '황체호르몬 질정', '미분화 프로게스테론', '코리폴리트로핀 알파', '벰폴라']) {
+      expect(aliases).toContain(alias);
     }
   });
 

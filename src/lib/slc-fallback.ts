@@ -30,12 +30,12 @@ export function fallbackScheduleItems(patientId: string): ScheduleItem[] {
   }));
 }
 
-export function fallbackMedications(): Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'default_unit' | 'default_cta'>[] {
+export function fallbackMedications(): Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'aliases' | 'default_unit' | 'default_cta'>[] {
   return [
-    { id: 'menopur', brand_name_ko: '메노푸어', brand_name_en: 'Menopur', default_unit: 'IU', default_cta: '주사하기' },
-    { id: 'cetrotide', brand_name_ko: '세트로타이드', brand_name_en: 'Cetrotide', default_unit: 'mg', default_cta: '주사하기' },
-    { id: 'gonal-f', brand_name_ko: '고날에프', brand_name_en: 'Gonal-F', default_unit: 'IU', default_cta: '주사하기' },
-    { id: 'ovidrel', brand_name_ko: '오비드렐', brand_name_en: 'Ovidrel', default_unit: 'syringe', default_cta: '주사하기' },
-    { id: 'crinone', brand_name_ko: '크리논', brand_name_en: 'Crinone', default_unit: '개', default_cta: '사용하기' },
+    { id: 'menopur', brand_name_ko: '메노푸어', brand_name_en: 'Menopur', aliases: ['메노퓨어', '메노트로핀'], default_unit: 'IU', default_cta: '주사하기' },
+    { id: 'cetrotide', brand_name_ko: '세트로타이드', brand_name_en: 'Cetrotide', aliases: ['세트로렐릭스'], default_unit: 'mg', default_cta: '주사하기' },
+    { id: 'gonal-f', brand_name_ko: '고날에프', brand_name_en: 'Gonal-F', aliases: ['폴리트로핀 알파', 'FSH'], default_unit: 'IU', default_cta: '주사하기' },
+    { id: 'ovidrel', brand_name_ko: '오비드렐', brand_name_en: 'Ovidrel', aliases: ['Ovitrelle', '코리오고나도트로핀'], default_unit: 'syringe', default_cta: '주사하기' },
+    { id: 'crinone', brand_name_ko: '크리논', brand_name_en: 'Crinone', aliases: [], default_unit: '개', default_cta: '사용하기' },
   ];
 }

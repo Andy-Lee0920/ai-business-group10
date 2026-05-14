@@ -24,7 +24,7 @@ describe('SLC auth entry contract', () => {
   it('starts onboarding with Welcome, then Role, then Consent without prechecked consent', () => {
     expect(onboardingScreen).toContain("type Step = 'welcome' | 'role' | 'consent'");
     expect(onboardingScreen).toContain("useState<Step>('welcome')");
-    expect(onboardingScreen).toContain('Fevio가 병원 안내를 오늘 할 일로 정리해 드릴게요');
+    expect(onboardingScreen).toContain('오늘의 주사와 약을 조용히 챙겨드릴게요');
     expect(onboardingScreen).toContain('어떤 역할로 시작하시나요?');
     expect(onboardingScreen).toContain('Fevio 민감정보 동의');
     expect(onboardingScreen).toContain('SLC_SAFE_COPY.onboardingSaveFailed');
