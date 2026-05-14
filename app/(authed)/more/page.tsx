@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
+import { isPresentationMode } from '../../../src/config';
 import { MoreScreen } from '../../../src/features/more/more-screen';
+import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import type { PartnerLink } from '../../../src/types/slc.types';
@@ -8,6 +10,10 @@ import { cookies } from 'next/headers';
 export const dynamic = 'force-dynamic';
 
 export default async function MorePage() {
+  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+    return <MoreScreen userId="presentation-user" existingLink={null} pendingRequests={[]} />;
+  }
+
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

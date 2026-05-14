@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
+import { isPresentationMode } from '../../../src/config';
 import { PartnerView } from '../../../src/features/partner/partner-view';
 import { partnerStateCopy, type PartnerProjectionState } from '../../../src/features/partner/partner-state';
+import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { cookies } from 'next/headers';
@@ -8,6 +10,10 @@ import { cookies } from 'next/headers';
 export const dynamic = 'force-dynamic';
 
 export default async function PartnerPage() {
+  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+    return <PartnerEmptyState state="not_linked" />;
+  }
+
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/sign-in');

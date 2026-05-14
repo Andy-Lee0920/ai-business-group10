@@ -1,10 +1,15 @@
+import { isPresentationMode } from '../../../src/config';
 import { RecordsScreen } from '../../../src/features/records/records-screen';
+import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
-import { isMissingSlcTable } from '../../../src/lib/slc-fallback';
 
 export const dynamic = 'force-dynamic';
 
 export default async function RecordsPage() {
+  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+    return <RecordsScreen items={[]} completions={[]} clinicUpdates={[]} />;
+  }
+
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
