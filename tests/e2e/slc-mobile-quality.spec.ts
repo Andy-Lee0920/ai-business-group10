@@ -22,4 +22,37 @@ test.describe('SLC mobile quality smoke', () => {
   test('documents the protected SLC route set for authenticated mobile smoke', async () => {
     expect(SLC_MOBILE_ROUTES).toEqual(['/privacy', '/onboarding', '/home', '/add', '/records', '/clinic-update', '/partner', '/more']);
   });
+
+  test('Clinic Guide update flow exposes the reference UI path in presentation mode', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/clinic-update');
+
+    await expect(page.getByRole('heading', { name: '오늘 병원 업데이트' })).toBeVisible();
+    await page.getByRole('button', { name: '시작하기' }).click();
+    await expect(page.getByLabel('1/4')).toBeVisible();
+    await expect(page.getByText('✦ Clinic Guide AI')).toBeVisible();
+
+    await page.getByRole('button', { name: '바뀌었어요' }).click();
+    await page.getByRole('button', { name: '다음' }).click();
+    await page.getByRole('button', { name: '네' }).click();
+    await page.getByLabel('약 이름 검색').fill('고날');
+    await expect(page.getByText('고날에프')).toBeVisible();
+    await expect(page.getByRole('button', { name: /직접 입력/ })).toBeVisible();
+    await page.getByRole('button', { name: '약 선택 완료' }).click();
+
+    await page.getByRole('button', { name: '2일' }).click();
+    await expect(page.getByLabel('다음 방문일 제안')).toBeVisible();
+    await page.getByRole('button', { name: '네, 표시할게요' }).click();
+    await expect(page.getByText(/다음 방문:/)).toBeVisible();
+    await page.getByRole('button', { name: '다음' }).click();
+
+    await page.locator('textarea').fill('트리거는 내일 오후 예정이라고 들었어요');
+    await expect(page.getByLabel('정리된 내용')).toContainText('트리거는 내일 오후 예정이라고 들었어요');
+    await page.getByRole('button', { name: '저장 전 확인' }).click();
+
+    await expect(page.getByText('6/6')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '저장 전 확인해주세요' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /저장하고 업데이트/ })).toBeVisible();
+  });
+
 });
