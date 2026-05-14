@@ -41,7 +41,10 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
   return (
     <div style={{ padding: '60px 24px 24px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2A1F1A', marginBottom: 24 }}>더보기</h1>
+      <header style={{ marginBottom: 24 }}>
+        <p style={{ fontSize: 12, fontWeight: 800, color: '#C4614A', margin: '0 0 6px' }}>공유와 설정 관리</p>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2A1F1A', margin: 0 }}>관리</h1>
+      </header>
 
       <section id="partner-invite" style={{ marginBottom: 32 }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>파트너 초대</h2>
@@ -95,7 +98,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       </section>
 
       <section style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>SLC 보조 메뉴</h2>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#9B8E86', marginBottom: 12 }}>케어 관리 메뉴</h2>
         {MORE_MENU_ITEMS.map((item) => (
           <Link key={item.href} href={item.href} style={{ display: 'block', padding: '14px 20px', background: '#fff', borderRadius: 14, border: '1.5px solid #F0EDE8', color: '#2A1F1A', textDecoration: 'none', fontSize: 15, fontWeight: 500, marginBottom: 8 }}>{item.label}</Link>
         ))}

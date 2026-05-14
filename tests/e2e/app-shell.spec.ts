@@ -13,27 +13,33 @@ test('mobile visitor sees the Fevio landing shell', async ({ page }) => {
 
 test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await page.goto('/home?care=injection');
-  await expect(page.locator('main.app-shell').last()).toBeVisible();
+  await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('navigation', { name: '주 탐색' })).toHaveCount(0);
-  await expect(page.getByTestId('compact-hero-greeting')).toContainText('주사 준비');
-  await expect(page.getByTestId('compact-hero-greeting')).toContainText('오늘은 시간을 함께 지키는 날이에요.');
-  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
-  await expect(page.getByRole('link', { name: /일정 변경/ })).toHaveAttribute('href', '/schedule');
-  await expect(page.getByRole('link', { name: /약·주사 확인/ })).toHaveAttribute('href', '/medication');
+  await expect(page.getByRole('heading', { name: '오늘 일정' })).toBeVisible();
+  const bottomNav = page.getByRole('navigation', { name: '하단 주요 메뉴' });
+  await expect(bottomNav).toBeVisible();
+  await expect(bottomNav.getByRole('link').nth(1)).toHaveAccessibleName('오늘 케어 보기');
+  await expect(page.getByRole('link', { name: '오늘 케어 보기' })).toHaveAttribute('href', '/home');
+  await expect(page.getByRole('link', { name: '케어 기록 흐름 보기' })).toHaveAttribute('href', '/records');
+  await expect(page.getByRole('link', { name: '공유와 설정 관리' })).toHaveAttribute('href', '/more');
 });
 
-test('desktop home is constrained to an iPhone 17-width frame without demo bottom navigation', async ({ page }) => {
+test('desktop home is constrained to an iPhone 17-width frame with the refined bottom navigation', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/home?care=injection');
 
-  const shellBox = await page.locator('main.app-shell').first().boundingBox();
+  const shellBox = await page.getByRole('main').boundingBox();
+  const navBox = await page.getByRole('navigation', { name: '하단 주요 메뉴' }).boundingBox();
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   const viewportWidth = await page.evaluate(() => window.innerWidth);
 
   expect(shellBox).not.toBeNull();
+  expect(navBox).not.toBeNull();
   expect(shellBox!.width).toBeLessThanOrEqual(440);
   expect(shellBox!.width).toBeGreaterThanOrEqual(430);
   expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  expect(navBox!.width).toBeLessThanOrEqual(440);
+  expect(Math.abs(navBox!.x + navBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
   await expect(page.getByRole('navigation', { name: '주 탐색' })).toHaveCount(0);
   expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);
 });
