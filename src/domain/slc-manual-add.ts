@@ -1,4 +1,6 @@
-import type { ScheduleType } from '../types/slc.types';
+import type { Medication, ScheduleType } from '../types/slc.types';
+
+export type ManualAddScheduleMode = 'single' | 'range';
 
 export interface ManualAddTypeConfig {
   type: ScheduleType;
@@ -11,6 +13,7 @@ export interface ManualAddTypeConfig {
   doseLabel: string;
   defaultUnit: string;
   unitOptions: string[];
+  routeFilter: Medication['route'][];
 }
 
 export const MANUAL_ADD_TYPE_CONFIG: Record<ScheduleType, ManualAddTypeConfig> = {
@@ -25,6 +28,7 @@ export const MANUAL_ADD_TYPE_CONFIG: Record<ScheduleType, ManualAddTypeConfig> =
     doseLabel: '용량 (선택)',
     defaultUnit: 'IU',
     unitOptions: ['IU', 'μg', 'mg', 'ml', 'syringe'],
+    routeFilter: ['subcutaneous_injection', 'intramuscular_injection'],
   },
   medication: {
     type: 'medication',
@@ -37,6 +41,7 @@ export const MANUAL_ADD_TYPE_CONFIG: Record<ScheduleType, ManualAddTypeConfig> =
     doseLabel: '복용량 (선택)',
     defaultUnit: '정',
     unitOptions: ['정', '개', 'mg', 'ml'],
+    routeFilter: ['oral', 'vaginal', 'other'],
   },
   clinic: {
     type: 'clinic',
@@ -49,6 +54,7 @@ export const MANUAL_ADD_TYPE_CONFIG: Record<ScheduleType, ManualAddTypeConfig> =
     doseLabel: '',
     defaultUnit: '',
     unitOptions: [],
+    routeFilter: [],
   },
 };
 
@@ -63,16 +69,38 @@ export interface ManualAddFormValue {
   unit: string;
   scheduledAt: string;
   medicationId: string;
+  selectedCategory: Medication['category'] | null;
+  scheduleMode: ManualAddScheduleMode;
+  startDate: string;
+  endDate: string;
+  dailyTime: string;
 }
 
 export function buildManualAddPayload(form: ManualAddFormValue) {
   const config = manualAddConfigFor(form.type);
-  return {
+  const medicationFields = {
+    medicationId: config.showMedicationSelect && form.medicationId ? form.medicationId : null,
+    selectedCategory: config.showMedicationSelect ? form.selectedCategory : null,
+  };
+  const sharedFields = {
     type: form.type,
     title: form.title,
     dose: config.showDose && form.dose ? form.dose : null,
     unit: config.showDose && form.unit ? form.unit : null,
+    ...medicationFields,
+  };
+
+  if (form.scheduleMode === 'range') {
+    return {
+      ...sharedFields,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      dailyTime: form.dailyTime,
+    };
+  }
+
+  return {
+    ...sharedFields,
     scheduledAt: form.scheduledAt,
-    medicationId: config.showMedicationSelect && form.medicationId ? form.medicationId : null,
   };
 }
