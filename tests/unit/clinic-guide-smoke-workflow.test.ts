@@ -27,4 +27,14 @@ describe('clinic-guide-ai smoke workflow', () => {
     expect(workflow).toContain('--expect-id');
   });
 
+  it('allows the existing CI workflow to dispatch a fallback smoke with explicit inputs', () => {
+    const workflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).toContain('clinic_guide_ai_smoke_input:');
+    expect(workflow).toContain('clinic_guide_ai_expected_id:');
+    expect(workflow).toContain('${{ github.event.inputs.clinic_guide_ai_smoke_input || vars.CLINIC_GUIDE_AI_SMOKE_INPUT }}');
+    expect(workflow).toContain('${{ github.event.inputs.clinic_guide_ai_expected_id || vars.CLINIC_GUIDE_AI_EXPECTED_ID }}');
+  });
+
 });
