@@ -3,18 +3,20 @@ import { redirect } from 'next/navigation';
 import { BottomNav } from '../../src/components/bottom-nav';
 import { isPresentationMode } from '../../src/config';
 import { computeConsentRedirect } from '../../src/lib/consent-guard';
+import { hasSupabasePublicConfig } from '../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable, type SlcRole } from '../../src/lib/slc-fallback';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AuthedLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createCookieBackedSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
   const presentationMode = isPresentationMode();
+  const skipSupabase = presentationMode && !hasSupabasePublicConfig();
+  const supabase = skipSupabase ? null : await createCookieBackedSupabaseClient();
+  const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   if (!user && !presentationMode) redirect('/auth/sign-in');
 
-  const { data: consent, error: consentError } = user
+  const { data: consent, error: consentError } = user && supabase
     ? await supabase
       .from('user_consents')
       .select('role')

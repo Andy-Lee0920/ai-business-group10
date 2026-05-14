@@ -1,10 +1,16 @@
+import { isPresentationMode } from '../../../src/config';
 import { ClinicUpdateForm } from '../../../src/features/clinic-update/clinic-update-form';
+import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { fallbackMedications } from '../../../src/lib/slc-fallback';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ClinicUpdatePage() {
+  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+    return <ClinicUpdateForm medications={fallbackMedications()} />;
+  }
+
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: medications, error } = await supabase
