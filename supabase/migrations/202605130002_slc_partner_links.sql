@@ -12,18 +12,22 @@ create table if not exists partner_links (
 alter table partner_links enable row level security;
 
 -- patient: full control
+drop policy if exists "patient_own_partner_links" on partner_links;
 create policy "patient_own_partner_links" on partner_links
   for all using (auth.uid() = patient_id);
 
 -- partner: can read/update their own link
+drop policy if exists "partner_read_own_link" on partner_links;
 create policy "partner_read_own_link" on partner_links
   for select using (auth.uid() = partner_id);
 
+drop policy if exists "partner_update_own_link" on partner_links;
 create policy "partner_update_own_link" on partner_links
   for update using (auth.uid() = partner_id)
   with check (auth.uid() = partner_id);
 
 -- anyone with invite code can insert a request (join)
+drop policy if exists "public_join_by_invite" on partner_links;
 create policy "public_join_by_invite" on partner_links
   for update using (
     invite_code is not null

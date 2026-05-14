@@ -16,10 +16,12 @@ create table if not exists schedule_items (
 alter table schedule_items enable row level security;
 
 -- patient: full CRUD on own items
+drop policy if exists "patient_own_schedule" on schedule_items;
 create policy "patient_own_schedule" on schedule_items
   for all using (auth.uid() = patient_id);
 
 -- partner: read items where they are linked (join via partner_links)
+drop policy if exists "partner_read_schedule" on schedule_items;
 create policy "partner_read_schedule" on schedule_items
   for select using (
     exists (

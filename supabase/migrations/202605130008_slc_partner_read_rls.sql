@@ -1,4 +1,5 @@
 -- Allow approved partners to read patient schedule data
+drop policy if exists "approved partner reads patient schedule" on public.schedule_items;
 create policy "approved partner reads patient schedule"
   on public.schedule_items for select
   using (
@@ -11,6 +12,7 @@ create policy "approved partner reads patient schedule"
     )
   );
 
+drop policy if exists "approved partner reads patient completions" on public.completion_records;
 create policy "approved partner reads patient completions"
   on public.completion_records for select
   using (
@@ -23,6 +25,7 @@ create policy "approved partner reads patient completions"
     )
   );
 
+drop policy if exists "approved partner reads patient clinic updates" on public.clinic_updates;
 create policy "approved partner reads patient clinic updates"
   on public.clinic_updates for select
   using (

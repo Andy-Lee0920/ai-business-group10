@@ -10,9 +10,11 @@ create table if not exists completion_records (
 
 alter table completion_records enable row level security;
 
+drop policy if exists "patient_own_completions" on completion_records;
 create policy "patient_own_completions" on completion_records
   for all using (auth.uid() = patient_id);
 
+drop policy if exists "partner_read_completions" on completion_records;
 create policy "partner_read_completions" on completion_records
   for select using (
     exists (

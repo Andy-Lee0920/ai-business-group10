@@ -10,6 +10,7 @@ create table if not exists user_consents (
 
 alter table user_consents enable row level security;
 
+drop policy if exists "own_consent" on user_consents;
 create policy "own_consent" on user_consents
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);

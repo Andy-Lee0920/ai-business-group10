@@ -9,10 +9,12 @@ create table if not exists user_profiles (
 
 alter table user_profiles enable row level security;
 
+drop policy if exists "own_profile" on user_profiles;
 create policy "own_profile" on user_profiles
   for all using (auth.uid() = id);
 
 -- partner reads own profile (which links them to patient)
+drop policy if exists "read_linked_profile" on user_profiles;
 create policy "read_linked_profile" on user_profiles
   for select using (
     auth.uid() = id or
