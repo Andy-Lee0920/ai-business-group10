@@ -23,6 +23,31 @@ describe('clinic update guided form helpers', () => {
     ]);
   });
 
+  it('adds newly selected medications to today 19:00 while keeping the next clinic visit separate', () => {
+    expect(buildClinicUpdateScheduleItems({
+      nextVisitAt: '2026-05-16',
+      addedMedications: [{ id: 'cetrotide', title: '세트로타이드', unit: 'mg' }],
+      now: new Date('2026-05-14T03:00:00.000Z'),
+    })).toEqual([
+      {
+        medicationId: null,
+        type: 'clinic',
+        title: '다음 병원 방문',
+        dose: null,
+        unit: null,
+        scheduledAt: '2026-05-16T09:00:00.000',
+      },
+      {
+        medicationId: 'cetrotide',
+        type: 'medication',
+        title: '세트로타이드',
+        dose: null,
+        unit: 'mg',
+        scheduledAt: '2026-05-14T19:00:00.000+09:00',
+      },
+    ]);
+  });
+
   it('keeps Clinic Update copy away from treatment-stage decisions and prescriptions', () => {
     const source = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');
     expect(source).toContain('같은 약을 계속 사용하나요?');
