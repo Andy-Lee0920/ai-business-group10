@@ -13,6 +13,12 @@ export interface ClinicGuideRequest {
   step: ClinicGuideStep;
   context: Partial<ClinicUpdate>;
   userInput: string;
+  answerHistory: readonly ClinicGuideAnswer[];
+}
+
+export interface ClinicGuideAnswer {
+  step: ClinicGuideStep;
+  answer: string;
 }
 
 export interface ClinicGuideResponse {

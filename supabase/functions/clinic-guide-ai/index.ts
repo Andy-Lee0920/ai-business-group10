@@ -29,7 +29,8 @@ type ClinicGuideDraft = {
 };
 
 type NormalizeRequest = { mode?: 'normalizeMedication'; userInput: string; patientId: string };
-type InterviewRequest = { mode: 'interview'; patientId: string; step: ClinicGuideStep; context: ClinicGuideDraft; userInput: string };
+type ClinicGuideAnswer = { step: ClinicGuideStep; answer: string };
+type InterviewRequest = { mode: 'interview'; patientId: string; step: ClinicGuideStep; context: ClinicGuideDraft; userInput: string; answerHistory: ClinicGuideAnswer[] };
 type ClinicGuideAiRequest = NormalizeRequest | InterviewRequest;
 type ClinicGuideNormalizeResponse = { matched: Medication | null; source: 'aliases' | 'llm' | 'none' };
 type ClinicGuideInterviewResponse = {
@@ -219,7 +220,22 @@ function normalizeInterviewRequest(body: Partial<InterviewRequest>): InterviewRe
     step: body.step,
     context: isRecord(body.context) ? normalizeDraft(body.context) : {},
     userInput,
+    answerHistory: normalizeAnswerHistory(body.answerHistory),
   };
+}
+
+
+function normalizeAnswerHistory(value: unknown): ClinicGuideAnswer[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!isRecord(item)) return null;
+      const step = isClinicGuideStep(item.step) ? item.step : null;
+      const answer = typeof item.answer === 'string' ? item.answer.trim() : '';
+      return step && answer ? { step, answer } : null;
+    })
+    .filter((item): item is ClinicGuideAnswer => item !== null)
+    .slice(-8);
 }
 
 function buildInterviewFallback(request: InterviewRequest, fallbackReason: string): ClinicGuideInterviewResponse {

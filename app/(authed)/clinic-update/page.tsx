@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function ClinicUpdatePage() {
   const requestHeaders = await headers();
   if (isPresentationRequest({ headers: requestHeaders })) {
-    return <ClinicUpdateForm medications={fallbackMedications()} currentItems={fallbackScheduleItems('presentation-user')} />;
+    return <ClinicUpdateForm mode="memo" medications={fallbackMedications()} currentItems={fallbackScheduleItems('presentation-user')} />;
   }
 
   const supabase = await createCookieBackedSupabaseClient();
@@ -42,8 +42,8 @@ export default async function ClinicUpdatePage() {
   const partnerConnected = partnerLinks?.some((link) => link.status === 'approved') === true;
   const currentItems = user && !isMissingSlcTable(itemsRes.error) ? (itemsRes.data ?? []) as ScheduleItem[] : fallbackScheduleItems(user?.id ?? 'presentation-user');
 
-  if (error) return <ClinicUpdateForm medications={fallbackMedications()} partnerConnected={partnerConnected} currentItems={currentItems} />;
-  return <ClinicUpdateForm medications={medications ?? []} partnerConnected={partnerConnected} currentItems={currentItems} />;
+  if (error) return <ClinicUpdateForm mode="memo" medications={fallbackMedications()} partnerConnected={partnerConnected} currentItems={currentItems} />;
+  return <ClinicUpdateForm mode="memo" medications={medications ?? []} partnerConnected={partnerConnected} currentItems={currentItems} />;
 }
 
 function dayStart(offset: number) {

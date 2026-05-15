@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../../src/domain/care-os-architecture';
 import { buildInitialCareCycleState, defaultSharingLevelByStage, inferStageFromCareItem, type InitialCareCycleState, type IvfStage, type SelectedIntent, type SharingLevel } from '../../../../src/domain/onboarding-care-state';
 import { createCaptureStore, type ConfirmItem } from '../../../../src/lib/capture-confirm-store';
+import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
+import { SLC_CONSENT_COOKIE, SLC_ROLE_COOKIE, fallbackCookieOptions, isMissingSlcTable } from '../../../../src/lib/slc-fallback';
 import type { CardType, CareActionCard } from '../../../../src/types/care-cards.types';
 
 type FirstItemKind = 'schedule' | 'medication' | 'injection';
+type ShellRole = 'patient' | 'partner';
 type OnboardingBody = {
   treatmentContext?: unknown;
   treatmentExperience?: unknown;
@@ -65,6 +68,12 @@ export async function POST(request: NextRequest) {
   const store = await createCaptureStore(request);
   if (store instanceof Response) return store;
 
+  const shellRole = shellRoleForRoleContext(roleContext);
+  const consentPersistence = store.coupleId === 'demo-couple'
+    ? { kind: 'demo' as const, role: shellRole }
+    : await persistAuthedShellConsent(shellRole);
+  if (consentPersistence instanceof Response) return consentPersistence;
+
   const rawText = buildOnboardingCaptureText({ treatmentContext, treatmentExperience, baselineProfile, firstItem, firstCareItem, effectiveStage, sharingLevel, roleContext });
   const capture = await store.createCapture(rawText);
   const items = firstItem ? [toConfirmItem(firstItem)] : [];
@@ -104,6 +113,11 @@ export async function POST(request: NextRequest) {
   response.cookies.set('fevio_onboarding_effective_stage', effectiveStage, { httpOnly: true, sameSite: 'lax', path: '/' });
   response.cookies.set('fevio_onboarding_care_cycle_state', encodeURIComponent(JSON.stringify(initialCareCycleState)), { httpOnly: true, sameSite: 'lax', path: '/' });
 
+  if (consentPersistence.kind === 'fallback') {
+    response.cookies.set(SLC_ROLE_COOKIE, consentPersistence.role, fallbackCookieOptions());
+    response.cookies.set(SLC_CONSENT_COOKIE, 'accepted', fallbackCookieOptions());
+  }
+
   if (firstItem) {
     response.cookies.set('fevio_onboarding_first_card', encodeURIComponent(JSON.stringify(toCareActionCard(firstItem, store.coupleId, now))), {
       httpOnly: true,
@@ -115,6 +129,55 @@ export async function POST(request: NextRequest) {
   return response;
 }
 
+type ConsentPersistence =
+  | { kind: 'persisted'; role: ShellRole }
+  | { kind: 'fallback'; role: ShellRole }
+  | { kind: 'demo'; role: ShellRole };
+
+async function persistAuthedShellConsent(role: ShellRole): Promise<ConsentPersistence | Response> {
+  const supabase = await createCookieBackedSupabaseClient();
+  const { data: userResult, error: userError } = await supabase.auth.getUser();
+  if (userError || !userResult.user) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  const now = new Date().toISOString();
+  const displayName = typeof userResult.user.user_metadata?.full_name === 'string'
+    ? userResult.user.user_metadata.full_name
+    : null;
+
+  const { error: profileError } = await supabase
+    .from('user_profiles')
+    .upsert({ id: userResult.user.id, role, display_name: displayName, updated_at: now });
+  if (profileError) {
+    if (isMissingSlcTable(profileError)) return { kind: 'fallback', role };
+    return NextResponse.json({ error: profileError.message }, { status: 500 });
+  }
+
+  const { error: consentError } = await supabase
+    .from('user_consents')
+    .upsert({
+      user_id: userResult.user.id,
+      role,
+      consent_version: 'slc-v1',
+      privacy_boundary_accepted_at: now,
+      sensitive_data_accepted_at: now,
+      medical_disclaimer_accepted_at: now,
+      input_assist_disclaimer_accepted_at: now,
+      partner_sharing_accepted_at: role === 'partner' ? now : null,
+      consent_source: 'onboarding',
+    });
+  if (consentError) {
+    if (isMissingSlcTable(consentError)) return { kind: 'fallback', role };
+    return NextResponse.json({ error: consentError.message }, { status: 500 });
+  }
+
+  return { kind: 'persisted', role };
+}
+
+function shellRoleForRoleContext(roleContext: RoleContext): ShellRole {
+  return roleContext === 'partner' ? 'partner' : 'patient';
+}
 
 function normalizeRoleContext(value: unknown): RoleContext {
   if (value === 'patient' || value === 'partner' || value === 'together' || value === 'primary_solo' || value === 'primary_with_partner') return value;

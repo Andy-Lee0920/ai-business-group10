@@ -60,7 +60,47 @@ describe('/api/clinic-guide/interview', () => {
     expect(fetch).toHaveBeenCalledWith('https://example.supabase.co/functions/v1/clinic-guide-ai', expect.objectContaining({
       method: 'POST',
       headers: expect.objectContaining({ authorization: 'Bearer anon-key' }),
-      body: JSON.stringify({ mode: 'interview', patientId: 'patient-1', step: 'same_medication', context: {}, userInput: '바뀌었어요' }),
+      body: JSON.stringify({ mode: 'interview', patientId: 'patient-1', step: 'same_medication', context: {}, userInput: '바뀌었어요', answerHistory: [] }),
+    }));
+  });
+
+  it('passes prior answers to the AI interview proxy as bounded context', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    mockedCreateSupabase.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'patient-1' } }, error: null }) },
+    } as never);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      nextStep: 'medication_days',
+      question: '며칠치 처방인지 확인해 주세요.',
+      draft: { same_medication: false },
+      requiresUserConfirmation: true,
+    }), { status: 200 })));
+
+    await POST(jsonRequest({
+      step: 'add_medication',
+      userInput: '새 약 있어요',
+      context: { same_medication: false },
+      answerHistory: [
+        { step: 'same_medication', answer: '바뀌었어요' },
+        { step: 'add_medication', answer: '새 약 있어요' },
+        { step: 'memo', answer: '' },
+        { step: 'bad', answer: '무시' },
+      ],
+    }));
+
+    expect(fetch).toHaveBeenCalledWith('https://example.supabase.co/functions/v1/clinic-guide-ai', expect.objectContaining({
+      body: JSON.stringify({
+        mode: 'interview',
+        patientId: 'patient-1',
+        step: 'add_medication',
+        context: { same_medication: false },
+        userInput: '새 약 있어요',
+        answerHistory: [
+          { step: 'same_medication', answer: '바뀌었어요' },
+          { step: 'add_medication', answer: '새 약 있어요' },
+        ],
+      }),
     }));
   });
 

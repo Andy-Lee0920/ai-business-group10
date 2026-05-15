@@ -51,7 +51,8 @@ test.describe('SLC mobile quality smoke', () => {
     await page.getByRole('button', { name: /직접 수정/ }).click();
     await page.getByRole('button', { name: '직접 입력 form 열기' }).click();
     await expect(page.getByText('1/4')).toBeVisible();
-    await expect(page.getByText('✦ Clinic Guide AI')).toBeVisible();
+    await expect(page.getByText('✦ Clinic Guide AI')).toHaveCount(0);
+    await expect(page.getByLabel('Clinic Guide AI 질문')).toHaveCount(0);
 
     await page.getByRole('button', { name: '바뀌었어요' }).click();
     await page.getByRole('button', { name: '다음' }).click();

@@ -357,7 +357,7 @@ export function OnboardingClient() {
             <div className={styles.brandStack}>
               <img className={styles.brandLogo} alt="Fevio" src="/assets/onboarding/fevio-logo.svg" />
               <h1 className={styles.brandIntroTitle} id="brand-intro-title">소중한 시작을,<br />Fevio와 함께</h1>
-              <p className={styles.questionLead}>병원 안내를 확인한 일정으로 바꿔 조용히 챙겨드릴게요.</p>
+              <p className={styles.questionLead}>병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.</p>
             </div>
             <BottomDock activeIndex={activeIndex}>
               <CtaButton className={styles.primaryCta} onClick={() => goToStep('role_select')} type="button">

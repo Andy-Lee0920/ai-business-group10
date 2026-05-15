@@ -16,12 +16,11 @@ test('presentation home defaults to an immersive injection-day care instrument',
   const phaseNav = page.getByRole('navigation', { name: '케어 단계 전환' });
   await expect(phaseNav).toBeVisible();
   await expect(phaseNav.getByRole('link', { name: '주사', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByTestId('compact-hero-greeting')).toContainText('주사 준비');
+  await expect(page.getByTestId('injection-countdown-hero')).toContainText('남은 시간');
   await expect(page.getByTestId('mission-card-pair')).toContainText('오늘의 미션');
   await expect(page.getByTestId('mission-card-pair')).toContainText('고날에프');
   await expect(page.getByTestId('quick-stat-row')).toContainText('파트너');
-  await expect(page.getByTestId('partner-connect-bar')).toBeVisible();
-  await expect(page.getByTestId('partner-bar-icon')).toBeVisible();
+  await expect(page.getByTestId('partner-connect-bar')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /준비 체크리스트 보기/ })).toBeVisible();
   await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
 
@@ -42,9 +41,12 @@ test('presentation home applies the immersive/adaptive contract to every care da
     const scopedPhaseNav = page.getByRole('navigation', { name: '케어 단계 전환' });
     await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', scenario.phase);
     await expect(scopedPhaseNav.getByRole('link', { name: scenario.tab, exact: true })).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByTestId('compact-hero-greeting')).toContainText(scenario.heading);
-    await expect(page.getByTestId('partner-connect-bar')).toBeVisible();
-    await expect(page.getByTestId('partner-bar-icon')).toBeVisible();
+    if (scenario.care === 'injection') {
+      await expect(page.getByTestId('injection-countdown-hero')).toContainText('남은 시간');
+    } else {
+      await expect(page.getByTestId('compact-hero-greeting')).toContainText(scenario.heading);
+    }
+    await expect(page.getByTestId('partner-connect-bar')).toHaveCount(0);
     await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
 
     if (scenario.action) {
@@ -55,7 +57,7 @@ test('presentation home applies the immersive/adaptive contract to every care da
 
 test('presentation home changes component order by care phase', async ({ page }) => {
   const orders: Record<string, string[]> = {};
-  const trackedIds = new Set(['compact-hero-greeting', 'mission-card-pair', 'quick-stat-row', 'home-action-card', 'partner-connect-bar']);
+  const trackedIds = new Set(['injection-countdown-hero', 'compact-hero-greeting', 'mission-card-pair', 'quick-stat-row', 'home-action-card', 'partner-connect-bar']);
 
   for (const care of ['injection', 'clinic', 'waiting'] as const) {
     await page.goto(`/home?care=${care}`);
@@ -67,12 +69,12 @@ test('presentation home changes component order by care phase', async ({ page })
     Array.from(trackedIds));
   }
 
-  expect(orders.injection).toEqual(['compact-hero-greeting', 'mission-card-pair', 'quick-stat-row', 'partner-connect-bar']);
+  expect(orders.injection).toEqual(['injection-countdown-hero', 'mission-card-pair', 'quick-stat-row']);
   expect(orders.clinic[0]).toBe('compact-hero-greeting');
   expect(orders.clinic).toContain('home-action-card');
   expect(orders.clinic).not.toEqual(orders.injection);
   expect(orders.waiting[1]).toBe('home-action-card');
-  expect(orders.waiting).toContain('partner-connect-bar');
+  expect(orders.waiting).not.toContain('partner-connect-bar');
   expect(new Set(Object.values(orders).map((order) => order.join('>'))).size).toBe(3);
 });
 
@@ -299,4 +301,3 @@ test('presentation /demo stage 7 changes partner projection when patient changes
   await expect(page.getByTestId('shared-care-state-panel')).toContainText('감정까지 공유');
   await expect(partner).toContainText('감정까지 공유 중');
 });
-

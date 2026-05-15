@@ -14,7 +14,8 @@ describe('Clinic Guide clinic asset contract', () => {
   });
 
   it('places clinic visuals on entry, diff review, and manual fallback states', () => {
-    expect(form.indexOf('asset={slcAssets.clinic.visitClipboard}')).toBeLessThan(form.indexOf('사진으로 업데이트'));
+    expect(form.indexOf("step === 'entry'")).toBeLessThan(form.indexOf('asset={slcAssets.clinic.visitClipboard}'));
+    expect(form.indexOf('asset={slcAssets.clinic.visitClipboard}')).toBeLessThan(form.indexOf('copy.photoAction'));
     expect(form.indexOf("step === 'diff_review'")).toBeLessThan(form.indexOf('asset={slcAssets.clinic.diff}'));
     expect(form.indexOf("step === 'manual_entry'")).toBeLessThan(form.indexOf('asset={slcAssets.clinic.fallback}'));
     expect(form.indexOf('asset={slcAssets.clinic.fallback}')).toBeLessThan(form.indexOf('직접 입력 form 열기'));

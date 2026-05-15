@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import type { ScheduleItem } from '../types/slc.types';
 import { ctaLabel, completedLabel } from '../types/slc.types';
@@ -36,6 +37,7 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
           <CountdownRing scheduledAt={item.scheduled_at} size={urgent ? 64 : 56} />
         </div>
       )}
+      <Link href={`/schedule/${item.id}/edit`} aria-label={`${title} 수정`} style={editLinkStyle}>수정</Link>
       <div style={{ display: 'flex', flexDirection: 'column', gap: urgent ? 7 : 6, paddingRight: urgent && showCountdown ? 78 : 0 }}>
         <span data-testid="schedule-status-badge" data-tone={presentation.badgeTone} style={badgeStyle(presentation.badgeTone, emphasis)}>
           {urgent ? urgentBadgeLabel(item) : presentation.badgeLabel}
@@ -56,6 +58,21 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
     </div>
   );
 }
+
+const editLinkStyle: CSSProperties = {
+  position: 'absolute',
+  right: 14,
+  bottom: 14,
+  zIndex: 2,
+  color: 'var(--slc-coral)',
+  fontSize: 12,
+  fontWeight: 900,
+  textDecoration: 'none',
+  padding: '6px 9px',
+  borderRadius: 999,
+  background: 'var(--slc-surface)',
+  border: '1px solid var(--slc-border)',
+};
 
 function cardEmphasis({ compact, isCompleted, isDueSoon, isWithinHour }: { compact: boolean; isCompleted: boolean; isDueSoon: boolean; isWithinHour: boolean }): CardEmphasis {
   if (isCompleted) return 'completed';
@@ -138,11 +155,13 @@ function ctaButtonStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties
       color: '#fff',
       border: 'none',
       borderRadius: 999,
+      minHeight: 52,
+      width: '100%',
       padding: '13px 28px',
       fontSize: 15,
       fontWeight: 900,
       cursor: 'pointer',
-      alignSelf: 'flex-start',
+      alignSelf: 'stretch',
       fontFamily: 'inherit',
     };
   }

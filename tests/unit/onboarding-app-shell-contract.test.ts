@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const onboardingClient = readFileSync('app/onboarding/onboarding-client.tsx', 'utf8');
 const onboardingPage = readFileSync('app/onboarding/page.tsx', 'utf8');
+const authedLayout = readFileSync('app/(authed)/layout.tsx', 'utf8');
 
 describe('app onboarding shell contract', () => {
   it('declares the issue 315 onboarding step union exactly', () => {
@@ -86,6 +87,13 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain("partnerInvite: { intent: partnerIntent }");
     expect(onboardingClient).toContain("window.location.assign(payload.redirectTo ?? '/home')");
     expect(onboardingClient).toContain("'prepare_invite'");
+  });
+
+  it('recovers completed onboarding consent before guarding /home', () => {
+    expect(authedLayout).toContain("fevio_onboarding_role_context");
+    expect(authedLayout).toContain('recoverConsentFromCompletedOnboarding');
+    expect(authedLayout).toContain("from('user_consents')");
+    expect(authedLayout).toContain("consent_source: 'onboarding'");
   });
 
   it('renders the new app onboarding shell from /onboarding after privacy acceptance', () => {

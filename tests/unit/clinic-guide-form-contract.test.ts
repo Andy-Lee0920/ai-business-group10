@@ -9,9 +9,13 @@ describe('ClinicUpdateForm Clinic Guide integration', () => {
     expect(source).toContain("/api/clinic-guide/normalize");
     expect(source).toContain("/api/clinic-guide/interview");
     expect(source).toContain('ClinicGuideResponse');
+    expect(source).toContain('ClinicGuideAnswer');
+    expect(source).toContain('answerHistory');
     expect(source).toContain('requiresUserConfirmation');
     expect(source).toContain('정규화된 약 후보');
-    expect(source).toContain('AI 정리가 잠시 불안정해요');
+    expect(source).toContain('setAiAvailable(false)');
+    expect(source).toContain('if (!available) return null');
+    expect(source).not.toContain('AI 정리가 잠시 불안정해요');
     expect(source).toContain('저장은 최종 확인 후에만 진행돼요');
     expect(source).toContain('resolveMedicationNames');
     expect(source).not.toContain('form.addedMedicationIds.join');

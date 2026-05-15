@@ -31,10 +31,9 @@ describe('More and partner read-only state contract', () => {
     expect(moreScreen).toContain('나중에');
     expect(moreScreen).toContain('공유와 설정 관리');
     expect(moreScreen).not.toContain('>더보기<');
-    expect(morePage).toContain("redirect('/partner')");
-    expect(settingsPage).toContain("import MorePage from '../more/page'");
-    expect(settingsPage).toContain("export const dynamic = 'force-dynamic'");
-    expect(settingsPage).toContain('export default MorePage');
+    expect(morePage).toContain("permanentRedirect('/settings')");
+    expect(settingsPage).toContain("redirect('/partner')");
+    expect(settingsPage).toContain('buildPresentationPartnerLinks()');
   });
 
   it('uses the required SLC illustration assets for partner and More surfaces', () => {
