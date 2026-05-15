@@ -55,7 +55,7 @@ export function ScheduleEditForm({ item }: ScheduleEditFormProps) {
   }
 
   return (
-    <main style={{ minHeight: '100dvh', padding: '54px 20px 112px', background: 'var(--slc-bg)' }}>
+    <main style={pageStyle}>
       <Link href="/home" style={backLinkStyle}>‹ 홈으로</Link>
       <header style={{ margin: '18px 0 20px' }}>
         <p style={{ margin: '0 0 5px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>일정 수정</p>
@@ -78,7 +78,7 @@ export function ScheduleEditForm({ item }: ScheduleEditFormProps) {
           시간
           <input type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.currentTarget.value)} style={fieldStyle} required />
         </label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={splitFieldRowStyle}>
           <label style={labelStyle}>
             용량
             <input value={dose} onChange={(event) => setDose(event.currentTarget.value)} style={fieldStyle} placeholder="예: 150" />
@@ -124,6 +124,16 @@ function toDateTimeLocal(iso: string) {
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
+const pageStyle = {
+  width: '100%',
+  maxWidth: '100%',
+  minWidth: 0,
+  minHeight: '100dvh',
+  padding: '54px 20px 112px',
+  overflowX: 'hidden',
+  background: 'var(--slc-bg)',
+} as const;
+
 const backLinkStyle = {
   color: 'var(--slc-muted)',
   fontSize: 14,
@@ -132,6 +142,10 @@ const backLinkStyle = {
 } as const;
 
 const formStyle = {
+  width: '100%',
+  maxWidth: '100%',
+  minWidth: 0,
+  boxSizing: 'border-box',
   display: 'grid',
   gap: 12,
   padding: 18,
@@ -141,6 +155,7 @@ const formStyle = {
 } as const;
 
 const labelStyle = {
+  minWidth: 0,
   display: 'grid',
   gap: 6,
   color: 'var(--slc-muted)',
@@ -148,8 +163,17 @@ const labelStyle = {
   fontWeight: 900,
 } as const;
 
+const splitFieldRowStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: 10,
+  minWidth: 0,
+} as const;
+
 const fieldStyle = {
+  display: 'block',
   width: '100%',
+  maxWidth: '100%',
   boxSizing: 'border-box',
   minHeight: 46,
   borderRadius: 15,
@@ -179,7 +203,10 @@ function submitStyle(saving: boolean) {
 
 function deleteStyle(deleting: boolean) {
   return {
+    display: 'block',
     width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
     minHeight: 48,
     marginTop: 12,
     border: '1px solid var(--slc-border)',
