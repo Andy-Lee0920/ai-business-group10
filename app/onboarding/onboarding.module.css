@@ -59,7 +59,7 @@
   position: relative;
   z-index: 1;
   margin-bottom: auto;
-  padding-top: 44px;
+  padding-top: 10px;
 }
 
 .brandIntroVideo {
@@ -70,14 +70,8 @@
   height: 62%;
   object-fit: cover;
   object-position: center top;
-  mask-image:
-    linear-gradient(to bottom, transparent 0%, black 28%),
-    linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
-  -webkit-mask-image:
-    linear-gradient(to bottom, transparent 0%, black 28%),
-    linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
   z-index: 0;
   pointer-events: none;
 }
