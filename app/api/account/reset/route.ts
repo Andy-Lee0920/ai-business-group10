@@ -45,13 +45,18 @@ type DbError = { message: string; code?: string };
 type DbResult<T> = { data: T | null; error: DbError | null };
 type CoupleMemberRow = { couple_id: string | null };
 type ClinicPhotoRow = { name: string };
+type ResetUser = { id: string; email?: string | null };
+type AuthUserResult = { data: { user: ResetUser | null }; error: DbError | null };
 
 export async function POST(request: NextRequest) {
   const supabase = await createCookieBackedSupabaseClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const cookieUserResult = await supabase.auth.getUser() as AuthUserResult;
+  const bearerToken = getBearerToken(request);
+  if (!cookieUserResult.data.user && !bearerToken) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const admin = createSupabaseServiceRoleClient();
+  const user = cookieUserResult.data.user ?? await getBearerUser(bearerToken, admin);
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const deletedTables = new Set<string>();
 
   const coupleRows = await admin
@@ -102,6 +107,19 @@ export async function POST(request: NextRequest) {
 
 function resetError(error: DbError) {
   return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
+}
+
+function getBearerToken(request: NextRequest) {
+  const authorization = request.headers.get('authorization');
+  return authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? null;
+}
+
+async function getBearerUser(token: string | null, admin: ReturnType<typeof createSupabaseServiceRoleClient>) {
+  if (!token) return null;
+
+  const { data, error } = await admin.auth.getUser(token) as AuthUserResult;
+  if (error || !data.user) return null;
+  return data.user;
 }
 
 async function removeClinicPhotosBestEffort(admin: ReturnType<typeof createSupabaseServiceRoleClient>, userId: string) {
