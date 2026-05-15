@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fevioTokens } from '../../src/design/tokens';
-import { uiClassNames } from '../../src/components/ui';
+import { fevioPrimitiveStyles, uiClassNames } from '../../src/components/ui';
 
 describe('Fevio design tokens and UI primitive class contracts', () => {
   it('keeps the SLC color tokens from the design direction', () => {
@@ -30,6 +30,20 @@ describe('Fevio design tokens and UI primitive class contracts', () => {
     );
     expect(uiClassNames.statusBadge('synced')).toBe('fevio-status-badge fevio-status-badge--synced');
     expect(uiClassNames.timeInput()).toBe('fevio-time-input');
+  });
+
+
+
+  it('provides mobile-first primitive style contracts for Session B surfaces', () => {
+    expect(fevioTokens.color).toMatchObject({
+      slcCoral: '#C4614A',
+      slcBg: '#FAF7F4',
+      slcText: '#2A1F1A',
+    });
+    expect(fevioPrimitiveStyles.screenShell().maxWidth).toBe(430);
+    expect(fevioPrimitiveStyles.primaryCta(false).minHeight).toBe(52);
+    expect(fevioPrimitiveStyles.choiceCard(true).border).toContain('var(--slc-coral)');
+    expect(fevioPrimitiveStyles.settingsRow().minHeight).toBe(56);
   });
 
   it('marks selected segmented buttons with text-independent state', () => {
