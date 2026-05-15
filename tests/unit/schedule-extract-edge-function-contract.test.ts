@@ -25,7 +25,7 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('/storage/v1/object/sign/');
     expect(code).toContain('authorization: `Bearer ${serviceRoleKey}`');
     expect(code).toContain("model: OPENROUTER_VISION_MODEL");
-    expect(code).toContain("const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku-vision'");
+    expect(code).toContain("const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku'");
     expect(code).toContain("type: 'image_url'");
     expect(signedUrlIndex).toBeGreaterThan(-1);
     expect(openRouterIndex).toBeGreaterThan(-1);

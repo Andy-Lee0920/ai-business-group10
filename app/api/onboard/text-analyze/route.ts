@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { randomUUID } from 'node:crypto';
+import { isPresentationRequest } from '../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
 import type { ScheduleType } from '../../../../src/types/slc.types';
@@ -26,18 +28,32 @@ type OnboardAnalyzeClient = {
 export async function POST(request: NextRequest) {
   const supabase = (await createCookieBackedSupabaseClient()) as unknown as OnboardAnalyzeClient;
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as TextAnalyzeBody;
   const rawText = normalizeText(body.rawText);
   if (!rawText) return NextResponse.json({ error: 'rawText is required' }, { status: 400 });
+
+  if (!user && isPresentationRequest(request)) {
+    if (!hasPrivacyGateCookie(request.headers.get('cookie'))) {
+      return NextResponse.json({ error: 'privacy_gate_required' }, { status: 403 });
+    }
+
+    const { data } = await supabase.functions.invoke('schedule-extract', {
+      body: { mode: 'text', rawText, patientId: 'presentation' },
+    });
+    const candidates = normalizeCandidates(data?.candidates);
+    const safeCandidates = chooseSafeTextCandidates(rawText, candidates);
+    return NextResponse.json({ candidates: withPresentationIds(safeCandidates) });
+  }
+
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const { data } = await supabase.functions.invoke('schedule-extract', {
     body: { mode: 'text', rawText, patientId: user.id },
   });
 
   const candidates = normalizeCandidates(data?.candidates);
-  const safeCandidates = candidates.length ? candidates : extractDeterministicTextCandidates(rawText);
+  const safeCandidates = chooseSafeTextCandidates(rawText, candidates);
   if (safeCandidates.length === 0) return NextResponse.json({ candidates: [] });
 
   const rows = safeCandidates.map((candidate) => ({
@@ -58,6 +74,22 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ candidates: inserted ?? [] });
 }
 
+
+function hasPrivacyGateCookie(cookieHeader: string | null) {
+  return cookieHeader?.split(';').some((part) => {
+    const trimmed = part.trim();
+    return trimmed === 'fevio_privacy_gate_v1=accepted' || trimmed === 'fevio_privacy_accepted=1';
+  }) ?? false;
+}
+
+function withPresentationIds(candidates: ExtractedCandidate[]): InsertedCandidate[] {
+  return candidates.map((candidate) => ({ id: `presentation-${randomUUID()}`, ...candidate }));
+}
+
+function chooseSafeTextCandidates(rawText: string, llmCandidates: ExtractedCandidate[]) {
+  const deterministicCandidates = extractDeterministicTextCandidates(rawText);
+  return deterministicCandidates.length ? deterministicCandidates : llmCandidates;
+}
 
 const KOREA_TIME_ZONE = 'Asia/Seoul';
 const DAY_MS = 24 * 60 * 60 * 1000;

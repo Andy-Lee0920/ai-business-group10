@@ -23,9 +23,27 @@ vi.mock('../../src/lib/server-supabase', () => ({
   }),
 }));
 
-function multipartRequest(formData: FormData) {
-  return new NextRequest('http://localhost/api/onboard/photo-upload', {
+vi.mock('../../src/lib/server-supabase-admin', () => ({
+  createSupabaseServiceRoleClient: () => ({
+    storage: {
+      from: (bucket: string) => ({
+        upload: async (path: string, file: File, options: { contentType: string; upsert: false }) => {
+          uploadCalls.push({ bucket, path, file, options });
+          return { data: { path }, error: null };
+        },
+      }),
+    },
+  }),
+}));
+
+function multipartRequest(formData: FormData, init?: { url?: string; cookie?: string }) {
+  const host = init?.url ? new URL(init.url).host : undefined;
+  return new NextRequest(init?.url ?? 'http://localhost/api/onboard/photo-upload', {
     method: 'POST',
+    headers: {
+      ...(host ? { host } : {}),
+      ...(init?.cookie ? { cookie: init.cookie } : {}),
+    },
     body: formData,
   });
 }
@@ -48,6 +66,27 @@ describe('/api/onboard/photo-upload', () => {
     expect(response.status).toBe(401);
     expect(payload).toEqual({ error: 'unauthorized' });
     expect(uploadCalls).toHaveLength(0);
+  });
+
+  it('uploads a presentation image after privacy acceptance without a signed-in user', async () => {
+    userResponses.push({ data: { user: null }, error: null });
+    const { POST } = await import('../../app/api/onboard/photo-upload/route');
+    const formData = new FormData();
+    formData.set('file', new File(['photo'], 'clinic.jpg', { type: 'image/jpeg' }));
+
+    const response = await POST(multipartRequest(formData, {
+      url: 'https://ai-business-group10.vercel.app/api/onboard/photo-upload',
+      cookie: 'fevio_privacy_gate_v1=accepted',
+    }));
+    const payload = await response.json() as { path: string };
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({ path: expect.stringMatching(/^presentation\/[0-9a-f-]{36}\.jpg$/u) });
+    expect(uploadCalls[0]).toMatchObject({
+      bucket: 'clinic-photos',
+      path: payload.path,
+      options: { contentType: 'image/jpeg', upsert: false },
+    });
   });
 
   it('returns 400 when the multipart image file is missing', async () => {

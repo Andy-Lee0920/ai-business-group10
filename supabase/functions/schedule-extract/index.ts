@@ -23,7 +23,7 @@ type OpenRouterChoice = { message?: { content?: string } };
 type OpenRouterResponse = { choices?: OpenRouterChoice[] };
 type StorageSignedUrlResponse = { signedURL?: string; signedUrl?: string; error?: string; message?: string };
 
-const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku-vision';
+const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku';
 const OPENROUTER_TEXT_MODEL = 'anthropic/claude-3-haiku';
 const CLINIC_PHOTOS_BUCKET = 'clinic-photos';
 const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 5;
