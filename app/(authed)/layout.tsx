@@ -1,17 +1,17 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { BottomNav } from '../../src/components/bottom-nav';
-import { isPresentationMode } from '../../src/config';
+import { isPresentationRequest } from '../../src/config';
 import { computeConsentRedirect } from '../../src/lib/consent-guard';
-import { hasSupabasePublicConfig } from '../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable, type SlcRole } from '../../src/lib/slc-fallback';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AuthedLayout({ children }: { children: React.ReactNode }) {
-  const presentationMode = isPresentationMode();
-  const skipSupabase = presentationMode && !hasSupabasePublicConfig();
+  const requestHeaders = await headers();
+  const presentationMode = isPresentationRequest({ headers: requestHeaders });
+  const skipSupabase = presentationMode;
   const supabase = skipSupabase ? null : await createCookieBackedSupabaseClient();
   const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   if (!user && !presentationMode) redirect('/auth/sign-in');

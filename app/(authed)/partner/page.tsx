@@ -1,19 +1,26 @@
 import { redirect } from 'next/navigation';
-import { isPresentationMode } from '../../../src/config';
+import { isPresentationRequest } from '../../../src/config';
 import { PartnerView } from '../../../src/features/partner/partner-view';
 import { SLCIllustration } from '../../../src/components/slc-illustration';
 import { slcAssets } from '../../../src/design/slc-assets';
 import { partnerStateCopy, type PartnerProjectionState } from '../../../src/features/partner/partner-state';
-import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable } from '../../../src/lib/slc-fallback';
-import { cookies } from 'next/headers';
+import { buildPresentationClinicUpdates, buildPresentationCompletions, buildPresentationItems } from '../../../src/features/presentation/presentation-testbed';
+import { cookies, headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PartnerPage() {
-  if (isPresentationMode() && !hasSupabasePublicConfig()) {
-    return <PartnerEmptyState state="not_linked" />;
+  const requestHeaders = await headers();
+  if (isPresentationRequest({ headers: requestHeaders })) {
+    return (
+      <PartnerView
+        items={buildPresentationItems()}
+        completions={buildPresentationCompletions()}
+        latestClinicUpdate={buildPresentationClinicUpdates()[0] ?? null}
+      />
+    );
   }
 
   const supabase = await createCookieBackedSupabaseClient();
