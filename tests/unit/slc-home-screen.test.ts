@@ -80,9 +80,11 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).toContain('position:sticky');
-    expect(markup).toContain('height:58dvh');
-    expect(markup).toContain('margin-top:-28px');
-    expect(markup).toContain('min-height:calc(42dvh + 28px)');
+    expect(markup).toContain('height:66dvh');
+    expect(markup).toContain('display:flex');
+    expect(markup).toContain('flex-direction:column');
+    expect(markup).toContain('margin-top:-22px');
+    expect(markup).toContain('min-height:calc(34dvh + 22px)');
     expect(markup).toContain('height:100%');
     expect(markup).toContain('object-fit:cover');
     expect(markup).toContain('opacity:0.22');
@@ -104,7 +106,9 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-testid="injection-countdown-hero"');
     expect(markup).toContain('천천히 준비하면 돼요');
-    expect(markup).toContain('background:rgba(255,253,252,0.94)');
+    expect(markup).toContain('align-content:end');
+    expect(markup).toContain('background:transparent');
+    expect(markup).toContain('box-shadow:none');
     expect(markup).toContain('width:100%;min-height:52px');
     expect(markup).toContain('Menopur 150 IU');
     expect(markup).toContain('다음 주사');

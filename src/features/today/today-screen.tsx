@@ -112,9 +112,11 @@ export function TodayScreen({
         style={{
           position: 'sticky',
           top: 0,
-          height: '58dvh',
+          height: '66dvh',
           zIndex: 0,
           overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <Header reminderEnabled={reminderEnabled} onToggleReminder={() => setReminderEnabled((value) => !value)} />
@@ -127,9 +129,9 @@ export function TodayScreen({
           zIndex: 1,
           background: 'var(--slc-bg)',
           borderRadius: '28px 28px 0 0',
-          marginTop: '-28px',
+          marginTop: '-22px',
           padding: '20px 0 112px',
-          minHeight: 'calc(42dvh + 28px)',
+          minHeight: 'calc(34dvh + 22px)',
         }}
       >
         <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
@@ -192,11 +194,15 @@ function HeroZone({
       intensity="hero"
       priority
       style={{
+        flex: 1,
+        minHeight: 0,
+      }}
+      contentStyle={{
         height: '100%',
       }}
     >
       <div data-testid="home-hero-zone" data-focus-kind={story.focus.kind} style={{ height: '100%' }}>
-        <div style={{ padding: '24px 20px 28px' }}>
+        <div style={{ height: '100%', padding: '8px 20px 22px' }}>
           {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
           {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
           {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
@@ -309,7 +315,7 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
     <section
       aria-label="주사 카운트다운"
       data-testid="injection-countdown-hero"
-      style={{ padding: '2px 0 4px' }}
+      style={{ height: '100%', padding: '0 0 2px' }}
     >
       <div style={countdownHeroCardStyle}>
         <div style={{ textAlign: 'center' }}>
@@ -325,10 +331,10 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
           </div>
         ) : (
           <>
-            <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} size={218} />
-            <div style={{ textAlign: 'center', marginTop: -40 }}>
+            <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} size={196} />
+            <div style={{ textAlign: 'center', marginTop: -36 }}>
               <p style={{ margin: '0 0 4px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 800 }}>남은 시간</p>
-              <strong style={{ color: 'var(--slc-text)', fontSize: 34, lineHeight: 1, letterSpacing: '-0.04em' }}>
+              <strong suppressHydrationWarning style={{ color: 'var(--slc-text)', fontSize: 34, lineHeight: 1, letterSpacing: '-0.04em' }}>
                 {formatRemainingClock(remaining)}
               </strong>
             </div>
@@ -353,7 +359,7 @@ function CountdownInfoBlock({ item, nextInjection }: { item: ScheduleItem; nextI
         background: 'var(--slc-surface)',
         border: '1px solid var(--slc-border)',
         overflow: 'hidden',
-        marginTop: 8,
+        marginTop: 2,
       }}
     >
       <CountdownInfoRow label="주사 시간" value={formatScheduleTime(item.scheduled_at)} href={`/schedule/${item.id}/edit`} />
@@ -396,13 +402,15 @@ function CountdownInfoRow({ label, value, href }: { label: string; value: string
 const countdownHeroCardStyle = {
   display: 'grid',
   justifyItems: 'center',
-  gap: 12,
-  padding: '20px 18px 18px',
-  borderRadius: 30,
-  background: 'rgba(255,253,252,0.94)',
-  border: '1px solid rgba(233,222,214,0.92)',
-  boxShadow: '0 18px 40px rgba(80, 50, 40, 0.08)',
-  backdropFilter: 'blur(12px)',
+  alignContent: 'end',
+  gap: 8,
+  height: '100%',
+  padding: '0 0 4px',
+  borderRadius: 0,
+  background: 'transparent',
+  border: 'none',
+  boxShadow: 'none',
+  backdropFilter: 'none',
 } as const;
 
 const dueNowPanelStyle = {
