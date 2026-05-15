@@ -2,308 +2,252 @@
 
 import { useMemo, useState } from 'react';
 import { CtaButton, Notice, SelectionChip, StatusBadge } from '../../src/components/ui';
-import {
-  buildUtilityPreview,
-  defaultSharingLevelByStage,
-  formatStageLabel,
-  getEffectiveStage,
-  inferStageFromCareItem,
-  IVF_STAGE_LABELS,
-  type IvfStage,
-  type SelectedIntent,
-  type SharingLevel,
-} from '../../src/domain/onboarding-care-state';
 import styles from './onboarding.module.css';
 
-type TreatmentExperience = 'first_ivf' | 'experienced_ivf' | 'returning_ivf';
-type RoleContext = 'primary_solo' | 'primary_with_partner';
-type OnboardingStep = 'experience' | 'care_item' | 'sharing' | 'review';
-type CompleteResponse = { redirectTo?: string; error?: string };
-type Attachment = { id: string; type: 'photo'; source: 'camera' | 'upload'; localUrl?: string; status: 'local_only' | 'uploaded' | 'failed'; name?: string };
+export type OnboardingStep = 'brand_intro' | 'role_select' | 'add_method' | 'photo_processing' | 'text_paste' | 'candidate_review' | 'direct_entry' | 'sharing' | 'complete';
 
-const STEPS: Array<{ id: OnboardingStep; label: string }> = [
-  { id: 'experience', label: '경험' },
-  { id: 'care_item', label: '항목' },
+type TreatmentRole = 'patient' | 'partner';
+type TreatmentExperience = 'first' | 'experienced' | 'returning';
+type AddMethodStep = Extract<OnboardingStep, 'photo_processing' | 'text_paste' | 'direct_entry'>;
+type NavigationDirection = 'next' | 'back';
+
+type StepDefinition = { id: OnboardingStep; label: string };
+
+const STEP_ORDER = [
+  'brand_intro',
+  'role_select',
+  'add_method',
+  'photo_processing',
+  'text_paste',
+  'candidate_review',
+  'direct_entry',
+  'sharing',
+  'complete',
+] as const satisfies readonly OnboardingStep[];
+
+const VISIBLE_PROGRESS_STEPS: readonly StepDefinition[] = [
+  { id: 'brand_intro', label: '시작' },
+  { id: 'role_select', label: '역할' },
+  { id: 'add_method', label: '추가 방식' },
   { id: 'sharing', label: '공유' },
-  { id: 'review', label: '확인' },
-];
+  { id: 'complete', label: '완료' },
+] as const;
 
 const EXPERIENCE_OPTIONS: Array<{ value: TreatmentExperience; label: string; helper: string }> = [
-  { value: 'first_ivf', label: '처음이에요', helper: '낯선 안내는 더 짧게 풀어 보여줍니다.' },
-  { value: 'experienced_ivf', label: '해본 적 있어요', helper: '반복 설명보다 확인할 항목을 먼저 보여줍니다.' },
-  { value: 'returning_ivf', label: '다시 준비 중', helper: '이전 기억과 이번 안내를 구분해 시작합니다.' },
+  { value: 'first', label: '처음', helper: '처음이라면 설명을 조금 더 자세히 보여드려요.' },
+  { value: 'experienced', label: '해본 적 있음', helper: '익숙한 흐름은 핵심 확인 위주로 정리해요.' },
+  { value: 'returning', label: '다시 준비 중', helper: '이전 경험과 이번 안내를 구분해 시작해요.' },
 ];
 
-const INTENT_OPTIONS: Array<{ value: SelectedIntent; label: string; helper: string }> = [
-  { value: 'medication', label: '약·주사 안내', helper: '시간, 약, 주사 준비' },
-  { value: 'clinic_visit', label: '병원 방문', helper: '방문, 검사, 예약' },
-  { value: 'procedure', label: '채취·시술 준비', helper: '채취, 시술 전 안내' },
-  { value: 'result_waiting', label: '결과 대기', helper: '수정·배아 결과 연락' },
-  { value: 'post_transfer', label: '이식 후 관리', helper: '이식 후 약과 일정' },
-  { value: 'pregnancy_test', label: '피검·임신 확인', helper: '피검, hCG, 결과일' },
-  { value: 'unknown', label: '잘 모르겠어요', helper: '먼저 안내받은 내용만 남김' },
+const ADD_METHODS: Array<{ step: AddMethodStep; label: string; helper: string }> = [
+  { step: 'photo_processing', label: '사진으로 남기기', helper: '처방전이나 병원 메모를 사진으로 보관해요.' },
+  { step: 'text_paste', label: '문자로 붙여넣기', helper: '문자·카톡 안내를 붙여넣고 확인해요.' },
+  { step: 'direct_entry', label: '직접 적기', helper: '기억나는 일정이나 할 일을 직접 남겨요.' },
 ];
 
-const STAGE_CORRECTION_OPTIONS: Array<{ value: IvfStage; label: string }> = [
-  { value: 'baseline_testing', label: '검사' },
-  { value: 'ovarian_stimulation', label: '주사' },
-  { value: 'egg_retrieval', label: '채취' },
-  { value: 'fertilization', label: '수정 결과' },
-  { value: 'embryo_culture', label: '배아 결과' },
-  { value: 'embryo_transfer', label: '이식 후' },
-  { value: 'pregnancy_test', label: '피검' },
-];
+export function enterOnboardingStep(step: OnboardingStep): OnboardingStep {
+  return step;
+}
 
-function explanationDensityFor(value: TreatmentExperience | null) {
-  if (value === 'first_ivf') return 'guided';
-  if (value === 'experienced_ivf') return 'compact';
-  return 'standard';
+export function exitOnboardingStep(currentStep: OnboardingStep, direction: NavigationDirection): OnboardingStep {
+  const currentIndex = STEP_ORDER.indexOf(currentStep);
+  const targetIndex = direction === 'next'
+    ? Math.min(currentIndex + 1, STEP_ORDER.length - 1)
+    : Math.max(currentIndex - 1, 0);
+
+  return STEP_ORDER[targetIndex];
+}
+
+function isVisibleProgressStep(step: OnboardingStep) {
+  return VISIBLE_PROGRESS_STEPS.some((progressStep) => progressStep.id === step);
 }
 
 export function OnboardingClient() {
-  const [activeStep, setActiveStep] = useState<OnboardingStep>('experience');
+  const [activeStep, setActiveStep] = useState<OnboardingStep>('brand_intro');
+  const [selectedRole, setSelectedRole] = useState<TreatmentRole | null>(null);
   const [treatmentExperience, setTreatmentExperience] = useState<TreatmentExperience | null>(null);
-  const [selectedIntent, setSelectedIntent] = useState<SelectedIntent | null>(null);
-  const [rawText, setRawText] = useState('');
-  const [medicalNotes, setMedicalNotes] = useState('');
-  const [showPhotoFlow, setShowPhotoFlow] = useState(false);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [roleContext, setRoleContext] = useState<RoleContext>('primary_solo');
-  const [userCorrectedStage, setUserCorrectedStage] = useState<IvfStage | null>(null);
-  const [stageSelectorOpen, setStageSelectorOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const activeIndex = STEPS.findIndex((step) => step.id === activeStep);
-  const progress = Math.round(((activeIndex + 1) / STEPS.length) * 100);
-  const trimmedRawText = rawText.trim();
-  const trimmedMedicalNotes = medicalNotes.trim();
-  const effectiveIntent = selectedIntent ?? 'unknown';
-  const baseInference = useMemo(() => inferStageFromCareItem({ selectedIntent: effectiveIntent, rawText: trimmedRawText }), [effectiveIntent, trimmedRawText]);
-  const inference = { ...baseInference, userCorrectedStage: userCorrectedStage ?? undefined };
-  const effectiveStage = getEffectiveStage(inference);
-  const sharingLevel: SharingLevel = roleContext === 'primary_with_partner' ? defaultSharingLevelByStage(effectiveStage) : 'basic';
-  const preview = buildUtilityPreview(effectiveStage, trimmedRawText);
-  const canAdvanceCareItem = Boolean(selectedIntent || trimmedRawText || attachments.length > 0);
-  const progressLabel = `처음 설정 ${activeIndex + 1}/${STEPS.length}`;
+  const progressStep = useMemo(() => {
+    if (isVisibleProgressStep(activeStep)) return activeStep;
+    if (activeStep === 'photo_processing' || activeStep === 'text_paste' || activeStep === 'direct_entry' || activeStep === 'candidate_review') return 'add_method';
+    return activeStep;
+  }, [activeStep]);
+
+  const activeIndex = VISIBLE_PROGRESS_STEPS.findIndex((step) => step.id === progressStep);
+  const progress = Math.round(((activeIndex + 1) / VISIBLE_PROGRESS_STEPS.length) * 100);
+  const progressLabel = `처음 설정 ${activeIndex + 1}/${VISIBLE_PROGRESS_STEPS.length}`;
 
   function goToStep(step: OnboardingStep) {
     setError(null);
-    setActiveStep(step);
+    setActiveStep(enterOnboardingStep(step));
   }
 
   function goBack() {
-    const previous = STEPS[Math.max(0, activeIndex - 1)]?.id;
-    if (previous) goToStep(previous);
-  }
-
-  function selectExperience(value: TreatmentExperience) {
-    setTreatmentExperience(value);
-    goToStep('care_item');
-  }
-
-  function continueFromCareItem() {
-    if (!canAdvanceCareItem) {
-      setError('안내받은 약, 방문, 결과 일정 중 하나를 남겨주세요.');
-      return;
-    }
-    goToStep('sharing');
-  }
-
-  function continueFromSharing(nextRoleContext = roleContext) {
-    setRoleContext(nextRoleContext);
-    goToStep('review');
-  }
-
-  function onPhotoChange(files: FileList | null) {
-    const file = files?.[0];
-    if (!file) return;
-    setAttachments((current) => [
-      ...current,
-      { id: `local-${Date.now()}`, type: 'photo', source: 'camera', localUrl: `local-file:${file.name}`, status: 'local_only', name: file.name },
-    ]);
-  }
-
-  async function completeOnboarding() {
-    if (!treatmentExperience) {
-      setError('시술 경험을 하나 선택해 주세요.');
-      goToStep('experience');
-      return;
-    }
-    if (!canAdvanceCareItem) {
-      setError('안내받은 약, 방문, 결과 일정 중 하나를 남겨주세요.');
-      goToStep('care_item');
+    if (activeStep === 'add_method') {
+      goToStep('role_select');
       return;
     }
 
-    setSubmitting(true);
-    setIsGenerating(true);
+    if (activeStep === 'photo_processing' || activeStep === 'text_paste' || activeStep === 'direct_entry') {
+      goToStep('add_method');
+      return;
+    }
+
+    goToStep(exitOnboardingStep(activeStep, 'back'));
+  }
+
+  function selectPatientRole() {
+    setSelectedRole('patient');
     setError(null);
+  }
 
-    const generationDelay = new Promise((resolve) => window.setTimeout(resolve, 2600));
-    const request = fetch('/api/onboarding/complete', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        treatmentExperience,
-        explanationDensity: explanationDensityFor(treatmentExperience),
-        firstCareItem: {
-          selectedIntent: effectiveIntent,
-          rawText: trimmedRawText,
-          attachments,
-          medicalNotes: trimmedMedicalNotes,
-        },
-        inferredStage: inference.inferredStage,
-        effectiveStage,
-        roleContext,
-        sharingLevel,
-        partnerInvite: { intent: roleContext === 'primary_with_partner' ? 'prepare_invite' : 'skip' },
-      }),
-    });
+  function selectPartnerRole() {
+    setSelectedRole('partner');
+    setTreatmentExperience(null);
+    goToStep('complete');
+  }
 
-    const [response] = await Promise.all([request, generationDelay]) as [Response, unknown];
-    const payload = (await response.json()) as CompleteResponse;
-
-    if (!response.ok) {
-      setError(payload.error ?? '저장/동기화에 실패했어요. 다시 시도해 주세요.');
-      setSubmitting(false);
-      setIsGenerating(false);
+  function continueAfterExperience() {
+    if (!treatmentExperience) {
+      setError('치료 경험을 하나 선택해 주세요.');
       return;
     }
 
-    window.location.href = payload.redirectTo ?? '/home';
-  }
-
-  if (isGenerating) {
-    const steps = roleContext === 'primary_with_partner'
-      ? ['치료 흐름 확인', '내 화면 카드 생성', '파트너 화면 준비', '공유 범위 적용']
-      : ['치료 흐름 확인', '내 화면 카드 생성', '공유 설정 저장'];
-
-    return (
-      <section className={`${styles.choiceSection} ${styles.generatedTransition}`} aria-label="첫 화면 생성 중">
-        <StatusBadge state="synced">화면 준비</StatusBadge>
-        <h2 className={styles.sectionTitle}>첫 화면을 만들고 있어요</h2>
-        <p className={styles.questionLead}>병원 안내를 기준으로 오늘의 케어 카드를 준비합니다.</p>
-        <ol className={styles.generationList}>
-          {steps.map((step, index) => <li key={step} style={{ '--delay-index': index } as React.CSSProperties}>✓ {step}</li>)}
-        </ol>
-      </section>
-    );
+    goToStep('add_method');
   }
 
   return (
     <div className={styles.onboardingFlow} aria-label="처음 설정 인터뷰">
       <div className={styles.interviewProgress} aria-label={progressLabel}>
-        <span>{activeIndex + 1}/{STEPS.length}</span>
+        <span>{activeIndex + 1}/{VISIBLE_PROGRESS_STEPS.length}</span>
         <div className={styles.progressTrack} aria-hidden="true"><i style={{ width: `${progress}%` }} /></div>
-        <small>{STEPS[activeIndex]?.label}</small>
+        <small>{VISIBLE_PROGRESS_STEPS[activeIndex]?.label}</small>
       </div>
 
-      {activeStep === 'experience' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="experience-title">
-          <StatusBadge state="shared">시술 경험</StatusBadge>
-          <h2 className={styles.sectionTitle} id="experience-title">시술 경험이 어느 정도인지 확인할게요</h2>
-          <p className={styles.questionLead}>병원 안내를 보여주는 설명의 양을 맞춥니다.</p>
-          <div className={styles.choiceGrid} role="group" aria-label="시술 경험 선택">
-            {EXPERIENCE_OPTIONS.map((option) => (
-              <SelectionChip key={option.value} onClick={() => selectExperience(option.value)} selected={treatmentExperience === option.value} className={styles.choiceChip} tone="sage">
-                <span>{option.label}</span><small>{option.helper}</small>
+      {activeStep === 'brand_intro' ? (
+        <section className={`${styles.choiceSection} ${styles.interviewSlide} ${styles.brandIntroStep}`} aria-labelledby="brand-intro-title">
+          <div className={styles.logoMark} aria-label="Fevio logo"><img alt="" aria-hidden="true" src="/assets/onboarding/fevio-logo.svg" />Fevio</div>
+          <h1 className={styles.brandIntroTitle} id="brand-intro-title">오늘 필요한 것만 보여드릴게요</h1>
+          <p className={styles.questionLead}>병원 안내를 사용자가 확인한 할 일로 바꾸고, 지금 필요한 화면만 먼저 보여드려요.</p>
+          <CtaButton onClick={() => goToStep('role_select')} type="button">시작하기</CtaButton>
+        </section>
+      ) : null}
+
+      {activeStep === 'role_select' ? (
+        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="role-select-title">
+          <StatusBadge state="shared">역할 선택</StatusBadge>
+          <h2 className={styles.sectionTitle} id="role-select-title">누구로 시작할까요?</h2>
+          <p className={styles.questionLead}>치료자는 병원 안내를 추가하고, 파트너는 초대 링크 안내를 확인합니다.</p>
+          <div className={styles.choiceGrid} role="group" aria-label="역할 선택">
+            <SelectionChip className={styles.choiceChip} onClick={selectPatientRole} selected={selectedRole === 'patient'} tone="sage">
+              <span>치료자</span>
+              <small>내 병원 안내를 추가하고 오늘 필요한 할 일을 확인해요.</small>
+            </SelectionChip>
+            <SelectionChip className={styles.choiceChip} onClick={selectPartnerRole} selected={selectedRole === 'partner'} tone="lavender">
+              <span>파트너</span>
+              <small>치료자가 보낸 초대 링크로 들어오면 오늘 도울 일을 볼 수 있어요.</small>
+            </SelectionChip>
+          </div>
+
+          {selectedRole === 'patient' ? (
+            <div className={styles.subStepPanel} aria-labelledby="experience-title">
+              <h3 id="experience-title">치료 경험을 알려주세요</h3>
+              <p>처음 / 해본 적 있음 / 다시 준비 중 중 하나를 고르면 설명 밀도를 맞춥니다.</p>
+              <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="치료 경험 선택">
+                {EXPERIENCE_OPTIONS.map((option) => (
+                  <SelectionChip key={option.value} className={styles.choiceChip} onClick={() => setTreatmentExperience(option.value)} selected={treatmentExperience === option.value} tone="sage">
+                    <span>{option.label}</span>
+                    <small>{option.helper}</small>
+                  </SelectionChip>
+                ))}
+              </div>
+              <div className={styles.slideActions}>
+                <CtaButton onClick={() => goToStep('brand_intro')} variant="secondary" type="button">이전</CtaButton>
+                <CtaButton disabled={!treatmentExperience} onClick={continueAfterExperience} type="button">다음</CtaButton>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {activeStep === 'add_method' ? (
+        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="add-method-title">
+          <StatusBadge state="shared">안내 추가</StatusBadge>
+          <h2 className={styles.sectionTitle} id="add-method-title">어떻게 추가할까요?</h2>
+          <p className={styles.questionLead}>아직 저장하지 않습니다. 다음 화면에서 사용자가 확인한 내용만 안전하게 이어갑니다.</p>
+          <div className={styles.choiceGrid} role="group" aria-label="안내 추가 방식 선택">
+            {ADD_METHODS.map((method) => (
+              <SelectionChip key={method.step} className={styles.choiceChip} onClick={() => goToStep(method.step)} selected={false} tone={method.step === 'photo_processing' ? 'coral' : 'sage'}>
+                <span>{method.label}</span>
+                <small>{method.helper}</small>
               </SelectionChip>
             ))}
+          </div>
+          <div className={styles.slideActions}>
+            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
+            <CtaButton onClick={() => goToStep('sharing')} type="button">나중에 하기</CtaButton>
           </div>
         </section>
       ) : null}
 
-      {activeStep === 'care_item' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="care-item-title">
-          <StatusBadge state="shared">현재 안내</StatusBadge>
-          <h2 className={styles.sectionTitle} id="care-item-title">현재 치료 상황을 확인할게요</h2>
-          <p className={styles.questionLead}>병원에서 안내받은 약, 방문, 결과 일정을 기준으로 시작합니다.</p>
-          <div className={`${styles.choiceGrid} ${styles.intentGrid}`} role="group" aria-label="현재 치료 상황 선택">
-            {INTENT_OPTIONS.map((option) => (
-              <SelectionChip key={option.value} onClick={() => setSelectedIntent(option.value)} selected={selectedIntent === option.value} className={styles.choiceChip} tone={option.value === 'medication' ? 'coral' : 'sage'}>
-                <span>{option.label}</span><small>{option.helper}</small>
-              </SelectionChip>
-            ))}
-          </div>
-          <label className="field-label" htmlFor="first-care-item">직접 입력</label>
-          <textarea className={styles.textArea} id="first-care-item" onChange={(event) => setRawText(event.target.value)} placeholder="예: 밤에 주사, 오전 방문, 결과는 전화로 안내" rows={3} value={rawText} />
-          <label className="field-label" htmlFor="care-notes">주의사항 선택 입력</label>
-          <textarea className={`${styles.textArea} ${styles.compactTextArea}`} id="care-notes" onChange={(event) => setMedicalNotes(event.target.value)} placeholder="예: 알레르기, 병원에 말해둔 주의사항" rows={2} value={medicalNotes} />
-          <div className={styles.photoInlineFlow}>
-            <button className={styles.photoAddButton} type="button" onClick={() => setShowPhotoFlow(true)}>사진으로 추가</button>
-            <span>약 봉투, 처방전, 병원 메모</span>
-            {showPhotoFlow ? <input id="onboarding-photo" type="file" accept="image/*" capture="environment" onChange={(event) => onPhotoChange(event.target.files)} /> : null}
-            {attachments.length > 0 ? <small>{attachments.length}개 사진을 추가했습니다. 사진은 사용자가 확인한 첨부로만 남깁니다.</small> : null}
-          </div>
-          <div className={styles.slideActions}>
-            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
-            <CtaButton disabled={!canAdvanceCareItem} onClick={continueFromCareItem} type="button">다음</CtaButton>
-          </div>
-        </section>
+      {activeStep === 'photo_processing' ? (
+        <PlaceholderStep
+          body="사진 처리와 OCR 저장은 이번 이슈 범위 밖입니다. 아직 사진이나 민감정보를 저장하지 않습니다."
+          onBack={goBack}
+          title="사진으로 남기기는 곧 이어집니다"
+        />
+      ) : null}
+
+      {activeStep === 'text_paste' ? (
+        <PlaceholderStep
+          body="문자 붙여넣기 저장은 이번 이슈 범위 밖입니다. 입력칸을 만들지 않아 민감정보를 저장하지 않습니다."
+          onBack={goBack}
+          title="문자로 붙여넣기는 곧 이어집니다"
+        />
+      ) : null}
+
+      {activeStep === 'direct_entry' ? (
+        <PlaceholderStep
+          body="직접 입력 저장은 이번 이슈 범위 밖입니다. 확인 전 데이터 저장은 하지 않습니다."
+          onBack={goBack}
+          title="직접 적기는 곧 이어집니다"
+        />
       ) : null}
 
       {activeStep === 'sharing' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="sharing-title">
-          <StatusBadge state="shared">공유 방식</StatusBadge>
-          <h2 className={styles.sectionTitle} id="sharing-title">이 내용을 함께 볼 사람을 정할게요</h2>
-          <p className={styles.questionLead}>공유 범위는 나중에 언제든 바꿀 수 있습니다.</p>
-          <div className={styles.choiceGrid} role="group" aria-label="파트너 공유 방식 선택">
-            <SelectionChip className={styles.choiceChip} onClick={() => setRoleContext('primary_solo')} selected={roleContext === 'primary_solo'} tone="sage">
-              <span>나 혼자 시작할게요</span><small>내 화면에 먼저 정리하고, 필요하면 나중에 초대합니다.</small>
-            </SelectionChip>
-            <SelectionChip className={styles.choiceChip} onClick={() => setRoleContext('primary_with_partner')} selected={roleContext === 'primary_with_partner'} tone="lavender">
-              <span>파트너와 함께 쓸게요</span><small>같은 항목을 역할에 맞게 나눠 보고, 초대 링크를 준비합니다.</small>
-            </SelectionChip>
-          </div>
-          <div className={styles.slideActions}>
-            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
-            <CtaButton onClick={() => continueFromSharing()} type="button">다음</CtaButton>
-          </div>
-        </section>
+        <PlaceholderStep
+          body="공유 설정은 이후 단계에서 사용자 확인 후 저장됩니다."
+          onBack={() => goToStep('add_method')}
+          title="공유 설정은 다음 단계에서 준비됩니다"
+        />
       ) : null}
 
-      {activeStep === 'review' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="review-title">
-          <StatusBadge state="synced">확인</StatusBadge>
-          <h2 className={styles.sectionTitle} id="review-title">첫 화면을 이렇게 만들게요</h2>
-          <div className={styles.generatedPreview} data-testid="generated-home-preview">
-            <div className={styles.stagePreviewHeader}>
-              <strong data-testid="inferred-stage-label">{formatStageLabel(effectiveStage)}</strong>
-              <button type="button" onClick={() => setStageSelectorOpen((value) => !value)}>{inference.confidence === 'low' ? '단계 선택' : '단계 수정'}</button>
-            </div>
-            {inference.confidence === 'medium' ? <p className={styles.stageConfidence}>이 단계가 맞는지 확인해주세요.</p> : null}
-            {inference.confidence === 'low' ? <p className={styles.stageConfidence}>먼저 병원 안내를 정리하는 화면으로 시작합니다.</p> : null}
-            {stageSelectorOpen ? (
-              <div className={styles.stageSelector} role="group" aria-label="단계 수정 선택">
-                {STAGE_CORRECTION_OPTIONS.map((option) => (
-                  <button key={option.value} type="button" aria-pressed={effectiveStage === option.value} onClick={() => { setUserCorrectedStage(option.value); setStageSelectorOpen(false); }}>
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            <section aria-label="내 화면 미리보기" className={styles.previewColumn}>
-              <h3>내 화면</h3>
-              {preview.patientCards.map((card) => <p key={card}>{card}</p>)}
-            </section>
-            {roleContext === 'primary_with_partner' ? (
-              <section aria-label="파트너 화면 미리보기" className={styles.previewColumn}>
-                <h3>파트너 화면</h3>
-                {preview.partnerCards.map((card) => <p key={card}>{card}</p>)}
-              </section>
-            ) : null}
-            <p className={styles.sharingLine}>공유 범위: {sharingLevel === 'care' ? '케어 항목' : '기본 안내'}</p>
-          </div>
-          <div className={styles.slideActions}>
-            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
-            <CtaButton disabled={submitting} onClick={completeOnboarding} type="button">첫 화면 만들기</CtaButton>
-          </div>
+      {activeStep === 'complete' ? (
+        <section className={`${styles.choiceSection} ${styles.interviewSlide} ${styles.partnerExitStep}`} aria-labelledby="complete-title">
+          <StatusBadge state="done">안내 완료</StatusBadge>
+          <h2 className={styles.sectionTitle} id="complete-title">파트너는 초대 링크로 들어와 주세요</h2>
+          <p className={styles.questionLead}>치료자가 Fevio에서 초대 링크를 보내면, 파트너 화면에서 오늘 도울 일만 확인할 수 있어요.</p>
+          <Notice tone="sage">지금은 파트너 계정 없이 링크 안내만 보여드리고 온보딩을 종료합니다.</Notice>
+          <CtaButton onClick={() => window.location.assign('/')} type="button">처음 화면으로 가기</CtaButton>
         </section>
       ) : null}
 
       {error ? <Notice tone="coral">{error}</Notice> : null}
     </div>
+  );
+}
+
+function PlaceholderStep({ body, onBack, title }: { body: string; onBack: () => void; title: string }) {
+  return (
+    <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="placeholder-title">
+      <StatusBadge state="idle">준비 중</StatusBadge>
+      <h2 className={styles.sectionTitle} id="placeholder-title">{title}</h2>
+      <p className={styles.questionLead}>{body}</p>
+      <div className={styles.slideActions}>
+        <CtaButton onClick={onBack} variant="secondary" type="button">이전</CtaButton>
+        <CtaButton disabled type="button">확인 후 계속</CtaButton>
+      </div>
+    </section>
   );
 }
