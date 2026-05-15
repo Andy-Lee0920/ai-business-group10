@@ -8,6 +8,7 @@ import { partnerStateCopy } from '../../src/features/partner/partner-state';
 
 const moreScreen = readFileSync('src/features/more/more-screen.tsx', 'utf8');
 const morePage = readFileSync('app/(authed)/more/page.tsx', 'utf8');
+const settingsPage = readFileSync('app/(authed)/settings/page.tsx', 'utf8');
 const partnerView = readFileSync('src/features/partner/partner-view.tsx', 'utf8');
 const partnerPage = readFileSync('app/(authed)/partner/page.tsx', 'utf8');
 const partnerTokenPage = readFileSync('app/partner/[token]/page.tsx', 'utf8');
@@ -31,6 +32,9 @@ describe('More and partner read-only state contract', () => {
     expect(moreScreen).toContain('공유와 설정 관리');
     expect(moreScreen).not.toContain('>더보기<');
     expect(morePage).toContain("redirect('/partner')");
+    expect(settingsPage).toContain("import MorePage from '../more/page'");
+    expect(settingsPage).toContain("export const dynamic = 'force-dynamic'");
+    expect(settingsPage).toContain('export default MorePage');
   });
 
   it('uses the required SLC illustration assets for partner and More surfaces', () => {
