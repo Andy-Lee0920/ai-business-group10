@@ -56,8 +56,24 @@
 }
 
 .brandStack {
+  position: relative;
+  z-index: 1;
   margin-bottom: auto;
   padding-top: 78px;
+}
+
+.brandIntroVideo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 62%;
+  object-fit: cover;
+  object-position: center top;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .brandLogo {
@@ -99,24 +115,6 @@
   font-size: 0.9rem;
   font-weight: 900;
   letter-spacing: -0.02em;
-}
-
-.backButton {
-  position: fixed;
-  top: calc(18px + env(safe-area-inset-top));
-  left: max(18px, calc(50% - 220px + 22px));
-  z-index: 40;
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border: 1px solid rgba(233, 222, 214, 0.82);
-  border-radius: 999px;
-  background: rgba(255, 253, 251, 0.76);
-  color: var(--slc-text, #2f2926);
-  box-shadow: 0 10px 24px rgba(75, 55, 45, 0.08);
-  backdrop-filter: blur(12px);
-  cursor: pointer;
 }
 
 .roleGrid {
@@ -291,12 +289,6 @@
   margin-top: clamp(148px, 25vh, 210px);
 }
 
-@media (min-width: 768px) {
-  .backButton {
-    top: calc(24px + var(--fevio-phone-safe-top, 59px));
-    left: calc(50% - (min(100vw, var(--fevio-phone-frame-max, 440px)) / 2) + 24px);
-  }
-}
 
 .methodGrid {
   display: grid;
@@ -587,64 +579,92 @@
 .candidateReviewSummary {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 4px 2px 2px;
+  align-items: center;
+  gap: 0;
+  padding: 10px 14px;
+  border-left: 3px solid rgba(216, 98, 77, 0.42);
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(255, 253, 251, 0.74), rgba(255, 253, 251, 0.28));
 }
 
 .summaryMetric {
+  position: relative;
   display: inline-flex;
-  min-height: 34px;
   align-items: center;
-  gap: 6px;
-  padding: 8px 11px;
-  border: 1px solid rgba(218, 205, 195, 0.58);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.54);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  gap: 5px;
+  padding: 3px 10px 3px 0;
+}
+
+.summaryMetric + .summaryMetric {
+  padding-left: 10px;
+}
+
+.summaryMetric + .summaryMetric::before {
+  position: absolute;
+  left: 0;
+  color: rgba(132, 120, 111, 0.38);
+  content: '·';
+  font-size: 1rem;
+  font-weight: 900;
 }
 
 .summaryMetric small {
-  color: #9a8d85;
-  font-size: 0.72rem;
+  color: #8f8279;
+  font-size: 0.74rem;
   font-weight: 900;
 }
 
 .summaryMetric strong {
-  color: #302621;
-  font-size: 0.92rem;
+  color: var(--slc-coral, #d8624d);
+  font-size: 0.86rem;
   font-weight: 950;
   letter-spacing: -0.04em;
 }
 
 .candidateGroupList {
   display: grid;
-  gap: 10px;
+  gap: 0;
+  padding: 4px 2px 0;
 }
 
 .candidateGroupCard {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  padding: 14px 16px;
-  border-left: 3px solid rgba(216, 98, 77, 0.38);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.56);
-  box-shadow: 0 10px 26px rgba(93, 73, 62, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 2px 13px 16px;
+  border-bottom: 1px solid rgba(218, 205, 195, 0.42);
+  background: transparent;
+  box-shadow: none;
+}
+
+.candidateGroupCard::before {
+  position: absolute;
+  top: 22px;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--slc-coral, #d8624d);
+  content: '';
+  opacity: 0.72;
 }
 
 .candidateBadges {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: flex-end;
   gap: 6px;
+  max-width: 110px;
 }
 
 .candidateBadges em {
-  padding: 5px 8px;
+  padding: 4px 7px;
   border-radius: 999px;
-  background: rgba(245, 242, 238, 0.92);
-  color: #7d7168;
-  font-size: 0.68rem;
+  background: rgba(255, 253, 251, 0.58);
+  color: #86786e;
+  font-size: 0.66rem;
   font-style: normal;
   font-weight: 930;
   white-space: nowrap;

@@ -98,13 +98,9 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain('completeAmbientScreen');
   });
 
-  it('does not show a back button over the role selection headline', () => {
-    const roleSelectBranch = onboardingClient.slice(
-      onboardingClient.indexOf("activeStep === 'role_select'"),
-      onboardingClient.indexOf("activeStep === 'add_method'"),
-    );
-
-    expect(roleSelectBranch).not.toContain('<BackButton');
+  it('does not render onboarding back buttons that can overlap copy', () => {
+    expect(onboardingClient).not.toContain('<BackButton');
+    expect(onboardingStyles).not.toContain('.backButton');
   });
 
   it('uses ambient onboarding backgrounds without foreground completion glyph clutter', () => {

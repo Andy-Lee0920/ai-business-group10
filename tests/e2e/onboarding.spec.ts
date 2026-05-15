@@ -26,9 +26,11 @@ test('onboarding shell renders premium brand intro, role cards, first-add prompt
   await page.getByRole('button', { name: '다음' }).click();
   await expect(page.getByRole('heading', { name: /자료 사진이나/ })).toBeVisible();
   await expect(page.getByText(/요약본으로 정리/)).toBeVisible();
+  await expect(page.getByRole('button', { name: '이전' })).toHaveCount(0);
   await page.getByRole('button', { name: '추가하기' }).click();
 
   await expect(page.getByRole('heading', { name: '어떻게 추가할까요?' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '이전' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /사진으로 남기기/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /문자로 붙여넣기/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /직접 적기/ })).toBeVisible();

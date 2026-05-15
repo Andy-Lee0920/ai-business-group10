@@ -127,32 +127,6 @@ export function OnboardingClient() {
     setActiveStep(enterOnboardingStep(step));
   }
 
-  function goBack() {
-    if (activeStep === 'add_method' && addMethodIntroSeen) {
-      setAddMethodIntroSeen(false);
-      return;
-    }
-
-    if (activeStep === 'add_method') {
-      goToStep('role_select');
-      return;
-    }
-
-    if (activeStep === 'photo_processing' || activeStep === 'text_paste' || activeStep === 'direct_entry' || activeStep === 'candidate_review') {
-      setAddMethodIntroSeen(true);
-      goToStep('add_method');
-      return;
-    }
-
-    if (activeStep === 'sharing') {
-      setAddMethodIntroSeen(true);
-      goToStep('add_method');
-      return;
-    }
-
-    goToStep(exitOnboardingStep(activeStep, 'back'));
-  }
-
   function selectPatientRole() {
     setSelectedRole('patient');
     setTreatmentExperience('first');
@@ -421,7 +395,6 @@ export function OnboardingClient() {
 
         {activeStep === 'add_method' && !addMethodIntroSeen ? (
           <section className={`${styles.screen} ${styles.centerScreen} ${styles.addMethodIntroScreen}`} aria-labelledby="first-add-title">
-            <BackButton onClick={goBack} />
             <div className={styles.heroCopy}>
               <h2 className={styles.sectionTitle} id="first-add-title">자료 사진이나<br />안내문을 넣어주세요</h2>
               <p className={styles.questionLead}>입력될 내용은 먼저 요약본으로 정리하고, 확인 전에는 일정으로 저장하지 않아요.</p>
@@ -436,7 +409,6 @@ export function OnboardingClient() {
 
         {activeStep === 'add_method' && addMethodIntroSeen ? (
           <section className={styles.screen} aria-labelledby="add-method-title">
-            <BackButton onClick={goBack} />
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="add-method-title">어떻게 추가할까요?</h2>
             </div>
@@ -455,7 +427,6 @@ export function OnboardingClient() {
 
         {activeStep === 'photo_processing' ? (
           <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="photo-processing-title">
-            <BackButton onClick={goBack} />
             <HeroGlyph kind="document" done={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'} />
             <div className={styles.heroCopy}>
               <h2 className={styles.sectionTitle} id="photo-processing-title">{photoPhase === 'idle' ? '사진으로 남겨주세요' : '사진을 받았어요'}</h2>
@@ -486,7 +457,6 @@ export function OnboardingClient() {
 
         {activeStep === 'text_paste' ? (
           <section className={styles.screen} aria-labelledby="text-paste-title">
-            <BackButton onClick={goBack} />
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="text-paste-title">병원 안내를 붙여넣어 주세요</h2>
               <p className={styles.questionLead}>확인 전에는 일정으로 저장하지 않아요.</p>
@@ -507,7 +477,6 @@ export function OnboardingClient() {
         {activeStep === 'candidate_review' ? (
           reviewCandidates.length ? (
             <section className={styles.screen} aria-labelledby="candidate-review-title">
-              <BackButton onClick={goBack} />
               <div className={styles.stepHeader}>
                 <p className={styles.kicker}>저장 전 확인</p>
                 <h2 className={styles.sectionTitle} id="candidate-review-title">반복 일정은<br />묶어서 보여드려요</h2>
@@ -609,13 +578,12 @@ export function OnboardingClient() {
               </BottomDock>
             </section>
           ) : (
-            <PlaceholderStep body="확인할 후보가 아직 없습니다. 사진이나 문자를 다시 추가해 주세요." onBack={() => goToStep('add_method')} title="후보가 없어요" />
+            <PlaceholderStep body="확인할 후보가 아직 없습니다. 사진이나 문자를 다시 추가해 주세요." title="후보가 없어요" />
           )
         ) : null}
 
         {activeStep === 'direct_entry' ? (
           <section className={styles.screen} aria-labelledby="direct-entry-title">
-            <BackButton onClick={goBack} />
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="direct-entry-title">기억나는 일정만 적어주세요</h2>
               <p className={styles.questionLead}>확인한 내용만 저장합니다.</p>
@@ -670,7 +638,6 @@ export function OnboardingClient() {
 
         {activeStep === 'sharing' ? (
           <section className={styles.screen} aria-labelledby="sharing-title">
-            <BackButton onClick={goBack} />
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="sharing-title">어떻게 시작할까요?</h2>
               <p className={styles.questionLead}>{savedReviewItems.length ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.` : '오늘 일정은 나중에 홈에서도 추가할 수 있어요.'}</p>
@@ -698,7 +665,6 @@ export function OnboardingClient() {
         {activeStep === 'complete' ? (
           selectedRole === 'partner' ? (
             <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="complete-title">
-              <BackButton onClick={goBack} />
               <HeroGlyph kind="document" done />
               <div className={styles.heroCopy}>
                 <h2 className={styles.sectionTitle} id="complete-title">파트너는 초대 링크로 들어와 주세요</h2>
@@ -711,7 +677,6 @@ export function OnboardingClient() {
             </section>
           ) : (
             <section className={`${styles.screen} ${styles.centerScreen} ${styles.completeAmbientScreen}`} aria-labelledby="complete-title">
-              <BackButton onClick={goBack} />
               <div className={styles.heroCopy}>
                 <h2 className={styles.sectionTitle} id="complete-title">일정 후보를 만들었어요</h2>
                 <p className={styles.questionLead}>일정 후보를 확인하고 오늘 홈에서 만나보세요.</p>
@@ -877,10 +842,9 @@ function formatCandidateDose(dose: string | null, unit: string | null) {
   return `${dose ?? ''}${dose && unit ? ' ' : ''}${unit ?? ''}`.trim();
 }
 
-function PlaceholderStep({ body, onBack, title }: { body: string; onBack: () => void; title: string }) {
+function PlaceholderStep({ body, title }: { body: string; title: string }) {
   return (
     <section className={styles.screen} aria-labelledby="placeholder-title">
-      <BackButton onClick={onBack} />
       <div className={styles.stepHeader}>
         <p className={styles.kicker}>준비 중</p>
         <h2 className={styles.sectionTitle} id="placeholder-title">{title}</h2>
@@ -890,16 +854,6 @@ function PlaceholderStep({ body, onBack, title }: { body: string; onBack: () => 
         <CtaButton className={styles.primaryCta} disabled type="button">확인 후 계속</CtaButton>
       </BottomDock>
     </section>
-  );
-}
-
-function BackButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button aria-label="이전" className={styles.backButton} onClick={onClick} type="button">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="m15 5-7 7 7 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </button>
   );
 }
 
