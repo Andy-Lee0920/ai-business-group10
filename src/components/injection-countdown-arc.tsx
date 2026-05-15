@@ -31,6 +31,7 @@ export function InjectionCountdownArc({
       data-testid="injection-countdown-arc"
       height={height}
       role="img"
+      suppressHydrationWarning
       viewBox={`0 0 ${size} ${height}`}
       width={size}
     >
@@ -52,6 +53,7 @@ export function InjectionCountdownArc({
             strokeDasharray={`${visibleLength} ${circumference}`}
             strokeDashoffset={0}
             strokeLinecap="round"
+            suppressHydrationWarning
             strokeWidth={STROKE_WIDTH}
           />
         </>
