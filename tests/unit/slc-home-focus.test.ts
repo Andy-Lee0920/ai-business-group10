@@ -31,7 +31,7 @@ describe('SLC home focus', () => {
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'missed',
       badgeLabel: '확인',
-      heading: '놓친 일정이 있어요',
+      heading: '확인이 필요한 주사가 있어요',
       primaryItem: { id: 'late-injection' },
     });
     expect(resolveHomeVisualAsset('missed').src).toBe('/assets/slc/home-missed-recovery.png');
@@ -52,9 +52,22 @@ describe('SLC home focus', () => {
     expect(getHomePendingItems(items, now).map((item) => item.id)).toEqual(['clinic-soon', 'med-now']);
   });
 
-  it('prioritizes tomorrow clinic context over today medication when no clinic is imminent today', () => {
+  it('keeps today medication context ahead of tomorrow clinic when no clinic is imminent today', () => {
     const items = [
       baseItem({ id: 'med-today', type: 'medication', title: '프로기노바', scheduled_at: '2026-05-14T11:00:00.000Z' }),
+      baseItem({ id: 'clinic-tomorrow', type: 'clinic', title: '내원', scheduled_at: '2026-05-15T00:30:00.000Z' }),
+    ];
+
+    expect(resolveHomeFocus(items, now)).toMatchObject({
+      kind: 'medication_upcoming',
+      badgeLabel: '다음',
+      heading: '다음 투약이 있어요',
+      primaryItem: { id: 'med-today' },
+    });
+  });
+
+  it('uses tomorrow clinic context when no today schedule competes with it', () => {
+    const items = [
       baseItem({ id: 'clinic-tomorrow', type: 'clinic', title: '내원', scheduled_at: '2026-05-15T00:30:00.000Z' }),
     ];
 
@@ -84,7 +97,7 @@ describe('SLC home focus', () => {
     expect(resolveHomeFocus([baseItem({ id: 'med-missed', scheduled_at: '2026-05-14T08:00:00.000Z' })], now)).toMatchObject({
       kind: 'missed',
       badgeLabel: '확인',
-      heading: '놓친 일정이 있어요',
+      heading: '확인이 필요한 주사가 있어요',
       primaryItem: { id: 'med-missed' },
     });
   });

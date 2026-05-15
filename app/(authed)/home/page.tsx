@@ -4,6 +4,7 @@ import { isPresentationMode } from '../../../src/config';
 import { TodayScreen } from '../../../src/features/today/today-screen';
 import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
+import { getKstDayEnd, getKstDayStart } from '../../../src/domain/kst-date';
 import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import type { ClinicUpdate, ScheduleItem } from '../../../src/types/slc.types';
 
@@ -35,14 +36,14 @@ export default async function HomePage() {
       .from('schedule_items')
       .select('*')
       .eq('patient_id', user.id)
-      .gte('scheduled_at', dayStart(0).toISOString())
-      .lte('scheduled_at', dayEnd(2).toISOString())
+      .gte('scheduled_at', getKstDayStart(0).toISOString())
+      .lte('scheduled_at', getKstDayEnd(2).toISOString())
       .order('scheduled_at', { ascending: true }),
     supabase
       .from('clinic_updates')
       .select('*')
       .eq('patient_id', user.id)
-      .gte('created_at', dayStart(0).toISOString())
+      .gte('created_at', getKstDayStart(0).toISOString())
       .order('created_at', { ascending: false }),
   ]);
 
@@ -57,18 +58,4 @@ export default async function HomePage() {
       firstScheduleSkipped={firstScheduleSkipped}
     />
   );
-}
-
-function dayStart(offset: number) {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + offset);
-  return date;
-}
-
-function dayEnd(offset: number) {
-  const date = new Date();
-  date.setHours(23, 59, 59, 999);
-  date.setDate(date.getDate() + offset);
-  return date;
 }

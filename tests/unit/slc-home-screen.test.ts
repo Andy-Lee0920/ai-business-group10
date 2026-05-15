@@ -68,12 +68,11 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('home-injection-bg-v2.png');
     expect(markup).not.toContain('data-testid="home-focus-hero"');
     expect(markup.indexOf('data-testid="home-hero-zone"')).toBeLessThan(markup.indexOf('aria-label="일정 날짜"'));
-    expect(markup.indexOf('aria-label="일정 날짜"')).toBeLessThan(markup.indexOf('data-card-emphasis="primary"'));
   });
 
 
 
-  it('visually promotes the current CTA card over the next schedule preview', () => {
+  it('promotes the current injection through the hero CTA and keeps it out of the list', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -81,12 +80,12 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'injection-next', type: 'injection', title: 'Cetrotide', dose: '0.25', unit: 'mg', scheduled_at: '2026-05-14T19:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-card-emphasis="primary"');
-    expect(markup).toContain('data-card-emphasis="secondary"');
-    expect(markup).toContain('주사');
-    expect(markup).toContain('border:1.5px solid #E8A898');
-    expect(markup).toContain('background:var(--slc-surface)');
-    expect(markup.indexOf('data-card-emphasis="primary"')).toBeLessThan(markup.indexOf('data-card-emphasis="secondary"'));
+    expect(markup).toContain('data-testid="injection-countdown-hero"');
+    expect(markup).toContain('width:100%;min-height:52px');
+    expect(markup).toContain('Menopur 150 IU');
+    expect(markup).toContain('다음 주사');
+    expect(markup).toContain('Cetrotide 0.25 mg');
+    expect(markup).not.toContain('data-card-emphasis="primary"');
   });
 
 
@@ -128,6 +127,20 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('data-testid="home-hero-compact-card"');
     expect(markup).toContain('오늘 할 일');
     expect(markup).toContain('듀파스톤');
+    expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
+  });
+
+  it('adds the missed accent border to the hero without duplicating the hero item in the list', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'late-injection', type: 'injection', title: '확인 필요 주사', status: 'missed', scheduled_at: '2026-05-14T08:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-focus-kind="missed"');
+    expect(markup).toContain('border-left:3px solid var(--slc-coral)');
+    expect(markup).toContain('확인이 필요한 주사가 있어요');
+    expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
   });
 
   it('shows tomorrow card after today is completed and removes recent-completed home section', () => {
@@ -143,6 +156,31 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('내일 병원');
     expect(markup).not.toContain('최근 완료');
     expect(markup).not.toContain('aria-label="최근 완료"');
+  });
+
+  it('uses tomorrow medication copy for injection or medication fallback after today is completed', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'done-today', type: 'injection', title: '오늘 완료 주사', status: 'completed', scheduled_at: '2026-05-14T09:00:00.000Z' }),
+      item({ id: 'tomorrow-injection', type: 'injection', title: '내일 고날에프', scheduled_at: '2026-05-15T09:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('내일 투약이에요');
+    expect(markup).not.toContain('내일 병원이에요');
+    expect(markup).toContain('내일 고날에프');
+  });
+
+  it('uses KST day boundaries for the today tab even when the runtime timezone is UTC-like', () => {
+    vi.setSystemTime(new Date('2026-05-14T15:30:00.000Z')); // 2026-05-15 00:30 KST
+
+    const markup = render([
+      item({ id: 'kst-today', type: 'injection', title: 'KST 오늘 주사', scheduled_at: '2026-05-14T16:00:00.000Z' }),
+      item({ id: 'kst-yesterday', type: 'injection', title: 'KST 어제 주사', scheduled_at: '2026-05-14T14:30:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('KST 오늘 주사');
+    expect(markup).not.toContain('KST 어제 주사');
   });
 
   it('does not render post-clinic prompt after a relevant clinic update exists', () => {

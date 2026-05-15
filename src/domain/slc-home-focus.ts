@@ -1,5 +1,6 @@
 import { slcAssets, type SLCAsset } from '../design/slc-assets';
 import type { ScheduleItem, ScheduleStatus } from '../types/slc.types';
+import { formatKstTime, isSameKstDate, isTomorrowKstDate } from './kst-date';
 
 export type ScheduleBadgeTone = 'coral' | 'amber' | 'default' | 'completed';
 export type HomeFocusKind = 'clinic_soon' | 'clinic_tomorrow' | 'medication_due' | 'medication_upcoming' | 'missed' | 'empty';
@@ -16,10 +17,11 @@ export interface HomeFocus {
   heading:
     | '병원 시간이 가까워요'
     | '내일 병원이에요'
-    | '놓친 일정이 있어요'
+    | '내일 투약이에요'
+    | '확인이 필요한 주사가 있어요'
     | '지금 챙길 시간이에요'
     | '다음 투약이 있어요'
-    | '일정이 없어요';
+    | '오늘은 예정된 일정이 없어요';
   description: string;
   primaryItem: ScheduleItem | null;
 }
@@ -47,20 +49,20 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     .slice()
     .sort((left, right) => new Date(left.scheduled_at).getTime() - new Date(right.scheduled_at).getTime());
 
-  const missed = pending.find((item) => isSameLocalDate(new Date(item.scheduled_at), now) && (item.status === 'missed' || statusFromDiff(minutesUntil(item.scheduled_at, now)) === 'missed'));
+  const missed = pending.find((item) => isSameKstDate(item.scheduled_at, now) && (item.status === 'missed' || statusFromDiff(minutesUntil(item.scheduled_at, now)) === 'missed'));
   if (missed) {
     return {
       kind: 'missed',
       badgeLabel: '확인',
-      heading: '놓친 일정이 있어요',
-      description: formatFocusTime(missed, '완료 여부만 확인해요.'),
+      heading: '확인이 필요한 주사가 있어요',
+      description: formatFocusTime(missed, '예정된 주사 기록이 아직 완료되지 않았어요.'),
       primaryItem: missed,
     };
   }
 
   const clinicSoon = pending.find((item) => {
     const diffMin = minutesUntil(item.scheduled_at, now);
-    return item.type === 'clinic' && isSameLocalDate(new Date(item.scheduled_at), now) && diffMin >= 0 && diffMin <= SIXTY_MINUTES;
+    return item.type === 'clinic' && isSameKstDate(item.scheduled_at, now) && diffMin >= 0 && diffMin <= SIXTY_MINUTES;
   });
   if (clinicSoon) {
     return {
@@ -69,17 +71,6 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
       heading: '병원 시간이 가까워요',
       description: formatFocusTime(clinicSoon, '방문 시간만 먼저 볼게요.'),
       primaryItem: clinicSoon,
-    };
-  }
-
-  const clinicTomorrow = pending.find((item) => item.type === 'clinic' && isTomorrowLocalDate(new Date(item.scheduled_at), now));
-  if (clinicTomorrow) {
-    return {
-      kind: 'clinic_tomorrow',
-      badgeLabel: '내일',
-      heading: '내일 병원이에요',
-      description: formatFocusTime(clinicTomorrow, '방문 시간만 남겨둘게요.'),
-      primaryItem: clinicTomorrow,
     };
   }
 
@@ -105,11 +96,22 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     };
   }
 
+  const clinicTomorrow = pending.find((item) => item.type === 'clinic' && isTomorrowKstDate(item.scheduled_at, now));
+  if (clinicTomorrow) {
+    return {
+      kind: 'clinic_tomorrow',
+      badgeLabel: '내일',
+      heading: '내일 병원이에요',
+      description: formatFocusTime(clinicTomorrow, '방문 시간만 남겨둘게요.'),
+      primaryItem: clinicTomorrow,
+    };
+  }
+
   return {
     kind: 'empty',
     badgeLabel: '비어 있음',
-    heading: '일정이 없어요',
-    description: '확정된 일정이 생기면 여기에서 보여드릴게요.',
+    heading: '오늘은 예정된 일정이 없어요',
+    description: '새 일정이 생기면 여기에서 바로 보여드릴게요.',
     primaryItem: null,
   };
 }
@@ -149,22 +151,8 @@ function isMedication(item: ScheduleItem) {
   return item.type === 'injection' || item.type === 'medication';
 }
 
-function isSameLocalDate(left: Date, right: Date) {
-  return left.getFullYear() === right.getFullYear()
-    && left.getMonth() === right.getMonth()
-    && left.getDate() === right.getDate();
-}
-
-function isTomorrowLocalDate(value: Date, now: Date) {
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return isSameLocalDate(value, tomorrow);
-}
-
 function formatFocusTime(item: ScheduleItem, suffix: string) {
-  const time = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', {
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  });
+  const time = formatKstTime(item.scheduled_at);
   return `${time} · ${suffix}`;
 }
 

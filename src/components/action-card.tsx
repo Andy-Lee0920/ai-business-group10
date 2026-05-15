@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import type { ScheduleItem } from '../types/slc.types';
 import { ctaLabel, completedLabel } from '../types/slc.types';
 import { getSchedulePresentation, type ScheduleBadgeTone } from '../domain/slc-home-focus';
+import { formatKstTime } from '../domain/kst-date';
 import { CountdownRing } from './countdown-ring';
 
 interface ActionCardProps {
@@ -22,9 +23,7 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
   const isDueSoon = status === 'due_soon' || status === 'due';
   const isWithinHour = presentation.badgeTone === 'amber';
   const emphasis = cardEmphasis({ compact, isCompleted, isDueSoon, isWithinHour });
-  const timeStr = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', {
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  });
+  const timeStr = formatKstTime(item.scheduled_at);
   const cta = ctaLabel(item.type);
   const completedStr = completedLabel(item.type);
   const title = formatTitle(item);

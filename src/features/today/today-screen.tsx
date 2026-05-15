@@ -13,6 +13,7 @@ import { ctaLabel } from '../../types/slc.types';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
 import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
+import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-date';
 import { isInInjectionCountdownWindow, minutesUntilInjection } from '../adaptive-home/injection-timing';
 
 interface TodayScreenProps {
@@ -51,16 +52,21 @@ export function TodayScreen({
     [items, selectedDay],
   );
 
-  const focusItems = selectedDay === 0 ? items : visibleItems;
-  const homeFocus = useMemo(() => resolveHomeFocus(focusItems), [focusItems]);
-  const pending = useMemo(() => getHomePendingItems(focusItems), [focusItems]);
+  const homeFocus = useMemo(() => resolveHomeFocus(visibleItems), [visibleItems]);
+  const heroStory = useMemo(
+    () => resolveHeroStory(selectedDay === 0 ? items : visibleItems, homeFocus, selectedDay),
+    [items, visibleItems, homeFocus, selectedDay],
+  );
+  const heroItemId = 'item' in heroStory ? heroStory.item.id : null;
+  const pending = useMemo(() => getHomePendingItems(visibleItems), [visibleItems]);
   const clinicFollowUpItem = useMemo(
     () => selectedDay === 0 ? resolveClinicFollowUpPrompt(visibleItems, initialClinicUpdates) : null,
     [selectedDay, visibleItems, initialClinicUpdates],
   );
-  const cardItems = clinicFollowUpItem ? pending.filter((item) => item.id !== clinicFollowUpItem.id) : pending;
+  const cardItems = pending.filter((item) => item.id !== clinicFollowUpItem?.id && item.id !== heroItemId);
   const mainItem = cardItems[0];
   const nextItem = cardItems[1];
+  const hasSelectedDaySchedule = visibleItems.length > 0 || Boolean(clinicFollowUpItem);
   const postClinicBannerState = useMemo(() => resolvePostClinicBannerState(items), [items]);
 
   const handleComplete = useCallback(async (site?: InjectionSite) => {
@@ -78,11 +84,11 @@ export function TodayScreen({
   return (
     <div style={{ minHeight: '100dvh', padding: '0 0 112px', background: 'var(--slc-bg)' }}>
       <Header />
-      <HeroZone focus={homeFocus} items={items} onCta={setActiveItem} />
+      <HeroZone story={heroStory} onCta={setActiveItem} />
       <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
       <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
-        {pending.length === 0 ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
+        {!hasSelectedDaySchedule ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
           <>
             {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
             {nextItem && <NextItem item={nextItem} />}
@@ -121,15 +127,12 @@ function resolveNextInjection(primaryItem: ScheduleItem | null, items: ScheduleI
 }
 
 function HeroZone({
-  focus,
-  items,
+  story,
   onCta,
 }: {
-  focus: HomeFocus;
-  items: ScheduleItem[];
+  story: HeroStory;
   onCta: (item: ScheduleItem) => void;
 }) {
-  const story = resolveHeroStory(items, focus);
   const asset = resolveHomeVisualAsset(story.focus.kind);
 
   return (
@@ -139,9 +142,12 @@ function HeroZone({
       as="section"
       intensity="hero"
       priority
-      style={{ marginBottom: 16 }}
+      style={{
+        marginBottom: 16,
+        borderLeft: story.focus.kind === 'missed' ? '3px solid var(--slc-coral)' : undefined,
+      }}
     >
-      <div data-testid="home-hero-zone" data-focus-kind={focus.kind} style={{ minHeight: 340 }}>
+      <div data-testid="home-hero-zone" data-focus-kind={story.focus.kind} style={{ minHeight: 340 }}>
         <div style={{ padding: '24px 20px 28px' }}>
           {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
           {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
@@ -153,12 +159,14 @@ function HeroZone({
   );
 }
 
-function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus): HeroStory {
+function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus, selectedDay: DayOffset): HeroStory {
   const pending = items
     .filter((item) => item.status !== 'completed')
     .slice()
     .sort((left, right) => new Date(left.scheduled_at).getTime() - new Date(right.scheduled_at).getTime());
-  const countdown = pending.find((item) => item.type === 'injection' && isInInjectionCountdownWindow(item.scheduled_at));
+  const countdown = selectedDay === 0
+    ? pending.find((item) => item.type === 'injection' && isOnDay(item.scheduled_at, 0) && isInInjectionCountdownWindow(item.scheduled_at))
+    : null;
   if (countdown) {
     return {
       kind: 'countdown',
@@ -168,26 +176,37 @@ function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus): HeroStory {
     };
   }
 
-  const todayPending = pending.find((item) => isOnDay(item.scheduled_at, 0));
-  if (todayPending) return { kind: 'today_pending', item: todayPending, focus: { ...focus, primaryItem: todayPending } };
+  const selectedFocusItem = focus.primaryItem && isOnDay(focus.primaryItem.scheduled_at, selectedDay)
+    ? focus.primaryItem
+    : null;
+  const selectedPending = selectedFocusItem ?? pending.find((item) => isOnDay(item.scheduled_at, selectedDay));
+  if (selectedPending) {
+    const selectedFocus = selectedFocusItem ? focus : resolveHomeFocus([selectedPending]);
+    return { kind: 'today_pending', item: selectedPending, focus: { ...selectedFocus, primaryItem: selectedPending } };
+  }
 
   const hasCompletedToday = items.some((item) => item.status === 'completed' && isOnDay(item.scheduled_at, 0));
   const tomorrowPending = pending.find((item) => isOnDay(item.scheduled_at, 1));
-  if (hasCompletedToday && tomorrowPending) {
+  if (selectedDay === 0 && hasCompletedToday && tomorrowPending) {
     return {
       kind: 'tomorrow',
       item: tomorrowPending,
-      focus: {
-        kind: 'clinic_tomorrow',
-        badgeLabel: '내일',
-        heading: '내일 병원이에요',
-        description: `${formatScheduleTime(tomorrowPending.scheduled_at)} · 다음 일정만 미리 확인해요.`,
-        primaryItem: tomorrowPending,
-      },
+      focus: buildTomorrowFocus(tomorrowPending),
     };
   }
 
   return { kind: 'quiet', focus };
+}
+
+function buildTomorrowFocus(item: ScheduleItem): HomeFocus {
+  const isClinic = item.type === 'clinic';
+  return {
+    kind: isClinic ? 'clinic_tomorrow' : 'medication_upcoming',
+    badgeLabel: '내일',
+    heading: isClinic ? '내일 병원이에요' : '내일 투약이에요',
+    description: `${formatScheduleTime(item.scheduled_at)} · ${isClinic ? '방문 시간만 미리 확인해요.' : '준비해두세요.'}`,
+    primaryItem: item,
+  };
 }
 
 function QuietHeroContent({ focus, paddingTop = 60 }: { focus: HomeFocus; paddingTop?: number }) {
@@ -332,7 +351,7 @@ function Header() {
     <header style={{ padding: '54px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
         <p style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 600, margin: '0 0 4px' }}>
-          {today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+          {formatKstDateLabel(today)}
         </p>
         <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--slc-text)', margin: 0 }}>오늘</h1>
       </div>
@@ -373,7 +392,7 @@ function NextItem({ item }: { item: ScheduleItem }) {
 }
 
 function ScheduleFlowRow({ item, statusLabel }: { item: ScheduleItem; statusLabel: '예정' | '완료' }) {
-  const timeStr = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const timeStr = formatScheduleTime(item.scheduled_at);
   return (
     <div data-card-emphasis="secondary" data-home-flow-row={item.type} style={{ minHeight: 62, display: 'grid', gridTemplateColumns: '54px 1fr auto auto', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 18, background: 'var(--slc-surface)', border: '1px solid var(--slc-border)' }}>
       <span style={{ color: 'var(--slc-text)', fontSize: 14, fontWeight: 900 }}>{timeStr}</span>
@@ -398,9 +417,7 @@ function formatScheduleTitle(item: ScheduleItem) {
 }
 
 function formatScheduleTime(scheduledAt: string) {
-  return new Date(scheduledAt).toLocaleTimeString('ko-KR', {
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  });
+  return formatKstTime(scheduledAt);
 }
 
 function formatRemainingClock(minutes: number) {
@@ -417,9 +434,7 @@ function scheduleTypeLabel(type: ScheduleItem['type']) {
 }
 
 function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
-  const timeStr = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', {
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  });
+  const timeStr = formatScheduleTime(item.scheduled_at);
 
   return (
     <div data-testid="clinic-follow-up-prompt" style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 12, alignItems: 'center', padding: '16px 18px', background: 'var(--slc-surface)', borderRadius: 20, border: '1.5px solid var(--slc-border)', overflow: 'hidden' }}>
@@ -434,11 +449,7 @@ function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
 }
 
 function isOnDay(iso: string, offset: DayOffset) {
-  const target = new Date();
-  target.setHours(0, 0, 0, 0);
-  target.setDate(target.getDate() + offset);
-  const value = new Date(iso);
-  return value >= target && value < new Date(target.getTime() + 24 * 60 * 60_000);
+  return isInKstDay(iso, offset);
 }
 
 const addButtonStyle = {
