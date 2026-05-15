@@ -37,13 +37,36 @@ describe('app onboarding shell contract', () => {
     }
   });
 
-  it('keeps direct entry confirmation-first and avoids photo/text sensitive inputs in unfinished steps', () => {
+  it('keeps direct entry confirmation-first and avoids text sensitive inputs in unfinished steps', () => {
     expect(onboardingClient).toContain('이 일정 기억하기');
     expect(onboardingClient).toContain("fetch('/api/schedule/add'");
     expect(onboardingClient).toContain('홈 미리보기');
     expect(onboardingClient).not.toContain("fetch('/api/onboarding/complete'");
-    expect(onboardingClient).not.toContain('type="file"');
     expect(onboardingClient).not.toContain('<textarea');
+  });
+
+  it('implements photo processing with native image pickers, upload/analyze progress, and safe fallback', () => {
+    expect(onboardingClient).toContain('type="file" accept="image/*" capture="environment"');
+    expect(onboardingClient).toContain('type="file" accept="image/*"');
+    expect(onboardingClient).toContain("fetch('/api/onboard/photo-upload'");
+    expect(onboardingClient).toContain("fetch('/api/onboard/photo-analyze'");
+    for (const copy of ['사진 찍기', '사진 선택', '업로드 완료', '내용 분석 중', '일정 후보 준비', '사진에서 일정을 찾지 못했어요', '다시 찍기']) {
+      expect(onboardingClient).toContain(copy);
+    }
+    expect(onboardingClient).not.toContain('getUserMedia');
+    expect(onboardingClient).not.toContain('camera viewport');
+  });
+
+  it('implements candidate review inline edits and confirm API payload', () => {
+    expect(onboardingClient).toContain("activeStep === 'candidate_review'");
+    expect(onboardingClient).toContain('일정을 확인해 주세요');
+    expect(onboardingClient).toContain('formatCandidateType(candidate.type)');
+    expect(onboardingClient).toContain('input type="datetime-local"');
+    expect(onboardingClient).toContain('candidateEdits');
+    expect(onboardingClient).toContain('confirmedIds');
+    expect(onboardingClient).toContain('rejectedIds');
+    expect(onboardingClient).toContain("fetch('/api/onboard/candidates/confirm'");
+    expect(onboardingClient).toContain('후보가 없어요');
   });
 
   it('renders the new app onboarding shell from /onboarding after privacy acceptance', () => {

@@ -100,4 +100,33 @@ describe('/api/onboard/candidates/confirm', () => {
       expect.objectContaining({ values: { status: 'rejected' }, ids: ['candidate-2'], patientId: 'patient-1' }),
     ]);
   });
+
+  it('uses inline candidate edits when copying confirmed candidates into schedule_items', async () => {
+    state.user = { id: 'patient-1' };
+    state.ownedCandidates = [
+      { id: 'candidate-1', patient_id: 'patient-1', type: 'injection', title: '고날에프', scheduled_at: '2026-05-15T12:00:00.000Z', dose: '150', unit: 'IU' },
+    ];
+    const { POST } = await import('../../app/api/onboard/candidates/confirm/route');
+
+    const response = await POST(request({
+      confirmedIds: ['candidate-1'],
+      rejectedIds: [],
+      candidateEdits: [
+        { id: 'candidate-1', type: 'injection', title: '수정한 고날에프', scheduled_at: '2026-05-15T13:30:00.000Z', dose: '225', unit: 'IU' },
+      ],
+    }));
+
+    expect(response.status).toBe(200);
+    expect(state.insertedRows).toEqual([
+      expect.objectContaining({
+        patient_id: 'patient-1',
+        type: 'injection',
+        title: '수정한 고날에프',
+        dose: '225',
+        unit: 'IU',
+        scheduled_at: '2026-05-15T13:30:00.000Z',
+        source: 'capture',
+      }),
+    ]);
+  });
 });

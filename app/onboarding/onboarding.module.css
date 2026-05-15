@@ -98,6 +98,8 @@
 .interviewSlide {
   min-height: min(420px, calc(100dvh - 230px));
   align-content: start;
+  box-sizing: border-box;
+  padding-inline: 10px;
   animation: slideIn 220ms ease both;
 }
 
@@ -670,4 +672,135 @@
   font-size: 14px;
   font-weight: 780;
   line-height: 1.45;
+}
+
+.hiddenFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.photoPickerActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.processingSteps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.processingSteps li {
+  padding: 14px 16px;
+  border: 1px solid var(--fevio-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--fevio-text-tertiary);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.processingSteps li[data-active='true'] {
+  border-color: rgba(111, 143, 110, 0.3);
+  background: rgba(111, 143, 110, 0.12);
+  color: var(--fevio-sage-dark);
+}
+
+.candidateList {
+  display: grid;
+  gap: 14px;
+}
+
+.candidateCard {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(111, 143, 110, 0.18);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 16px 36px rgba(50, 61, 46, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.candidateCard[data-decision='rejected'] {
+  opacity: 0.62;
+}
+
+.candidateSummary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.candidateSummary span {
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(215, 93, 68, 0.1);
+  color: var(--fevio-coral);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.candidateSummary strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fevio-ink);
+  font-size: 16px;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidateSummary small {
+  grid-column: 2;
+  color: var(--fevio-text-tertiary);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.candidateHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.candidateHeader select {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(111, 143, 110, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--fevio-sage-dark);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.candidateDecisionActions {
+  display: flex;
+  gap: 8px;
+}
+
+.candidateDecisionActions button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(111, 143, 110, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--fevio-sage-dark);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 950;
 }
