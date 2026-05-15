@@ -103,6 +103,8 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('deterministicCandidates.length >= llmCandidates.length');
     expect(code).toContain('function extractDeterministicTextCandidates');
     expect(code).toContain('function extractDocumentBaseDateKey');
+    expect(code).toContain('function normalizeScheduleInstructionBreaks');
+    expect(code).toContain('normalizeScheduleInstructionBreaks(rawText)');
     expect(code).toContain('발행일|작성일');
     expect(code).toContain("meridiem === '오후'");
     expect(code).toContain('durationDays * frequency');

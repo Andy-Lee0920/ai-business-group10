@@ -413,11 +413,20 @@ function extractDeterministicSegmentCandidates(rawText: string, baseDateKey: str
 }
 
 function splitScheduleInstructionSegments(rawText: string) {
-  return rawText
+  return normalizeScheduleInstructionBreaks(rawText)
     .split(/\r?\n|[•●▪◦]\s*/u)
     .map((segment) => segment.replace(/^\s*(?:[-*]|\d+\.)\s*/u, '').trim())
     .filter(Boolean)
     .filter(isScheduleInstructionSegment);
+}
+
+function normalizeScheduleInstructionBreaks(rawText: string) {
+  const scheduleStart = '(?:고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|다음\\s*병원|병원\\s*방문)';
+  return rawText
+    .replace(new RegExp(`([.。])\\s*(?=${scheduleStart})`, 'giu'), '$1\n')
+    .replace(new RegExp(`(주사하세요[.。]?)\\s*(?=${scheduleStart})`, 'giu'), '$1\n')
+    .replace(new RegExp(`(사용하세요[.。]?)\\s*(?=${scheduleStart})`, 'giu'), '$1\n')
+    .replace(new RegExp(`(맞으세요[.。]?)\\s*(?=${scheduleStart})`, 'giu'), '$1\n');
 }
 
 function isScheduleInstructionSegment(segment: string) {
