@@ -35,8 +35,12 @@ const SCHEDULE_EXTRACT_SYSTEM_PROMPT = [
   '원문을 줄/항목 단위로 읽고 약명·방문 일정마다 별도 후보를 만든다.',
   '명시된 날짜와 시간이 있으면 scheduled_at을 null로 두지 말고 ISO-8601(+09:00 기준)로 채운다.',
   '예: 2026년 5월 15일 오후 9시 => 2026-05-15T21:00:00+09:00, 밤 10시 => 22:00, 오전 10시 방문 => clinic.',
+  '문서 상단/환자정보의 발행일·작성일은 기준일이다. 오늘/오늘부터/오늘 밤부터는 그 기준일로 해석한다.',
   '기간과 빈도는 후보 수로 펼친다. 예: 3일간 하루 두 번 => 6 candidates, 2일간 매일 오전 9시 => 2 candidates.',
   '단, "본인이 정해서", "정확한 시간 확인", "확인 후 입력"처럼 사용자가 시간을 정해야 하는 항목은 scheduled_at:null로 둔다.',
+  '시간 미정이어도 약명, 용량, 단위, 기간, 빈도는 원문에 있으면 반드시 채운다. 용량/단위가 제목에 보이면 dose/unit에도 분리해 채운다.',
+  '고날에프, 메노푸어, 세트로타이드, 오비드렐, 퓨리곤은 원문에 복용이라고 쓰지 않는 한 injection으로 분류한다.',
+  '오후/밤/저녁은 12시간을 더한다. 오후 9시는 21:00이지 09:00이 아니다.',
   '시간을 사용자가 정하라는 안내 문장 자체는 별도 candidate로 만들지 말고, 바로 앞 약명/행위 후보의 시간 미정 정보로만 반영한다.',
   'Return JSON only: {"candidates":[{"type":"injection"|"medication"|"clinic","title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
 ].join(' ');
@@ -167,7 +171,7 @@ async function extractCandidatesFromImageWithOpenRouter(imageUrl: string): Promi
             {
               type: 'text',
               text: JSON.stringify({
-                instruction: '이미지에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
+                instruction: '이미지에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 문서의 발행일/작성일을 기준일로 삼아 오늘/오늘부터를 해석하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 오후 9시는 21:00입니다. 고날에프/메노푸어/세트로타이드/오비드렐은 주사입니다. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
               }),
             },
             { type: 'image_url', image_url: { url: imageUrl } },
@@ -204,7 +208,7 @@ async function extractCandidatesFromTextWithOpenRouter(rawText: string): Promise
         {
           role: 'user',
           content: JSON.stringify({
-            instruction: '텍스트에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
+            instruction: '텍스트에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 문서의 발행일/작성일을 기준일로 삼아 오늘/오늘부터를 해석하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 오후 9시는 21:00입니다. 고날에프/메노푸어/세트로타이드/오비드렐은 주사입니다. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
             rawText,
           }),
         },
@@ -247,16 +251,21 @@ function isObjectWithCandidates(value: unknown): value is { candidates: unknown[
 }
 
 function normalizeCandidate(value: unknown): ScheduleCandidate | null {
-  const type = normalizeScheduleType(readProperty(value, 'type'));
   const title = normalizeText(readProperty(value, 'title'));
-  if (!type || !title) return null;
+  if (!title || isUserTimeGuidanceTitle(title)) return null;
+
+  const doseFromTitle = extractDoseParts(title);
+  const dose = normalizeNullableText(readProperty(value, 'dose')) ?? doseFromTitle?.dose ?? null;
+  const unit = normalizeNullableText(readProperty(value, 'unit')) ?? doseFromTitle?.unit ?? null;
+  const type = normalizeScheduleType(readProperty(value, 'type'), title);
+  if (!type) return null;
 
   return {
     type,
-    title,
+    title: normalizeMedicationTitle(title),
     scheduled_at: normalizeNullableText(readProperty(value, 'scheduled_at')),
-    dose: normalizeNullableText(readProperty(value, 'dose')),
-    unit: normalizeNullableText(readProperty(value, 'unit')),
+    dose,
+    unit,
   };
 }
 
@@ -265,13 +274,52 @@ function readProperty(value: unknown, key: keyof ScheduleCandidate): unknown {
   return value[key as keyof typeof value];
 }
 
-function normalizeScheduleType(value: unknown): ScheduleType | null {
+function normalizeScheduleType(value: unknown, title = ''): ScheduleType | null {
+  const titleText = normalizeMedicationText(title);
+  if (isKnownInjectionMedication(titleText)) return 'injection';
+
   const text = normalizeText(value)?.toLocaleLowerCase('ko-KR').replace(/[\s_-]/gu, '');
   if (!text) return null;
   if (text === 'injection' || text.includes('주사')) return 'injection';
   if (text === 'medication' || text === 'medicine' || text === 'pill' || text.includes('복용') || text.includes('약')) return 'medication';
   if (text === 'clinic' || text === 'visit' || text === 'appointment' || text === 'hospital' || text.includes('병원') || text.includes('방문') || text.includes('내원') || text.includes('검사')) return 'clinic';
   return null;
+}
+
+function normalizeMedicationTitle(title: string) {
+  const normalized = normalizeMedicationText(title);
+  if (normalized.includes('고날')) return '고날에프';
+  if (normalized.includes('메노푸')) return '메노푸어';
+  if (normalized.includes('세트로')) return '세트로타이드';
+  if (normalized.includes('오비드렐')) return '오비드렐';
+  if (normalized.includes('퓨리곤')) return '퓨리곤';
+  return title;
+}
+
+function normalizeMedicationText(value: string) {
+  return value.toLocaleLowerCase('ko-KR').replace(/[\s_-]/gu, '');
+}
+
+function isKnownInjectionMedication(text: string) {
+  return /고날|메노푸|세트로|오비드렐|퓨리곤/u.test(text);
+}
+
+function isUserTimeGuidanceTitle(title: string) {
+  const text = normalizeMedicationText(title);
+  if (isKnownInjectionMedication(text)) return false;
+  return /(회차.*시간|시간.*본인|시간.*정|시간.*기록|정확한시간|확인후입력)/u.test(text);
+}
+
+function extractDoseParts(title: string): { dose: string; unit: string } | null {
+  const match = title.match(/(\d+(?:\.\d+)?)\s*(IU|iu|mg|mcg|mL|ml|정)\b/u);
+  if (!match) return null;
+  return { dose: match[1] ?? '', unit: normalizeDoseUnit(match[2] ?? '') };
+}
+
+function normalizeDoseUnit(unit: string) {
+  if (/^iu$/iu.test(unit)) return 'IU';
+  if (/^ml$/iu.test(unit)) return 'mL';
+  return unit;
 }
 
 function normalizeText(value: unknown): string | null {

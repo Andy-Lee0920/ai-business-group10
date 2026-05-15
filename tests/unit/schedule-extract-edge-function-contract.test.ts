@@ -80,10 +80,26 @@ describe('schedule-extract Edge Function image contract', () => {
 
     expect(code).toContain('원문을 줄/항목 단위로 읽고');
     expect(code).toContain('명시된 날짜와 시간이 있으면 scheduled_at을 null로 두지 말고');
+    expect(code).toContain('문서 상단/환자정보의 발행일·작성일은 기준일이다');
     expect(code).toContain('3일간 하루 두 번 => 6 candidates');
     expect(code).toContain('2일간 매일 오전 9시 => 2 candidates');
+    expect(code).toContain('용량/단위가 제목에 보이면 dose/unit에도 분리해 채운다');
+    expect(code).toContain('고날에프, 메노푸어, 세트로타이드, 오비드렐, 퓨리곤');
+    expect(code).toContain('오후 9시는 21:00이지 09:00이 아니다');
     expect(code).toContain('"본인이 정해서", "정확한 시간 확인", "확인 후 입력"');
     expect(code).toContain('시간을 사용자가 정하라는 안내 문장 자체는 별도 candidate로 만들지 말고');
+  });
+
+  it('repairs common vision extraction mistakes from Korean IVF notices', () => {
+    const code = source();
+
+    expect(code).toContain("normalizeScheduleType(readProperty(value, 'type'), title)");
+    expect(code).toContain("if (isKnownInjectionMedication(titleText)) return 'injection'");
+    expect(code).toContain('function extractDoseParts');
+    expect(code).toContain('function isUserTimeGuidanceTitle');
+    expect(code).toContain('if (!title || isUserTimeGuidanceTitle(title)) return null');
+    expect(code).toContain("normalized.includes('메노푸')");
+    expect(code).toContain("normalized.includes('세트로')");
   });
 
   it('explicitly forbids medical judgment and does not contain committed secrets', () => {
