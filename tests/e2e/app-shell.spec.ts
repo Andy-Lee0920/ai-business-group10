@@ -18,10 +18,15 @@ test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '오늘 일정' })).toBeVisible();
   const bottomNav = page.getByRole('navigation', { name: '하단 주요 메뉴' });
   await expect(bottomNav).toBeVisible();
-  await expect(bottomNav.getByRole('link').nth(1)).toHaveAccessibleName('오늘 케어 보기');
-  await expect(page.getByRole('link', { name: '오늘 케어 보기' })).toHaveAttribute('href', '/home');
-  await expect(page.getByRole('link', { name: '케어 기록 흐름 보기' })).toHaveAttribute('href', '/records');
-  await expect(page.getByRole('link', { name: '공유와 설정 관리' })).toHaveAttribute('href', '/more');
+  await expect(bottomNav.getByRole('link').nth(0)).toHaveAccessibleName('기록');
+  await expect(bottomNav.getByRole('link').nth(1)).toHaveAccessibleName('홈');
+  await expect(bottomNav.getByRole('link').nth(2)).toHaveAccessibleName('관리');
+  await expect(page.getByRole('link', { name: '홈' })).toHaveAttribute('href', '/home');
+  await expect(page.getByRole('link', { name: '기록' })).toHaveAttribute('href', '/records');
+  await expect(page.getByRole('link', { name: '관리' })).toHaveAttribute('href', '/more');
+  await expect(bottomNav).not.toContainText('흐름');
+  await expect(bottomNav).not.toContainText('케어');
+  await expect(bottomNav).not.toContainText('공유');
 });
 
 test('desktop home is constrained to an iPhone 17-width frame with the refined bottom navigation', async ({ page }) => {

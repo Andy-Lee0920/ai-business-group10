@@ -6,16 +6,16 @@ import type { CSSProperties } from 'react';
 type NavIconName = 'care' | 'timeline' | 'manage';
 
 export const NAV_ITEMS = [
-  { href: '/records', label: '기록', caption: '흐름', icon: 'timeline', ariaLabel: '케어 기록 흐름 보기', placement: 'side' },
-  { href: '/home', label: '오늘', caption: '케어', icon: 'care', ariaLabel: '오늘 케어 보기', placement: 'center' },
-  { href: '/more', label: '관리', caption: '공유', icon: 'manage', ariaLabel: '공유와 설정 관리', placement: 'side' },
+  { href: '/records', label: '기록', icon: 'timeline', placement: 'side' },
+  { href: '/home', label: '홈', icon: 'care', placement: 'center' },
+  { href: '/more', label: '관리', icon: 'manage', placement: 'side' },
 ] as const;
 
 export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="하단 주요 메뉴" style={navStyle}>
-      {NAV_ITEMS.map(({ href, label, caption, icon, ariaLabel, placement }) => {
+      {NAV_ITEMS.map(({ href, label, icon, placement }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         const center = placement === 'center';
         return (
@@ -23,14 +23,12 @@ export function BottomNav() {
             key={href}
             href={href}
             aria-current={active ? 'page' : undefined}
-            aria-label={ariaLabel}
             style={itemStyle(active, center)}
           >
             <span style={iconShellStyle(active, center)}>
               <NavIcon name={icon} />
             </span>
             <span style={labelStyle}>{label}</span>
-            <span style={captionStyle(active)}>{caption}</span>
           </Link>
         );
       })}
@@ -128,13 +126,3 @@ const labelStyle: CSSProperties = {
   lineHeight: 1.1,
   letterSpacing: '-0.02em',
 };
-
-function captionStyle(active: boolean): CSSProperties {
-  return {
-    fontSize: 10,
-    lineHeight: 1,
-    fontWeight: 700,
-    color: active ? 'rgba(141, 74, 57, 0.68)' : 'rgba(156, 144, 135, 0.7)',
-    letterSpacing: '-0.02em',
-  };
-}
