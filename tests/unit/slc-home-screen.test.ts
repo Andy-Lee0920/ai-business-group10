@@ -79,7 +79,11 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).toContain('min-height:340px');
+    expect(markup).toContain('position:sticky');
+    expect(markup).toContain('height:58dvh');
+    expect(markup).toContain('margin-top:-28px');
+    expect(markup).toContain('min-height:calc(42dvh + 28px)');
+    expect(markup).toContain('height:100%');
     expect(markup).toContain('object-fit:cover');
     expect(markup).toContain('opacity:0.22');
     expect(markup).toContain('linear-gradient(180deg, rgba(250,247,242,0.94) 0%, rgba(250,247,242,0.78) 44%, var(--slc-bg) 100%)');
@@ -259,6 +263,7 @@ describe('SLC home screen vertical slices', () => {
       userId: 'patient-1',
     }));
 
+    expect(markup).toContain('쉬어가는 날');
     expect(markup).toContain('아직 사이클 기록이 없습니다');
     expect(markup).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
     expect(markup).not.toContain('data-testid="pending-partner-request-card"');

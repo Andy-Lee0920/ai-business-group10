@@ -107,19 +107,43 @@ export function TodayScreen({
   }, [activeItem]);
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '0 0 var(--fevio-page-bottom)', background: 'var(--slc-bg)' }}>
-      <Header reminderEnabled={reminderEnabled} onToggleReminder={() => setReminderEnabled((value) => !value)} />
-      <HeroZone story={heroStory} onCta={setActiveItem} />
-      <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
-      <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
-        {!hasSelectedDaySchedule ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
-          <>
-            {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
-            {nextItem && <NextItem item={nextItem} />}
-          </>
-        )}
-      </section>
+    <div style={{ position: 'relative', background: 'var(--slc-bg)', minHeight: '100dvh' }}>
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          height: '58dvh',
+          zIndex: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <Header reminderEnabled={reminderEnabled} onToggleReminder={() => setReminderEnabled((value) => !value)} />
+        <HeroZone story={heroStory} onCta={setActiveItem} />
+      </div>
+
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          background: 'var(--slc-bg)',
+          borderRadius: '28px 28px 0 0',
+          marginTop: '-28px',
+          padding: '20px 0 112px',
+          minHeight: 'calc(42dvh + 28px)',
+        }}
+      >
+        <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
+        <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
+          {!hasSelectedDaySchedule ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
+            <>
+              {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
+              {nextItem && <NextItem item={nextItem} />}
+            </>
+          )}
+        </section>
+      </div>
+
       <PostClinicBanner
         lastInjectionAt={postClinicBannerState.lastInjectionAt}
         hasNextSchedule={postClinicBannerState.hasNextSchedule}
@@ -168,10 +192,10 @@ function HeroZone({
       intensity="hero"
       priority
       style={{
-        marginBottom: 16,
+        height: '100%',
       }}
     >
-      <div data-testid="home-hero-zone" data-focus-kind={story.focus.kind} style={{ minHeight: 340 }}>
+      <div data-testid="home-hero-zone" data-focus-kind={story.focus.kind} style={{ height: '100%' }}>
         <div style={{ padding: '24px 20px 28px' }}>
           {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
           {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}

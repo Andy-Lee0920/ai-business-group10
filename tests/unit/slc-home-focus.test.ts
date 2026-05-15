@@ -113,6 +113,7 @@ describe('SLC home focus', () => {
   it('returns empty focus when no incomplete schedule exists', () => {
     expect(resolveHomeFocus([baseItem({ status: 'completed' })], now)).toMatchObject({
       kind: 'empty',
+      heading: '쉬어가는 날',
       primaryItem: null,
     });
   });
