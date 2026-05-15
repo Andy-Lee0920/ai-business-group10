@@ -100,11 +100,21 @@ const INJECTION_MEDICATION_ALIASES: Array<{ pattern: RegExp; title: string }> = 
   { pattern: /세트로\s*(?:타이드)?/iu, title: '세트로타이드' },
   { pattern: /오비드렐/iu, title: '오비드렐' },
   { pattern: /퓨리곤/iu, title: '퓨리곤' },
-  { pattern: /메노푸르/iu, title: '메노푸르' },
-  { pattern: /프로게스테론|질정/iu, title: '프로게스테론' },
+  { pattern: /메노푸[어르]/iu, title: '메노푸어' },
+  { pattern: /질정/iu, title: '질정' },
+  { pattern: /프로게스테론/iu, title: '프로게스테론' },
 ];
 
 function extractDeterministicTextCandidates(rawText: string, now = new Date()): ExtractedCandidate[] {
+  const segmentCandidates = splitScheduleInstructionSegments(rawText)
+    .flatMap((segment) => extractDeterministicSegmentCandidates(segment, now))
+    .slice(0, MAX_DETERMINISTIC_CANDIDATES);
+  if (segmentCandidates.length) return segmentCandidates;
+
+  return extractDeterministicSegmentCandidates(rawText, now);
+}
+
+function extractDeterministicSegmentCandidates(rawText: string, now: Date): ExtractedCandidate[] {
   const title = findScheduleTitle(rawText);
   if (!title) return [];
 
@@ -112,7 +122,7 @@ function extractDeterministicTextCandidates(rawText: string, now = new Date()): 
   if (!type) return [];
 
   const durationDays = extractDurationDays(rawText);
-  const times = extractExplicitTimes(rawText);
+  const times = shouldLeaveTimesForUser(rawText) ? [] : extractExplicitTimes(rawText);
   const frequency = extractDailyFrequency(rawText, times.length);
   const shouldExpandDuration = shouldExpandDurationFrequency(rawText, durationDays, frequency, times.length);
   const dose = extractDose(rawText);
@@ -144,16 +154,34 @@ function extractDeterministicTextCandidates(rawText: string, now = new Date()): 
     .slice(0, MAX_DETERMINISTIC_CANDIDATES);
 }
 
+function splitScheduleInstructionSegments(rawText: string) {
+  return rawText
+    .split(/\r?\n|[•●▪◦]\s*/u)
+    .map((segment) => segment.replace(/^\s*(?:[-*]|\d+\.)\s*/u, '').trim())
+    .filter(Boolean)
+    .filter(isScheduleInstructionSegment);
+}
+
+function isScheduleInstructionSegment(segment: string) {
+  if (/^(?:환자\s*정보|투약\s*안내|다음\s*방문\s*안내|공유\s*안내|메모|End of document)/iu.test(segment)) return false;
+  if (/최종\s*주사\s*여부|병원\s*안내를\s*다시\s*확인|공유해\s*주세요/iu.test(segment)) return false;
+  if (/안내문?$/u.test(segment) && !/(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment)) return false;
+  return /(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment);
+}
+
 function findScheduleTitle(rawText: string) {
   const medicationTitle = INJECTION_MEDICATION_ALIASES.find((alias) => alias.pattern.test(rawText))?.title;
   if (medicationTitle) return medicationTitle;
+  if (/방문|내원|검사|초음파|채혈/iu.test(rawText)) return '병원 방문';
   if (/주사|맞|펜/iu.test(rawText)) return '주사';
   return null;
 }
 
 function inferTextScheduleType(rawText: string, title: string): ScheduleType | null {
-  if (/주사|맞|펜|IU|고날|세트로|오비드렐|퓨리곤|메노푸르/iu.test(rawText)) return 'injection';
-  if (/복용|먹|질정|정\b/iu.test(rawText) && title === '프로게스테론') return 'medication';
+  if (title === '병원 방문') return 'clinic';
+  if (title === '질정' || title === '프로게스테론') return 'medication';
+  if (/주사|맞|펜|IU|고날|세트로|오비드렐|퓨리곤|메노푸[어르]/iu.test(rawText)) return 'injection';
+  if (/복용|먹|질정|정\b|사용/iu.test(rawText)) return 'medication';
   if (/방문|내원|검사|초음파|채혈/iu.test(rawText)) return 'clinic';
   return null;
 }
@@ -190,6 +218,10 @@ function shouldExpandDurationFrequency(rawText: string, durationDays: number, fr
   if (/하루\s*(?:\d{1,2}|두)\s*(?:번|회)/iu.test(rawText)) return true;
   if (/매일/u.test(rawText)) return true;
   return explicitTimeCount === 0 && frequency > 1 && (/아침/u.test(rawText) || /저녁|밤/u.test(rawText));
+}
+
+function shouldLeaveTimesForUser(rawText: string) {
+  return /본인이\s*정|직접\s*정|시간은\s*본인|시간을\s*본인|정확한\s*시간|시간\s*확인|확인\s*후\s*입력|시간.*기록/iu.test(rawText);
 }
 
 function formatExpandedTitle(title: string, index: number, frequency: number, candidateCount: number) {

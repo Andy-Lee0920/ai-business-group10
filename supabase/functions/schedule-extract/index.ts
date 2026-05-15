@@ -27,6 +27,17 @@ const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku';
 const OPENROUTER_TEXT_MODEL = 'anthropic/claude-3-haiku';
 const CLINIC_PHOTOS_BUCKET = 'clinic-photos';
 const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 5;
+const SCHEDULE_EXTRACT_SYSTEM_PROMPT = [
+  '의료 판단 금지, 일정 후보만 추출.',
+  'IVF 환자의 병원 안내에서 사용자가 저장 전 확인할 일정 후보만 JSON으로 추출한다.',
+  '진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다.',
+  '원문을 줄/항목 단위로 읽고 약명·방문 일정마다 별도 후보를 만든다.',
+  '명시된 날짜와 시간이 있으면 scheduled_at을 null로 두지 말고 ISO-8601(+09:00 기준)로 채운다.',
+  '예: 2026년 5월 15일 오후 9시 => 2026-05-15T21:00:00+09:00, 밤 10시 => 22:00, 오전 10시 방문 => clinic.',
+  '기간과 빈도는 후보 수로 펼친다. 예: 3일간 하루 두 번 => 6 candidates, 2일간 매일 오전 9시 => 2 candidates.',
+  '단, "본인이 정해서", "정확한 시간 확인", "확인 후 입력"처럼 사용자가 시간을 정해야 하는 항목은 scheduled_at:null로 둔다.',
+  'Return JSON only: {"candidates":[{"type":"injection"|"medication"|"clinic","title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
+].join(' ');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -146,7 +157,7 @@ async function extractCandidatesFromImageWithOpenRouter(imageUrl: string): Promi
       messages: [
         {
           role: 'system',
-          content: '의료 판단 금지, 일정 후보만 추출. IVF 환자의 병원 안내 이미지에서 사용자가 확인할 일정 후보만 JSON으로 추출한다. 진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다. Return JSON only: {"candidates":[{"type":"injection"|"medication"|"clinic","title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
+          content: SCHEDULE_EXTRACT_SYSTEM_PROMPT,
         },
         {
           role: 'user',
@@ -154,7 +165,7 @@ async function extractCandidatesFromImageWithOpenRouter(imageUrl: string): Promi
             {
               type: 'text',
               text: JSON.stringify({
-                instruction: '이미지에 명시된 날짜/시간/약/검사/방문 일정 후보만 추출하세요. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
+                instruction: '이미지에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
               }),
             },
             { type: 'image_url', image_url: { url: imageUrl } },
@@ -186,12 +197,12 @@ async function extractCandidatesFromTextWithOpenRouter(rawText: string): Promise
       messages: [
         {
           role: 'system',
-          content: '의료 판단 금지, 일정 후보만 추출. IVF 환자의 문자/카카오 병원 안내에서 사용자가 확인할 일정 후보만 JSON으로 추출한다. 진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다. Return JSON only: {"candidates":[{"type":"injection"|"medication"|"clinic","title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
+          content: SCHEDULE_EXTRACT_SYSTEM_PROMPT,
         },
         {
           role: 'user',
           content: JSON.stringify({
-            instruction: '텍스트에 명시된 날짜/시간/약/검사/방문 일정 후보만 추출하세요. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
+            instruction: '텍스트에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
             rawText,
           }),
         },

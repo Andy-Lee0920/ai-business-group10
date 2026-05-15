@@ -73,6 +73,16 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('{"type":"injection"|"medication"|"clinic"');
   });
 
+  it('instructs the model to preserve explicit clinic notice times and expand duration-frequency schedules', () => {
+    const code = source();
+
+    expect(code).toContain('원문을 줄/항목 단위로 읽고');
+    expect(code).toContain('명시된 날짜와 시간이 있으면 scheduled_at을 null로 두지 말고');
+    expect(code).toContain('3일간 하루 두 번 => 6 candidates');
+    expect(code).toContain('2일간 매일 오전 9시 => 2 candidates');
+    expect(code).toContain('"본인이 정해서", "정확한 시간 확인", "확인 후 입력"');
+  });
+
   it('explicitly forbids medical judgment and does not contain committed secrets', () => {
     const code = source();
 
