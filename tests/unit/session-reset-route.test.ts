@@ -28,7 +28,7 @@ function request() {
 describe('/auth/reset', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('signs out and clears Fevio/Supabase browser state before returning to sign-in', async () => {
+  it('signs out and clears app/session state while preserving privacy acceptance before returning to sign-in', async () => {
     const { GET } = await import('../../app/auth/reset/route');
 
     const response = await GET(request());
@@ -37,12 +37,13 @@ describe('/auth/reset', () => {
     expect(response.status).toBe(303);
     expect(response.headers.get('location')).toBe('https://project-oznp0.vercel.app/auth/sign-in');
     expect(signOut).toHaveBeenCalledTimes(1);
-    expect(setCookie).toContain('fevio_privacy_accepted=;');
+    expect(setCookie).not.toContain('fevio_privacy_accepted=;');
     expect(setCookie).toContain('fevio_onboarding_first_card=;');
     expect(setCookie).toContain('fevio_onboarding_role_context=;');
     expect(setCookie).toContain('fevio_onboarding_care_cycle_state=;');
     expect(setCookie).toContain('fevio_treatment_milestones=;');
     expect(setCookie).toContain('fevio_treatment_cards=;');
     expect(setCookie).toContain('sb-awetgcuczwdytctwfyjl-auth-token=;');
+    expect(setCookie).not.toContain('fevio_privacy_gate_v1=;');
   });
 });

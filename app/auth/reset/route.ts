@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 
 const FEVIO_STATE_COOKIES = [
-  'fevio_privacy_accepted',
-  'fevio_privacy_gate_v1',
   'fevio_onboarding_first_card',
   'fevio_onboarding_role_context',
   'fevio_onboarding_sharing_level',
