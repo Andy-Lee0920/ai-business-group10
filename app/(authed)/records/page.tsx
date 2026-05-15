@@ -26,7 +26,7 @@ export default async function RecordsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const since = new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString();
   const memberRes = await supabase
     .from('couple_members')
     .select('couple_id')

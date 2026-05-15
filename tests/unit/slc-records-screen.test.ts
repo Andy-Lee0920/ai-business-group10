@@ -37,11 +37,13 @@ describe('SLC records screen', () => {
       clinicUpdates: [],
     }));
 
-    expect(markup).toContain('최근 7일');
-    expect(markup).toContain('완료한 일만 조용히 모아둘게요.');
+    expect(markup).toContain('최근 기록');
+    expect(markup).toContain('주사 시작');
+    expect(markup).toContain('일차');
     expect(markup).toContain('data-testid="records-calm-card"');
     expect(markup).toContain('주사');
     expect(markup).toContain('오른쪽 아래');
+    expect(markup).toContain('정부 지원 안내');
     expect(markup).not.toContain('예정 19:00 · 완료');
   });
 
