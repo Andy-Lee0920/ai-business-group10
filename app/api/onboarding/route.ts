@@ -1,20 +1,60 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { isPresentationMode } from '../../../src/config';
-import { getSeedItems } from '../../../src/lib/seed-helpers';
 import { SLC_CONSENT_COOKIE, SLC_ROLE_COOKIE, fallbackCookieOptions, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { maskTechnicalError } from '../../../src/domain/slc-copy';
+import { hasRequiredConsentChecks, type ConsentCheckState, type OnboardingRole } from '../../../src/features/onboarding/onboarding-flow';
+import type { ScheduleType } from '../../../src/types/slc.types';
 
-type OnboardingRole = 'patient' | 'partner';
+type FirstSchedulePayload = {
+  type?: unknown;
+  title?: unknown;
+  dose?: unknown;
+  unit?: unknown;
+  scheduledAt?: unknown;
+  medicationId?: unknown;
+  optionalMemo?: unknown;
+  inputAssist?: unknown;
+};
+
+type OnboardingBody = {
+  role?: unknown;
+  inviteCode?: unknown;
+  consentChecks?: unknown;
+  firstSchedule?: unknown;
+  skipFirstSchedule?: unknown;
+};
+
+type OnboardingSupabase = Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>;
+
+type ScheduleInsertRow = {
+  patient_id: string;
+  type: ScheduleType;
+  title: string;
+  dose: string | null;
+  unit: string | null;
+  scheduled_at: string;
+  medication_id: string | null;
+  source: 'onboarding_interview';
+};
 
 export async function POST(request: NextRequest) {
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  const { role, inviteCode } = await request.json() as { role: OnboardingRole; inviteCode?: string };
-  if (role !== 'patient' && role !== 'partner') {
-    return NextResponse.json({ error: 'invalid role' }, { status: 400 });
+  const body = (await request.json().catch(() => ({}))) as OnboardingBody;
+  const role = normalizeRole(body.role);
+  if (!role) return NextResponse.json({ error: 'invalid role' }, { status: 400 });
+
+  const consentChecks = normalizeConsentChecks(body.consentChecks);
+  if (!hasRequiredConsentChecks(consentChecks)) {
+    return NextResponse.json({ error: '필수 동의 4가지를 모두 확인해 주세요.' }, { status: 400 });
+  }
+
+  const firstSchedule = normalizeFirstSchedule(body.firstSchedule);
+  const skipFirstSchedule = body.skipFirstSchedule === true;
+  if (role === 'patient' && !firstSchedule && !skipFirstSchedule) {
+    return NextResponse.json({ error: '첫 일정을 확인하거나 나중에 할게요를 선택해 주세요.' }, { status: 400 });
   }
 
   const displayName = typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null;
@@ -34,9 +74,12 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       role,
       consent_version: 'slc-v1',
+      privacy_boundary_accepted_at: now,
       sensitive_data_accepted_at: now,
       medical_disclaimer_accepted_at: now,
-      partner_sharing_accepted_at: now,
+      input_assist_disclaimer_accepted_at: now,
+      partner_sharing_accepted_at: role === 'partner' ? now : null,
+      consent_source: 'onboarding',
     });
 
   if (consentError) {
@@ -44,17 +87,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: maskTechnicalError(consentError.message) }, { status: 500 });
   }
 
-  if (role === 'partner' && inviteCode) {
+  if (role === 'partner') {
+    const inviteCode = normalizeText(body.inviteCode);
+    if (!inviteCode) return NextResponse.json({ error: '초대 코드를 입력해 주세요.' }, { status: 400 });
     const linkResult = await requestPartnerLink(supabase, inviteCode, user.id);
     if (linkResult) return linkResult;
+    return NextResponse.json({ ok: true, role, redirectTo: '/partner' });
   }
 
-  if (role === 'patient') {
-    const seedError = await seedPatientSchedule(supabase, user.id);
-    if (seedError) return seedError;
+  if (!firstSchedule) return NextResponse.json({ ok: true, role, redirectTo: '/home', firstScheduleItem: null });
+
+  const { data: firstScheduleItem, error: scheduleError } = await supabase
+    .from('schedule_items')
+    .insert({ ...firstSchedule, patient_id: user.id })
+    .select()
+    .single();
+
+  if (scheduleError) {
+    if (isMissingSlcTable(scheduleError)) return fallbackOnboardingResponse(role);
+    return NextResponse.json({ error: maskTechnicalError(scheduleError.message) }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, role });
+  return NextResponse.json({ ok: true, role, redirectTo: '/home', firstScheduleItem });
 }
 
 export async function GET() {
@@ -71,7 +125,7 @@ export async function GET() {
   return NextResponse.json({ profile: data ?? null });
 }
 
-async function requestPartnerLink(supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>, inviteCode: string, partnerId: string) {
+async function requestPartnerLink(supabase: OnboardingSupabase, inviteCode: string, partnerId: string) {
   const { data: link, error: linkError } = await supabase
     .from('partner_links')
     .select('*')
@@ -90,32 +144,62 @@ async function requestPartnerLink(supabase: Awaited<ReturnType<typeof createCook
   return null;
 }
 
-async function seedPatientSchedule(supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>, patientId: string) {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const { count, error: countError } = await supabase
-    .from('schedule_items')
-    .select('*', { count: 'exact', head: true })
-    .eq('patient_id', patientId)
-    .gte('scheduled_at', todayStart.toISOString());
+function normalizeRole(value: unknown): OnboardingRole | null {
+  return value === 'patient' || value === 'partner' ? value : null;
+}
 
-  if (countError) {
-    if (isMissingSlcTable(countError)) return null;
-    return NextResponse.json({ error: maskTechnicalError(countError.message) }, { status: 500 });
-  }
-  if ((count ?? 0) > 0) return null;
+function normalizeConsentChecks(value: unknown): ConsentCheckState {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return {};
+  const candidate = value as Record<string, unknown>;
+  return {
+    privacy_boundary: candidate.privacy_boundary === true,
+    sensitive_data: candidate.sensitive_data === true,
+    clinical_boundary: candidate.clinical_boundary === true,
+    input_assist_boundary: candidate.input_assist_boundary === true,
+  };
+}
 
-  const mode = isPresentationMode() ? 'presentation' : 'production';
-  const { error: seedError } = await supabase.from('schedule_items').insert(getSeedItems(patientId, mode));
-  if (seedError) {
-    if (isMissingSlcTable(seedError)) return null;
-    return NextResponse.json({ error: maskTechnicalError(seedError.message) }, { status: 500 });
-  }
-  return null;
+function normalizeFirstSchedule(value: unknown): Omit<ScheduleInsertRow, 'patient_id'> | null {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return null;
+  const candidate = value as FirstSchedulePayload;
+  const type = normalizeScheduleType(candidate.type);
+  const title = normalizeText(candidate.title);
+  const scheduledAt = normalizeDateTime(candidate.scheduledAt);
+  if (!type || !title || !scheduledAt) return null;
+
+  return {
+    type,
+    title,
+    dose: normalizeNullableText(candidate.dose),
+    unit: normalizeNullableText(candidate.unit),
+    scheduled_at: scheduledAt,
+    medication_id: normalizeNullableText(candidate.medicationId),
+    source: 'onboarding_interview',
+  };
+}
+
+function normalizeScheduleType(value: unknown): ScheduleType | null {
+  return value === 'injection' || value === 'medication' || value === 'clinic' ? value : null;
+}
+
+function normalizeText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeNullableText(value: unknown) {
+  const text = normalizeText(value);
+  return text || null;
+}
+
+function normalizeDateTime(value: unknown) {
+  const text = normalizeText(value);
+  if (!text) return '';
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
 }
 
 function fallbackOnboardingResponse(role: OnboardingRole) {
-  const response = NextResponse.json({ ok: true, role, fallback: 'missing_slc_schema' });
+  const response = NextResponse.json({ ok: true, role, redirectTo: role === 'partner' ? '/partner' : '/home', fallback: 'missing_slc_schema' });
   response.cookies.set(SLC_ROLE_COOKIE, role, fallbackCookieOptions());
   response.cookies.set(SLC_CONSENT_COOKIE, 'accepted', fallbackCookieOptions());
   return response;

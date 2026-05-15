@@ -21,12 +21,13 @@ describe('SLC auth entry contract', () => {
     expect(landingPage).not.toContain('Google로 시작하기');
   });
 
-  it('starts onboarding with Welcome, then Role, then Consent without prechecked consent', () => {
-    expect(onboardingScreen).toContain("type Step = 'welcome' | 'role' | 'consent'");
-    expect(onboardingScreen).toContain("useState<Step>('welcome')");
+  it('starts onboarding with Welcome, then Role, Consent, First Schedule, and Confirm without prechecked consent', () => {
+    expect(onboardingScreen).toContain("useState<OnboardingStep>('brand_intro')");
     expect(onboardingScreen).toContain('오늘의 주사와 약을 조용히 챙겨드릴게요');
     expect(onboardingScreen).toContain('어떤 역할로 시작하시나요?');
     expect(onboardingScreen).toContain('Fevio 민감정보 동의');
+    expect(onboardingScreen).toContain('처음 확인할 일정을 하나만 남겨주세요');
+    expect(onboardingScreen).toContain('이 일정으로 Home을 시작할게요');
     expect(onboardingScreen).toContain('SLC_SAFE_COPY.onboardingSaveFailed');
     expect(slcCopy).toContain('시작 정보를 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
     expect(onboardingScreen).not.toContain('data.error ??');

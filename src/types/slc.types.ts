@@ -20,7 +20,7 @@ export interface ScheduleItem {
   unit: string | null;
   scheduled_at: string;
   status: ScheduleStatus;
-  source: 'seed' | 'manual' | 'clinic_update';
+  source: 'seed' | 'manual' | 'clinic_update' | 'onboarding_interview';
   created_at: string;
 }
 

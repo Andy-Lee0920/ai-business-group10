@@ -38,6 +38,7 @@ describe('domain ownership audit', () => {
     expect(home).toContain('schedule_items');
     expect(home).not.toContain('care-os-architecture');
     expect(onboarding).toContain('user_consents');
-    expect(onboarding).toContain('getSeedItems');
+    expect(onboarding).toContain("source: 'onboarding_interview'");
+    expect(onboarding).not.toContain('getSeedItems');
   });
 });

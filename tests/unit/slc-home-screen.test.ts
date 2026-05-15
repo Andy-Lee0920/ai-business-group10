@@ -68,6 +68,18 @@ describe('SLC home screen vertical slices', () => {
     expect(markup.indexOf('data-card-emphasis="primary"')).toBeLessThan(markup.indexOf('data-card-emphasis="secondary"'));
   });
 
+
+  it('shows a first schedule saved from onboarding on /home', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'onboarding-first', type: 'injection', title: '고날에프 주사', source: 'onboarding_interview', scheduled_at: '2026-05-14T09:10:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('고날에프 주사');
+    expect(markup).toContain('지금 주사 시간이에요');
+  });
+
   it('does not render post-clinic prompt after a relevant clinic update exists', () => {
     vi.setSystemTime(new Date('2026-05-14T10:30:00.000Z'));
 
