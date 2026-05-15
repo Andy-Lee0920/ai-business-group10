@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   insertCalls: [] as InsertCall[],
   invokeCalls: [] as InvokeCall[],
   signedCalls: [] as Array<{ bucket: string; path: string; expiresIn: number }>,
+  removeCalls: [] as Array<{ bucket: string; paths: string[] }>,
 }));
 
 vi.mock('../../src/lib/server-supabase', () => ({
@@ -43,14 +44,23 @@ vi.mock('../../src/lib/server-supabase-admin', () => ({
           state.signedCalls.push({ bucket, path, expiresIn });
           return { data: { signedUrl: state.signedUrl }, error: null };
         },
+        remove: async (paths: string[]) => {
+          state.removeCalls.push({ bucket, paths });
+          return { data: {}, error: null };
+        },
       }),
     },
   }),
 }));
 
-function request(body: unknown) {
-  return new NextRequest('http://localhost/api/onboard/photo-analyze', {
+function request(body: unknown, init?: { url?: string; cookie?: string }) {
+  const host = init?.url ? new URL(init.url).host : undefined;
+  return new NextRequest(init?.url ?? 'http://localhost/api/onboard/photo-analyze', {
     method: 'POST',
+    headers: {
+      ...(host ? { host } : {}),
+      ...(init?.cookie ? { cookie: init.cookie } : {}),
+    },
     body: JSON.stringify(body),
   });
 }
@@ -63,6 +73,7 @@ describe('/api/onboard/photo-analyze', () => {
     state.insertCalls = [];
     state.invokeCalls = [];
     state.signedCalls = [];
+    state.removeCalls = [];
   });
 
   it('returns 401 without auth', async () => {
@@ -87,6 +98,30 @@ describe('/api/onboard/photo-analyze', () => {
       options: { body: { mode: 'image', imagePath: 'patient-1/photo.jpg', patientId: 'patient-1', signedUrl: 'https://signed.example/photo' } },
     });
     expect(state.insertCalls[0].rows[0]).toMatchObject({ patient_id: 'patient-1', image_path: 'patient-1/photo.jpg', raw_text: null, status: 'draft' });
+  });
+
+  it('allows presentation image extraction after privacy acceptance without persisting drafts', async () => {
+    state.user = null;
+    state.candidates = [{ type: 'clinic', title: '병원 방문', scheduled_at: '2026-05-16T00:00:00.000Z', dose: null, unit: null }];
+    const { POST } = await import('../../app/api/onboard/photo-analyze/route');
+
+    const response = await POST(request(
+      { imagePath: 'presentation/photo.jpg' },
+      {
+        url: 'https://ai-business-group10.vercel.app/api/onboard/photo-analyze',
+        cookie: 'fevio_privacy_gate_v1=accepted',
+      },
+    ));
+    const payload = await response.json() as { candidates: Array<{ id: string; title: string }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates[0]).toMatchObject({ id: expect.stringMatching(/^presentation-/u), title: '병원 방문' });
+    expect(state.invokeCalls[0]).toMatchObject({
+      name: 'schedule-extract',
+      options: { body: { mode: 'image', imagePath: 'presentation/photo.jpg', patientId: 'presentation', signedUrl: 'https://signed.example/photo' } },
+    });
+    expect(state.insertCalls).toHaveLength(0);
+    expect(state.removeCalls).toEqual([{ bucket: 'clinic-photos', paths: ['presentation/photo.jpg'] }]);
   });
 
   it('returns empty candidates for zero extraction results without inserting', async () => {

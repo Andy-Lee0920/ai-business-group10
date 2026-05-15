@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { randomUUID } from 'node:crypto';
+import { isPresentationRequest } from '../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 import { createSupabaseServiceRoleClient } from '../../../../src/lib/server-supabase-admin';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
@@ -30,6 +32,7 @@ type AdminStorageClient = {
   storage: {
     from(bucket: typeof CLINIC_PHOTOS_BUCKET): {
       createSignedUrl(path: string, expiresIn: number): Promise<{ data: { signedUrl?: string; signedURL?: string } | null; error: DbError | null }>;
+      remove(paths: string[]): Promise<{ data: unknown; error: DbError | null }>;
     };
   };
 };
@@ -37,24 +40,34 @@ type AdminStorageClient = {
 export async function POST(request: NextRequest) {
   const supabase = (await createCookieBackedSupabaseClient()) as unknown as OnboardAnalyzeClient;
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as PhotoAnalyzeBody;
-  const imagePath = normalizeImagePath(body.imagePath, user.id);
+  const presentation = !user && isPresentationRequest(request);
+  if (presentation && !hasPrivacyGateCookie(request.headers.get('cookie'))) {
+    return NextResponse.json({ error: 'privacy_gate_required' }, { status: 403 });
+  }
+  if (!user && !presentation) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const imagePath = normalizeImagePath(body.imagePath, user?.id ?? 'presentation');
   if (!imagePath) return NextResponse.json({ error: 'valid imagePath is required' }, { status: 400 });
 
   const signedUrl = await createSixtySecondSignedUrl(imagePath).catch(() => null);
   if (!signedUrl) return NextResponse.json({ candidates: [] });
 
   const { data } = await supabase.functions.invoke('schedule-extract', {
-    body: { mode: 'image', imagePath, patientId: user.id, signedUrl },
+    body: { mode: 'image', imagePath, patientId: user?.id ?? 'presentation', signedUrl },
   });
+  if (presentation) await removePresentationImage(imagePath).catch(() => null);
 
   const candidates = normalizeCandidates(data?.candidates);
   if (candidates.length === 0) return NextResponse.json({ candidates: [] });
 
+  if (presentation) {
+    return NextResponse.json({ candidates: withPresentationIds(candidates) });
+  }
+
   const rows = candidates.map((candidate) => ({
-    patient_id: user.id,
+    patient_id: user!.id,
     image_path: imagePath,
     raw_text: null,
     status: 'draft',
@@ -71,11 +84,28 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ candidates: inserted ?? [] });
 }
 
+function hasPrivacyGateCookie(cookieHeader: string | null) {
+  return cookieHeader?.split(';').some((part) => {
+    const trimmed = part.trim();
+    return trimmed === 'fevio_privacy_gate_v1=accepted' || trimmed === 'fevio_privacy_accepted=1';
+  }) ?? false;
+}
+
+function withPresentationIds(candidates: ExtractedCandidate[]): InsertedCandidate[] {
+  return candidates.map((candidate) => ({ id: `presentation-${randomUUID()}`, ...candidate }));
+}
+
 async function createSixtySecondSignedUrl(imagePath: string) {
   const admin = createSupabaseServiceRoleClient() as unknown as AdminStorageClient;
   const { data, error } = await admin.storage.from(CLINIC_PHOTOS_BUCKET).createSignedUrl(imagePath, SIGNED_URL_EXPIRES_SECONDS);
   if (error) return null;
   return data?.signedUrl ?? data?.signedURL ?? null;
+}
+
+async function removePresentationImage(imagePath: string) {
+  if (!imagePath.startsWith('presentation/')) return;
+  const admin = createSupabaseServiceRoleClient() as unknown as AdminStorageClient;
+  await admin.storage.from(CLINIC_PHOTOS_BUCKET).remove([imagePath]);
 }
 
 function normalizeImagePath(value: unknown, userId: string) {

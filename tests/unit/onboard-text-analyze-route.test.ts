@@ -32,9 +32,14 @@ vi.mock('../../src/lib/server-supabase', () => ({
   }),
 }));
 
-function request(body: unknown) {
-  return new NextRequest('http://localhost/api/onboard/text-analyze', {
+function request(body: unknown, init?: { url?: string; cookie?: string }) {
+  const host = init?.url ? new URL(init.url).host : undefined;
+  return new NextRequest(init?.url ?? 'http://localhost/api/onboard/text-analyze', {
     method: 'POST',
+    headers: {
+      ...(host ? { host } : {}),
+      ...(init?.cookie ? { cookie: init.cookie } : {}),
+    },
     body: JSON.stringify(body),
   });
 }
@@ -54,23 +59,47 @@ describe('/api/onboard/text-analyze', () => {
     expect(response.status).toBe(401);
   });
 
-  it('calls text mode extraction and inserts draft candidates with raw text and no image path', async () => {
-    state.user = { id: 'patient-1' };
+  it('allows presentation text extraction after privacy acceptance without persisting drafts', async () => {
+    state.user = null;
     state.candidates = [{ type: 'injection', title: '고날에프', scheduled_at: '2026-05-15T12:00:00.000Z', dose: '150', unit: 'IU' }];
     const { POST } = await import('../../app/api/onboard/text-analyze/route');
 
-    const response = await POST(request({ rawText: ' 고날에프 150 IU 21:00 ' }));
+    const response = await POST(request(
+      { rawText: '고날에프 150 IU 21:00' },
+      {
+        url: 'https://ai-business-group10.vercel.app/api/onboard/text-analyze',
+        cookie: 'fevio_privacy_gate_v1=accepted',
+      },
+    ));
+    const payload = await response.json() as { candidates: Array<{ id: string; title: string }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toHaveLength(1);
+    expect(payload.candidates[0]).toMatchObject({ id: expect.stringMatching(/^presentation-/u), title: '고날에프' });
+    expect(state.invokeCalls[0]).toMatchObject({
+      name: 'schedule-extract',
+      options: { body: { mode: 'text', rawText: '고날에프 150 IU 21:00', patientId: 'presentation' } },
+    });
+    expect(state.insertCalls).toHaveLength(0);
+  });
+
+  it('calls text mode extraction and inserts draft candidates with raw text and no image path', async () => {
+    state.user = { id: 'patient-1' };
+    state.candidates = [{ type: 'clinic', title: '병원 방문', scheduled_at: '2026-05-15T12:00:00.000Z', dose: null, unit: null }];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: ' 내일 병원 방문 ' }));
     const payload = await response.json() as { candidates: Array<{ id: string }> };
 
     expect(response.status).toBe(200);
     expect(payload.candidates).toHaveLength(1);
     expect(state.invokeCalls[0]).toMatchObject({
       name: 'schedule-extract',
-      options: { body: { mode: 'text', rawText: '고날에프 150 IU 21:00', patientId: 'patient-1' } },
+      options: { body: { mode: 'text', rawText: '내일 병원 방문', patientId: 'patient-1' } },
     });
     expect(state.insertCalls[0]).toMatchObject({
       table: 'schedule_candidates',
-      rows: [expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '고날에프 150 IU 21:00', status: 'draft' })],
+      rows: [expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '내일 병원 방문', status: 'draft' })],
     });
   });
 
@@ -100,6 +129,27 @@ describe('/api/onboard/text-analyze', () => {
         expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '오늘 밤 부터 고날에프 17시 한번 09시 한번 10일간 맞아야한대', status: 'draft', type: 'injection', title: '고날에프' }),
       ],
     });
+    vi.useRealTimers();
+  });
+
+  it('prefers deterministic Korean medication times over unsafe LLM guesses', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [
+      { type: 'injection', title: '고날에프', scheduled_at: '2023-04-10T17:00:00.000Z', dose: '1', unit: null },
+    ];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '오늘 밤 부터 고날에프 17시 한번 09시 한번 10일간 맞아야한대' }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toHaveLength(2);
+    expect(payload.candidates.map((candidate) => candidate.scheduled_at)).toEqual([
+      '2026-05-15T08:00:00.000Z',
+      '2026-05-15T00:00:00.000Z',
+    ]);
     vi.useRealTimers();
   });
 
