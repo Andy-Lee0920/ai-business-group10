@@ -395,7 +395,6 @@ export function OnboardingClient() {
 
         {activeStep === 'role_select' ? (
           <section className={styles.screen} aria-labelledby="role-select-title">
-            <BackButton onClick={goBack} />
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="role-select-title">어떤 화면으로 시작할까요?</h2>
               <p className={styles.questionLead}>필요한 화면만 먼저 보여드릴게요.</p>
@@ -424,8 +423,8 @@ export function OnboardingClient() {
           <section className={`${styles.screen} ${styles.centerScreen} ${styles.addMethodIntroScreen}`} aria-labelledby="first-add-title">
             <BackButton onClick={goBack} />
             <div className={styles.heroCopy}>
-              <h2 className={styles.sectionTitle} id="first-add-title">병원 안내를<br />그대로 옮겨주세요</h2>
-              <p className={styles.questionLead}>확인 전에는 일정으로 저장하지 않아요.</p>
+              <h2 className={styles.sectionTitle} id="first-add-title">자료 사진이나<br />안내문을 넣어주세요</h2>
+              <p className={styles.questionLead}>입력될 내용은 먼저 요약본으로 정리하고, 확인 전에는 일정으로 저장하지 않아요.</p>
             </div>
             <BottomDock activeIndex={activeIndex}>
               <CtaButton className={styles.primaryCta} onClick={() => setAddMethodIntroSeen(true)} type="button">
@@ -711,9 +710,8 @@ export function OnboardingClient() {
               </BottomDock>
             </section>
           ) : (
-            <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="complete-title">
+            <section className={`${styles.screen} ${styles.centerScreen} ${styles.completeAmbientScreen}`} aria-labelledby="complete-title">
               <BackButton onClick={goBack} />
-              <HeroGlyph kind="document" done />
               <div className={styles.heroCopy}>
                 <h2 className={styles.sectionTitle} id="complete-title">일정 후보를 만들었어요</h2>
                 <p className={styles.questionLead}>일정 후보를 확인하고 오늘 홈에서 만나보세요.</p>

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 const onboardingClient = readFileSync('app/onboarding/onboarding-client.tsx', 'utf8');
 const onboardingPage = readFileSync('app/onboarding/page.tsx', 'utf8');
 const authedLayout = readFileSync('app/(authed)/layout.tsx', 'utf8');
+const onboardingStyles = readFileSync('app/onboarding/onboarding.module.css', 'utf8');
 
 describe('app onboarding shell contract', () => {
   it('declares the issue 315 onboarding step union exactly', () => {
@@ -25,8 +26,9 @@ describe('app onboarding shell contract', () => {
       '시작하기',
       '본인',
       '파트너',
-      '병원 안내를',
-      '그대로 옮겨주세요',
+      '자료 사진이나',
+      '안내문을 넣어주세요',
+      '요약본으로 정리',
       '추가하기',
       'addMethodIntroScreen',
       'onboardingShellAddIntro',
@@ -93,6 +95,28 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain("partnerInvite: { intent: partnerIntent }");
     expect(onboardingClient).toContain("window.location.assign(payload.redirectTo ?? '/home')");
     expect(onboardingClient).toContain("'prepare_invite'");
+    expect(onboardingClient).toContain('completeAmbientScreen');
+  });
+
+  it('does not show a back button over the role selection headline', () => {
+    const roleSelectBranch = onboardingClient.slice(
+      onboardingClient.indexOf("activeStep === 'role_select'"),
+      onboardingClient.indexOf("activeStep === 'add_method'"),
+    );
+
+    expect(roleSelectBranch).not.toContain('<BackButton');
+  });
+
+  it('uses ambient onboarding backgrounds without foreground completion glyph clutter', () => {
+    const patientCompleteBranch = onboardingClient.slice(
+      onboardingClient.indexOf('completeAmbientScreen'),
+      onboardingClient.indexOf('{sharingChoice ==='),
+    );
+
+    expect(onboardingStyles).toContain("url('/assets/slc/home-clinic-bg.png')");
+    expect(onboardingStyles).toContain("url('/assets/slc/home-empty-bg.png')");
+    expect(onboardingStyles).toContain('completeAmbientScreen::before');
+    expect(patientCompleteBranch).not.toContain('<HeroGlyph');
   });
 
   it('recovers completed onboarding consent before guarding /home', () => {
