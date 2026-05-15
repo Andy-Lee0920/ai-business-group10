@@ -30,7 +30,8 @@ describe('AmbientStoryBackground', () => {
     expect(markup).toContain('min-height:340px');
     expect(markup).toContain('opacity:0.7');
     expect(markup).toContain('object-fit:cover');
-    expect(markup).toContain('transparent 40%');
+    expect(markup).toContain('rgba(47,41,38,0.18) 0%');
+    expect(markup).toContain('transparent 35%');
     expect(markup).toContain('남은 시간');
   });
 });
