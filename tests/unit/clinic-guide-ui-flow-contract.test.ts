@@ -8,10 +8,29 @@ describe('Clinic Guide visual flow contract', () => {
   it('implements entry, guided interview header, search, draft, confirmation, and success states', () => {
     for (const copy of [
       "'entry'",
-      '오늘 병원 업데이트',
-      '몇 가지만 확인하면 오늘 일정에 반영할 수 있어요.',
-      '시작하기',
+      '병원 안내를<br />오늘 일정으로 바꿀게요',
+      '사진, 문자, 직접 수정 중 편한 방법으로 시작하세요.',
+      '사진으로 업데이트',
+      '문자로 업데이트',
+      '직접 수정',
       '나중에 할게요',
+      'photo_processing',
+      'text_paste',
+      'diff_review',
+      'manual_entry',
+      '/api/onboard/photo-upload',
+      '/api/onboard/photo-analyze',
+      '/api/onboard/text-analyze',
+      '/api/onboard/candidates/confirm',
+      '업로드 완료',
+      '분석 중',
+      '후보 준비',
+      '찾지 못했어요',
+      '변경사항을 확인해주세요',
+      '현재 일정',
+      '새 후보',
+      '변경사항 적용',
+      '직접 입력 form 열기',
       '✦ Clinic Guide AI',
       'progressbar',
       '1/4',
@@ -52,6 +71,8 @@ describe('Clinic Guide visual flow contract', () => {
     expect(form).not.toContain("form.sameMedication === option.value");
     expect(form).toContain("router.push('/home')");
     expect(page).toContain('partnerConnected');
+    expect(page).toContain('currentItems');
+    expect(page).toContain("from('schedule_items')");
     expect(page).toContain("link.status === 'approved'");
     expect(page).toContain('aliases');
   });

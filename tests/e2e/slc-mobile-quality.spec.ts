@@ -45,8 +45,11 @@ test.describe('SLC mobile quality smoke', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/clinic-update');
 
-    await expect(page.getByRole('heading', { name: '오늘 병원 업데이트' })).toBeVisible();
-    await page.getByRole('button', { name: '시작하기' }).click();
+    await expect(page.getByRole('heading', { name: /병원 안내를/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /사진으로 업데이트/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /문자로 업데이트/ })).toBeVisible();
+    await page.getByRole('button', { name: /직접 수정/ }).click();
+    await page.getByRole('button', { name: '직접 입력 form 열기' }).click();
     await expect(page.getByText('1/4')).toBeVisible();
     await expect(page.getByText('✦ Clinic Guide AI')).toBeVisible();
 
