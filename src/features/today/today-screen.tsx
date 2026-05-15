@@ -15,6 +15,7 @@ interface TodayScreenProps {
   userId: string;
   pendingPartnerRequest?: PartnerLink | null;
   initialClinicUpdates?: ClinicUpdate[];
+  firstScheduleSkipped?: boolean;
 }
 
 type DayOffset = 0 | 1 | 2;
@@ -26,6 +27,7 @@ export function TodayScreen({
   userId: _userId,
   pendingPartnerRequest: initialPendingPartnerRequest = null,
   initialClinicUpdates = [],
+  firstScheduleSkipped = false,
 }: TodayScreenProps) {
   const [items, setItems] = useState<ScheduleItem[]>(initialItems);
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
@@ -93,7 +95,7 @@ export function TodayScreen({
         )}
         {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
         <FocusHero focus={homeFocus} />
-        {pending.length === 0 && visibleItems.length === 0 ? <EmptyState selectedDay={selectedDay} /> : (
+        {pending.length === 0 && visibleItems.length === 0 ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
           <>
             {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
             {nextItem && <NextItem item={nextItem} />}
@@ -190,10 +192,11 @@ function DayTabs({ selectedDay, onSelect }: { selectedDay: DayOffset; onSelect: 
   );
 }
 
-function EmptyState({ selectedDay }: { selectedDay: DayOffset }) {
+function EmptyState({ selectedDay, firstScheduleSkipped }: { selectedDay: DayOffset; firstScheduleSkipped: boolean }) {
+  const asset = firstScheduleSkipped ? slcAssets.empty.medication : slcAssets.empty.cycle;
   return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <SLCIllustration asset={slcAssets.empty.cycle} size="empty" style={{ opacity: 0.86, marginBottom: 12 }} />
+      <SLCIllustration asset={asset} size="empty" style={{ opacity: 0.86, marginBottom: 12 }} />
       <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>{DAY_LABELS[selectedDay]}은 비어 있어요</p>
       <p style={{ color: '#B5A89E', fontSize: 13, lineHeight: 1.5, margin: 0 }}>{SLC_SAFE_COPY.noSchedule}</p>
       <Link href="/add" style={emptyLinkStyle}>추가하기</Link>

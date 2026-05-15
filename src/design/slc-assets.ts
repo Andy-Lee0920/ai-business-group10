@@ -22,7 +22,7 @@ const decorativeAsset = (src: string, width: number, height: number): SLCAsset =
 
 export const slcAssets = {
   onboarding: {
-    coupleHero: asset('/assets/slc/onboarding-couple-hero.png', 388, 435, '오늘 일정을 함께 준비하는 Fevio 일러스트'),
+    coupleHero: asset('/assets/slc/onboarding-couple-hero.png', 388, 435, '함께 태블릿을 보는 커플 일러스트'),
     scheduleHero: asset('/assets/slc/onboarding-schedule-hero.png', 608, 672, '확인한 일정이 오늘 케어로 정리되는 일러스트'),
     patientRole: asset('/assets/slc/onboarding-couple-hero.png', 388, 435, '일정을 직접 기록하는 기록자 일러스트'),
     partnerRole: asset('/assets/slc/partner-readonly-visual.png', 483, 1086, '일정을 읽기 전용으로 확인하는 파트너 일러스트'),
@@ -41,7 +41,7 @@ export const slcAssets = {
   },
   empty: {
     records: asset('/assets/slc/empty-records.png', 347, 397, '기록이 없습니다'),
-    medication: asset('/assets/slc/medication-entry-empty.png', 360, 540, '약 일정이 없습니다'),
+    medication: asset('/assets/slc/medication-entry-empty.png', 360, 540, '등록된 약 일정이 없습니다'),
     search: asset('/assets/slc/empty-search.png', 348, 399, '검색 결과가 없습니다'),
     cycle: asset('/assets/slc/empty-cycle.png', 520, 513, '아직 사이클 기록이 없습니다'),
   },

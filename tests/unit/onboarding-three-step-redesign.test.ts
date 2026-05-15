@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 const screen = readFileSync('src/features/onboarding/onboarding-screen.tsx', 'utf8');
 const flow = readFileSync('src/features/onboarding/onboarding-flow.ts', 'utf8');
 const ui = readFileSync('src/features/onboarding/onboarding-ui.tsx', 'utf8');
+const assets = readFileSync('src/design/slc-assets.ts', 'utf8');
 
 describe('Session A onboarding redesign contract', () => {
   it('starts with brand welcome, then role cards, first schedule interview, and confirmation after the privacy gate', () => {
@@ -14,6 +15,10 @@ describe('Session A onboarding redesign contract', () => {
       'slcAssets.onboarding.patientRole',
       'slcAssets.onboarding.partnerRole',
       'slcAssets.empty.medication',
+      '함께 태블릿을 보는 커플 일러스트',
+      'Fevio 기능 설명',
+      '확인한 주사·복용·병원 일정을 오늘 화면에 차분히 정리합니다.',
+      'decorative',
       '오늘 필요한 것만',
       '보여드릴게요',
       '병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.',
@@ -40,7 +45,7 @@ describe('Session A onboarding redesign contract', () => {
       '확인하고 저장',
       '확인 후 저장 · 입력 보조 자동 저장 없음',
     ]) {
-      expect(screen + flow).toContain(copy);
+      expect(screen + flow + assets).toContain(copy);
     }
     expect(screen).toContain('onboardingTokens.primary');
     expect(screen).toContain("fetch('/api/clinic-guide/normalize'");

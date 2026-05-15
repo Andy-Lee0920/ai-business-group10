@@ -157,6 +157,7 @@ describe('/api/onboarding first schedule contract', () => {
     const response = await POST(jsonRequest({ role: 'patient', consentChecks: requiredConsentChecks, skipFirstSchedule: true }));
 
     expect(response.status).toBe(200);
+    expect(response.headers.get('set-cookie')).toContain('fevio_first_schedule_skipped_v1=1');
     expect(supabase.from).not.toHaveBeenCalledWith('schedule_items');
   });
 

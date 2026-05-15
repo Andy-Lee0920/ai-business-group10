@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { SLC_CONSENT_COOKIE, SLC_ROLE_COOKIE, fallbackCookieOptions, isMissingSlcTable } from '../../../src/lib/slc-fallback';
+import { SLC_CONSENT_COOKIE, SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackCookieOptions, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { createSupabaseServiceRoleClient } from '../../../src/lib/server-supabase-admin';
 import { maskTechnicalError } from '../../../src/domain/slc-copy';
@@ -94,7 +94,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, role, redirectTo: '/partner' });
   }
 
-  if (!firstSchedule) return NextResponse.json({ ok: true, role, redirectTo: '/home', firstScheduleItem: null });
+  if (!firstSchedule) {
+    const response = NextResponse.json({ ok: true, role, redirectTo: '/home', firstScheduleItem: null });
+    response.cookies.set(SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, '1', fallbackCookieOptions());
+    return response;
+  }
 
   const { data: firstScheduleItem, error: scheduleError } = await supabase
     .from('schedule_items')
@@ -107,7 +111,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: maskTechnicalError(scheduleError.message) }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, role, redirectTo: '/home', firstScheduleItem });
+  const response = NextResponse.json({ ok: true, role, redirectTo: '/home', firstScheduleItem });
+  response.cookies.set(SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, '', { ...fallbackCookieOptions(), maxAge: 0 });
+  return response;
 }
 
 export async function GET() {
