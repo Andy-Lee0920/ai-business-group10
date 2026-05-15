@@ -21,11 +21,13 @@ type PhotoPhase = 'idle' | 'uploading' | 'uploaded' | 'analyzing' | 'ready' | 'n
 type ExtractedCandidate = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null; decision: 'confirmed' | 'rejected' };
 type ApiCandidate = { id?: unknown; type?: unknown; title?: unknown; scheduled_at?: unknown; dose?: unknown; unit?: unknown };
 type CurrentScheduleItem = Pick<ScheduleItem, 'id' | 'type' | 'title' | 'scheduled_at' | 'dose' | 'unit' | 'status'>;
+type ClinicUpdateMode = 'schedule' | 'memo';
 
 interface Props {
   medications: MedicationOption[];
   partnerConnected?: boolean;
   currentItems?: CurrentScheduleItem[];
+  mode?: ClinicUpdateMode;
 }
 
 interface FormState {
@@ -45,8 +47,42 @@ const DIRECT_PREFIX = 'direct:';
 const INTERVIEW_PROGRESS_TOTAL = 4;
 const INTERVIEW_PROGRESS_LABELS = ['1/4', '2/4', '3/4', '4/4'] as const;
 
-export function ClinicUpdateForm({ medications, partnerConnected = false, currentItems = [] }: Props) {
+const MODE_COPY = {
+  schedule: {
+    entryTitle: '일정을 추가할게요',
+    entrySubtitle: '사진이나 문자에서 일정 후보를 찾고, 저장 전 직접 확인해요.',
+    methodLabel: '일정 입력 방법',
+    photoAction: '사진으로 일정 추가',
+    photoDescription: '처방전·안내문을 찍고 후보만 확인해요.',
+    textAction: '문자로 일정 추가',
+    textDescription: '문자·카톡 안내를 붙여넣고 비교해요.',
+    textAriaLabel: '일정 안내 문자',
+    textTitle: '문자로 일정 추가',
+    textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
+    diffTitle: '기존 일정과 충돌하는 항목이 있습니다',
+    diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
+    applyLabel: '일정 적용',
+  },
+  memo: {
+    entryTitle: '병원 안내를\\n오늘 일정으로 바꿀게요',
+    entrySubtitle: '사진, 문자, 직접 수정 중 편한 방법으로 시작하세요.',
+    methodLabel: '병원 업데이트 방법',
+    photoAction: '사진으로 업데이트',
+    photoDescription: '처방전·안내문을 찍고 후보만 확인해요.',
+    textAction: '문자로 업데이트',
+    textDescription: '문자·카톡 안내를 붙여넣고 비교해요.',
+    textAriaLabel: '병원 안내 문자',
+    textTitle: '문자로 업데이트',
+    textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
+    diffTitle: '기존 카드와 달라진 항목입니다',
+    diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
+    applyLabel: '변경사항 적용',
+  },
+} as const satisfies Record<ClinicUpdateMode, Record<string, string>>;
+
+export function ClinicUpdateForm({ medications, partnerConnected = false, currentItems = [], mode = 'memo' }: Props) {
   const router = useRouter();
+  const copy = MODE_COPY[mode];
   const [step, setStep] = useState<Step>('entry');
   const [saving, setSaving] = useState(false);
   const [normalizing, setNormalizing] = useState(false);
@@ -418,21 +454,21 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
     <Shell>
       <div style={{ flex: 1, display: 'grid', alignContent: 'center', gap: 18 }}>
         <SLCIllustration asset={slcAssets.clinic.visitClipboard} size="banner" priority style={entryBannerStyle} />
-        <h1 style={heroTitleStyle}>병원 안내를<br />오늘 일정으로 바꿀게요</h1>
-        <p style={subtitleStyle}>사진, 문자, 직접 수정 중 편한 방법으로 시작하세요.</p>
-        <div style={methodGridStyle} aria-label="병원 업데이트 방법">
+        <h1 style={heroTitleStyle}>{copy.entryTitle.split('\\n').map((line, index) => <span key={line}>{index > 0 ? <br /> : null}{line}</span>)}</h1>
+        <p style={subtitleStyle}>{copy.entrySubtitle}</p>
+        <div style={methodGridStyle} aria-label={copy.methodLabel}>
           <button type="button" style={methodCardStyle} onClick={() => setStep('photo_processing')}>
             <span style={iconPillStyle}>📷</span>
             <span style={{ display: 'grid', gap: 4 }}>
-              <strong>사진으로 업데이트</strong>
-              <small>처방전·안내문을 찍고 후보만 확인해요.</small>
+              <strong>{copy.photoAction}</strong>
+              <small>{copy.photoDescription}</small>
             </span>
           </button>
           <button type="button" style={methodCardStyle} onClick={() => setStep('text_paste')}>
             <span style={iconPillStyle}>✉️</span>
             <span style={{ display: 'grid', gap: 4 }}>
-              <strong>문자로 업데이트</strong>
-              <small>문자·카톡 안내를 붙여넣고 비교해요.</small>
+              <strong>{copy.textAction}</strong>
+              <small>{copy.textDescription}</small>
             </span>
           </button>
           <button type="button" style={methodCardStyle} onClick={startManualEntry}>
@@ -474,11 +510,11 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   if (step === 'text_paste') return (
     <Shell>
       <section style={questionCardStyle} aria-label="문자로 업데이트">
-        <h1 style={titleStyle}>문자로 업데이트</h1>
-        <p style={subtitleStyle}>병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.</p>
+        <h1 style={titleStyle}>{copy.textTitle}</h1>
+        <p style={subtitleStyle}>{copy.textSubtitle}</p>
         <label style={{ position: 'relative', display: 'block' }}>
           <textarea
-            aria-label="병원 안내 문자"
+            aria-label={copy.textAriaLabel}
             value={textPasteValue}
             maxLength={1000}
             onChange={(event) => setTextPasteValue(event.target.value)}
@@ -511,8 +547,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
     <Shell>
       <section style={questionCardStyle} aria-label="변경사항 diff 확인">
         <SLCIllustration asset={slcAssets.clinic.diff} size="card" style={diffHeroStyle} />
-        <h1 style={titleStyle}>변경사항을 확인해주세요</h1>
-        <p style={subtitleStyle}>현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.</p>
+        <h1 style={titleStyle}>{copy.diffTitle}</h1>
+        <p style={subtitleStyle}>{copy.diffDescription}</p>
         <div style={diffGridStyle}>
           <section style={diffColumnStyle} aria-label="현재 일정">
             <h2 style={sectionTitleStyle}>현재 일정</h2>
@@ -558,7 +594,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
           </section>
         </div>
         {aiError ? <p style={warningStyle}>{aiError}</p> : null}
-        <button type="button" onClick={applyExtractedCandidates} disabled={applyingCandidates} style={ctaStyle(applyingCandidates)}>{applyingCandidates ? '적용 중...' : '변경사항 적용'}</button>
+        <button type="button" onClick={applyExtractedCandidates} disabled={applyingCandidates} style={ctaStyle(applyingCandidates)}>{applyingCandidates ? '적용 중...' : copy.applyLabel}</button>
       </section>
       <button type="button" onClick={startManualEntry} style={textButtonStyle}>직접 수정으로 바꾸기</button>
     </Shell>

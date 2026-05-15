@@ -3,12 +3,16 @@ import { describe, expect, it } from 'vitest';
 
 const form = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');
 const page = readFileSync('app/(authed)/clinic-update/page.tsx', 'utf8');
+const addPage = readFileSync('app/(authed)/add/page.tsx', 'utf8');
 
 describe('Clinic Guide visual flow contract', () => {
   it('implements entry, guided interview header, search, draft, confirmation, and success states', () => {
     for (const copy of [
       "'entry'",
-      '병원 안내를<br />오늘 일정으로 바꿀게요',
+      'mode?: ClinicUpdateMode',
+      "mode = 'memo'",
+      '병원 안내를\\\\n오늘 일정으로 바꿀게요',
+      '일정을 추가할게요',
       '사진, 문자, 직접 수정 중 편한 방법으로 시작하세요.',
       '사진으로 업데이트',
       '문자로 업데이트',
@@ -26,10 +30,12 @@ describe('Clinic Guide visual flow contract', () => {
       '분석 중',
       '후보 준비',
       '찾지 못했어요',
-      '변경사항을 확인해주세요',
+      '기존 일정과 충돌하는 항목이 있습니다',
+      '기존 카드와 달라진 항목입니다',
       '현재 일정',
       '새 후보',
       '변경사항 적용',
+      '일정 적용',
       '직접 입력 form 열기',
       '✦ Clinic Guide AI',
       'progressbar',
@@ -72,8 +78,12 @@ describe('Clinic Guide visual flow contract', () => {
     expect(form).toContain("router.push('/home')");
     expect(page).toContain('partnerConnected');
     expect(page).toContain('currentItems');
+    expect(page).toContain('mode="memo"');
     expect(page).toContain("from('schedule_items')");
     expect(page).toContain("link.status === 'approved'");
     expect(page).toContain('aliases');
+    expect(addPage).toContain('mode="schedule"');
+    expect(addPage).toContain("from('schedule_items')");
+    expect(addPage).not.toContain('ManualAddForm');
   });
 });

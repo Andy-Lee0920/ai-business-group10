@@ -4,10 +4,12 @@ import { isProtectedAppPath } from '../../src/config/protected-routes';
 describe('production protected app route contract', () => {
   it('requires an authenticated session before direct SLC app entry', () => {
     expect(isProtectedAppPath('/home')).toBe(true);
+    expect(isProtectedAppPath('/calendar')).toBe(true);
     expect(isProtectedAppPath('/records')).toBe(true);
     expect(isProtectedAppPath('/clinic-update')).toBe(true);
     expect(isProtectedAppPath('/add')).toBe(true);
     expect(isProtectedAppPath('/more')).toBe(true);
+    expect(isProtectedAppPath('/settings')).toBe(true);
     expect(isProtectedAppPath('/partner')).toBe(true);
     expect(isProtectedAppPath('/onboarding')).toBe(true);
   });

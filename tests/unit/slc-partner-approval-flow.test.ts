@@ -17,12 +17,12 @@ describe('SLC partner approval flow', () => {
   });
 
   it('hydrates partner display names before rendering approval surfaces', () => {
-    const morePage = read('app/(authed)/more/page.tsx');
+    const settingsPage = read('app/(authed)/settings/page.tsx');
     const moreScreen = read('src/features/more/more-screen.tsx');
     const identityMigration = read('supabase/migrations/202605140001_slc_partner_profile_identity.sql');
 
-    expect(morePage).toContain('partner_profile:user_profiles!partner_id(display_name)');
-    expect(morePage).toContain('partner_profile');
+    expect(settingsPage).toContain('partner_profile:user_profiles!partner_id(display_name)');
+    expect(settingsPage).toContain('partner_profile');
     expect(moreScreen).toContain('partnerDisplayName');
     expect(moreScreen).toContain("link.partner_profile?.display_name?.trim() || '파트너'");
     expect(identityMigration).toContain('partner_links_partner_profile_fkey');

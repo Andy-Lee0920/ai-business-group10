@@ -5,11 +5,13 @@ const addPage = readFileSync('app/(authed)/add/page.tsx', 'utf8');
 const formSource = readFileSync('src/features/add/manual-add-form.tsx', 'utf8');
 
 describe('ManualAddForm search and range repeat contract', () => {
-  it('fetches the medication fields required for route filtering and alias search', () => {
-    expect(addPage).toContain('route');
-    expect(addPage).toContain('category');
-    expect(addPage).toContain('aliases');
-    expect(addPage).toContain('brand_name_en');
+  it('keeps the legacy manual form searchable while /add uses schedule mode', () => {
+    expect(addPage).toContain('ClinicUpdateForm');
+    expect(addPage).toContain('mode="schedule"');
+    expect(formSource).toContain('route');
+    expect(formSource).toContain('category');
+    expect(formSource).toContain('aliases');
+    expect(formSource).toContain('brand_name_en');
   });
 
   it('uses iOS search, alias matching, and a fixed direct-input row instead of a flat list', () => {
