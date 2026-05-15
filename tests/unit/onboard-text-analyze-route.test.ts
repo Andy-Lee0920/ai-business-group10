@@ -41,6 +41,7 @@ function request(body: unknown) {
 
 describe('/api/onboard/text-analyze', () => {
   beforeEach(() => {
+    vi.useRealTimers();
     state.user = null;
     state.candidates = [];
     state.insertCalls = [];
@@ -71,6 +72,35 @@ describe('/api/onboard/text-analyze', () => {
       table: 'schedule_candidates',
       rows: [expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '고날에프 150 IU 21:00', status: 'draft' })],
     });
+  });
+
+
+  it('falls back to deterministic Korean injection extraction when LLM returns no candidates', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '오늘 밤 부터 고날에프 17시 한번 09시 한번 10일간 맞아야한대' }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toHaveLength(2);
+    expect(payload.candidates.map((candidate) => candidate.title)).toEqual(['고날에프', '고날에프']);
+    expect(payload.candidates.map((candidate) => candidate.type)).toEqual(['injection', 'injection']);
+    expect(payload.candidates.map((candidate) => candidate.scheduled_at)).toEqual([
+      '2026-05-15T08:00:00.000Z',
+      '2026-05-15T00:00:00.000Z',
+    ]);
+    expect(state.insertCalls[0]).toMatchObject({
+      table: 'schedule_candidates',
+      rows: [
+        expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '오늘 밤 부터 고날에프 17시 한번 09시 한번 10일간 맞아야한대', status: 'draft', type: 'injection', title: '고날에프' }),
+        expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '오늘 밤 부터 고날에프 17시 한번 09시 한번 10일간 맞아야한대', status: 'draft', type: 'injection', title: '고날에프' }),
+      ],
+    });
+    vi.useRealTimers();
   });
 
   it('returns an empty candidate array without inserting when extraction finds nothing', async () => {
