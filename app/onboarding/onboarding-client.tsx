@@ -395,9 +395,8 @@ export function OnboardingClient() {
         ) : null}
 
         {activeStep === 'add_method' && !addMethodIntroSeen ? (
-          <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="first-add-title">
+          <section className={`${styles.screen} ${styles.centerScreen} ${styles.addMethodIntroScreen}`} aria-labelledby="first-add-title">
             <BackButton onClick={goBack} />
-            <img className={styles.heroImage} alt="" src="/assets/slc/clinic-visit-clipboard.png" />
             <div className={styles.heroCopy}>
               <h2 className={styles.sectionTitle} id="first-add-title">병원 안내를<br />그대로 옮겨주세요</h2>
               <p className={styles.questionLead}>확인 전에는 일정으로 저장하지 않아요.</p>

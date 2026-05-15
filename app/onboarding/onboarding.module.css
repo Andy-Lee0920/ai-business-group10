@@ -211,6 +211,49 @@
   filter: drop-shadow(0 22px 42px rgba(149, 94, 72, 0.13));
 }
 
+.addMethodIntroScreen {
+  isolation: isolate;
+  justify-content: flex-start;
+}
+
+.addMethodIntroScreen::before {
+  position: absolute;
+  inset: -12px -36px 74px;
+  z-index: 0;
+  background-image: url('/assets/slc/clinic-visit-clipboard.png');
+  background-repeat: no-repeat;
+  background-position: center 12px;
+  background-size: min(118%, 460px) auto;
+  content: '';
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.addMethodIntroScreen::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 253, 251, 0) 0%,
+      rgba(255, 253, 251, 0.14) 30%,
+      rgba(255, 253, 251, 0.72) 58%,
+      var(--slc-bg, #faf7f2) 100%
+    );
+  content: '';
+  pointer-events: none;
+}
+
+.addMethodIntroScreen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.addMethodIntroScreen .heroCopy {
+  margin-top: clamp(190px, 36vh, 280px);
+}
+
 .methodGrid {
   display: grid;
   gap: 14px;
