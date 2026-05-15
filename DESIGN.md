@@ -54,7 +54,7 @@
 
 ## Responsive behavior
 - Supported breakpoints/devices: iPhone Safari mobile first; desktop preview constrained to iPhone 17 Pro Max width (`--fevio-phone-frame-max`).
-- Layout adaptations: pages use shared gutters/top/bottom safe-area tokens; fixed overlays align to the same max frame.
+- Layout adaptations: pages use shared gutters/top/bottom safe-area tokens; authenticated screens keep the same desktop phone chrome as onboarding; fixed overlays align to the same max frame.
 - Touch/hover differences: 48px minimum target preferred; hover is not required.
 
 ## Interaction states
@@ -75,7 +75,7 @@
 - Design-token constraints: use `--fevio-page-gutter`, `--fevio-page-top`, `--fevio-bottom-nav-height`, `--fevio-page-bottom`, and `--fevio-mobile-frame-max` for mobile frame alignment.
 - Performance constraints: no new visual dependency for shell layout.
 - Compatibility constraints: Safari dynamic viewport (`100dvh`) and `env(safe-area-inset-*)` are required.
-- Test/screenshot expectations: unit contract for shared frame tokens; Playwright smoke verifies no horizontal overflow on 390px and desktop iPhone frame width.
+- Test/screenshot expectations: unit contract for shared frame tokens and desktop phone chrome continuity; Playwright smoke verifies no horizontal overflow on 390px and desktop iPhone frame width.
 
 ## Open questions
 - [ ] Whether iPhone 17 non-Pro and Pro Max should have separate visual baselines / owner: product / impact: screenshot QA precision.

@@ -11,6 +11,7 @@ export function PostClinicBanner({ lastInjectionAt, hasNextSchedule }: PostClini
 
   return (
     <div
+      className="fevio-post-clinic-banner"
       data-testid="post-clinic-banner"
       style={{
         position: 'fixed',

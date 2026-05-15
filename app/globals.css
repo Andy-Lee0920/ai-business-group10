@@ -61,7 +61,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   background:
     radial-gradient(circle at 20% 0%, rgba(255, 232, 219, 0.86), transparent 34rem),
     radial-gradient(circle at 80% 4%, rgba(220, 235, 219, 0.82), transparent 34rem),
@@ -139,7 +139,8 @@ body {
     overflow: hidden;
   }
 
-  .app-shell {
+  .app-shell,
+  .fevio-authed-frame {
     position: relative;
     width: min(100vw, var(--fevio-phone-frame-max));
     max-width: var(--fevio-phone-frame-max);
@@ -148,7 +149,6 @@ body {
     margin: 24px auto;
     padding-top: 0;
     scroll-padding-top: var(--fevio-phone-safe-top);
-    overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
     border: var(--fevio-phone-bezel-width) solid #050706;
@@ -162,20 +162,33 @@ body {
     scrollbar-width: none;
   }
 
-  .fevio-authed-frame {
-    width: min(100vw, var(--fevio-mobile-frame-max));
-    max-width: var(--fevio-mobile-frame-max);
+  .app-shell {
+    overflow-y: auto;
   }
 
-  .app-shell::-webkit-scrollbar {
+  .fevio-authed-frame {
+    overflow-y: hidden;
+    background: var(--slc-bg);
+  }
+
+  .fevio-authed-main {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: clip;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  .app-shell::-webkit-scrollbar,
+  .fevio-authed-main::-webkit-scrollbar {
     display: none;
   }
 
-  .app-shell::before {
-    position: fixed;
-    top: calc(24px + var(--fevio-dynamic-island-top-offset));
-    left: 50%;
-    z-index: 30;
+  .app-shell::before,
+  .fevio-authed-frame::before {
+    z-index: 80;
     display: block;
     width: var(--fevio-dynamic-island-width);
     height: var(--fevio-dynamic-island-height);
@@ -190,4 +203,30 @@ body {
     transform: translateX(-50%);
   }
 
+  .app-shell::before {
+    position: fixed;
+    top: calc(24px + var(--fevio-dynamic-island-top-offset));
+    left: 50%;
+  }
+
+  .fevio-authed-frame::before {
+    position: absolute;
+    top: var(--fevio-dynamic-island-top-offset);
+    left: 50%;
+  }
+
+  .fevio-authed-frame .fevio-bottom-nav {
+    position: absolute !important;
+    bottom: 0 !important;
+  }
+
+  .fevio-authed-frame .fevio-bottom-sheet-layer,
+  .fevio-authed-frame .fevio-confirm-sheet-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+  }
+
+  .fevio-authed-frame .fevio-post-clinic-banner {
+    position: absolute !important;
+  }
 }

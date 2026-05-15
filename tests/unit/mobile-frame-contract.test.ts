@@ -16,21 +16,27 @@ describe('iPhone Safari mobile frame contract', () => {
     expect(css).toContain('--fevio-page-bottom: calc(var(--fevio-bottom-nav-height) + 22px)');
     expect(css).toContain('.fevio-authed-frame');
     expect(css).toContain('.fevio-authed-main');
+    expect(css).toContain('.app-shell,\n  .fevio-authed-frame');
+    expect(css).toContain('.fevio-authed-frame::before');
+    expect(css).toContain('.fevio-authed-frame .fevio-bottom-nav');
   });
 
   it('uses the shared frame for authed layout, bottom navigation, and fixed overlays', () => {
     expect(authedLayout()).toContain('className="fevio-authed-frame"');
     expect(authedLayout()).toContain('className="fevio-authed-main"');
+    expect(bottomNav()).toContain('className="fevio-bottom-nav"');
     expect(bottomNav()).toContain("maxWidth: 'var(--fevio-mobile-frame-max)'");
     expect(bottomNav()).toContain("minHeight: 'var(--fevio-bottom-nav-height)'");
     expect(postClinicBanner()).toContain("maxWidth: 'var(--fevio-mobile-frame-max)'");
     expect(postClinicBanner()).toContain("bottom: 'calc(var(--fevio-bottom-nav-height) + 8px)'");
+    expect(confirmSheet()).toContain('className="fevio-confirm-sheet-overlay"');
     expect(confirmSheet()).toContain("maxWidth: 'var(--fevio-mobile-frame-max)'");
   });
 
   it('documents the mobile frame decision in DESIGN.md', () => {
     const design = readFileSync('DESIGN.md', 'utf8');
     expect(design).toContain('iPhone Safari frame uses shared `--fevio-page-*`');
+    expect(design).toContain('authenticated screens keep the same desktop phone chrome as onboarding');
     expect(design).toContain('Safari dynamic viewport (`100dvh`)');
   });
 });

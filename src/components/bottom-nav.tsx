@@ -45,7 +45,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav aria-label="하단 주요 메뉴" style={navStyle}>
+      <nav className="fevio-bottom-nav" aria-label="하단 주요 메뉴" style={navStyle}>
         {NAV_ITEMS.map((item) => {
           const center = item.placement === 'center';
           if (item.kind === 'action') {
@@ -86,6 +86,7 @@ export function BottomNav() {
       </nav>
       {createOpen ? (
         <div
+          className="fevio-bottom-sheet-layer"
           aria-label="추가 메뉴"
           aria-modal="true"
           role="dialog"

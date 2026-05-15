@@ -22,7 +22,7 @@ const TOUCH_ZONES: Array<{ site: InjectionSite; label: string; style: CSSPropert
 export function ConfirmSheet({ item, onComplete, onClose }: ConfirmSheetProps) {
   if (item.type !== 'injection') {
     return (
-      <div style={overlayStyle} onClick={onClose}>
+      <div className="fevio-confirm-sheet-overlay" style={overlayStyle} onClick={onClose}>
         <div style={sheetStyle} onClick={(event) => event.stopPropagation()}>
           <div style={handleStyle} />
           <h3 style={sheetTitleStyle}>{item.title}</h3>
@@ -35,7 +35,7 @@ export function ConfirmSheet({ item, onComplete, onClose }: ConfirmSheetProps) {
   }
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
+    <div className="fevio-confirm-sheet-overlay" style={overlayStyle} onClick={onClose}>
       <div style={{ ...sheetStyle, paddingBottom: 40 }} onClick={(event) => event.stopPropagation()}>
         <div style={handleStyle} />
         <h3 style={{ ...sheetTitleStyle, textAlign: 'center' }}>주사 위치를 선택해 주세요</h3>
