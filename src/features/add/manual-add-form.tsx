@@ -174,20 +174,20 @@ export function ManualAddForm({ medications }: Props) {
   };
 
   const inputStyle: CSSProperties = {
-    width: '100%', padding: '13px 16px', borderRadius: 14, border: '1.5px solid #F0EDE8',
+    width: '100%', padding: '13px 16px', borderRadius: 14, border: '1.5px solid var(--slc-border)',
     fontSize: 16, fontFamily: 'inherit', background: '#fff', boxSizing: 'border-box',
   };
   const labelStyle: CSSProperties = {
-    fontSize: 14, color: '#9B8E86', display: 'block', marginBottom: 8, marginTop: 16,
+    fontSize: 14, color: 'var(--slc-muted)', display: 'block', marginBottom: 8, marginTop: 16,
   };
   const selectedMedication = form.selectedCategory ? categoryHint(form.selectedCategory) : null;
 
   return (
     <div style={{ padding: '60px 24px 24px' }}>
-      <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#9B8E86', fontSize: 15, cursor: 'pointer', marginBottom: 20, fontFamily: 'inherit' }}>
+      <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: 'var(--slc-muted)', fontSize: 15, cursor: 'pointer', marginBottom: 20, fontFamily: 'inherit' }}>
         ← 뒤로
       </button>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2A1F1A', marginBottom: 24 }}>일정 추가</h1>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 24 }}>일정 추가</h1>
 
       <label style={labelStyle}>종류</label>
       <div style={{ display: 'flex', gap: 8 }}>
@@ -195,8 +195,8 @@ export function ManualAddForm({ medications }: Props) {
           return (
             <button key={t} onClick={() => selectType(t)} style={{
               padding: '9px 16px', borderRadius: 999,
-              background: form.type === t ? '#C4614A' : '#F0EDE8',
-              color: form.type === t ? '#fff' : '#9B8E86',
+              background: form.type === t ? 'var(--slc-coral)' : 'var(--slc-border)',
+              color: form.type === t ? '#fff' : 'var(--slc-muted)',
               border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
             }}>
               {MANUAL_ADD_TYPE_CONFIG[t].label}
@@ -226,15 +226,15 @@ export function ManualAddForm({ medications }: Props) {
                   onClick={() => selectMedication(medication)}
                   style={{
                     ...inputStyle,
-                    borderColor: selected ? '#C4614A' : '#F0EDE8',
-                    background: selected ? '#FFF0EB' : '#fff',
-                    color: selected ? '#C4614A' : '#2A1F1A',
+                    borderColor: selected ? 'var(--slc-coral)' : 'var(--slc-border)',
+                    background: selected ? 'var(--slc-coral-light)' : '#fff',
+                    color: selected ? 'var(--slc-coral)' : 'var(--slc-text)',
                     textAlign: 'left',
                     cursor: 'pointer',
                   }}
                 >
                   <span style={{ display: 'block', fontWeight: 800 }}>{medication.brand_name_ko}</span>
-                  <span style={{ display: 'block', color: '#9B8E86', fontSize: 12, marginTop: 3 }}>
+                  <span style={{ display: 'block', color: 'var(--slc-muted)', fontSize: 12, marginTop: 3 }}>
                     {[medication.brand_name_en, ...medication.aliases].filter(Boolean).join(' · ') || '등록된 별칭 없음'}
                   </span>
                   {hint && <span style={{ display: 'inline-block', marginTop: 8, padding: '4px 8px', borderRadius: 999, background: '#F7F1EE', color: '#9B6B5E', fontSize: 12, fontWeight: 800 }}>{hint}</span>}
@@ -255,7 +255,7 @@ export function ManualAddForm({ medications }: Props) {
               ✏️ 직접 입력
             </button>
           </div>
-          <p style={{ fontSize: 12, color: '#9B8E86', margin: '2px 0 0' }}>{SLC_SAFE_COPY.medicationNotFound}</p>
+          <p style={{ fontSize: 12, color: 'var(--slc-muted)', margin: '2px 0 0' }}>{SLC_SAFE_COPY.medicationNotFound}</p>
         </div>
       )}
       <input
@@ -286,8 +286,8 @@ export function ManualAddForm({ medications }: Props) {
                     padding: '10px 12px',
                     borderRadius: 999,
                     border: 'none',
-                    background: form.unit === u ? '#C4614A' : '#F0EDE8',
-                    color: form.unit === u ? '#fff' : '#9B8E86',
+                    background: form.unit === u ? 'var(--slc-coral)' : 'var(--slc-border)',
+                    color: form.unit === u ? '#fff' : 'var(--slc-muted)',
                     fontSize: 13,
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -315,8 +315,8 @@ export function ManualAddForm({ medications }: Props) {
               padding: '10px 12px',
               borderRadius: 999,
               border: 'none',
-              background: form.scheduleMode === mode ? '#C4614A' : '#F0EDE8',
-              color: form.scheduleMode === mode ? '#fff' : '#9B8E86',
+              background: form.scheduleMode === mode ? 'var(--slc-coral)' : 'var(--slc-border)',
+              color: form.scheduleMode === mode ? '#fff' : 'var(--slc-muted)',
               fontSize: 13,
               fontWeight: 800,
               opacity: mode === 'range' && isTrigger ? 0.45 : 1,
@@ -331,22 +331,22 @@ export function ManualAddForm({ medications }: Props) {
 
       {form.scheduleMode === 'range' ? (
         <div style={{ display: 'grid', gap: 10 }}>
-          <div style={{ border: '1.5px solid #F0EDE8', borderRadius: 18, padding: 10, background: '#fff' }}>
+          <div style={{ border: '1.5px solid var(--slc-border)', borderRadius: 18, padding: 10, background: '#fff' }}>
             <DayPicker
               mode="range"
               selected={range}
               onSelect={selectRange}
               styles={{
-                root: { width: '100%', fontFamily: 'inherit', color: '#2A1F1A' },
+                root: { width: '100%', fontFamily: 'inherit', color: 'var(--slc-text)' },
                 caption_label: { fontWeight: 800 },
                 day: { borderRadius: 999 },
-                selected: { backgroundColor: '#C4614A', color: '#fff' },
-                range_middle: { backgroundColor: '#FFF0EB', color: '#C4614A' },
-                today: { color: '#C4614A', fontWeight: 800 },
+                selected: { backgroundColor: 'var(--slc-coral)', color: '#fff' },
+                range_middle: { backgroundColor: 'var(--slc-coral-light)', color: 'var(--slc-coral)' },
+                today: { color: 'var(--slc-coral)', fontWeight: 800 },
               }}
             />
           </div>
-          <p style={{ fontSize: 12, color: '#9B8E86', margin: 0 }}>최대 30일까지 반복 일정을 만들 수 있어요.</p>
+          <p style={{ fontSize: 12, color: 'var(--slc-muted)', margin: 0 }}>최대 30일까지 반복 일정을 만들 수 있어요.</p>
           <label style={{ ...labelStyle, marginTop: 2 }}>매일 이 시간에</label>
           <input
             type="time"
@@ -367,7 +367,7 @@ export function ManualAddForm({ medications }: Props) {
         onClick={save}
         disabled={saving || !canSave}
         style={{
-          marginTop: 32, background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999,
+          marginTop: 32, background: 'var(--slc-coral)', color: '#fff', border: 'none', borderRadius: 999,
           padding: '14px 0', fontSize: 16, fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: 'inherit',
           opacity: (saving || !canSave) ? 0.5 : 1,
         }}

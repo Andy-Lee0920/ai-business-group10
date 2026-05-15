@@ -44,8 +44,8 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
   return (
     <div style={{ minHeight: '100dvh', padding: '60px 20px 112px', background: 'var(--slc-bg)' }}>
       <header style={{ marginBottom: 22 }}>
-        <p style={{ fontSize: 12, fontWeight: 900, color: '#C4614A', margin: '0 0 6px' }}>공유와 설정 관리</p>
-        <h1 style={{ fontSize: 28, fontWeight: 900, color: '#2A1F1A', margin: 0, letterSpacing: '-0.03em' }}>관리</h1>
+        <p style={{ fontSize: 12, fontWeight: 900, color: 'var(--slc-coral)', margin: '0 0 6px' }}>공유와 설정 관리</p>
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: 0, letterSpacing: '-0.03em' }}>관리</h1>
       </header>
 
       <section id="partner-invite" style={sectionStyle}>
@@ -59,10 +59,10 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
         {pendingRequests.length > 0 && (
           <div style={{ margin: '0 14px 12px', background: '#FFF8F5', borderRadius: 16, padding: '14px 16px', border: '1px solid #F4D4C8' }}>
-            <p style={{ fontSize: 14, fontWeight: 900, color: '#C4614A', margin: '0 0 12px' }}>파트너 연결 요청이 있어요</p>
+            <p style={{ fontSize: 14, fontWeight: 900, color: 'var(--slc-coral)', margin: '0 0 12px' }}>파트너 연결 요청이 있어요</p>
             {pendingRequests.map((req) => (
               <div key={req.id} style={{ display: 'grid', gap: 10, marginBottom: 10 }}>
-                <span style={{ fontSize: 14, color: '#2A1F1A', fontWeight: 800 }}>{partnerDisplayName(req)}</span>
+                <span style={{ fontSize: 14, color: 'var(--slc-text)', fontWeight: 800 }}>{partnerDisplayName(req)}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => sendPartnerAction(req.id, 'approve')} style={pillButtonStyle('primary')}>승인하기</button>
                   <button onClick={() => sendPartnerAction(req.id, 'reject')} style={pillButtonStyle('muted')}>나중에</button>
@@ -73,17 +73,17 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
         )}
 
         {existingLink?.status === 'approved' && (
-          <div style={{ margin: '0 14px 12px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid #F0EDE8' }}>
-            <p style={{ fontSize: 13, color: '#9B8E86', margin: '0 0 6px', fontWeight: 800 }}>연결된 파트너</p>
-            <p style={{ fontSize: 15, color: '#2A1F1A', fontWeight: 900, margin: '0 0 12px' }}>{partnerDisplayName(existingLink)}</p>
+          <div style={{ margin: '0 14px 12px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
+            <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 6px', fontWeight: 800 }}>연결된 파트너</p>
+            <p style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 12px' }}>{partnerDisplayName(existingLink)}</p>
             <button onClick={() => sendPartnerAction(existingLink.id, 'revoke')} style={pillButtonStyle('muted')}>연결 해제</button>
           </div>
         )}
 
         {inviteCode ? (
-          <div style={{ margin: '0 14px 14px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid #F0EDE8' }}>
-            <p style={{ fontSize: 13, color: '#9B8E86', margin: '0 0 8px', fontWeight: 800 }}>초대 코드 · 읽기 전용 연결</p>
-            <p style={{ fontSize: 12, color: '#C4614A', fontFamily: 'monospace', margin: '0 0 12px', wordBreak: 'break-all' }}>
+          <div style={{ margin: '0 14px 14px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
+            <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 8px', fontWeight: 800 }}>초대 코드 · 읽기 전용 연결</p>
+            <p style={{ fontSize: 12, color: 'var(--slc-coral)', fontFamily: 'monospace', margin: '0 0 12px', wordBreak: 'break-all' }}>
               {typeof window !== 'undefined' ? `${window.location.origin}/invite/${inviteCode}` : `/invite/${inviteCode}`}
             </p>
             <button onClick={copyLink} style={pillButtonStyle('primary')}>{copied ? '복사됨 ✓' : '링크 복사'}</button>
@@ -121,7 +121,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 function SettingsSection({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
   return (
     <section id={id} style={{ marginBottom: 22 }}>
-      <h2 style={{ fontSize: 13, fontWeight: 900, color: '#9B8E86', margin: '0 0 8px', padding: '0 4px' }}>{title}</h2>
+      <h2 style={{ fontSize: 13, fontWeight: 900, color: 'var(--slc-muted)', margin: '0 0 8px', padding: '0 4px' }}>{title}</h2>
       <div style={sectionStyle}>{children}</div>
     </section>
   );
@@ -143,17 +143,17 @@ const sectionStyle = {
   overflow: 'hidden',
   background: '#fff',
   borderRadius: 20,
-  border: '1px solid #F0EDE8',
+  border: '1px solid var(--slc-border)',
   boxShadow: '0 8px 24px rgba(80, 50, 40, 0.05)',
 } as const;
 
-const sectionTitleStyle = { fontSize: 16, fontWeight: 900, color: '#2A1F1A', margin: '0 0 6px' } as const;
-const sectionLeadStyle = { fontSize: 13, color: '#9B8E86', lineHeight: 1.5, margin: 0 } as const;
+const sectionTitleStyle = { fontSize: 16, fontWeight: 900, color: 'var(--slc-text)', margin: '0 0 6px' } as const;
+const sectionLeadStyle = { fontSize: 13, color: 'var(--slc-muted)', lineHeight: 1.5, margin: 0 } as const;
 
 function pillButtonStyle(tone: 'primary' | 'muted') {
   return {
-    background: tone === 'primary' ? '#C4614A' : '#F0EDE8',
-    color: tone === 'primary' ? '#fff' : '#9B8E86',
+    background: tone === 'primary' ? 'var(--slc-coral)' : 'var(--slc-border)',
+    color: tone === 'primary' ? '#fff' : 'var(--slc-muted)',
     border: 'none',
     borderRadius: 999,
     padding: '9px 16px',

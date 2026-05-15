@@ -470,7 +470,7 @@ function GuideHeader({ current, total }: { current: number; total: number }) {
     <header style={{ display: 'grid', gap: 12, justifyItems: 'center', marginBottom: 18 }}>
       <strong style={{ fontFamily: 'Georgia, serif', fontSize: 34, fontWeight: 500 }}>Fevio</strong>
       <span style={badgeStyle}>✦ Clinic Guide AI</span>
-      <span style={{ color: '#C4614A', fontWeight: 900 }}>{label}</span>
+      <span style={{ color: 'var(--slc-coral)', fontWeight: 900 }}>{label}</span>
       <div role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={current} style={progressTrackStyle}>
         <i style={{ ...progressFillStyle, width: `${(current / total) * 100}%` }} />
       </div>
@@ -496,12 +496,12 @@ function QuestionCard({ icon, title, lead, children }: { icon?: string; title: s
 function DraftPanel({ medicationNames, nextVisit, memo, aiDraft }: { medicationNames: string[]; nextVisit: string; memo: string; aiDraft: Partial<ClinicUpdate> }) {
   return (
     <section style={panelStyle} aria-label="정리된 내용">
-      <h2 style={{ ...sectionTitleStyle, color: '#C4614A' }}>정리된 내용</h2>
+      <h2 style={{ ...sectionTitleStyle, color: 'var(--slc-coral)' }}>정리된 내용</h2>
       <p>• 새 약: {medicationNames.length ? medicationNames.join(', ') : '없음'}</p>
       <p>• 다음 방문: {nextVisit}</p>
       <p>• 메모: {memo || aiDraft.memo || '없음'}</p>
       <p>• AI draft: {summarizeAiDraft(aiDraft)}</p>
-      <small style={{ color: '#9B8E86', fontWeight: 800 }}>requiresUserConfirmation: true · 저장은 최종 확인 후에만 진행돼요</small>
+      <small style={{ color: 'var(--slc-muted)', fontWeight: 800 }}>requiresUserConfirmation: true · 저장은 최종 확인 후에만 진행돼요</small>
     </section>
   );
 }
@@ -509,8 +509,8 @@ function DraftPanel({ medicationNames, nextVisit, memo, aiDraft }: { medicationN
 function AiInterviewPanel({ question, chips, loading, error }: { question: string; chips: string[]; loading: boolean; error: string | null }) {
   return (
     <section style={aiPanelStyle} aria-label="Clinic Guide AI 질문">
-      <strong style={{ color: '#C4614A' }}>AI 질문</strong>
-      <p style={{ margin: '8px 0', color: '#2A1F1A', fontWeight: 800 }}>{loading ? '다음 질문을 정리하고 있어요...' : question}</p>
+      <strong style={{ color: 'var(--slc-coral)' }}>AI 질문</strong>
+      <p style={{ margin: '8px 0', color: 'var(--slc-text)', fontWeight: 800 }}>{loading ? '다음 질문을 정리하고 있어요...' : question}</p>
       {chips.length ? <div style={chipRowStyle}>{chips.slice(0, 4).map((chip) => <span key={chip} style={aiChipStyle}>{chip}</span>)}</div> : null}
       {error ? <p style={safeNoteStyle}>{error}</p> : null}
     </section>
@@ -625,30 +625,30 @@ function todayAtLocalTime(time: '19:00') {
   return date.toISOString();
 }
 
-const containerStyle: CSSProperties = { padding: '54px 24px 112px', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #FFFCF7 0%, #F8F1E9 100%)', color: '#2A1F1A' };
+const containerStyle: CSSProperties = { padding: '54px 24px 112px', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #FFFCF7 0%, #F8F1E9 100%)', color: 'var(--slc-text)' };
 const heroTitleStyle: CSSProperties = { margin: 0, textAlign: 'center', fontSize: 34, fontWeight: 900, letterSpacing: '-0.06em' };
 const titleStyle: CSSProperties = { margin: '0 0 8px', textAlign: 'center', fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.25 };
 const sectionTitleStyle: CSSProperties = { margin: '0 0 8px', fontSize: 16, fontWeight: 900 };
 const subtitleStyle: CSSProperties = { margin: '0 0 18px', textAlign: 'center', fontSize: 15, color: '#74675F', lineHeight: 1.55 };
-const badgeStyle: CSSProperties = { justifySelf: 'center', width: 'fit-content', padding: '8px 14px', borderRadius: 999, background: '#FCE9E3', color: '#C4614A', fontSize: 14, fontWeight: 900 };
+const badgeStyle: CSSProperties = { justifySelf: 'center', width: 'fit-content', padding: '8px 14px', borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', fontSize: 14, fontWeight: 900 };
 const landingCardStyle: CSSProperties = { display: 'grid', gap: 14, justifyItems: 'center', padding: 28, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.82)', boxShadow: '0 18px 40px rgba(82,57,45,0.10)', textAlign: 'center' };
-const hospitalIconStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 58, height: 58, borderRadius: 999, background: '#FCE9E3', color: '#C4614A', fontSize: 28, margin: '0 auto 8px' };
+const hospitalIconStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 58, height: 58, borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', fontSize: 28, margin: '0 auto 8px' };
 const questionCardStyle: CSSProperties = { padding: 20, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 28px rgba(82,57,45,0.08)' };
 const panelStyle: CSSProperties = { marginTop: 16, padding: 16, border: '1px solid #F0E1D6', borderRadius: 18, background: 'rgba(255,255,255,0.78)' };
 const aiPanelStyle: CSSProperties = { marginTop: 14, padding: 14, border: '1px solid #F4D4C8', borderRadius: 18, background: '#FFF8F5' };
 const suggestionCardStyle: CSSProperties = { ...panelStyle, textAlign: 'center', animation: 'slideIn 220ms ease both' };
-const optionStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 58, marginTop: 10, padding: '12px 16px', borderRadius: 16, border: `2px solid ${active ? '#C4614A' : '#F0E1D6'}`, background: active ? '#FFF0EB' : '#fff', color: active ? '#C4614A' : '#2A1F1A', fontSize: 16, fontWeight: 900, fontFamily: 'inherit', cursor: 'pointer' });
+const optionStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 58, marginTop: 10, padding: '12px 16px', borderRadius: 16, border: `2px solid ${active ? 'var(--slc-coral)' : '#F0E1D6'}`, background: active ? 'var(--slc-coral-light)' : '#fff', color: active ? 'var(--slc-coral)' : 'var(--slc-text)', fontSize: 16, fontWeight: 900, fontFamily: 'inherit', cursor: 'pointer' });
 const chipRowStyle: CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' };
-const chipStyle = (active: boolean): CSSProperties => ({ padding: '12px 22px', borderRadius: 14, border: `1.5px solid ${active ? '#C4614A' : '#E8D8CE'}`, background: active ? '#D5634D' : '#fff', color: active ? '#fff' : '#2A1F1A', fontWeight: 900, fontFamily: 'inherit', cursor: 'pointer' });
-const aiChipStyle: CSSProperties = { padding: '8px 12px', borderRadius: 999, background: '#FFF0EB', color: '#C4614A', fontSize: 12, fontWeight: 900 };
-const iconPillStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 999, background: '#FCE9E3', color: '#C4614A', flex: '0 0 auto' };
+const chipStyle = (active: boolean): CSSProperties => ({ padding: '12px 22px', borderRadius: 14, border: `1.5px solid ${active ? 'var(--slc-coral)' : '#E8D8CE'}`, background: active ? '#D5634D' : '#fff', color: active ? '#fff' : 'var(--slc-text)', fontWeight: 900, fontFamily: 'inherit', cursor: 'pointer' });
+const aiChipStyle: CSSProperties = { padding: '8px 12px', borderRadius: 999, background: 'var(--slc-coral-light)', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 };
+const iconPillStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', flex: '0 0 auto' };
 const inputStyle: CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #E8D8CE', background: '#fff', fontSize: 16, fontFamily: 'inherit' };
 const textareaStyle: CSSProperties = { ...inputStyle, minHeight: 150, resize: 'none', lineHeight: 1.55 };
-const counterStyle: CSSProperties = { position: 'absolute', right: 14, bottom: 12, color: '#9B8E86', fontSize: 12 };
+const counterStyle: CSSProperties = { position: 'absolute', right: 14, bottom: 12, color: 'var(--slc-muted)', fontSize: 12 };
 const listStyle: CSSProperties = { display: 'grid', gap: 8, marginTop: 12 };
-const rowStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 14px', borderRadius: 14, border: `1.5px solid ${active ? '#C4614A' : '#EFE4DC'}`, background: active ? '#FFF0EB' : '#fff', color: '#2A1F1A', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' });
+const rowStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 14px', borderRadius: 14, border: `1.5px solid ${active ? 'var(--slc-coral)' : '#EFE4DC'}`, background: active ? 'var(--slc-coral-light)' : '#fff', color: 'var(--slc-text)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' });
 const summaryCardStyle: CSSProperties = { ...rowStyle(false), marginBottom: 10, minHeight: 76 };
-const emptyListStyle: CSSProperties = { margin: '4px 0', padding: '12px 14px', borderRadius: 14, background: '#FFFCFA', border: '1px dashed #F0EDE8', color: '#9B8E86', fontSize: 13, fontWeight: 800 };
+const emptyListStyle: CSSProperties = { margin: '4px 0', padding: '12px 14px', borderRadius: 14, background: '#FFFCFA', border: '1px dashed var(--slc-border)', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 800 };
 const ctaStyle = (disabled = false): CSSProperties => ({ marginTop: 18, width: '100%', minHeight: 52, border: 'none', borderRadius: 16, padding: '16px 0', background: 'linear-gradient(180deg, #D86C57, #C95842)', color: '#fff', fontSize: 17, fontWeight: 900, fontFamily: 'inherit', cursor: disabled ? 'default' : 'pointer', boxShadow: '0 12px 24px rgba(196,97,74,0.20)', opacity: disabled ? 0.55 : 1 });
 const textButtonStyle: CSSProperties = {
   minHeight: 44,

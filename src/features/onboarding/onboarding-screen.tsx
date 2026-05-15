@@ -186,7 +186,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
         <p style={leadStyle}>아래 4가지를 직접 확인해야 병원 안내와 일정이 저장됩니다.</p>
         {role === 'partner' && (
           <label style={{ display: 'block', marginTop: 18 }}>
-            <span style={{ display: 'block', marginBottom: 8, color: '#9B8E86', fontSize: 14 }}>초대 코드 입력</span>
+            <span style={{ display: 'block', marginBottom: 8, color: onboardingTokens.textMuted, fontSize: 14 }}>초대 코드 입력</span>
             <input aria-label="초대 코드" placeholder="치료자가 공유한 초대 코드" value={inputCode} onChange={(event) => setInputCode(event.target.value)} style={inputStyle} />
           </label>
         )}
@@ -277,7 +277,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
   );
 }
 
-const labelStyle = { display: 'block', margin: '0 0 8px', color: '#9B8E86', fontSize: 14, fontWeight: 700 };
+const labelStyle = { display: 'block', margin: '0 0 8px', color: onboardingTokens.textMuted, fontSize: 14, fontWeight: 700 };
 const smallButtonStyle = { minHeight: 48, padding: '0 14px', borderRadius: 14, border: `1.5px solid ${onboardingTokens.border}`, background: '#fff', color: onboardingTokens.primary, fontWeight: 800, fontFamily: 'inherit' };
 const assistNoticeStyle = { margin: '0 0 12px', padding: '10px 12px', borderRadius: 14, background: '#F3F8F2', color: '#617B5A', fontSize: 13, lineHeight: 1.4 };
 
