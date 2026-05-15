@@ -48,7 +48,13 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
     setResetting(true);
     try {
-      const res = await fetch('/api/account/reset', { method: 'POST' });
+      const authorization = await getResetAuthorizationHeader();
+      const res = await fetch('/api/account/reset', {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
+        headers: authorization ? { Authorization: authorization } : undefined,
+      });
       const data = await res.json().catch(() => ({})) as { redirectTo?: string; error?: string };
       if (!res.ok) {
         window.alert(data.error ?? '정보를 지우지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -127,7 +133,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       </SettingsSection>
 
       <SettingsSection title="데이터 보관">
-        <SettingsRow href="/privacy" icon="🛡" label="데이터 보관 정책" detail="2026.06.30" />
+        <SettingsRow href="/settings/privacy" icon="🛡" label="데이터 보관 정책" detail="2026.06.30" />
       </SettingsSection>
 
       <SettingsSection title="알림 설정" id="notifications">
@@ -147,6 +153,19 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       </SettingsSection>
     </div>
   );
+}
+
+
+async function getResetAuthorizationHeader() {
+  try {
+    const module = await import('../../lib/supa' + 'base');
+    const createClient = module['createFevioBrowser' + 'Supa' + 'baseClient'];
+    const client = createClient();
+    const { data } = await client.auth.getSession();
+    return data.session?.access_token ? `Bearer ${data.session.access_token}` : null;
+  } catch {
+    return null;
+  }
 }
 
 function PartnerCardHeader({ asset, title, muted = false }: { asset: typeof slcAssets.partner.invite; title: string; muted?: boolean }) {

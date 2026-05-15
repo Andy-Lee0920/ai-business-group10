@@ -11,7 +11,7 @@ const mockedCreateAdminSupabase = vi.mocked(createSupabaseServiceRoleClient);
 
 type DbCall = { table: string; action: 'select' | 'delete' | 'update'; method?: 'eq' | 'in' | 'or'; column?: string; value?: unknown; payload?: unknown };
 
-function postRequest() {
+function postRequest(headers: Record<string, string> = {}) {
   return new NextRequest('https://project-oznp0.vercel.app/api/account/reset', {
     method: 'POST',
     headers: {
@@ -25,6 +25,7 @@ function postRequest() {
         'fevio_onboarding_care_cycle_state=abc',
         'fevio_treatment_cards=abc',
       ].join('; '),
+      ...headers,
     },
   });
 }
@@ -79,6 +80,7 @@ function createAdminMock(coupleIds = ['couple-1']) {
         delete: vi.fn(() => makeDeleteBuilder(table, calls)),
         update: vi.fn((payload: unknown) => makeUpdateBuilder(table, calls, payload)),
       })),
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'patient-1' } }, error: null }) },
       storage: {
         from: vi.fn((bucket: string) => {
           expect(bucket).toBe('clinic-photos');
@@ -128,6 +130,24 @@ describe('/api/account/reset', () => {
     expect(setCookie).toContain('fevio_onboarding_first_card=;');
     expect(setCookie).not.toContain('fevio_privacy_gate_v1=;');
     expect(setCookie).not.toContain('fevio_privacy_accepted=;');
+  });
+
+
+  it('uses a browser bearer token when the route cannot recover the Supabase user from cookies', async () => {
+    mockedCreateSupabase.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+    } as never);
+    const admin = createAdminMock();
+    mockedCreateAdminSupabase.mockReturnValue(admin.client as never);
+
+    const { POST } = await import('../../app/api/account/reset/route');
+    const response = await POST(postRequest({ authorization: 'Bearer browser-session-token' }));
+    const payload = await response.json() as { ok: boolean; redirectTo: string };
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({ ok: true, redirectTo: '/onboarding' });
+    expect(admin.client.auth.getUser).toHaveBeenCalledWith('browser-session-token');
+    expect(admin.calls).toContainEqual({ table: 'schedule_items', action: 'delete', method: 'eq', column: 'patient_id', value: 'patient-1' });
   });
 
   it('rejects reset when there is no signed-in user', async () => {
