@@ -48,7 +48,7 @@ export default async function AuthedLayout({ children }: { children: React.React
     ? { role: fallbackRole ?? 'patient' }
     : recoveredConsent ?? (persistedRole
       ? { role: persistedRole }
-      : (isMissingSlcTable(consentResult.error) || isMissingSlcTable(profileResult.error)) && fallbackRole ? { role: fallbackRole } : null);
+      : (isMissingSlcTable(consentResult.error) || isMissingSlcTable(profileResult.error)) ? { role: (fallbackRole ?? 'patient') as const } : null);
 
   const redirectTo = computeConsentRedirect(effectiveConsent, hasExistingCareData);
   if (redirectTo) redirect(redirectTo);
