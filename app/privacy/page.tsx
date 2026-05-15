@@ -47,7 +47,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
             확인하고 계속
           </button>
         </form>
-        <p id="details" style={{ margin: '14px 0 0', color: '#9B8E86', fontSize: 12, lineHeight: 1.5 }}>
+        <p id="details" style={{ margin: '14px 0 0', color: 'var(--slc-muted)', fontSize: 12, lineHeight: 1.5 }}>
           Fevio는 의료 판단을 하지 않고 병원 안내를 기록·확인하는 도구입니다.
         </p>
       </section>

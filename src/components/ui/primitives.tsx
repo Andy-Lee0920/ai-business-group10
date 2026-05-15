@@ -25,7 +25,7 @@ export const fevioPrimitiveStyles = {
     width: '100%',
     border: 'none',
     borderRadius: 999,
-    background: disabled ? '#E5DDD8' : 'linear-gradient(180deg, #D86F56 0%, #C4614A 100%)',
+    background: disabled ? '#E5DDD8' : 'linear-gradient(180deg, #D86F56 0%, var(--slc-coral) 100%)',
     color: '#fff',
     fontFamily: 'inherit',
     fontSize: 16,

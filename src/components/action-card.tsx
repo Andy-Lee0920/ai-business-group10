@@ -105,7 +105,7 @@ function cardStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
 
   return {
     ...base,
-    background: '#FFFFFF',
+    background: 'var(--slc-card)',
     border: '1.5px solid #EFE7E0',
     boxShadow: compact ? '0 4px 20px rgba(80, 50, 40, 0.06)' : '0 4px 24px rgba(80, 50, 40, 0.09)',
   };
@@ -115,7 +115,7 @@ function timeStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
   if (emphasis === 'primary') {
     return { fontSize: 31, color: '#fff', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05 };
   }
-  return { fontSize: compact ? 13 : 14, color: '#9B8E86', fontWeight: 700 };
+  return { fontSize: compact ? 13 : 14, color: 'var(--slc-muted)', fontWeight: 700 };
 }
 
 function titleStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
@@ -125,7 +125,7 @@ function titleStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
   return {
     fontSize: compact ? 17 : 20,
     fontWeight: 800,
-    color: emphasis === 'completed' ? '#B5A89E' : '#2A1F1A',
+    color: emphasis === 'completed' ? '#B5A89E' : 'var(--slc-text)',
     lineHeight: 1.3,
   };
 }
@@ -150,7 +150,7 @@ function ctaButtonStyle(emphasis: CardEmphasis): CSSProperties {
 
   return {
     marginTop: 12,
-    background: '#C4614A',
+    background: 'var(--slc-coral)',
     color: '#fff',
     border: 'none',
     borderRadius: 999,
@@ -191,10 +191,10 @@ function badgeStyle(tone: ScheduleBadgeTone, emphasis: CardEmphasis) {
   }
 
   const colors = {
-    coral: { background: '#FFF0EB', color: '#C4614A', border: '#E8A898' },
+    coral: { background: 'var(--slc-coral-light)', color: 'var(--slc-coral)', border: '#E8A898' },
     amber: { background: '#FFF7E8', color: '#A86F10', border: '#E9B75F' },
-    completed: { background: '#F7F5F2', color: '#9B8E86', border: '#E8E4DF' },
-    default: { background: '#F8F4F0', color: '#9B8E86', border: '#EFE7E0' },
+    completed: { background: '#F7F5F2', color: 'var(--slc-muted)', border: '#E8E4DF' },
+    default: { background: '#F8F4F0', color: 'var(--slc-muted)', border: '#EFE7E0' },
   }[tone];
 
   return {

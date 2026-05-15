@@ -119,7 +119,7 @@ function iconShellStyle(active: boolean, center: boolean): CSSProperties {
     height: center ? 28 : 26,
     display: 'grid',
     placeItems: 'center',
-    color: active || center ? '#C4614A' : '#A99D94',
+    color: active || center ? 'var(--slc-coral)' : '#A99D94',
     transform: active ? 'translateY(-1px)' : 'none',
   };
 }

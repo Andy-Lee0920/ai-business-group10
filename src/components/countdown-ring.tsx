@@ -19,7 +19,7 @@ export function CountdownRing({ scheduledAt, size = 64 }: CountdownRingProps) {
   if (remaining.totalSeconds <= 0) {
     return (
       <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#C4614A', letterSpacing: '-0.02em' }}>지금</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--slc-coral)', letterSpacing: '-0.02em' }}>지금</span>
       </div>
     );
   }
@@ -37,10 +37,10 @@ export function CountdownRing({ scheduledAt, size = 64 }: CountdownRingProps) {
       <defs>
         <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#E8A898" />
-          <stop offset="100%" stopColor="#C4614A" />
+          <stop offset="100%" stopColor="var(--slc-coral)" />
         </linearGradient>
       </defs>
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#F0EDE8" strokeWidth={4} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--slc-border)" strokeWidth={4} />
       <circle
         cx={size / 2} cy={size / 2} r={radius}
         fill="none"
@@ -55,7 +55,7 @@ export function CountdownRing({ scheduledAt, size = 64 }: CountdownRingProps) {
         x={size / 2} y={size / 2}
         textAnchor="middle" dominantBaseline="central"
         style={{ transform: `rotate(90deg)`, transformOrigin: `${size / 2}px ${size / 2}px` }}
-        fill="#C4614A" fontSize={10} fontWeight={700} fontFamily="system-ui"
+        fill="var(--slc-coral)" fontSize={10} fontWeight={700} fontFamily="system-ui"
       >
         {timeLabel}
       </text>

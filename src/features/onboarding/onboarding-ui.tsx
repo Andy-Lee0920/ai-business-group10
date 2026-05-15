@@ -1,13 +1,13 @@
 import type { CSSProperties } from 'react';
 
 export const onboardingTokens = {
-  primary: '#C4614A',
-  activeBg: '#FFF0EB',
+  primary: 'var(--slc-coral)',
+  activeBg: 'var(--slc-coral-light)',
   surface: '#FFFCFA',
-  card: '#FFFFFF',
-  border: '#F0EDE8',
-  textMain: '#2A1F1A',
-  textMuted: '#9B8E86',
+  card: 'var(--slc-card)',
+  border: 'var(--slc-border)',
+  textMain: 'var(--slc-text)',
+  textMuted: 'var(--slc-muted)',
   radiusCard: 16,
   radiusPill: 999,
 } as const;
@@ -56,7 +56,7 @@ export const leadStyle: CSSProperties = {
 
 export const checkStyle: CSSProperties = {
   display: 'flex', gap: 10, alignItems: 'flex-start', minHeight: 44, padding: 14, borderRadius: onboardingTokens.radiusCard,
-  background: '#FFFFFF', border: `1px solid ${onboardingTokens.border}`,
+  background: 'var(--slc-card)', border: `1px solid ${onboardingTokens.border}`,
   color: '#6B5E55', fontSize: 13, lineHeight: 1.45,
 };
 
@@ -71,7 +71,7 @@ export const backButtonStyle: CSSProperties = {
 };
 
 export const errorStyle: CSSProperties = {
-  color: '#B54735', background: '#FFF0EB', borderRadius: 14, padding: '10px 12px', fontSize: 13, lineHeight: 1.4,
+  color: '#B54735', background: 'var(--slc-coral-light)', borderRadius: 14, padding: '10px 12px', fontSize: 13, lineHeight: 1.4,
 };
 
 export function ctaStyle(disabled: boolean): CSSProperties {
