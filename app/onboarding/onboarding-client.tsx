@@ -15,6 +15,7 @@ type ReviewCandidate = { id: string; type: DirectEntryType; title: string; sched
 type SavedScheduleItem = { id: string; type: DirectEntryType; title: string; scheduled_at: string; dose: string | null; unit: string | null };
 type ApiCandidate = { id?: unknown; type?: unknown; title?: unknown; scheduled_at?: unknown; dose?: unknown; unit?: unknown };
 type NavigationDirection = 'next' | 'back';
+type SharingChoice = 'solo' | 'partner';
 
 type StepDefinition = { id: OnboardingStep; label: string };
 
@@ -80,9 +81,14 @@ export function OnboardingClient() {
   const [savingDirectEntry, setSavingDirectEntry] = useState(false);
   const [photoPhase, setPhotoPhase] = useState<PhotoPhase>('idle');
   const [photoMessage, setPhotoMessage] = useState('사진을 선택하면 업로드 후 내용을 분석합니다.');
+  const [textPasteValue, setTextPasteValue] = useState('');
+  const [analyzingText, setAnalyzingText] = useState(false);
+  const [textMessage, setTextMessage] = useState<string | null>(null);
   const [reviewCandidates, setReviewCandidates] = useState<ReviewCandidate[]>([]);
   const [savedReviewItems, setSavedReviewItems] = useState<SavedScheduleItem[]>([]);
+  const [sharingChoice, setSharingChoice] = useState<SharingChoice | null>(null);
   const [savingCandidates, setSavingCandidates] = useState(false);
+  const [completingOnboarding, setCompletingOnboarding] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -164,6 +170,8 @@ export function OnboardingClient() {
         }),
       });
       if (!response.ok) throw new Error('save_failed');
+      const payload = await response.json() as { item?: unknown };
+      setSavedReviewItems(normalizeSavedScheduleItems(payload.item ? [payload.item] : []));
       goToStep('sharing');
     } catch {
       setError('저장하지 못했어요. 네트워크 상태를 확인한 뒤 다시 시도해주세요.');
@@ -224,6 +232,41 @@ export function OnboardingClient() {
     window.setTimeout(() => goToStep('direct_entry'), 900);
   }
 
+  async function analyzePastedText() {
+    const rawText = textPasteValue.trim();
+    if (!rawText) {
+      setTextMessage('병원 안내문을 붙여넣어 주세요.');
+      return;
+    }
+
+    setAnalyzingText(true);
+    setTextMessage('내용 분석 중');
+    setError(null);
+    try {
+      const response = await fetch('/api/onboard/text-analyze', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ rawText }),
+      });
+      if (!response.ok) throw new Error('text_analyze_failed');
+      const payload = await response.json() as { candidates?: ApiCandidate[] };
+      const candidates = normalizeReviewCandidates(payload.candidates);
+      if (!candidates.length) {
+        setTextMessage('일정을 찾지 못했어요');
+        return;
+      }
+
+      setSavedReviewItems([]);
+      setReviewCandidates(candidates);
+      setTextMessage(null);
+      goToStep('candidate_review');
+    } catch {
+      setTextMessage('일정을 찾지 못했어요');
+    } finally {
+      setAnalyzingText(false);
+    }
+  }
+
   function updateCandidate(id: string, patch: Partial<ReviewCandidate>) {
     setReviewCandidates((current) => current.map((candidate) => (candidate.id === id ? { ...candidate, ...patch } : candidate)));
   }
@@ -256,6 +299,36 @@ export function OnboardingClient() {
       setError('일정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setSavingCandidates(false);
+    }
+  }
+
+  function continueSharing(choice: SharingChoice) {
+    setSharingChoice(choice);
+    goToStep('complete');
+  }
+
+  async function completeOnboarding() {
+    const partnerIntent = sharingChoice === 'partner' ? 'prepare_invite' : 'skip';
+    setCompletingOnboarding(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          treatmentContext: 'onboarding_capture_completed',
+          treatmentExperience,
+          roleContext: sharingChoice === 'partner' ? 'primary_with_partner' : 'primary_solo',
+          partnerInvite: { intent: partnerIntent },
+        }),
+      });
+      if (!response.ok) throw new Error('complete_failed');
+      const payload = await response.json() as { redirectTo?: string };
+      window.location.assign(payload.redirectTo ?? '/home');
+    } catch {
+      setError('완료하지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setCompletingOnboarding(false);
     }
   }
 
@@ -363,11 +436,22 @@ export function OnboardingClient() {
       ) : null}
 
       {activeStep === 'text_paste' ? (
-        <PlaceholderStep
-          body="문자 붙여넣기 저장은 이번 이슈 범위 밖입니다. 입력칸을 만들지 않아 민감정보를 저장하지 않습니다."
-          onBack={goBack}
-          title="문자로 붙여넣기는 곧 이어집니다"
-        />
+        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="text-paste-title">
+          <StatusBadge state={textMessage === '일정을 찾지 못했어요' ? 'attention' : analyzingText ? 'shared' : 'idle'}>문자 추가</StatusBadge>
+          <h2 className={styles.sectionTitle} id="text-paste-title">병원 안내를 붙여넣어 주세요</h2>
+          <p className={styles.questionLead}>문자·카톡 내용을 후보로만 바꿉니다. 확인 전에는 일정으로 저장하지 않아요.</p>
+          <label className={styles.pasteField}>
+            <span>병원 안내문</span>
+            <textarea maxLength={1000} value={textPasteValue} onChange={(event) => setTextPasteValue(event.target.value)} placeholder="예: 오늘 밤 9시 고날에프 150 IU 주사" />
+            <small>{textPasteValue.length}/1000</small>
+          </label>
+          {textMessage ? <Notice tone={textMessage === '일정을 찾지 못했어요' ? 'coral' : 'sage'}>{textMessage}</Notice> : null}
+          {textMessage === '일정을 찾지 못했어요' ? <CtaButton onClick={() => goToStep('direct_entry')} variant="secondary" type="button">직접 입력으로 바꾸기</CtaButton> : null}
+          <div className={styles.slideActions}>
+            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
+            <CtaButton disabled={!textPasteValue.trim() || analyzingText} onClick={analyzePastedText} type="button">{analyzingText ? '분석 중' : '분석하기'}</CtaButton>
+          </div>
+        </section>
       ) : null}
 
       {activeStep === 'candidate_review' ? (
@@ -481,21 +565,50 @@ export function OnboardingClient() {
       ) : null}
 
       {activeStep === 'sharing' ? (
-        <PlaceholderStep
-          body={savedReviewItems.length ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.` : '공유 설정은 이후 단계에서 사용자 확인 후 저장됩니다.'}
-          onBack={() => goToStep('add_method')}
-          title="공유 설정은 다음 단계에서 준비됩니다"
-        />
+        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="sharing-title">
+          <StatusBadge state="shared">공유 설정</StatusBadge>
+          <h2 className={styles.sectionTitle} id="sharing-title">어떻게 시작할까요?</h2>
+          <p className={styles.questionLead}>{savedReviewItems.length ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.` : '오늘 일정은 나중에 홈에서도 추가할 수 있어요.'}</p>
+          <div className={styles.choiceGrid} role="group" aria-label="파트너 공유 선택">
+            <SelectionChip className={styles.choiceChip} onClick={() => setSharingChoice('solo')} selected={sharingChoice === 'solo'} tone="sage">
+              <span>나 혼자 시작할게요</span>
+              <small>먼저 내 홈에서 오늘 할 일만 확인해요.</small>
+            </SelectionChip>
+            <SelectionChip className={styles.choiceChip} onClick={() => setSharingChoice('partner')} selected={sharingChoice === 'partner'} tone="lavender">
+              <span>파트너와 함께 쓸게요</span>
+              <small>완료 후 초대 링크를 준비할 수 있게 표시해요.</small>
+            </SelectionChip>
+          </div>
+          <div className={styles.slideActions}>
+            <CtaButton onClick={() => goToStep('add_method')} variant="secondary" type="button">이전</CtaButton>
+            <CtaButton disabled={!sharingChoice} onClick={() => sharingChoice ? continueSharing(sharingChoice) : undefined} type="button">다음</CtaButton>
+          </div>
+        </section>
       ) : null}
 
       {activeStep === 'complete' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide} ${styles.partnerExitStep}`} aria-labelledby="complete-title">
-          <StatusBadge state="done">안내 완료</StatusBadge>
-          <h2 className={styles.sectionTitle} id="complete-title">파트너는 초대 링크로 들어와 주세요</h2>
-          <p className={styles.questionLead}>치료자가 Fevio에서 초대 링크를 보내면, 파트너 화면에서 오늘 도울 일만 확인할 수 있어요.</p>
-          <Notice tone="sage">지금은 파트너 계정 없이 링크 안내만 보여드리고 온보딩을 종료합니다.</Notice>
-          <CtaButton onClick={() => window.location.assign('/')} type="button">처음 화면으로 가기</CtaButton>
-        </section>
+        selectedRole === 'partner' ? (
+          <section className={`${styles.choiceSection} ${styles.interviewSlide} ${styles.partnerExitStep}`} aria-labelledby="complete-title">
+            <StatusBadge state="done">안내 완료</StatusBadge>
+            <h2 className={styles.sectionTitle} id="complete-title">파트너는 초대 링크로 들어와 주세요</h2>
+            <p className={styles.questionLead}>치료자가 Fevio에서 초대 링크를 보내면, 파트너 화면에서 오늘 도울 일만 확인할 수 있어요.</p>
+            <Notice tone="sage">지금은 파트너 계정 없이 링크 안내만 보여드리고 온보딩을 종료합니다.</Notice>
+            <CtaButton onClick={() => window.location.assign('/')} type="button">처음 화면으로 가기</CtaButton>
+          </section>
+        ) : (
+          <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="complete-title">
+            <StatusBadge state="done">준비 완료</StatusBadge>
+            <h2 className={styles.sectionTitle} id="complete-title">거의 다 왔어요!</h2>
+            <p className={styles.questionLead}>저장한 일정은 홈에서 오늘 할 일로 보여드릴게요.</p>
+            <div className={styles.homePreviewCard} aria-label="일정 후보 요약">
+              <small>일정 후보 요약</small>
+              <strong>{savedReviewItems[0]?.title ?? '저장된 일정 없이 시작'}</strong>
+              <span>{savedReviewItems[0] ? `${formatCandidateType(savedReviewItems[0].type)} · ${formatCandidateDateTime(savedReviewItems[0].scheduled_at)} · ${formatCandidateDose(savedReviewItems[0].dose, savedReviewItems[0].unit)}` : '홈에서 직접 추가할 수 있어요.'}</span>
+            </div>
+            {sharingChoice === 'partner' ? <Notice tone="sage">파트너 초대 링크를 준비하도록 저장합니다.</Notice> : null}
+            <CtaButton disabled={completingOnboarding} onClick={completeOnboarding} type="button">{completingOnboarding ? '완료 중' : '시작하기'}</CtaButton>
+          </section>
+        )
       ) : null}
 
       {error ? <Notice tone="coral">{error}</Notice> : null}
