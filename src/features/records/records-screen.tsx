@@ -251,7 +251,7 @@ function injectionSiteFromMeta(meta: string) {
 }
 
 function recordTone(record: RecordsViewRecord) {
-  if (record.statusLabel === '완료') return { bg: 'var(--slc-coral-light)', fg: 'var(--slc-coral)', border: '#F0C7BB' };
+  if (record.statusLabel === '완료') return { bg: '#EEF5EF', fg: 'var(--slc-success)', border: '#C9DCCB' };
   if (record.statusLabel === '놓침') return { bg: '#FFF0F0', fg: '#C44F4F', border: '#F2B8B8' };
   if (record.type === 'change') return { bg: '#F1EDFF', fg: '#705CB8', border: '#D8CEF9' };
   return { bg: '#F8F4F0', fg: 'var(--slc-muted)', border: '#EFE7E0' };

@@ -59,7 +59,7 @@ const MODE_COPY = {
     textAriaLabel: '일정 안내 문자',
     textTitle: '문자로 일정 추가',
     textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
-    diffTitle: '기존 일정과 충돌하는 항목이 있습니다',
+    diffTitle: '겹치는 일정이 있어요',
     diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
     applyLabel: '일정 적용',
   },
@@ -74,7 +74,7 @@ const MODE_COPY = {
     textAriaLabel: '병원 안내 문자',
     textTitle: '문자로 업데이트',
     textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
-    diffTitle: '기존 카드와 달라진 항목입니다',
+    diffTitle: '겹치는 일정이 있어요',
     diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
     applyLabel: '변경사항 적용',
   },
@@ -568,8 +568,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
             {extractedCandidates.map((candidate) => (
               <article key={candidate.id} style={candidateCardStyle(candidate.decision === 'confirmed')}>
                 <div style={chipRowStyle}>
-                  <button type="button" style={chipStyle(candidate.decision === 'confirmed')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'confirmed' })}>반영</button>
-                  <button type="button" style={chipStyle(candidate.decision === 'rejected')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'rejected' })}>제외</button>
+                  <button type="button" style={chipStyle(candidate.decision === 'confirmed')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'confirmed' })}>새 일정으로 교체</button>
+                  <button type="button" style={chipStyle(candidate.decision === 'rejected')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'rejected' })}>기존 일정 유지</button>
                 </div>
                 <label style={fieldLabelStyle}>종류
                   <select aria-label={`${candidate.title} 종류`} value={candidate.type} onChange={(event) => updateExtractedCandidate(candidate.id, { type: event.target.value as ScheduleType })} style={inputStyle}>

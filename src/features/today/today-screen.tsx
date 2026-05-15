@@ -400,7 +400,7 @@ function ScheduleFlowRow({ item, statusLabel }: { item: ScheduleItem; statusLabe
         <strong style={{ display: 'block', color: 'var(--slc-text)', fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatScheduleRowTitle(item)}</strong>
         <small style={{ display: 'block', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 700, marginTop: 3 }}>{scheduleTypeLabel(item.type)}</small>
       </span>
-      <span style={{ padding: '5px 10px', borderRadius: 999, background: statusLabel === '완료' ? 'var(--slc-coral-light)' : 'var(--slc-border)', color: statusLabel === '완료' ? 'var(--slc-coral)' : 'var(--slc-muted)', fontSize: 11, fontWeight: 900 }}>{statusLabel}</span>
+      <span style={{ padding: '5px 10px', borderRadius: 999, background: statusLabel === '완료' ? '#EEF5EF' : 'var(--slc-border)', color: statusLabel === '완료' ? 'var(--slc-success)' : 'var(--slc-muted)', fontSize: 11, fontWeight: 900 }}>{statusLabel}</span>
       <Link href={`/schedule/${item.id}/edit`} aria-label={`${formatScheduleRowTitle(item)} 수정`} style={{ color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900, textDecoration: 'none' }}>수정</Link>
     </div>
   );
