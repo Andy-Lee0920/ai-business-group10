@@ -58,7 +58,11 @@ describe('app onboarding shell contract', () => {
 
   it('implements candidate review inline edits and confirm API payload', () => {
     expect(onboardingClient).toContain("activeStep === 'candidate_review'");
-    expect(onboardingClient).toContain('저장 전,');
+    expect(onboardingClient).toContain('반복 일정은');
+    expect(onboardingClient).toContain('candidateReviewSummary');
+    expect(onboardingClient).toContain('buildCandidateReviewGroups(reviewCandidates)');
+    expect(onboardingClient).toContain('expandedCandidateId');
+    expect(onboardingClient).toContain('필요한 일정만 수정');
     expect(onboardingClient).toContain('formatCandidateType(candidate.type)');
     expect(onboardingClient).toContain('input type="datetime-local"');
     expect(onboardingClient).toContain('candidateEdits');

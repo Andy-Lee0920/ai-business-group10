@@ -12,6 +12,19 @@ type AddMethodStep = Extract<OnboardingStep, 'photo_processing' | 'text_paste' |
 type DirectEntryType = 'injection' | 'medication' | 'clinic';
 type PhotoPhase = 'idle' | 'uploading' | 'uploaded' | 'analyzing' | 'ready' | 'not_found';
 type ReviewCandidate = { id: string; type: DirectEntryType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null; decision: 'confirmed' | 'rejected' };
+type CandidateReviewGroup = {
+  key: string;
+  type: DirectEntryType;
+  title: string;
+  doseLabel: string;
+  count: number;
+  confirmedCount: number;
+  rejectedCount: number;
+  missingTimeCount: number;
+  missingDoseCount: number;
+  firstScheduledAt: string | null;
+  lastScheduledAt: string | null;
+};
 type SavedScheduleItem = { id: string; type: DirectEntryType; title: string; scheduled_at: string; dose: string | null; unit: string | null };
 type ApiCandidate = { id?: unknown; type?: unknown; title?: unknown; scheduled_at?: unknown; dose?: unknown; unit?: unknown };
 type NavigationDirection = 'next' | 'back';
@@ -81,6 +94,7 @@ export function OnboardingClient() {
   const [analyzingText, setAnalyzingText] = useState(false);
   const [textMessage, setTextMessage] = useState<string | null>(null);
   const [reviewCandidates, setReviewCandidates] = useState<ReviewCandidate[]>([]);
+  const [expandedCandidateId, setExpandedCandidateId] = useState<string | null>(null);
   const [savedReviewItems, setSavedReviewItems] = useState<SavedScheduleItem[]>([]);
   const [sharingChoice, setSharingChoice] = useState<SharingChoice | null>(null);
   const [savingCandidates, setSavingCandidates] = useState(false);
@@ -97,6 +111,14 @@ export function OnboardingClient() {
 
   const activeIndex = VISIBLE_PROGRESS_STEPS.findIndex((step) => step.id === progressStep);
   const progressLabel = `처음 설정 ${activeIndex + 1}/${VISIBLE_PROGRESS_STEPS.length}`;
+  const reviewGroups = useMemo(() => buildCandidateReviewGroups(reviewCandidates), [reviewCandidates]);
+  const activeEditCandidate = reviewCandidates.find((candidate) => candidate.id === expandedCandidateId)
+    ?? reviewCandidates.find((candidate) => candidate.decision === 'confirmed')
+    ?? reviewCandidates[0]
+    ?? null;
+  const confirmedCandidateCount = reviewCandidates.filter((candidate) => candidate.decision === 'confirmed').length;
+  const missingCandidateTimeCount = reviewCandidates.filter((candidate) => candidate.decision === 'confirmed' && !candidate.scheduled_at).length;
+  const missingCandidateDoseCount = reviewCandidates.filter((candidate) => candidate.decision === 'confirmed' && candidate.type !== 'clinic' && !candidate.dose).length;
   const hasMissingCandidateTime = reviewCandidates.some((candidate) => candidate.decision === 'confirmed' && !candidate.scheduled_at);
   const hasMissingCandidateDose = reviewCandidates.some((candidate) => candidate.decision === 'confirmed' && candidate.type !== 'clinic' && !candidate.dose);
 
@@ -234,6 +256,7 @@ export function OnboardingClient() {
 
       setSavedReviewItems([]);
       setReviewCandidates(candidates);
+      setExpandedCandidateId(candidates[0]?.id ?? null);
       setPhotoPhase('ready');
       setPhotoMessage('일정 후보 준비');
       await wait(350);
@@ -275,6 +298,7 @@ export function OnboardingClient() {
 
       setSavedReviewItems([]);
       setReviewCandidates(candidates);
+      setExpandedCandidateId(candidates[0]?.id ?? null);
       setTextMessage(null);
       goToStep('candidate_review');
     } catch {
@@ -485,51 +509,100 @@ export function OnboardingClient() {
             <section className={styles.screen} aria-labelledby="candidate-review-title">
               <BackButton onClick={goBack} />
               <div className={styles.stepHeader}>
-                <p className={styles.kicker}>확인 필요</p>
-                <h2 className={styles.sectionTitle} id="candidate-review-title">저장 전,<br />일정을 확인해 주세요</h2>
-                <p className={styles.questionLead}>확인한 일정만 저장합니다.</p>
+                <p className={styles.kicker}>저장 전 확인</p>
+                <h2 className={styles.sectionTitle} id="candidate-review-title">반복 일정은<br />묶어서 보여드려요</h2>
+                <p className={styles.questionLead}>총 {reviewCandidates.length}개 후보 중 저장할 항목만 확인해 주세요.</p>
               </div>
               {hasMissingCandidateTime ? <Notice className={styles.notice} tone="coral">접종 시간이 아직 비어 있어요. 필요한 시간을 알려주세요.</Notice> : null}
               {hasMissingCandidateDose ? <Notice className={styles.notice} tone="sage">용량이 확인되지 않았어요. 처방지에 적힌 용량을 확인해 주세요.</Notice> : null}
-              <div className={styles.candidateList}>
-                {reviewCandidates.map((candidate) => (
-                  <article key={candidate.id} className={styles.candidateCard} data-decision={candidate.decision}>
-                    <div className={styles.candidateSummary} aria-label={`${candidate.title} 요약`}>
-                      <span>{formatCandidateType(candidate.type)}</span>
-                      <strong>{candidate.title || '제목을 입력해 주세요'}</strong>
-                      <small>{formatCandidateDateTime(candidate.scheduled_at)} · {formatCandidateDose(candidate.dose, candidate.unit)}</small>
+              <div className={styles.candidateReviewSummary} aria-label="일정 후보 요약">
+                <div className={styles.summaryMetric}>
+                  <small>저장 예정</small>
+                  <strong>{confirmedCandidateCount}개</strong>
+                </div>
+                <div className={styles.summaryMetric}>
+                  <small>반복 묶음</small>
+                  <strong>{reviewGroups.length}개</strong>
+                </div>
+                <div className={styles.summaryMetric}>
+                  <small>확인 필요</small>
+                  <strong>{missingCandidateTimeCount + missingCandidateDoseCount}개</strong>
+                </div>
+              </div>
+              <div className={styles.candidateGroupList} aria-label="반복 일정 묶음">
+                {reviewGroups.map((group) => (
+                  <article key={group.key} className={styles.candidateGroupCard}>
+                    <div className={styles.candidateSummary} aria-label={`${group.title} 반복 요약`}>
+                      <span>{formatCandidateType(group.type)} · {group.count}회</span>
+                      <strong>{group.title || '제목 확인 필요'}</strong>
+                      <small>{formatCandidateGroupRange(group)} · {group.doseLabel}</small>
+                    </div>
+                    <div className={styles.candidateBadges} aria-label="묶음 상태">
+                      {group.confirmedCount ? <em>{group.confirmedCount}개 저장</em> : null}
+                      {group.rejectedCount ? <em>{group.rejectedCount}개 제외</em> : null}
+                      {group.missingTimeCount ? <em data-tone="coral">시간 {group.missingTimeCount}</em> : null}
+                      {group.missingDoseCount ? <em data-tone="sage">용량 {group.missingDoseCount}</em> : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className={styles.candidateEditPanel}>
+                <div className={styles.candidateEditHeader}>
+                  <strong>필요한 일정만 수정</strong>
+                  <small>자세한 값은 선택한 1개만 펼쳐요.</small>
+                </div>
+                <div className={styles.candidatePicker} aria-label="수정할 후보 선택">
+                  {reviewCandidates.map((candidate, index) => (
+                    <button
+                      key={candidate.id}
+                      aria-pressed={candidate.id === activeEditCandidate?.id}
+                      data-decision={candidate.decision}
+                      type="button"
+                      onClick={() => setExpandedCandidateId(candidate.id)}
+                    >
+                      <span>{index + 1}회</span>
+                      <small>{formatCandidateType(candidate.type)} · {formatCandidateDateTime(candidate.scheduled_at)}</small>
+                    </button>
+                  ))}
+                </div>
+                {activeEditCandidate ? (
+                  <article className={styles.candidateCard} data-decision={activeEditCandidate.decision}>
+                    <div className={styles.candidateSummary} aria-label={`${activeEditCandidate.title} 요약`}>
+                      <span>{formatCandidateType(activeEditCandidate.type)}</span>
+                      <strong>{activeEditCandidate.title || '제목을 입력해 주세요'}</strong>
+                      <small>{formatCandidateDateTime(activeEditCandidate.scheduled_at)} · {formatCandidateDose(activeEditCandidate.dose, activeEditCandidate.unit)}</small>
                     </div>
                     <div className={styles.candidateHeader}>
-                      <select aria-label="종류" value={candidate.type} onChange={(event) => updateCandidate(candidate.id, { type: event.target.value as DirectEntryType })}>
+                      <select aria-label="종류" value={activeEditCandidate.type} onChange={(event) => updateCandidate(activeEditCandidate.id, { type: event.target.value as DirectEntryType })}>
                         <option value="injection">주사</option>
                         <option value="medication">약 복용</option>
                         <option value="clinic">병원 방문</option>
                       </select>
                       <div className={styles.candidateDecisionActions}>
-                        <button aria-label={`${candidate.title} 확인`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'confirmed' })}>✓</button>
-                        <button aria-label={`${candidate.title} 거절`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'rejected' })}>✕</button>
+                        <button aria-label={`${activeEditCandidate.title} 확인`} type="button" onClick={() => updateCandidate(activeEditCandidate.id, { decision: 'confirmed' })}>✓</button>
+                        <button aria-label={`${activeEditCandidate.title} 거절`} type="button" onClick={() => updateCandidate(activeEditCandidate.id, { decision: 'rejected' })}>✕</button>
                       </div>
                     </div>
                     <label className={styles.directField}>
                       <span>제목</span>
-                      <input value={candidate.title} onChange={(event) => updateCandidate(candidate.id, { title: event.target.value })} />
+                      <input value={activeEditCandidate.title} onChange={(event) => updateCandidate(activeEditCandidate.id, { title: event.target.value })} />
                     </label>
                     <label className={styles.directField}>
                       <span>시간</span>
-                      <input type="datetime-local" value={toDateTimeLocal(candidate.scheduled_at)} onChange={(event) => updateCandidate(candidate.id, { scheduled_at: fromDateTimeLocal(event.target.value) })} />
+                      <input type="datetime-local" value={toDateTimeLocal(activeEditCandidate.scheduled_at)} onChange={(event) => updateCandidate(activeEditCandidate.id, { scheduled_at: fromDateTimeLocal(event.target.value) })} />
                     </label>
                     <div className={styles.directFieldRow}>
                       <label className={styles.directField}>
                         <span>용량</span>
-                        <input value={candidate.dose ?? ''} onChange={(event) => updateCandidate(candidate.id, { dose: event.target.value || null })} />
+                        <input value={activeEditCandidate.dose ?? ''} onChange={(event) => updateCandidate(activeEditCandidate.id, { dose: event.target.value || null })} />
                       </label>
                       <label className={styles.directField}>
                         <span>단위</span>
-                        <input value={candidate.unit ?? ''} onChange={(event) => updateCandidate(candidate.id, { unit: event.target.value || null })} />
+                        <input value={activeEditCandidate.unit ?? ''} onChange={(event) => updateCandidate(activeEditCandidate.id, { unit: event.target.value || null })} />
                       </label>
                     </div>
                   </article>
-                ))}
+                ) : null}
               </div>
               <BottomDock activeIndex={activeIndex}>
                 <CtaButton className={styles.primaryCta} disabled={savingCandidates || reviewCandidates.every((candidate) => candidate.decision === 'rejected')} onClick={confirmCandidates} type="button">{savingCandidates ? '저장 중' : '일정 확인하기'}</CtaButton>
@@ -714,6 +787,59 @@ function normalizeSavedScheduleItems(value: unknown): SavedScheduleItem[] {
     .filter((item): item is SavedScheduleItem => item !== null);
 }
 
+function buildCandidateReviewGroups(candidates: ReviewCandidate[]): CandidateReviewGroup[] {
+  const groups = new Map<string, CandidateReviewGroup>();
+
+  for (const candidate of candidates) {
+    const key = getCandidateReviewGroupKey(candidate);
+    const current = groups.get(key);
+    const nextScheduledRange = mergeCandidateRange(current, candidate.scheduled_at);
+
+    groups.set(key, {
+      key,
+      type: current?.type ?? candidate.type,
+      title: current?.title ?? candidate.title,
+      doseLabel: current?.doseLabel ?? formatCandidateDose(candidate.dose, candidate.unit),
+      count: (current?.count ?? 0) + 1,
+      confirmedCount: (current?.confirmedCount ?? 0) + (candidate.decision === 'confirmed' ? 1 : 0),
+      rejectedCount: (current?.rejectedCount ?? 0) + (candidate.decision === 'rejected' ? 1 : 0),
+      missingTimeCount: (current?.missingTimeCount ?? 0) + (candidate.decision === 'confirmed' && !candidate.scheduled_at ? 1 : 0),
+      missingDoseCount: (current?.missingDoseCount ?? 0) + (candidate.decision === 'confirmed' && candidate.type !== 'clinic' && !candidate.dose ? 1 : 0),
+      firstScheduledAt: nextScheduledRange.firstScheduledAt,
+      lastScheduledAt: nextScheduledRange.lastScheduledAt,
+    });
+  }
+
+  return Array.from(groups.values());
+}
+
+function getCandidateReviewGroupKey(candidate: ReviewCandidate) {
+  return [
+    candidate.type,
+    candidate.title.trim().toLocaleLowerCase('ko-KR'),
+    candidate.dose?.trim().toLocaleLowerCase('ko-KR') ?? '',
+    candidate.unit?.trim().toLocaleLowerCase('ko-KR') ?? '',
+  ].join('|');
+}
+
+function mergeCandidateRange(group: CandidateReviewGroup | undefined, scheduledAt: string | null) {
+  const scheduledTime = scheduledAt ? new Date(scheduledAt).getTime() : Number.NaN;
+  if (!scheduledAt || Number.isNaN(scheduledTime)) {
+    return {
+      firstScheduledAt: group?.firstScheduledAt ?? null,
+      lastScheduledAt: group?.lastScheduledAt ?? null,
+    };
+  }
+
+  const firstTime = group?.firstScheduledAt ? new Date(group.firstScheduledAt).getTime() : Number.NaN;
+  const lastTime = group?.lastScheduledAt ? new Date(group.lastScheduledAt).getTime() : Number.NaN;
+
+  return {
+    firstScheduledAt: !group?.firstScheduledAt || Number.isNaN(firstTime) || scheduledTime < firstTime ? scheduledAt : group.firstScheduledAt,
+    lastScheduledAt: !group?.lastScheduledAt || Number.isNaN(lastTime) || scheduledTime > lastTime ? scheduledAt : group.lastScheduledAt,
+  };
+}
+
 function toDateTimeLocal(value: string | null) {
   if (!value) return '';
   const date = new Date(value);
@@ -739,6 +865,12 @@ function formatCandidateDateTime(value: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '시간 확인 필요';
   return new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+}
+
+function formatCandidateGroupRange(group: CandidateReviewGroup) {
+  if (!group.firstScheduledAt) return '시간 확인 필요';
+  if (!group.lastScheduledAt || group.firstScheduledAt === group.lastScheduledAt) return formatCandidateDateTime(group.firstScheduledAt);
+  return `${formatCandidateDateTime(group.firstScheduledAt)}부터 ${formatCandidateDateTime(group.lastScheduledAt)}까지`;
 }
 
 function formatCandidateDose(dose: string | null, unit: string | null) {

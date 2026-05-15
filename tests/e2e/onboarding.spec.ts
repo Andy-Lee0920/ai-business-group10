@@ -138,7 +138,7 @@ test('photo processing uses native picker, shows progress, and sends edited cand
   await expect(page.getByLabel('사진 처리 상태').getByText('업로드 완료')).toBeVisible();
   await expect(page.getByLabel('사진 처리 상태').getByText('내용 분석 중')).toBeVisible();
   await expect(page.getByLabel('사진 처리 상태').getByText('일정 후보 준비')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /저장 전,/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /반복 일정은/ })).toBeVisible();
   await expect(page.getByLabel('고날에프 요약')).toContainText('주사');
   await expect(page.getByLabel('고날에프 요약')).toContainText('150 IU');
 
@@ -189,9 +189,42 @@ test('text paste analyzes pasted clinic text into reusable candidate review', as
   await expect(page.getByText(/\d+\/1000/)).toBeVisible();
   await page.getByRole('button', { name: '분석하기' }).click();
 
-  await expect(page.getByRole('heading', { name: /저장 전,/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /반복 일정은/ })).toBeVisible();
   await expect(page.getByLabel('세트로타이드 요약')).toContainText('약 복용');
   await expect(page.getByLabel('세트로타이드 요약')).toContainText('0.25 mg');
+});
+
+test('candidate review summarizes repeated schedules before item-level edits', async ({ context, page }) => {
+  await acceptPrivacyForOnboarding(context);
+  await page.route('**/api/onboard/text-analyze', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        candidates: Array.from({ length: 6 }, (_, index) => ({
+          id: `repeat-${index + 1}`,
+          type: 'injection',
+          title: '고날에프',
+          scheduled_at: `2026-05-${15 + Math.floor(index / 2)}T${index % 2 === 0 ? '09' : '21'}:00:00.000Z`,
+          dose: '150',
+          unit: 'IU',
+        })),
+      }),
+    });
+  });
+
+  await goToAddMethod(page);
+  await page.getByRole('button', { name: /문자로 붙여넣기/ }).click();
+  await page.getByLabel('병원 안내문').fill('오늘밤부터 고날에프 3일간 하루 두번 150IU');
+  await page.getByRole('button', { name: '분석하기' }).click();
+
+  await expect(page.getByRole('heading', { name: /반복 일정은/ })).toBeVisible();
+  await expect(page.getByLabel('일정 후보 요약')).toContainText('저장 예정');
+  await expect(page.getByLabel('일정 후보 요약')).toContainText('6개');
+  await expect(page.getByLabel('반복 일정 묶음')).toContainText('주사 · 6회');
+  await expect(page.getByLabel('반복 일정 묶음')).toContainText('고날에프');
+  await expect(page.getByLabel('수정할 후보 선택').getByRole('button')).toHaveCount(6);
+  await expect(page.getByText('필요한 일정만 수정')).toBeVisible();
 });
 
 test('text paste offers direct entry fallback when no schedule candidates are found', async ({ context, page }) => {
