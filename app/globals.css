@@ -1,11 +1,13 @@
  :root {
-  --slc-bg: #FAF7F4;
-  --slc-surface: #FCEEE8;
-  --slc-coral: #C4614A;
-  --slc-coral-light: #FFF0EB;
-  --slc-border: #F0EDE8;
-  --slc-text: #2A1F1A;
-  --slc-muted: #9B8E86;
+  --slc-bg: #FAF7F2;
+  --slc-surface: #FFFDFC;
+  --slc-coral: #C95F4B;
+  --slc-coral-light: #F4DCD5;
+  --slc-coral-dark: #A94E3F;
+  --slc-border: #E9DED6;
+  --slc-text: #2F2926;
+  --slc-muted: #8A7F78;
+  --slc-success: #6E8F72;
   --slc-card: #FFFFFF;
   --fevio-sage: #6F8F6E;
   --fevio-sage-dark: #3D5C3C;

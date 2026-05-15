@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 describe('SLC design contract', () => {
   it('defines the warm SLC design tokens and coral theme color', () => {
-    expect(readFileSync('app/globals.css', 'utf8')).toContain('--slc-coral: #C4614A');
-    expect(readFileSync('app/layout.tsx', 'utf8')).toContain("themeColor: '#C4614A'");
+    expect(readFileSync('app/globals.css', 'utf8')).toContain('--slc-coral: #C95F4B');
+    expect(readFileSync('app/layout.tsx', 'utf8')).toContain("themeColor: '#C95F4B'");
   });
 
   it('uses the cropped abdomen PNG instead of a placeholder or SVG fallback', () => {

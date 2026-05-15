@@ -26,7 +26,7 @@ describe('SLC mobile quality gate', () => {
   });
 
   it('requires active and disabled CTA states to be distinguishable', () => {
-    expect(SLC_CTA_STATE_CONTRACT.active.background).toBe('#C4614A');
+    expect(SLC_CTA_STATE_CONTRACT.active.background).toBe('#C95F4B');
     expect(SLC_CTA_STATE_CONTRACT.disabled).toMatchObject({ requiresDisabledAttribute: true, opacityMax: 0.7 });
     expect(visibleSlcSources).toContain('disabled=');
     expect(visibleSlcSources).toMatch(/opacity: .*\?/);
