@@ -53,11 +53,6 @@ const VISIBLE_PROGRESS_STEPS: readonly StepDefinition[] = [
 ] as const;
 
 
-const ADD_METHODS: Array<{ step: AddMethodStep; label: string; helper: string }> = [
-  { step: 'photo_processing', label: '사진으로 남기기', helper: '처방지나 안내문을 찍어주세요' },
-  { step: 'text_paste', label: '문자로 붙여넣기', helper: '카톡·문자 내용을 붙여넣어요' },
-  { step: 'direct_entry', label: '직접 적기', helper: '이름, 시간, 용량만 간단히 적어요' },
-];
 
 export function enterOnboardingStep(step: OnboardingStep): OnboardingStep {
   return step;
@@ -80,7 +75,6 @@ export function OnboardingClient() {
   const [activeStep, setActiveStep] = useState<OnboardingStep>('brand_intro');
   const [selectedRole, setSelectedRole] = useState<TreatmentRole | null>(null);
   const [treatmentExperience, setTreatmentExperience] = useState<TreatmentExperience | null>(null);
-  const [addMethodIntroSeen, setAddMethodIntroSeen] = useState(false);
   const [directType, setDirectType] = useState<DirectEntryType>('injection');
   const [directTitle, setDirectTitle] = useState('');
   const [directDate, setDirectDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -151,7 +145,6 @@ export function OnboardingClient() {
     }
 
     setTreatmentExperience((current) => current ?? 'first');
-    setAddMethodIntroSeen(false);
     goToStep('add_method');
   }
 
@@ -347,10 +340,8 @@ export function OnboardingClient() {
     }
   }
 
-  const addIntroAsBackground = activeStep === 'add_method' && !addMethodIntroSeen;
-
   return (
-    <main className={`app-shell ${styles.onboardingShell} ${addIntroAsBackground ? styles.onboardingShellAddIntro : ''}`}>
+    <main className={`app-shell ${styles.onboardingShell}`}>
       <div className={styles.onboardingFlow} aria-label="처음 설정 인터뷰" aria-description={progressLabel}>
         {activeStep === 'brand_intro' ? (
           <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="brand-intro-title">
@@ -403,33 +394,54 @@ export function OnboardingClient() {
           </section>
         ) : null}
 
-        {activeStep === 'add_method' && !addMethodIntroSeen ? (
-          <section className={`${styles.screen} ${styles.centerScreen} ${styles.addMethodIntroScreen}`} aria-labelledby="first-add-title">
-            <div className={styles.heroCopy}>
-              <h2 className={styles.sectionTitle} id="first-add-title">자료 사진이나<br />안내문을 넣어주세요</h2>
-              <p className={styles.questionLead}>입력될 내용은 먼저 요약본으로 정리하고, 확인 전에는 일정으로 저장하지 않아요.</p>
-            </div>
-            <BottomDock activeIndex={activeIndex}>
-              <CtaButton className={styles.primaryCta} onClick={() => setAddMethodIntroSeen(true)} type="button">
-                <span>추가하기</span><span aria-hidden="true">›</span>
-              </CtaButton>
-            </BottomDock>
-          </section>
-        ) : null}
-
-        {activeStep === 'add_method' && addMethodIntroSeen ? (
+        {activeStep === 'add_method' ? (
           <section className={styles.screen} aria-labelledby="add-method-title">
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="add-method-title">어떻게 추가할까요?</h2>
+              <p className={styles.questionLead}>확인 후에만 저장해요.</p>
             </div>
-            <div className={styles.methodGrid} role="group" aria-label="안내 추가 방식 선택">
-              {ADD_METHODS.map((method) => (
-                <SelectionChip key={method.step} className={styles.methodCard} onClick={() => goToStep(method.step)} selected={false} tone={method.step === 'photo_processing' ? 'coral' : 'sage'}>
-                  <MethodIcon step={method.step} />
-                  <span><strong>{method.label}</strong><small>{method.helper}</small></span>
-                  <i aria-hidden="true">›</i>
-                </SelectionChip>
-              ))}
+            <div className={styles.methodGridFull} role="group" aria-label="안내 추가 방식 선택">
+              <button
+                type="button"
+                className={styles.methodHeroCard}
+                onClick={() => goToStep('photo_processing')}
+                aria-label="사진으로 남기기"
+              >
+                <span className={styles.methodHeroIcon}>
+                  <MethodIcon step="photo_processing" />
+                </span>
+                <span className={styles.methodHeroText}>
+                  <strong>사진으로 남기기</strong>
+                  <small>처방지나 안내문을 찍어주세요</small>
+                </span>
+                <i aria-hidden="true">›</i>
+              </button>
+              <div className={styles.methodSecondaryRow}>
+                <button
+                  type="button"
+                  className={styles.methodSecondaryCard}
+                  onClick={() => goToStep('text_paste')}
+                  aria-label="문자로 붙여넣기"
+                >
+                  <span className={styles.methodSecondaryIcon}>
+                    <MethodIcon step="text_paste" />
+                  </span>
+                  <strong>문자로</strong>
+                  <small>붙여넣기</small>
+                </button>
+                <button
+                  type="button"
+                  className={styles.methodSecondaryCard}
+                  onClick={() => goToStep('direct_entry')}
+                  aria-label="직접 적기"
+                >
+                  <span className={styles.methodSecondaryIcon}>
+                    <MethodIcon step="direct_entry" />
+                  </span>
+                  <strong>직접 적기</strong>
+                  <small>이름·시간·용량</small>
+                </button>
+              </div>
             </div>
             <BottomDock activeIndex={activeIndex} />
           </section>
@@ -650,22 +662,53 @@ export function OnboardingClient() {
           <section className={styles.screen} aria-labelledby="sharing-title">
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="sharing-title">어떻게 시작할까요?</h2>
-              <p className={styles.questionLead}>{savedReviewItems.length ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.` : '오늘 일정은 나중에 홈에서도 추가할 수 있어요.'}</p>
+              <p className={styles.questionLead}>
+                {savedReviewItems.length
+                  ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.`
+                  : '오늘 일정은 나중에 홈에서도 추가할 수 있어요.'}
+              </p>
             </div>
-            <div className={styles.methodGrid} role="group" aria-label="파트너 공유 선택">
-              <SelectionChip className={styles.methodCard} onClick={() => setSharingChoice('solo')} selected={sharingChoice === 'solo'} tone="sage">
-                <MethodIcon step="direct_entry" />
-                <span><strong>나 혼자 시작할게요</strong><small>먼저 내 홈에서 오늘 할 일만 확인해요.</small></span>
+            <div className={styles.methodGridFull} role="group" aria-label="파트너 공유 선택">
+              <button
+                type="button"
+                className={`${styles.methodHeroCard} ${styles.methodHeroCardGreen} ${sharingChoice === 'solo' ? styles.methodHeroCardGreenSelected : ''}`}
+                onClick={() => setSharingChoice('solo')}
+                aria-pressed={sharingChoice === 'solo'}
+                aria-label="나 혼자 시작할게요"
+              >
+                <span className={`${styles.methodHeroIcon} ${styles.methodHeroIconGreen}`}>
+                  <MethodIcon step="direct_entry" />
+                </span>
+                <span className={styles.methodHeroText}>
+                  <strong>나 혼자 시작할게요</strong>
+                  <small>먼저 내 홈에서 오늘 할 일만 확인해요</small>
+                </span>
                 <i aria-hidden="true">›</i>
-              </SelectionChip>
-              <SelectionChip className={styles.methodCard} onClick={() => setSharingChoice('partner')} selected={sharingChoice === 'partner'} tone="lavender">
-                <MethodIcon step="text_paste" />
-                <span><strong>파트너와 함께 쓸게요</strong><small>완료 후 초대 링크를 준비해요.</small></span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.sharingPartnerCard} ${sharingChoice === 'partner' ? styles.sharingPartnerCardSelected : ''}`}
+                onClick={() => setSharingChoice('partner')}
+                aria-pressed={sharingChoice === 'partner'}
+                aria-label="파트너와 함께 쓸게요"
+              >
+                <span className={styles.sharingPartnerIcon}>
+                  <MethodIcon step="text_paste" />
+                </span>
+                <span className={styles.sharingPartnerText}>
+                  <strong>파트너와 함께 쓸게요</strong>
+                  <small>완료 후 초대 링크를 준비해요</small>
+                </span>
                 <i aria-hidden="true">›</i>
-              </SelectionChip>
+              </button>
             </div>
             <BottomDock activeIndex={activeIndex}>
-              <CtaButton className={styles.primaryCta} disabled={!sharingChoice} onClick={() => sharingChoice ? continueSharing(sharingChoice) : undefined} type="button">
+              <CtaButton
+                className={styles.primaryCta}
+                disabled={!sharingChoice}
+                onClick={() => sharingChoice ? continueSharing(sharingChoice) : undefined}
+                type="button"
+              >
                 <span>다음</span><span aria-hidden="true">›</span>
               </CtaButton>
             </BottomDock>
