@@ -212,25 +212,19 @@
 }
 
 .addMethodIntroScreen {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 253, 251, 0.34) 0%,
+      rgba(255, 253, 251, 0.5) 34%,
+      rgba(250, 247, 242, 0.86) 66%,
+      var(--slc-bg, #faf7f2) 100%
+    ),
+    url('/assets/slc/clinic-visit-clipboard.png') center -28px / min(148%, 620px) auto no-repeat,
+    var(--slc-bg, #faf7f2);
+  background-blend-mode: normal, soft-light, normal;
   isolation: isolate;
   justify-content: flex-start;
-}
-
-.addMethodIntroAmbient {
-  position: absolute;
-  top: -18px;
-  right: -64px;
-  left: -64px;
-  height: min(66vh, 560px);
-  z-index: 0;
-  background-image: url('/assets/slc/clinic-visit-clipboard.png');
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-size: min(138%, 560px) auto;
-  filter: saturate(0.96);
-  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.86) 38%, rgba(0, 0, 0, 0.34) 70%, transparent 100%);
-  opacity: 0.24;
-  pointer-events: none;
 }
 
 .addMethodIntroScreen::after {
@@ -241,8 +235,8 @@
     linear-gradient(
       180deg,
       rgba(255, 253, 251, 0) 0%,
-      rgba(255, 253, 251, 0.14) 30%,
-      rgba(255, 253, 251, 0.72) 58%,
+      rgba(255, 253, 251, 0.18) 42%,
+      rgba(250, 247, 242, 0.74) 72%,
       var(--slc-bg, #faf7f2) 100%
     );
   content: '';
@@ -255,7 +249,7 @@
 }
 
 .addMethodIntroScreen .heroCopy {
-  margin-top: clamp(210px, 39vh, 304px);
+  margin-top: clamp(214px, 40vh, 318px);
 }
 
 .methodGrid {

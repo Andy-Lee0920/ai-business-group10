@@ -29,7 +29,6 @@ describe('app onboarding shell contract', () => {
       '그대로 옮겨주세요',
       '추가하기',
       'addMethodIntroScreen',
-      'addMethodIntroAmbient',
       '파트너는 초대 링크로 들어와 주세요',
       '어떻게 추가할까요?',
       '사진으로 남기기',
