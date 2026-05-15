@@ -37,9 +37,10 @@ export async function POST(request: NextRequest) {
   });
 
   const candidates = normalizeCandidates(data?.candidates);
-  if (candidates.length === 0) return NextResponse.json({ candidates: [] });
+  const safeCandidates = candidates.length ? candidates : extractDeterministicTextCandidates(rawText);
+  if (safeCandidates.length === 0) return NextResponse.json({ candidates: [] });
 
-  const rows = candidates.map((candidate) => ({
+  const rows = safeCandidates.map((candidate) => ({
     patient_id: user.id,
     image_path: null,
     raw_text: rawText,
@@ -55,6 +56,119 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
 
   return NextResponse.json({ candidates: inserted ?? [] });
+}
+
+
+const KOREA_TIME_ZONE = 'Asia/Seoul';
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_DETERMINISTIC_CANDIDATES = 4;
+
+const INJECTION_MEDICATION_ALIASES: Array<{ pattern: RegExp; title: string }> = [
+  { pattern: /고날\s*(?:에프|f)?/iu, title: '고날에프' },
+  { pattern: /세트로\s*(?:타이드)?/iu, title: '세트로타이드' },
+  { pattern: /오비드렐/iu, title: '오비드렐' },
+  { pattern: /퓨리곤/iu, title: '퓨리곤' },
+  { pattern: /메노푸르/iu, title: '메노푸르' },
+  { pattern: /프로게스테론|질정/iu, title: '프로게스테론' },
+];
+
+function extractDeterministicTextCandidates(rawText: string, now = new Date()): ExtractedCandidate[] {
+  const title = findMedicationTitle(rawText);
+  if (!title) return [];
+
+  const type = inferTextScheduleType(rawText, title);
+  if (!type) return [];
+
+  const times = extractExplicitTimes(rawText).slice(0, MAX_DETERMINISTIC_CANDIDATES);
+  const dose = extractDose(rawText);
+  const unit = dose ? extractDoseUnit(rawText) : null;
+
+  if (!times.length) {
+    return [{ type, title, scheduled_at: null, dose, unit }];
+  }
+
+  const dateKey = getKoreanDateKey(now, rawText.includes('내일') ? 1 : 0);
+  return times.map((time) => ({
+    type,
+    title,
+    scheduled_at: toKoreanIso(dateKey, time.hour, time.minute),
+    dose,
+    unit,
+  }));
+}
+
+function findMedicationTitle(rawText: string) {
+  return INJECTION_MEDICATION_ALIASES.find((alias) => alias.pattern.test(rawText))?.title ?? null;
+}
+
+function inferTextScheduleType(rawText: string, title: string): ScheduleType | null {
+  if (/주사|맞|펜|IU|고날|세트로|오비드렐|퓨리곤|메노푸르/iu.test(rawText)) return 'injection';
+  if (/복용|먹|질정|정\b/iu.test(rawText) && title === '프로게스테론') return 'medication';
+  if (/방문|내원|검사|초음파|채혈/iu.test(rawText)) return 'clinic';
+  return null;
+}
+
+function extractExplicitTimes(rawText: string): Array<{ hour: number; minute: number }> {
+  const times: Array<{ hour: number; minute: number }> = [];
+  const seen = new Set<string>();
+  const timePattern = /(?:(오전|오후|밤|저녁|아침)\s*)?(\d{1,2})(?::(\d{2}))?\s*시/giu;
+
+  for (const match of rawText.matchAll(timePattern)) {
+    const hour = normalizeHour(Number.parseInt(match[2] ?? '', 10), match[1] ?? '');
+    const minute = Number.parseInt(match[3] ?? '0', 10);
+    if (hour === null || !Number.isInteger(minute) || minute < 0 || minute > 59) continue;
+    const key = `${hour}:${minute}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    times.push({ hour, minute });
+  }
+
+  const clockPattern = /\b([01]?\d|2[0-3]):([0-5]\d)\b/gu;
+  for (const match of rawText.matchAll(clockPattern)) {
+    const hour = Number.parseInt(match[1] ?? '', 10);
+    const minute = Number.parseInt(match[2] ?? '', 10);
+    const key = `${hour}:${minute}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    times.push({ hour, minute });
+  }
+
+  return times;
+}
+
+function normalizeHour(hour: number, meridiem: string) {
+  if (!Number.isInteger(hour) || hour < 0 || hour > 24) return null;
+  if (hour === 24) return 0;
+  if ((meridiem === '오후' || meridiem === '저녁' || meridiem === '밤') && hour >= 1 && hour <= 11) return hour + 12;
+  if (meridiem === '아침' && hour === 12) return 0;
+  return hour;
+}
+
+function getKoreanDateKey(now: Date, offsetDays: number) {
+  const target = new Date(now.getTime() + (offsetDays * DAY_MS));
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: KOREA_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(target);
+  const value = (type: 'year' | 'month' | 'day') => parts.find((part) => part.type === type)?.value ?? '';
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
+function toKoreanIso(dateKey: string, hour: number, minute: number) {
+  const hh = String(hour).padStart(2, '0');
+  const mm = String(minute).padStart(2, '0');
+  return new Date(`${dateKey}T${hh}:${mm}:00+09:00`).toISOString();
+}
+
+function extractDose(rawText: string) {
+  return rawText.match(/\b\d+(?:\.\d+)?\s*(?:IU|iu|mg|mcg|mL|ml|정)\b/u)?.[0].replace(/\s+/g, ' ').replace(/iu/u, 'IU').split(/\s+/u)[0] ?? null;
+}
+
+function extractDoseUnit(rawText: string) {
+  const match = rawText.match(/\b\d+(?:\.\d+)?\s*(IU|iu|mg|mcg|mL|ml|정)\b/u);
+  return match?.[1]?.replace(/iu/u, 'IU') ?? null;
 }
 
 function normalizeText(value: unknown) {
