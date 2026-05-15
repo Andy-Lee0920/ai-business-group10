@@ -1,6 +1,10 @@
 'use client';
 import type { CSSProperties } from 'react';
 import type { ScheduleItem, InjectionSite } from '../types/slc.types';
+import { SLCIllustration } from './slc-illustration';
+import { slcAssets } from '../design/slc-assets';
+
+const ABDOMEN_PNG_SRC = '/assets/slc/abdomen-front.png';
 
 interface ConfirmSheetProps {
   item: ScheduleItem;
@@ -36,11 +40,9 @@ export function ConfirmSheet({ item, onComplete, onClose }: ConfirmSheetProps) {
         <div style={handleStyle} />
         <h3 style={{ ...sheetTitleStyle, textAlign: 'center' }}>주사 위치를 선택해 주세요</h3>
         <p style={{ ...sheetDescriptionStyle, textAlign: 'center' }}>탭하면 해당 위치로 즉시 기록됩니다</p>
-        <div style={abdomenFrameStyle}>
-          <img
-            src="/assets/slc/abdomen-front.png"
-            alt="주사 위치 선택"
-            draggable={false}
+        <div data-asset-src={ABDOMEN_PNG_SRC} style={abdomenFrameStyle}>
+          <SLCIllustration
+            asset={slcAssets.body.abdomenFront}
             style={{ width: '100%', height: '100%', objectFit: 'contain', userSelect: 'none', pointerEvents: 'none' }}
           />
           {TOUCH_ZONES.map(({ site, label, style }) => (

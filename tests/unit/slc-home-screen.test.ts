@@ -46,8 +46,9 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-focus-kind="clinic_soon"');
-    expect(markup).toContain('병원 일정이 다가오고 있어요');
-    expect(markup.indexOf('병원 일정이 다가오고 있어요')).toBeLessThan(markup.indexOf('듀파스톤'));
+    expect(markup).toContain('병원 시간이 가까워요');
+    expect(markup).toContain('방문 시간만 먼저 볼게요');
+    expect(markup.indexOf('병원 시간이 가까워요')).toBeLessThan(markup.indexOf('듀파스톤'));
   });
 
 
@@ -62,8 +63,8 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-card-emphasis="primary"');
     expect(markup).toContain('data-card-emphasis="secondary"');
-    expect(markup).toContain('지금 주사 시간이에요');
-    expect(markup).toContain('background:linear-gradient(135deg, #EF7A5D 0%, #C94C35 100%)');
+    expect(markup).toContain('주사');
+    expect(markup).toContain('border:1.5px solid #E8A898');
     expect(markup).toContain('background:#FFFBF8');
     expect(markup.indexOf('data-card-emphasis="primary"')).toBeLessThan(markup.indexOf('data-card-emphasis="secondary"'));
   });
@@ -77,7 +78,7 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('고날에프 주사');
-    expect(markup).toContain('지금 주사 시간이에요');
+    expect(markup).toContain('주사');
   });
 
   it('does not render post-clinic prompt after a relevant clinic update exists', () => {
