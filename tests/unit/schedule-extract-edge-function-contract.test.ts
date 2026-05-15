@@ -59,7 +59,8 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('if (!signedUrl) return json({ candidates: [] })');
     expect(code).toContain('if (!openRouterApiKey) return []');
     expect(code).toContain('if (!response?.ok) return []');
-    expect(code).toContain('if (!isObjectWithCandidates(parsed)) return []');
+    expect(code).toContain('type ParsedScheduleExtract = { candidates: ScheduleCandidate[]; sourceText: string | null }');
+    expect(code).toContain('if (!isObjectWithCandidates(parsed)) return { candidates: [], sourceText: null }');
   });
 
 
@@ -88,6 +89,24 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('오후 9시는 21:00이지 09:00이 아니다');
     expect(code).toContain('"본인이 정해서", "정확한 시간 확인", "확인 후 입력"');
     expect(code).toContain('시간을 사용자가 정하라는 안내 문장 자체는 별도 candidate로 만들지 말고');
+    expect(code).toContain('source_text');
+    expect(code).toContain('먼저 이미지의 문서 본문을 source_text에 전사하세요');
+  });
+
+
+  it('uses OCR source_text to deterministically repair under-expanded vision output', () => {
+    const code = source();
+
+    expect(code).toContain('const deterministicCandidates = parsed.sourceText ? extractDeterministicTextCandidates(parsed.sourceText) : []');
+    expect(code).toContain('return chooseCandidateSet(deterministicCandidates, parsed.candidates)');
+    expect(code).toContain('function chooseCandidateSet');
+    expect(code).toContain('deterministicCandidates.length >= llmCandidates.length');
+    expect(code).toContain('function extractDeterministicTextCandidates');
+    expect(code).toContain('function extractDocumentBaseDateKey');
+    expect(code).toContain('발행일|작성일');
+    expect(code).toContain("meridiem === '오후'");
+    expect(code).toContain('durationDays * frequency');
+    expect(code).toContain('function shouldLeaveTimesForUser');
   });
 
   it('repairs common vision extraction mistakes from Korean IVF notices', () => {
