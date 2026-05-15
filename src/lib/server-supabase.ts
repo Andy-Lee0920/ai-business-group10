@@ -5,14 +5,18 @@ export async function createCookieBackedSupabaseClient() {
   const cookieStore = await cookies();
 
   return createFevioServerSupabaseClient({
-    get(name) {
-      return cookieStore.get(name)?.value;
+    getAll() {
+      return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
     },
-    set(name, value, options) {
-      cookieStore.set({ name, value, ...options });
-    },
-    remove(name, options) {
-      cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+    setAll(cookiesToSet) {
+      for (const { name, value, options } of cookiesToSet) {
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch {
+          // Server Components cannot always write cookies. Middleware and Route
+          // Handlers will persist refreshed Supabase auth cookies when allowed.
+        }
+      }
     },
   });
 }
