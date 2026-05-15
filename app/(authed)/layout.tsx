@@ -16,20 +16,37 @@ export default async function AuthedLayout({ children }: { children: React.React
   const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   if (!user && !presentationMode) redirect('/auth/sign-in');
 
-  const { data: consent, error: consentError } = user && supabase
-    ? await supabase
-      .from('user_consents')
-      .select('role')
-      .eq('user_id', user.id)
-      .maybeSingle()
-    : { data: null, error: null };
+  const [consentResult, profileResult, existingScheduleResult] = user && supabase
+    ? await Promise.all([
+      supabase
+        .from('user_consents')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('schedule_items')
+        .select('id')
+        .eq('patient_id', user.id)
+        .limit(1)
+        .maybeSingle(),
+    ])
+    : [{ data: null, error: null }, { data: null, error: null }, { data: null, error: null }];
   const cookieStore = await cookies();
   const fallbackRole = normalizeRole(cookieStore.get(SLC_ROLE_COOKIE)?.value);
+  const persistedRole = normalizeRole(consentResult.data?.role) ?? normalizeRole(profileResult.data?.role);
+  const hasExistingCareData = Boolean(existingScheduleResult.data) && !existingScheduleResult.error;
   const effectiveConsent = presentationMode && !user
     ? { role: fallbackRole ?? 'patient' }
-    : isMissingSlcTable(consentError) && fallbackRole ? { role: fallbackRole } : consent;
+    : persistedRole
+      ? { role: persistedRole }
+      : (isMissingSlcTable(consentResult.error) || isMissingSlcTable(profileResult.error)) && fallbackRole ? { role: fallbackRole } : null;
 
-  const redirectTo = computeConsentRedirect(effectiveConsent);
+  const redirectTo = computeConsentRedirect(effectiveConsent, hasExistingCareData);
   if (redirectTo) redirect(redirectTo);
 
   return (
