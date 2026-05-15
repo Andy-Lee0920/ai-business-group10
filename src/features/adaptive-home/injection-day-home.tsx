@@ -8,7 +8,7 @@ import {
   QuickStatRow,
 } from './care-surface-primitives';
 import { countPartnerActionSignals, findPrimaryCareCard, toMissionCardData } from './care-surface-model';
-import { isInInjectionCountdownWindow, minutesUntilInjection } from './injection-timing';
+import { isInInjectionCountdownWindow, secondsUntilInjection } from './injection-timing';
 import type { AdaptiveStateHomeBaseProps } from './types';
 import type { HomeActionCard } from '../../domain/home-composition';
 
@@ -27,7 +27,7 @@ export function InjectionDayHome({ context, composition }: AdaptiveStateHomeBase
   const primaryTime = primary ? toMissionCardData(primary).time : '--:--';
   const drugName = primary ? extractDrug(primary.title) : '확인 필요';
   const inWindow = isInInjectionCountdownWindow(primary?.scheduledAt ?? null);
-  const remaining = primary?.scheduledAt ? minutesUntilInjection(primary.scheduledAt) : 0;
+  const remaining = primary?.scheduledAt ? secondsUntilInjection(primary.scheduledAt) : 0;
   const nextInjection = context.cards.find((card) => card !== primary && card.cardType === 'injection') ?? null;
 
   const stats = [
@@ -44,7 +44,7 @@ export function InjectionDayHome({ context, composition }: AdaptiveStateHomeBase
     <CareSurfaceFrame phase="injection" context={context} intensity={composition?.intensity} appliedRules={composition?.appliedRules}>
       <CarePhaseStrip activePhase="injection" />
       {inWindow
-        ? <InjectionCountdownHero primary={primary} nextInjection={nextInjection} remainingMinutes={remaining} />
+        ? <InjectionCountdownHero primary={primary} nextInjection={nextInjection} remainingSeconds={remaining} />
         : <CompactHeroGreeting phase="injection" momentCopy={composition?.momentCopy} />}
       {showPrimaryCard ? <MissionCardPair primary={primaryMission} secondary={secondaryMission} /> : null}
       {showStats ? <QuickStatRow stats={stats} /> : null}
@@ -62,11 +62,11 @@ function extractDrug(title: string): string {
 function InjectionCountdownHero({
   primary,
   nextInjection,
-  remainingMinutes,
+  remainingSeconds,
 }: {
   primary: HomeActionCard | null;
   nextInjection: HomeActionCard | null;
-  remainingMinutes: number;
+  remainingSeconds: number;
 }) {
   return (
     <section
@@ -79,11 +79,11 @@ function InjectionCountdownHero({
         padding: '8px 0 4px',
       }}
     >
-      <InjectionCountdownArc totalMinutes={60} remainingMinutes={remainingMinutes} />
+      <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remainingSeconds} />
       <div style={{ textAlign: 'center', marginTop: -42 }}>
         <p style={{ margin: '0 0 4px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 800 }}>남은 시간</p>
         <strong style={{ color: 'var(--slc-text)', fontSize: 34, lineHeight: 1, letterSpacing: '-0.04em' }}>
-          {formatRemainingClock(remainingMinutes)}
+          {formatRemainingClock(remainingSeconds)}
         </strong>
       </div>
       <div style={{ width: '100%', display: 'grid', gap: 8, marginTop: 10 }}>
@@ -124,11 +124,11 @@ function CountdownInfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatRemainingClock(minutes: number) {
-  const clamped = Math.max(0, minutes);
-  const hours = Math.floor(clamped / 60);
-  const mins = clamped % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+function formatRemainingClock(totalSeconds: number) {
+  const clamped = Math.max(0, totalSeconds);
+  const mins = Math.floor(clamped / 60);
+  const secs = clamped % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 function formatCardTime(scheduledAt: string | null) {
