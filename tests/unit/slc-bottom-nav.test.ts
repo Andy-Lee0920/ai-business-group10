@@ -21,7 +21,7 @@ describe('SLC bottom navigation', () => {
       }),
       expect.objectContaining({
         kind: 'action',
-        label: '+',
+        label: '일정추가',
         icon: 'plus',
         action: 'open-create-sheet',
       }),
@@ -45,6 +45,8 @@ describe('SLC bottom navigation', () => {
 
   it('opens the plus action as a local bottom sheet instead of a navigation link', () => {
     expect(source).toContain('data-testid="bottom-nav-create-button"');
+    expect(source).toContain('aria-label="일정 추가 메뉴 열기"');
+    expect(source).toContain("label: '일정추가'");
     expect(source).toContain('data-testid="create-bottom-sheet"');
     expect(source).toContain('role="dialog"');
     expect(source).toContain('일정 추가');
@@ -53,6 +55,9 @@ describe('SLC bottom navigation', () => {
     expect(source).toContain('href="/clinic-update"');
     expect(source).toContain("background: 'var(--slc-surface)'");
     expect(source).toContain("borderTopLeftRadius: 16");
+    expect(source).toContain("width: 44");
+    expect(source).toContain("background: 'linear-gradient(135deg, var(--slc-coral) 0%, #f08a70 100%)'");
+    expect(source).toContain('0 0 0 6px rgba(216, 98, 77, 0.10)');
   });
 
   it('uses a house outline for the home tab icon instead of the previous sun motif', () => {

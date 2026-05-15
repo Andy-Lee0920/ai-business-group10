@@ -20,14 +20,14 @@ test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await expect(bottomNav).toBeVisible();
   await expect(bottomNav.getByRole('link').nth(0)).toHaveAccessibleName('홈');
   await expect(bottomNav.getByRole('link').nth(1)).toHaveAccessibleName('캘린더');
-  await expect(bottomNav.getByRole('button', { name: '추가 메뉴 열기' })).toBeVisible();
+  await expect(bottomNav.getByRole('button', { name: '일정 추가 메뉴 열기' })).toBeVisible();
   await expect(bottomNav.getByRole('link').nth(2)).toHaveAccessibleName('기록');
   await expect(bottomNav.getByRole('link').nth(3)).toHaveAccessibleName('설정');
   await expect(page.getByRole('link', { name: '홈' })).toHaveAttribute('href', '/home');
   await expect(page.getByRole('link', { name: '캘린더' })).toHaveAttribute('href', '/calendar');
   await expect(page.getByRole('link', { name: '기록' })).toHaveAttribute('href', '/records');
   await expect(page.getByRole('link', { name: '설정' })).toHaveAttribute('href', '/settings');
-  await page.getByRole('button', { name: '추가 메뉴 열기' }).click();
+  await page.getByRole('button', { name: '일정 추가 메뉴 열기' }).click();
   await expect(page.getByTestId('create-bottom-sheet')).toBeVisible();
   await expect(page.getByRole('link', { name: /일정 추가/ })).toHaveAttribute('href', '/add');
   await expect(page.getByRole('link', { name: /병원 메모/ })).toHaveAttribute('href', '/clinic-update');

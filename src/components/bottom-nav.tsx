@@ -25,7 +25,7 @@ type NavActionItem = {
 export const NAV_ITEMS = [
   { kind: 'link', href: '/home', label: '홈', icon: 'care', placement: 'side' },
   { kind: 'link', href: '/calendar', label: '캘린더', icon: 'calendar', placement: 'side' },
-  { kind: 'action', label: '+', icon: 'plus', placement: 'center', action: 'open-create-sheet' },
+  { kind: 'action', label: '일정추가', icon: 'plus', placement: 'center', action: 'open-create-sheet' },
   { kind: 'link', href: '/records', label: '기록', icon: 'timeline', placement: 'side' },
   { kind: 'link', href: '/settings', label: '설정', icon: 'gear', placement: 'side' },
 ] as const satisfies readonly (NavLinkItem | NavActionItem)[];
@@ -55,7 +55,7 @@ export function BottomNav() {
                 type="button"
                 aria-expanded={createOpen}
                 aria-haspopup="dialog"
-                aria-label="추가 메뉴 열기"
+                aria-label="일정 추가 메뉴 열기"
                 data-testid="bottom-nav-create-button"
                 onClick={openCreateSheet}
                 style={{ ...itemStyle(false, center), ...buttonResetStyle }}
@@ -206,7 +206,7 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
     color: active || center ? 'var(--slc-coral)' : 'var(--slc-muted)',
     textDecoration: 'none',
     fontSize: 11,
-    fontWeight: active ? 800 : 650,
+    fontWeight: active || center ? 850 : 650,
     borderRadius: 22,
     transform: 'none',
     transition: 'background 160ms ease, color 160ms ease, transform 160ms ease',
@@ -214,12 +214,32 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
 }
 
 function iconShellStyle(active: boolean, center: boolean): CSSProperties {
+  if (center) {
+    return {
+      width: 44,
+      height: 44,
+      display: 'grid',
+      placeItems: 'center',
+      borderRadius: 999,
+      background: 'linear-gradient(135deg, var(--slc-coral) 0%, #f08a70 100%)',
+      color: '#fff',
+      border: '1px solid rgba(255, 255, 255, 0.74)',
+      boxShadow: [
+        '0 0 0 6px rgba(216, 98, 77, 0.10)',
+        '0 0 0 12px rgba(216, 98, 77, 0.045)',
+        '0 12px 26px rgba(216, 98, 77, 0.28)',
+        'inset 0 1px 0 rgba(255, 255, 255, 0.42)',
+      ].join(', '),
+      transform: 'translateY(-5px)',
+    };
+  }
+
   return {
     width: 30,
     height: 26,
     display: 'grid',
     placeItems: 'center',
-    color: active || center ? 'var(--slc-coral)' : 'var(--slc-muted)',
+    color: active ? 'var(--slc-coral)' : 'var(--slc-muted)',
     transform: active ? 'translateY(-1px)' : 'none',
   };
 }
@@ -234,7 +254,8 @@ const buttonResetStyle: CSSProperties = {
 
 const labelStyle: CSSProperties = {
   lineHeight: 1.1,
-  letterSpacing: '-0.02em',
+  letterSpacing: '-0.04em',
+  whiteSpace: 'nowrap',
 };
 
 const sheetLayerStyle: CSSProperties = {
