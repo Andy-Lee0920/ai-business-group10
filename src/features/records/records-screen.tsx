@@ -1,8 +1,6 @@
 'use client';
-import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
 import type { ScheduleItem, CompletionRecord, ClinicUpdate, Receipt } from '../../types/slc.types';
-import { buildRecordsViewModel, RECORD_FILTERS, type RecordsFilter, type RecordsViewRecord } from '../../domain/slc-records';
 import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { slcAssets } from '../../design/slc-assets';
 
@@ -21,8 +19,7 @@ interface RecordsScreenProps {
   receipts?: Receipt[];
 }
 
-export function RecordsScreen({ items, completions, clinicUpdates = [], receipts = [] }: RecordsScreenProps) {
-  const [filter, setFilter] = useState<RecordsFilter>('all');
+export function RecordsScreen({ receipts = [] }: RecordsScreenProps) {
   const [receiptItems, setReceiptItems] = useState<Receipt[]>(receipts);
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ReceiptCategory>('진료비');
@@ -32,9 +29,7 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
   const [saving, setSaving] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { groups } = buildRecordsViewModel({ items, completions, clinicUpdates, filter });
-  const receiptTotal = useMemo(() => receiptItems.reduce((sum, receipt) => sum + receipt.amount, 0), [receiptItems]);
-  const cycleDay = useMemo(() => computeCycleDay(items), [items]);
+  const summary = useMemo(() => buildFinancialSummary(receiptItems), [receiptItems]);
 
   async function submitReceipt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,10 +67,11 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
       intensity="subtle"
       style={{ minHeight: '100dvh', padding: '54px 0 112px' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '0 24px 18px' }}>
+      <header style={headerStyle}>
         <div>
-          <p style={{ fontSize: 13, color: '#B5A89E', fontWeight: 700, margin: '0 0 4px' }}>최근 기록</p>
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: 0, letterSpacing: '-0.05em' }}>기록</h1>
+          <p style={eyebrowStyle}>시술비 기록</p>
+          <h1 style={titleStyle}>비용</h1>
+          <p style={leadStyle}>병원 일정은 캘린더에 두고, 기록 탭은 지출과 지원금만 정리해요.</p>
         </div>
         <button
           type="button"
@@ -85,55 +81,15 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
         >
           +
         </button>
-      </div>
+      </header>
 
-      {cycleDay !== null ? (
-        <div style={cycleDayHeroStyle}>
-          <p style={{ margin: '0 0 4px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시작일 기준</p>
-          <p style={{ margin: 0, color: 'var(--slc-text)', fontSize: 26, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.2 }}>
-            주사 시작 <strong style={{ color: 'var(--slc-coral)' }}>{cycleDay}일차</strong>
-          </p>
-          <p style={{ margin: '6px 0 0', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 700 }}>
-            첫 주사 일정 기준 · 오늘까지
-          </p>
-        </div>
-      ) : null}
-
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 24px 16px', scrollbarWidth: 'none' }}>
-        {RECORD_FILTERS.map(({ key, label }) => (
-          <button key={key} type="button" onClick={() => setFilter(key)} style={filterChipStyle(filter === key)}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {receiptItems.length >= 2 ? (
-        <div style={{ padding: '0 16px 16px' }}>
-          <CostLineChart receipts={receiptItems} total={receiptTotal} />
-        </div>
-      ) : null}
-
-      {groups.length === 0 ? (
-        <div style={{ padding: '36px 24px 60px', textAlign: 'center' }}>
-          <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>아직 기록이 없어요</p>
-          <p style={{ color: '#B5A89E', fontSize: 13, lineHeight: 1.5, margin: 0 }}>완료하면 여기에 남겨둘게요.</p>
-        </div>
-      ) : (
-        <div data-testid="records-timeline" style={{ padding: '0 16px' }}>
-          {groups.map(({ date: groupDate, records }) => (
-            <section key={groupDate} style={{ marginBottom: 12 }} aria-label={`${groupDate} 기록`}>
-              <div style={{ padding: '12px 8px 8px' }}>
-                <span style={{ fontSize: 12, fontWeight: 900, color: '#B99F91' }}>{groupDate}</span>
-              </div>
-              <div style={{ display: 'grid', gap: 8 }}>
-                {records.map((record) => <RecordCard key={`${record.kind}-${record.id}`} record={record} />)}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
+      <section aria-label="비용 요약" style={{ padding: '0 16px 14px' }}>
+        <FinancialOverview summary={summary} receipts={receiptItems} />
+      </section>
 
       <SubsidyCards />
+
+      <RecentReceiptList receipts={receiptItems} onAdd={() => setSheetOpen(true)} />
 
       {sheetOpen ? (
         <div
@@ -155,9 +111,9 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
             </div>
             <strong
               data-testid="receipt-total"
-              style={{ color: receiptTotal < 0 ? 'var(--slc-coral)' : 'var(--slc-text)', fontSize: 16, fontWeight: 900 }}
+              style={{ color: summary.net < 0 ? 'var(--slc-coral)' : 'var(--slc-text)', fontSize: 16, fontWeight: 900 }}
             >
-              {formatWon(receiptTotal)}
+              {formatWon(summary.net)}
             </strong>
           </div>
           <form data-testid="receipt-form" onSubmit={submitReceipt} style={{ display: 'grid', gap: 10 }}>
@@ -209,68 +165,97 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
   );
 }
 
-function RecordCard({ record }: { record: RecordsViewRecord }) {
-  const tone = recordTone(record);
-  return (
-    <article data-testid="records-calm-card" style={{
-      minHeight: 84,
-      background: 'rgba(255, 252, 250, 0.9)',
-      border: '1.5px solid #EFE7E0',
-      borderRadius: 22,
-      padding: '16px 18px',
-      boxShadow: '0 8px 26px rgba(80, 50, 40, 0.055)',
-      backdropFilter: 'blur(14px)',
-      display: 'grid',
-      gridTemplateColumns: '1fr auto',
-      alignItems: 'start',
-      gap: 12,
-    }}>
-      <div>
-        <p style={{ fontSize: 12, color: '#B5A89E', fontWeight: 800, margin: '0 0 7px' }}>{recordCaption(record)}</p>
-        <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.25, color: 'var(--slc-text)', margin: 0 }}>{record.title}</h2>
-      </div>
-      <span style={{ display: 'grid', justifyItems: 'end', gap: 6 }}>
-        <span style={{ flex: '0 0 auto', fontSize: 12, fontWeight: 900, padding: '6px 11px', borderRadius: 999, background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}>
-          {record.statusLabel}
-        </span>
-        {record.kind === 'schedule' ? (
-          <Link href={`/schedule/${record.id}/edit`} aria-label={`${record.title} 수정`} style={{ color: 'var(--slc-coral)', fontSize: 22, lineHeight: 1, fontWeight: 900, textDecoration: 'none' }}>›</Link>
-        ) : null}
-      </span>
-    </article>
+type FinancialSummary = {
+  gross: number;
+  subsidy: number;
+  net: number;
+};
+
+function buildFinancialSummary(receipts: Receipt[]): FinancialSummary {
+  return receipts.reduce(
+    (summary, receipt) => {
+      if (receipt.amount < 0 || receipt.category === '정부지원금') {
+        const subsidy = Math.abs(receipt.amount);
+        return { ...summary, subsidy: summary.subsidy + subsidy, net: summary.net - subsidy };
+      }
+      return { ...summary, gross: summary.gross + receipt.amount, net: summary.net + receipt.amount };
+    },
+    { gross: 0, subsidy: 0, net: 0 },
   );
 }
 
-function recordCaption(record: RecordsViewRecord) {
-  const parts = [formatTime(record.at), recordTypeLabel(record.type), injectionSiteFromMeta(record.meta)];
-  return parts.filter(Boolean).join(' · ');
+function FinancialOverview({ summary, receipts }: { summary: FinancialSummary; receipts: Receipt[] }) {
+  return (
+    <div data-testid="records-financial-overview" style={financialCardStyle}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start', marginBottom: 16 }}>
+        <div>
+          <p style={{ margin: '0 0 4px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>이번 사이클 실부담</p>
+          <strong style={{ display: 'block', color: 'var(--slc-text)', fontSize: 30, fontWeight: 950, letterSpacing: '-0.06em', lineHeight: 1.05 }}>
+            {formatWon(summary.net)}
+          </strong>
+        </div>
+        <span style={receiptCountBadgeStyle}>{receipts.length}건</span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 16 }}>
+        <SummaryCell label="결제" value={formatWon(summary.gross)} />
+        <SummaryCell label="정부지원금" value={formatSupportWon(summary.subsidy)} tone="support" />
+        <SummaryCell label="남은 부담" value={formatWon(summary.net)} tone="net" />
+      </div>
+
+      <CostLineChart receipts={receipts} total={summary.net} />
+    </div>
+  );
 }
 
-function recordTypeLabel(type: RecordsViewRecord['type']) {
-  if (type === 'clinic') return '병원';
-  if (type === 'change') return '변경';
-  if (type === 'injection') return '주사';
-  return '복용';
+function SummaryCell({ label, value, tone = 'default' }: { label: string; value: string; tone?: 'default' | 'support' | 'net' }) {
+  return (
+    <div style={{ borderRadius: 16, background: tone === 'support' ? 'rgba(238, 245, 239, 0.82)' : 'rgba(255, 252, 250, 0.82)', border: '1px solid var(--slc-border)', padding: '11px 10px' }}>
+      <p style={{ margin: '0 0 5px', color: 'var(--slc-muted)', fontSize: 10, fontWeight: 900 }}>{label}</p>
+      <strong style={{ color: tone === 'support' ? 'var(--slc-success)' : 'var(--slc-text)', fontSize: 12, fontWeight: 950, letterSpacing: '-0.03em' }}>{value}</strong>
+    </div>
+  );
 }
 
-function injectionSiteFromMeta(meta: string) {
-  return ['왼쪽 위', '오른쪽 위', '왼쪽 아래', '오른쪽 아래'].find((site) => meta.includes(site)) ?? '';
-}
-
-function recordTone(record: RecordsViewRecord) {
-  if (record.statusLabel === '완료') return { bg: '#EEF5EF', fg: 'var(--slc-success)', border: '#C9DCCB' };
-  if (record.statusLabel === '놓침') return { bg: '#FFF0F0', fg: '#C44F4F', border: '#F2B8B8' };
-  if (record.type === 'change') return { bg: '#F1EDFF', fg: '#705CB8', border: '#D8CEF9' };
-  return { bg: '#F8F4F0', fg: 'var(--slc-muted)', border: '#EFE7E0' };
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+function RecentReceiptList({ receipts, onAdd }: { receipts: Receipt[]; onAdd(): void }) {
+  return (
+    <section aria-label="최근 비용 기록" style={{ padding: '16px 16px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px 10px' }}>
+        <p style={{ fontSize: 12, fontWeight: 900, color: '#B99F91', margin: 0 }}>최근 비용 기록</p>
+        <button type="button" onClick={onAdd} style={inlineAddButtonStyle}>추가</button>
+      </div>
+      <div data-testid="financial-receipt-list" style={{ display: 'grid', gap: 8 }}>
+        {receipts.length === 0 ? (
+          <div style={emptyReceiptStyle}>
+            <strong style={{ color: 'var(--slc-text)', fontSize: 16, fontWeight: 900 }}>아직 비용 기록이 없어요</strong>
+            <p style={{ color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.5, margin: '6px 0 14px' }}>
+              첫 영수증을 추가하면 그래프와 정부지원금 반영 금액이 바로 채워져요.
+            </p>
+            <button type="button" onClick={onAdd} style={emptyAddButtonStyle}>영수증 추가</button>
+          </div>
+        ) : receipts.slice(0, 8).map((receipt) => (
+          <article key={receipt.id} style={receiptRowStyle}>
+            <div>
+              <strong style={{ color: 'var(--slc-text)', fontSize: 14, fontWeight: 900 }}>{receipt.category}</strong>
+              <p style={{ color: 'var(--slc-muted)', fontSize: 11, margin: '3px 0 0' }}>{receipt.date}{receipt.note ? ` · ${receipt.note}` : ''}</p>
+            </div>
+            <span style={{ color: receipt.amount < 0 ? 'var(--slc-success)' : 'var(--slc-text)', fontSize: 14, fontWeight: 950 }}>
+              {receipt.amount < 0 ? '-' : ''}{formatWon(Math.abs(receipt.amount))}
+            </span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function formatWon(value: number) {
   const abs = Math.abs(value).toLocaleString('ko-KR');
   return `${value < 0 ? '-' : ''}${abs}원`;
+}
+
+function formatSupportWon(value: number) {
+  return value === 0 ? '0원' : `-${formatWon(value)}`;
 }
 
 function normalizeReceiptAmount(value: string, category: ReceiptCategory) {
@@ -290,64 +275,11 @@ function toReceiptCategory(value: string): ReceiptCategory {
   return RECEIPT_CATEGORIES.find((category) => category === value) ?? '기타';
 }
 
-const fieldLabelStyle = {
-  display: 'grid',
-  gap: 5,
-  color: 'var(--slc-muted)',
-  fontSize: 11,
-  fontWeight: 900,
-} as const;
-
-const fieldStyle = {
-  minHeight: 42,
-  borderRadius: 14,
-  border: '1px solid var(--slc-border)',
-  background: 'var(--slc-bg)',
-  color: 'var(--slc-text)',
-  padding: '0 12px',
-  fontSize: 14,
-  fontWeight: 800,
-  fontFamily: 'inherit',
-} as const;
-
-function filterChipStyle(active: boolean) {
-  return {
-    minHeight: 44,
-    padding: '10px 15px',
-    borderRadius: 999,
-    background: active ? 'var(--slc-coral)' : '#F8F4F0',
-    color: active ? '#fff' : 'var(--slc-muted)',
-    border: active ? '1px solid var(--slc-coral)' : '1px solid #EFE7E0',
-    fontSize: 13,
-    fontWeight: 900,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  } as const;
-}
-
-function computeCycleDay(items: ScheduleItem[]): number | null {
-  const first = items
-    .filter((item) => item.type === 'injection')
-    .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
-  if (!first) return null;
-  const diffDays = Math.floor((Date.now() - new Date(first.scheduled_at).getTime()) / 86_400_000);
-  return diffDays < 0 ? null : diffDays + 1;
-}
-
 function CostLineChart({ receipts, total }: { receipts: Receipt[]; total: number }) {
-  const points = [...receipts]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .reduce<Array<{ date: string; cumulative: number }>>(
-      (acc, receipt) => {
-        const prev = acc[acc.length - 1]?.cumulative ?? 0;
-        return [...acc, { date: receipt.date, cumulative: prev + receipt.amount }];
-      },
-      [],
-    );
-
+  const points = buildChartPoints(receipts);
   const W = 320;
-  const H = 100;
-  const PAD = { top: 12, right: 16, bottom: 24, left: 56 };
+  const H = 104;
+  const PAD = { top: 14, right: 16, bottom: 24, left: 56 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const amounts = points.map((point) => point.cumulative);
@@ -367,77 +299,73 @@ function CostLineChart({ receipts, total }: { receipts: Receipt[]; total: number
   const zeroY = toY(0);
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.88)',
-      border: '1px solid var(--slc-border)',
-      borderRadius: 22,
-      padding: '14px 16px 10px',
-      backdropFilter: 'blur(14px)',
-    }}>
+    <div style={chartShellStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <p style={{ margin: 0, fontSize: 12, color: 'var(--slc-muted)', fontWeight: 900 }}>사이클 누적 비용</p>
-        <strong style={{ fontSize: 15, fontWeight: 900, color: total < 0 ? 'var(--slc-coral)' : 'var(--slc-text)' }}>
+        <p style={{ margin: 0, fontSize: 12, color: 'var(--slc-muted)', fontWeight: 900 }}>비용 시각화</p>
+        <strong style={{ fontSize: 14, fontWeight: 950, color: total < 0 ? 'var(--slc-success)' : 'var(--slc-text)' }}>
           {formatWon(total)}
         </strong>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} aria-label="사이클 누적 비용 차트" role="img" style={{ overflow: 'visible' }}>
         <line x1={PAD.left} y1={zeroY} x2={W - PAD.right} y2={zeroY} stroke="var(--slc-border)" strokeWidth="1" />
-        <polyline points={polylinePoints} fill="none" stroke="var(--slc-coral)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        {points.length > 0 ? (
-          <circle cx={toX(points.length - 1)} cy={toY(points[points.length - 1].cumulative)} r="4" fill="var(--slc-coral)" />
-        ) : null}
+        {points.length > 1 ? (
+          <polyline points={polylinePoints} fill="none" stroke="var(--slc-coral)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        ) : (
+          <line x1={PAD.left} y1={zeroY} x2={W - PAD.right} y2={zeroY} stroke="var(--slc-coral)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="3 7" />
+        )}
+        {points.map((point, index) => (
+          <circle key={`${point.date}-${index}`} cx={toX(index)} cy={toY(point.cumulative)} r={index === points.length - 1 ? 4 : 3} fill="var(--slc-coral)" opacity={points.length > 1 ? 1 : 0.45} />
+        ))}
         {maxY > 0 ? (
           <text x={PAD.left - 4} y={PAD.top + 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">
             {formatWonShort(maxY)}
           </text>
         ) : null}
         <text x={PAD.left - 4} y={zeroY + 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">0</text>
-        {points.length > 0 ? (
-          <>
-            <text x={PAD.left} y={H - 4} textAnchor="start" fontSize="9" fill="#B5A89E" fontWeight="800">
-              {formatDateShort(points[0].date)}
-            </text>
-            <text x={W - PAD.right} y={H - 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">
-              {formatDateShort(points[points.length - 1].date)}
-            </text>
-          </>
-        ) : null}
+        <text x={PAD.left} y={H - 4} textAnchor="start" fontSize="9" fill="#B5A89E" fontWeight="800">
+          {points[0] ? formatDateShort(points[0].date) : '시작'}
+        </text>
+        <text x={W - PAD.right} y={H - 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">
+          {points.at(-1) ? formatDateShort(points.at(-1)!.date) : '오늘'}
+        </text>
       </svg>
     </div>
   );
 }
 
+function buildChartPoints(receipts: Receipt[]) {
+  const sorted = [...receipts].sort((a, b) => a.date.localeCompare(b.date));
+  if (sorted.length === 0) return [{ date: todayInputValue(), cumulative: 0 }];
+  return sorted.reduce<Array<{ date: string; cumulative: number }>>(
+    (acc, receipt) => {
+      const prev = acc[acc.length - 1]?.cumulative ?? 0;
+      return [...acc, { date: receipt.date, cumulative: prev + receipt.amount }];
+    },
+    [],
+  );
+}
+
 const SUBSIDY_INFO = [
-  { title: '난임 시술비 지원', desc: '최대 110만원 · 소득 무관', action: '국민행복카드로 신청' },
-  { title: '지자체 추가 지원', desc: '시·군·구별 10~50만원 추가', action: '거주지 보건소 문의' },
-  { title: '의료비 세액공제', desc: '총급여 3% 초과분 15% 공제', action: '연말정산 의료비 항목' },
+  { title: '난임 시술비 지원', desc: '정부·지자체 지원금은 비용에서 차감해 실부담으로 보여요', action: '영수증 분류에서 정부지원금 선택' },
+  { title: '지원금 처리', desc: '지원금은 자동으로 마이너스 금액으로 저장돼요', action: '결제 금액과 따로 기록' },
+  { title: '연말정산 준비', desc: '진료비·약제비·검사비를 분류해 모아둘 수 있어요', action: '최근 비용 기록에서 확인' },
 ] as const;
 
 function SubsidyCards() {
   return (
-    <section aria-label="정부 지원 안내" style={{ padding: '8px 16px 0' }}>
+    <section aria-label="정부 지원금 처리" style={{ padding: '0 16px 0' }}>
       <p style={{ fontSize: 12, fontWeight: 900, color: '#B99F91', padding: '0 8px 10px', margin: 0 }}>
-        정부 지원 안내
+        정부지원금 처리
       </p>
       <div style={{ display: 'grid', gap: 8 }}>
         {SUBSIDY_INFO.map((info) => (
           <div
             key={info.title}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              alignItems: 'center',
-              gap: 12,
-              padding: '14px 16px',
-              borderRadius: 18,
-              background: 'rgba(255,255,255,0.72)',
-              border: '1px solid var(--slc-border)',
-              backdropFilter: 'blur(14px)',
-            }}
+            style={subsidyCardStyle}
           >
             <div>
               <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 900, color: 'var(--slc-text)' }}>{info.title}</p>
-              <p style={{ margin: '0 0 3px', fontSize: 12, color: 'var(--slc-muted)', fontWeight: 700 }}>{info.desc}</p>
+              <p style={{ margin: '0 0 3px', fontSize: 12, color: 'var(--slc-muted)', fontWeight: 700, lineHeight: 1.45 }}>{info.desc}</p>
               <p style={{ margin: 0, fontSize: 11, color: 'var(--slc-coral)', fontWeight: 900 }}>{info.action}</p>
             </div>
             <span aria-hidden="true" style={{ color: 'var(--slc-muted)', fontSize: 18 }}>›</span>
@@ -460,6 +388,120 @@ function formatDateShort(dateStr: string) {
   return `${Number(month)}/${Number(day)}`;
 }
 
+const headerStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: 18,
+  padding: '0 24px 18px',
+} as const;
+
+const eyebrowStyle = {
+  fontSize: 13,
+  color: '#B5A89E',
+  fontWeight: 800,
+  margin: '0 0 4px',
+} as const;
+
+const titleStyle = {
+  fontSize: 30,
+  fontWeight: 950,
+  color: 'var(--slc-text)',
+  margin: 0,
+  letterSpacing: '-0.06em',
+  lineHeight: 1,
+} as const;
+
+const leadStyle = {
+  maxWidth: 270,
+  margin: '9px 0 0',
+  color: 'var(--slc-muted)',
+  fontSize: 13,
+  fontWeight: 700,
+  lineHeight: 1.45,
+} as const;
+
+const financialCardStyle = {
+  borderRadius: 26,
+  background: 'rgba(255,255,255,0.84)',
+  border: '1px solid var(--slc-border)',
+  boxShadow: '0 18px 46px rgba(80, 50, 40, 0.08)',
+  backdropFilter: 'blur(16px)',
+  padding: '18px 18px 14px',
+} as const;
+
+const receiptCountBadgeStyle = {
+  flex: '0 0 auto',
+  padding: '7px 11px',
+  borderRadius: 999,
+  background: 'var(--slc-coral-light)',
+  color: 'var(--slc-coral)',
+  fontSize: 12,
+  fontWeight: 900,
+} as const;
+
+const chartShellStyle = {
+  borderRadius: 20,
+  background: 'rgba(255, 249, 246, 0.76)',
+  border: '1px solid var(--slc-border)',
+  padding: '13px 13px 8px',
+} as const;
+
+const subsidyCardStyle = {
+  display: 'grid',
+  gridTemplateColumns: '1fr auto',
+  alignItems: 'center',
+  gap: 12,
+  padding: '14px 16px',
+  borderRadius: 18,
+  background: 'rgba(255,255,255,0.76)',
+  border: '1px solid var(--slc-border)',
+  backdropFilter: 'blur(14px)',
+} as const;
+
+const receiptRowStyle = {
+  display: 'grid',
+  gridTemplateColumns: '1fr auto',
+  alignItems: 'center',
+  gap: 10,
+  padding: '15px 16px',
+  borderRadius: 18,
+  background: 'rgba(255,255,255,0.78)',
+  border: '1px solid var(--slc-border)',
+  backdropFilter: 'blur(14px)',
+} as const;
+
+const emptyReceiptStyle = {
+  padding: '22px 18px',
+  borderRadius: 22,
+  background: 'rgba(255,255,255,0.72)',
+  border: '1px dashed rgba(216, 98, 77, 0.28)',
+  textAlign: 'center',
+} as const;
+
+const inlineAddButtonStyle = {
+  border: 0,
+  background: 'transparent',
+  color: 'var(--slc-coral)',
+  fontSize: 12,
+  fontWeight: 900,
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+} as const;
+
+const emptyAddButtonStyle = {
+  minHeight: 40,
+  padding: '0 16px',
+  border: 0,
+  borderRadius: 999,
+  background: 'var(--slc-coral)',
+  color: '#fff',
+  fontSize: 13,
+  fontWeight: 900,
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+} as const;
+
 const recordsAddButtonStyle = {
   width: 44,
   height: 44,
@@ -475,13 +517,24 @@ const recordsAddButtonStyle = {
   fontFamily: 'inherit',
 } as const;
 
-const cycleDayHeroStyle = {
-  margin: '0 16px 16px',
-  padding: '18px 20px',
-  borderRadius: 22,
-  background: 'rgba(255,255,255,0.82)',
+const fieldLabelStyle = {
+  display: 'grid',
+  gap: 5,
+  color: 'var(--slc-muted)',
+  fontSize: 11,
+  fontWeight: 900,
+} as const;
+
+const fieldStyle = {
+  minHeight: 42,
+  borderRadius: 14,
   border: '1px solid var(--slc-border)',
-  backdropFilter: 'blur(14px)',
+  background: 'var(--slc-bg)',
+  color: 'var(--slc-text)',
+  padding: '0 12px',
+  fontSize: 14,
+  fontWeight: 800,
+  fontFamily: 'inherit',
 } as const;
 
 const sheetBackdropStyle = {

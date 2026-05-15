@@ -22,7 +22,7 @@ const receipt = (overrides: Partial<Receipt> = {}): Receipt => ({
 });
 
 describe('Records receipts', () => {
-  it('keeps receipt entry in a bottom sheet and renders the running cost chart from saved receipts', () => {
+  it('makes the records tab a finance-first surface with always-visible cost visualization and subsidies', () => {
     const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
       items: [],
       completions: [],
@@ -30,19 +30,34 @@ describe('Records receipts', () => {
       receipts: [receipt(), receipt({ id: 'receipt-2', amount: -10000, category: '정부지원금', note: null })],
     }));
 
-    expect(markup).toContain('영수증 추가');
-    expect(markup).toContain('사이클 누적 비용');
+    expect(markup).toContain('시술비 기록');
+    expect(markup).toContain('비용 시각화');
     expect(markup).toContain('aria-label="사이클 누적 비용 차트"');
     expect(markup).toContain('25,000원');
-    expect(markup).toContain('정부 지원 안내');
-    expect(markup).toContain('난임 시술비 지원');
-    expect(markup).toContain('지자체 추가 지원');
-    expect(markup).toContain('의료비 세액공제');
+    expect(markup).toContain('정부지원금 처리');
+    expect(markup).toContain('지원금 처리');
+    expect(markup).toContain('data-testid="financial-receipt-list"');
+    expect(markup).toContain('정부지원금');
     expect(markup).toContain('data-testid="ambient-story-background"');
-    expect(markup).toContain('backdrop-filter:blur(14px)');
+    expect(markup).not.toContain('data-testid="records-timeline"');
+    expect(markup).not.toContain('data-testid="records-calm-card"');
     expect(markup).not.toContain('data-testid="receipt-form"');
-    expect(markup).not.toContain('data-testid="receipt-list"');
     expect(markup).not.toContain('rgba(252, 238, 232, 0.9)');
+  });
+
+  it('still renders cost visualization and support guidance before the first receipt exists', () => {
+    const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
+      items: [],
+      completions: [],
+      clinicUpdates: [],
+      receipts: [],
+    }));
+
+    expect(markup).toContain('0원');
+    expect(markup).toContain('비용 시각화');
+    expect(markup).toContain('정부지원금 처리');
+    expect(markup).toContain('아직 비용 기록이 없어요');
+    expect(markup).toContain('첫 영수증을 추가하면 그래프와 정부지원금 반영 금액이 바로 채워져요.');
   });
 
   it('defines the receipt bottom sheet contract without the legacy inline panel', () => {
@@ -54,8 +69,7 @@ describe('Records receipts', () => {
     expect(screenSource).not.toContain('function ReceiptPanel');
   });
 
-
-  it('extends the records fetch window so cycle-day can find the first injection', () => {
+  it('extends the records fetch window so finance context can coexist with a longer cycle', () => {
     expect(recordsPage).toContain('120 * 24 * 60 * 60 * 1000');
     expect(recordsPage).not.toContain('30 * 24 * 60 * 60 * 1000');
   });

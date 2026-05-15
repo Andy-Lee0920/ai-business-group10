@@ -6,7 +6,6 @@ const editPage = readFileSync('app/(authed)/schedule/[id]/edit/page.tsx', 'utf8'
 const actionCard = readFileSync('src/components/action-card.tsx', 'utf8');
 const todayScreen = readFileSync('src/features/today/today-screen.tsx', 'utf8');
 const calendarScreen = readFileSync('src/features/calendar/calendar-screen.tsx', 'utf8');
-const recordsScreen = readFileSync('src/features/records/records-screen.tsx', 'utf8');
 const editForm = readFileSync('src/features/schedule/schedule-edit-form.tsx', 'utf8');
 
 describe('schedule edit contract', () => {
@@ -37,8 +36,8 @@ describe('schedule edit contract', () => {
     expect(apiRoute).toContain('updated_at');
   });
 
-  it('exposes edit entry points from home, calendar, and records schedule rows', () => {
-    for (const source of [actionCard, todayScreen, calendarScreen, recordsScreen]) {
+  it('exposes edit entry points from home and calendar schedule rows without duplicating them in records', () => {
+    for (const source of [actionCard, todayScreen, calendarScreen]) {
       expect(source).toContain('/schedule/${');
     }
     expect(editPage).toContain('ScheduleEditForm');
@@ -47,12 +46,10 @@ describe('schedule edit contract', () => {
   });
 
   it('uses chevron edit affordances on schedule timeline rows', () => {
-    for (const source of [todayScreen, recordsScreen]) {
-      expect(source).toContain('>›</Link>');
-      expect(source).toContain('fontSize: 22');
-      expect(source).toContain('lineHeight: 1');
-      expect(source).not.toContain('>수정</Link>');
-    }
+    expect(todayScreen).toContain('>›</Link>');
+    expect(todayScreen).toContain('fontSize: 22');
+    expect(todayScreen).toContain('lineHeight: 1');
+    expect(todayScreen).not.toContain('>수정</Link>');
     expect(calendarScreen).toContain('function TimelineRow');
     expect(calendarScreen).toContain('paddingLeft: 28');
     expect(calendarScreen).toContain('left: 10');

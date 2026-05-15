@@ -30,20 +30,22 @@ const completion = (overrides: Partial<CompletionRecord>): CompletionRecord => (
 });
 
 describe('SLC records screen', () => {
-  it('renders records as calm scan-first cards instead of verbose timeline text', () => {
+  it('does not duplicate calendar schedule rows on the records tab', () => {
     const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
       items: [item({})],
       completions: [completion({})],
       clinicUpdates: [],
     }));
 
-    expect(markup).toContain('최근 기록');
-    expect(markup).toContain('주사 시작');
-    expect(markup).toContain('일차');
-    expect(markup).toContain('data-testid="records-calm-card"');
-    expect(markup).toContain('주사');
-    expect(markup).toContain('오른쪽 아래');
-    expect(markup).toContain('정부 지원 안내');
+    expect(markup).toContain('시술비 기록');
+    expect(markup).toContain('비용 시각화');
+    expect(markup).toContain('정부지원금 처리');
+    expect(markup).toContain('최근 비용 기록');
+    expect(markup).not.toContain('주사 시작');
+    expect(markup).not.toContain('data-testid="records-calm-card"');
+    expect(markup).not.toContain('data-testid="records-timeline"');
+    expect(markup).not.toContain('고날에프');
+    expect(markup).not.toContain('오른쪽 아래');
     expect(markup).not.toContain('예정 19:00 · 완료');
   });
 
