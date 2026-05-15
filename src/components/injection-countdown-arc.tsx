@@ -34,25 +34,27 @@ export function InjectionCountdownArc({
       viewBox={`0 0 ${size} ${height}`}
       width={size}
     >
-      <path
-        d={arcPath}
-        fill="none"
-        stroke="var(--slc-border)"
-        strokeLinecap="round"
-        strokeWidth={STROKE_WIDTH}
-      />
       {showFill ? (
-        <path
-          d={arcPath}
-          data-progress={ratio.toFixed(2)}
-          data-testid="injection-countdown-arc-fill"
-          fill="none"
-          stroke="var(--slc-coral)"
-          strokeDasharray={`${visibleLength} ${circumference}`}
-          strokeDashoffset={0}
-          strokeLinecap="round"
-          strokeWidth={STROKE_WIDTH}
-        />
+        <>
+          <path
+            d={arcPath}
+            fill="none"
+            stroke="rgba(201,95,75,0.14)"
+            strokeLinecap="round"
+            strokeWidth={STROKE_WIDTH}
+          />
+          <path
+            d={arcPath}
+            data-progress={ratio.toFixed(2)}
+            data-testid="injection-countdown-arc-fill"
+            fill="none"
+            stroke="var(--slc-coral)"
+            strokeDasharray={`${visibleLength} ${circumference}`}
+            strokeDashoffset={0}
+            strokeLinecap="round"
+            strokeWidth={STROKE_WIDTH}
+          />
+        </>
       ) : null}
     </svg>
   );

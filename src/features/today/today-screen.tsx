@@ -255,26 +255,40 @@ function CompactHeroCard({
 
 function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: ScheduleItem; nextInjection: ScheduleItem | null; onCta: (item: ScheduleItem) => void }) {
   const remaining = secondsUntilInjection(item.scheduled_at);
+  const isDueNow = remaining <= 0;
+
   return (
     <section
       aria-label="주사 카운트다운"
       data-testid="injection-countdown-hero"
-      style={{
-        display: 'grid',
-        justifyItems: 'center',
-        gap: 10,
-        paddingTop: 8,
-      }}
+      style={{ padding: '2px 0 4px' }}
     >
-      <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} />
-      <div style={{ textAlign: 'center', marginTop: -42 }}>
-        <p style={{ margin: '0 0 4px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 800 }}>남은 시간</p>
-        <strong style={{ color: 'var(--slc-text)', fontSize: 34, lineHeight: 1, letterSpacing: '-0.04em' }}>
-          {formatRemainingClock(remaining)}
-        </strong>
+      <div style={countdownHeroCardStyle}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ margin: '0 0 5px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>{isDueNow ? '확인 필요' : '주사 준비'}</p>
+          <strong style={{ color: 'var(--slc-text)', fontSize: 21, lineHeight: 1.18, letterSpacing: '-0.04em' }}>
+            {isDueNow ? '예정 시간이 지났어요' : '천천히 준비하면 돼요'}
+          </strong>
+        </div>
+        {isDueNow ? (
+          <div style={dueNowPanelStyle}>
+            <span aria-hidden="true" style={{ fontSize: 22 }}>!</span>
+            <span>완료 여부를 확인해 주세요.</span>
+          </div>
+        ) : (
+          <>
+            <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} size={218} />
+            <div style={{ textAlign: 'center', marginTop: -40 }}>
+              <p style={{ margin: '0 0 4px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 800 }}>남은 시간</p>
+              <strong style={{ color: 'var(--slc-text)', fontSize: 34, lineHeight: 1, letterSpacing: '-0.04em' }}>
+                {formatRemainingClock(remaining)}
+              </strong>
+            </div>
+          </>
+        )}
+        <CountdownInfoBlock item={item} nextInjection={nextInjection} />
+        <button type="button" onClick={() => onCta(item)} style={heroCtaStyle}>{ctaLabel(item.type)}</button>
       </div>
-      <CountdownInfoBlock item={item} nextInjection={nextInjection} />
-      <button type="button" onClick={() => onCta(item)} style={heroCtaStyle}>{ctaLabel(item.type)}</button>
     </section>
   );
 }
@@ -330,6 +344,32 @@ function CountdownInfoRow({ label, value, href }: { label: string; value: string
     </Link>
   );
 }
+
+const countdownHeroCardStyle = {
+  display: 'grid',
+  justifyItems: 'center',
+  gap: 12,
+  padding: '20px 18px 18px',
+  borderRadius: 30,
+  background: 'rgba(255,253,252,0.94)',
+  border: '1px solid rgba(233,222,214,0.92)',
+  boxShadow: '0 18px 40px rgba(80, 50, 40, 0.08)',
+  backdropFilter: 'blur(12px)',
+} as const;
+
+const dueNowPanelStyle = {
+  width: '100%',
+  minHeight: 112,
+  display: 'grid',
+  placeItems: 'center',
+  gap: 8,
+  borderRadius: 24,
+  background: 'linear-gradient(180deg, #FFF7F3 0%, #FFFDFC 100%)',
+  border: '1px solid var(--slc-border)',
+  color: 'var(--slc-coral)',
+  fontSize: 14,
+  fontWeight: 900,
+} as const;
 
 const heroCtaStyle = {
   width: '100%',

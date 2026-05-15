@@ -10,16 +10,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/privacy?mode=presentation', request.url));
   }
 
-  if (request.cookies.get('fevio_privacy_gate_v1')?.value !== 'accepted') {
-    return NextResponse.redirect(new URL('/privacy?next=/auth/sign-in', request.url));
-  }
-
   let supabase;
 
   try {
     supabase = await createCookieBackedSupabaseClient();
   } catch {
     return NextResponse.redirect(new URL('/?auth_error=missing_supabase_config', appUrl));
+  }
+
+  const { data: userResult } = await supabase.auth.getUser();
+  const nextPath = safeNextPath(request.nextUrl.searchParams.get('next'));
+  if (userResult.user) {
+    const response = NextResponse.redirect(new URL(nextPath ?? '/home', request.url));
+    setPrivacyCookies(response);
+    return response;
+  }
+
+  if (request.cookies.get('fevio_privacy_gate_v1')?.value !== 'accepted') {
+    return NextResponse.redirect(new URL('/privacy?next=/auth/sign-in', request.url));
   }
 
   const redirectTo = new URL('/auth/callback', appUrl).toString();
@@ -33,4 +41,15 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(data.url);
+}
+
+
+function safeNextPath(next: string | null) {
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/privacy') || next.startsWith('/auth/sign-in')) return null;
+  return next;
+}
+
+function setPrivacyCookies(response: NextResponse) {
+  response.cookies.set('fevio_privacy_accepted', '1', { httpOnly: true, sameSite: 'lax', path: '/' });
+  response.cookies.set('fevio_privacy_gate_v1', 'accepted', { httpOnly: true, sameSite: 'lax', path: '/' });
 }

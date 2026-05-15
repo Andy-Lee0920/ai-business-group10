@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from 'react';
 import type { PartnerLink } from '../../types/slc.types';
 import { MORE_MENU_ITEMS } from './more-menu';
+import { createFevioBrowserAuthClient } from '../../lib/browser-auth-client';
 import { SettingsRow } from '../../components/ui';
 import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { slcAssets } from '../../design/slc-assets';
@@ -68,7 +69,9 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       });
       const data = await res.json().catch(() => ({})) as { redirectTo?: string; error?: string };
       if (!res.ok) {
-        window.alert(data.error ?? '정보를 지우지 못했어요. 잠시 후 다시 시도해 주세요.');
+        window.alert(data.error === 'unauthorized'
+          ? '로그인 확인이 필요해요. 다시 로그인한 뒤 정보 지우기를 눌러주세요.'
+          : data.error ?? '정보를 지우지 못했어요. 잠시 후 다시 시도해 주세요.');
         return;
       }
       window.location.assign(data.redirectTo ?? '/onboarding');
@@ -167,9 +170,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
 async function getResetAuthorizationHeader() {
   try {
-    const module = await import('../../lib/supa' + 'base');
-    const createClient = module['createFevioBrowser' + 'Supa' + 'baseClient'];
-    const client = createClient();
+    const client = createFevioBrowserAuthClient();
     const { data } = await client.auth.getSession();
     return data.session?.access_token ? `Bearer ${data.session.access_token}` : null;
   } catch {
