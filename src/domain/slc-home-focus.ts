@@ -12,8 +12,14 @@ export interface SchedulePresentation {
 
 export interface HomeFocus {
   kind: HomeFocusKind;
-  badgeLabel: '병원 일정' | '내일 병원' | '투약 예정' | '다음 투약' | '확인 필요' | '일정 없음';
-  heading: '병원 일정이 다가오고 있어요' | '내일 병원 가는 날이에요' | '투약 예정이 있어요' | '다음 투약이 예정되어 있어요' | '놓친 일정이 있어요' | '등록된 일정이 없어요';
+  badgeLabel: '병원' | '내일' | '확인' | '지금' | '다음' | '비어 있음';
+  heading:
+    | '병원 시간이 가까워요'
+    | '내일 병원이에요'
+    | '놓친 일정이 있어요'
+    | '지금 챙길 시간이에요'
+    | '다음 투약이 있어요'
+    | '일정이 없어요';
   description: string;
   primaryItem: ScheduleItem | null;
 }
@@ -45,9 +51,9 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
   if (missed) {
     return {
       kind: 'missed',
-      badgeLabel: '확인 필요',
+      badgeLabel: '확인',
       heading: '놓친 일정이 있어요',
-      description: formatFocusTime(missed, '지나간 일정은 완료 여부만 차분히 확인해요.'),
+      description: formatFocusTime(missed, '완료 여부만 확인해요.'),
       primaryItem: missed,
     };
   }
@@ -59,9 +65,9 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
   if (clinicSoon) {
     return {
       kind: 'clinic_soon',
-      badgeLabel: '병원 일정',
-      heading: '병원 일정이 다가오고 있어요',
-      description: formatFocusTime(clinicSoon, '방문 시간이 먼저 보여요. 약명보다 병원 일정 맥락을 확인해요.'),
+      badgeLabel: '병원',
+      heading: '병원 시간이 가까워요',
+      description: formatFocusTime(clinicSoon, '방문 시간만 먼저 볼게요.'),
       primaryItem: clinicSoon,
     };
   }
@@ -70,20 +76,20 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
   if (clinicTomorrow) {
     return {
       kind: 'clinic_tomorrow',
-      badgeLabel: '내일 병원',
-      heading: '내일 병원 가는 날이에요',
-      description: formatFocusTime(clinicTomorrow, '내일 방문 시간을 먼저 확인해요.'),
+      badgeLabel: '내일',
+      heading: '내일 병원이에요',
+      description: formatFocusTime(clinicTomorrow, '방문 시간만 남겨둘게요.'),
       primaryItem: clinicTomorrow,
     };
   }
 
-  const medicationDue = pending.find((item) => isMedication(item) && ['due', 'due_soon', 'missed'].includes(statusFromDiff(minutesUntil(item.scheduled_at, now))));
+  const medicationDue = pending.find((item) => isMedication(item) && ['due', 'due_soon'].includes(statusFromDiff(minutesUntil(item.scheduled_at, now))));
   if (medicationDue) {
     return {
       kind: 'medication_due',
-      badgeLabel: '투약 예정',
-      heading: '투약 예정이 있어요',
-      description: formatFocusTime(medicationDue, '시간이 가까운 주사·복용을 먼저 확인해요.'),
+      badgeLabel: '지금',
+      heading: '지금 챙길 시간이에요',
+      description: formatFocusTime(medicationDue, '할 일만 먼저 보여드려요.'),
       primaryItem: medicationDue,
     };
   }
@@ -92,18 +98,18 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
   if (medicationUpcoming) {
     return {
       kind: 'medication_upcoming',
-      badgeLabel: '다음 투약',
-      heading: '다음 투약이 예정되어 있어요',
-      description: formatFocusTime(medicationUpcoming, '다음 주사·복용 시간을 차분히 확인해요.'),
+      badgeLabel: '다음',
+      heading: '다음 투약이 있어요',
+      description: formatFocusTime(medicationUpcoming, '다음 시간만 확인해요.'),
       primaryItem: medicationUpcoming,
     };
   }
 
   return {
     kind: 'empty',
-    badgeLabel: '일정 없음',
-    heading: '등록된 일정이 없어요',
-    description: '확정된 병원 일정이나 투약 일정이 생기면 홈에서 먼저 보여드릴게요.',
+    badgeLabel: '비어 있음',
+    heading: '일정이 없어요',
+    description: '확정된 일정이 생기면 여기에서 보여드릴게요.',
     primaryItem: null,
   };
 }
@@ -162,18 +168,19 @@ function formatFocusTime(item: ScheduleItem, suffix: string) {
   return `${time} · ${suffix}`;
 }
 
-
 export function resolveHomeVisualAsset(kind: HomeFocusKind): SLCAsset {
   switch (kind) {
     case 'clinic_soon':
+      return slcAssets.home.clinicWide;
     case 'clinic_tomorrow':
       return slcAssets.home.clinic;
     case 'medication_due':
-    case 'medication_upcoming':
       return slcAssets.home.injection;
+    case 'medication_upcoming':
+      return slcAssets.home.injectionWide;
     case 'missed':
       return slcAssets.home.missedRecovery;
     case 'empty':
-      return slcAssets.home.waiting;
+      return slcAssets.home.empty;
   }
 }

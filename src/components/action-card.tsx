@@ -32,11 +32,11 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
   return (
     <div data-card-emphasis={emphasis} style={cardStyle(emphasis, compact)}>
       {showCountdown && isDueSoon && !isCompleted && (
-        <div style={{ position: 'absolute', top: urgent ? 46 : 16, right: urgent ? 22 : 16 }}>
-          <CountdownRing scheduledAt={item.scheduled_at} size={urgent ? 76 : 64} />
+        <div style={{ position: 'absolute', top: urgent ? 20 : 16, right: urgent ? 20 : 16 }}>
+          <CountdownRing scheduledAt={item.scheduled_at} size={urgent ? 64 : 56} />
         </div>
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: urgent ? 9 : 6, maxWidth: urgent && showCountdown ? '68%' : '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: urgent ? 7 : 6, paddingRight: urgent && showCountdown ? 78 : 0 }}>
         <span data-testid="schedule-status-badge" data-tone={presentation.badgeTone} style={badgeStyle(presentation.badgeTone, emphasis)}>
           {urgent ? urgentBadgeLabel(item) : presentation.badgeLabel}
         </span>
@@ -47,7 +47,7 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
         ) : (
           <button
             onClick={() => onCta(item)}
-            style={ctaButtonStyle(emphasis)}
+            style={ctaButtonStyle(emphasis, compact)}
           >
             {cta}
           </button>
@@ -66,8 +66,8 @@ function cardEmphasis({ compact, isCompleted, isDueSoon, isWithinHour }: { compa
 
 function cardStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
   const base: CSSProperties = {
-    borderRadius: 24,
-    padding: compact ? '16px 20px' : '24px 24px',
+    borderRadius: compact ? 20 : 24,
+    padding: compact ? '15px 16px' : '22px 20px',
     position: 'relative',
     transition: 'all 0.3s ease',
     overflow: 'hidden',
@@ -76,11 +76,10 @@ function cardStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
   if (emphasis === 'primary') {
     return {
       ...base,
-      minHeight: 210,
-      background: 'linear-gradient(135deg, #EF7A5D 0%, #C94C35 100%)',
-      border: '1.5px solid rgba(255,255,255,0.32)',
-      boxShadow: '0 18px 42px rgba(196, 73, 48, 0.28)',
-      color: '#fff',
+      minHeight: 202,
+      background: 'var(--slc-card)',
+      border: '1.5px solid #E8A898',
+      boxShadow: '0 10px 30px rgba(196, 97, 74, 0.11)',
     };
   }
 
@@ -113,50 +112,50 @@ function cardStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
 
 function timeStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
   if (emphasis === 'primary') {
-    return { fontSize: 31, color: '#fff', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05 };
+    return { fontSize: 17, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05 };
   }
   return { fontSize: compact ? 13 : 14, color: 'var(--slc-muted)', fontWeight: 700 };
 }
 
 function titleStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
   if (emphasis === 'primary') {
-    return { fontSize: 24, fontWeight: 900, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.02em' };
+    return { fontSize: 24, fontWeight: 900, color: 'var(--slc-text)', lineHeight: 1.22, letterSpacing: '-0.04em' };
   }
   return {
     fontSize: compact ? 17 : 20,
-    fontWeight: 800,
+    fontWeight: 900,
     color: emphasis === 'completed' ? '#B5A89E' : 'var(--slc-text)',
     lineHeight: 1.3,
+    letterSpacing: '-0.03em',
   };
 }
 
-function ctaButtonStyle(emphasis: CardEmphasis): CSSProperties {
+function ctaButtonStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
   if (emphasis === 'primary') {
     return {
       marginTop: 14,
-      background: '#FFFBF8',
-      color: '#C94C35',
+      background: 'var(--slc-coral)',
+      color: '#fff',
       border: 'none',
       borderRadius: 999,
-      padding: '15px 30px',
-      fontSize: 16,
+      padding: '13px 28px',
+      fontSize: 15,
       fontWeight: 900,
       cursor: 'pointer',
-      alignSelf: 'stretch',
+      alignSelf: 'flex-start',
       fontFamily: 'inherit',
-      boxShadow: '0 8px 18px rgba(104, 43, 25, 0.16)',
     };
   }
 
   return {
-    marginTop: 12,
+    marginTop: compact ? 8 : 12,
     background: 'var(--slc-coral)',
     color: '#fff',
     border: 'none',
     borderRadius: 999,
-    padding: '13px 28px',
+    padding: compact ? '11px 20px' : '13px 28px',
     fontSize: 15,
-    fontWeight: 800,
+    fontWeight: 900,
     cursor: 'pointer',
     alignSelf: 'flex-start',
     fontFamily: 'inherit',
@@ -164,9 +163,9 @@ function ctaButtonStyle(emphasis: CardEmphasis): CSSProperties {
 }
 
 function urgentBadgeLabel(item: ScheduleItem) {
-  if (item.type === 'clinic') return '지금 병원 일정이에요';
-  if (item.type === 'medication') return '지금 복용 시간이에요';
-  return '지금 주사 시간이에요';
+  if (item.type === 'clinic') return '병원';
+  if (item.type === 'medication') return '복용';
+  return '주사';
 }
 
 function formatTitle(item: ScheduleItem) {
@@ -179,11 +178,11 @@ function badgeStyle(tone: ScheduleBadgeTone, emphasis: CardEmphasis) {
   if (emphasis === 'primary') {
     return {
       alignSelf: 'flex-start',
-      padding: '7px 12px',
+      padding: '5px 10px',
       borderRadius: 999,
-      border: '1px solid rgba(255,255,255,0.58)',
-      background: '#FFFBF8',
-      color: '#C94C35',
+      border: '1px solid #E8A898',
+      background: 'var(--slc-coral-light)',
+      color: 'var(--slc-coral)',
       fontSize: 12,
       fontWeight: 900,
       lineHeight: 1,

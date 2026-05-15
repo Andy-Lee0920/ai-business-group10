@@ -3,10 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ActionCard } from '../../components/action-card';
 import { ConfirmSheet } from '../../components/confirm-sheet';
+import { SLCIllustration } from '../../components/slc-illustration';
 import type { ClinicUpdate, InjectionSite, PartnerLink, ScheduleItem } from '../../types/slc.types';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
-import { getHomePendingItems, resolveHomeFocus, type HomeFocus } from '../../domain/slc-home-focus';
+import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
 
 interface TodayScreenProps {
   initialItems: ScheduleItem[];
@@ -77,10 +78,11 @@ export function TodayScreen({
   }, [pendingPartnerRequest]);
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '0 0 16px', background: 'var(--slc-bg)' }}>
+    <div style={{ minHeight: '100dvh', padding: '0 0 112px', background: 'var(--slc-bg)' }}>
       <Header />
+      {selectedDay === 0 && <AmbientBg focus={homeFocus} />}
       <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
-      <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {pendingPartnerRequest && (
           <PartnerRequestCard
             request={pendingPartnerRequest}
@@ -103,27 +105,43 @@ export function TodayScreen({
   );
 }
 
+function AmbientBg({ focus }: { focus: HomeFocus }) {
+  const asset = resolveHomeVisualAsset(focus.kind);
+  return (
+    <div aria-hidden style={{ position: 'relative', height: 92, overflow: 'hidden', marginBottom: -8 }}>
+      <SLCIllustration
+        asset={asset}
+        size="banner"
+        priority
+        style={{ height: '100%', width: '100%', maxHeight: 'none', borderRadius: 0, objectFit: 'cover', opacity: 0.78 }}
+      />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(255, 251, 248, 0.16) 0%, var(--slc-bg) 96%)' }} />
+    </div>
+  );
+}
+
 function FocusHero({ focus }: { focus: HomeFocus }) {
+  const warmFocus = focus.kind === 'missed' || focus.kind.startsWith('clinic');
   return (
     <section
       aria-label="홈 핵심 상태"
       data-testid="home-focus-hero"
       data-focus-kind={focus.kind}
       style={{
-        padding: '18px 20px',
-        background: focus.kind.startsWith('clinic') ? '#FFF8F5' : 'var(--slc-card)',
+        padding: '18px 18px 20px',
+        background: 'var(--slc-card)',
         borderRadius: 24,
-        border: focus.kind.startsWith('clinic') ? '1.5px solid #F4D4C8' : '1.5px solid #EFE7E0',
-        boxShadow: '0 4px 24px rgba(80, 50, 40, 0.07)',
+        border: warmFocus ? '1.5px solid #F4D4C8' : '1.5px solid #EFE7E0',
+        boxShadow: '0 8px 28px rgba(80, 50, 40, 0.065)',
       }}
     >
-      <p style={{ fontSize: 12, color: focus.kind.startsWith('clinic') ? 'var(--slc-coral)' : 'var(--slc-muted)', fontWeight: 900, margin: '0 0 8px' }}>
+      <p style={{ display: 'inline-flex', padding: '5px 10px', borderRadius: 999, background: warmFocus ? 'var(--slc-coral-light)' : '#F8F4F0', color: warmFocus ? 'var(--slc-coral)' : 'var(--slc-muted)', fontSize: 12, fontWeight: 900, lineHeight: 1, margin: '0 0 10px' }}>
         {focus.badgeLabel}
       </p>
-      <h2 style={{ fontSize: 21, color: 'var(--slc-text)', fontWeight: 900, lineHeight: 1.25, margin: '0 0 8px' }}>
+      <h2 style={{ fontSize: 24, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.2, margin: '0 0 8px' }}>
         {focus.heading}
       </h2>
-      <p style={{ fontSize: 13, color: 'var(--slc-muted)', lineHeight: 1.5, margin: 0 }}>
+      <p style={{ fontSize: 13, color: 'var(--slc-muted)', lineHeight: 1.45, margin: 0 }}>
         {focus.description}
       </p>
     </section>
@@ -149,12 +167,12 @@ function PartnerRequestCard({ request, onApprove, onReject }: { request: Partner
 function Header() {
   const today = new Date();
   return (
-    <header style={{ padding: '60px 24px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <header style={{ padding: '54px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
         <p style={{ fontSize: 13, color: '#B5A89E', fontWeight: 600, margin: '0 0 4px' }}>
           {today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
         </p>
-        <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--slc-text)', margin: 0 }}>오늘 일정</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--slc-text)', margin: 0 }}>오늘</h1>
       </div>
       <Link href="/add" aria-label="일정 추가" style={addButtonStyle}>+</Link>
     </header>
@@ -163,7 +181,7 @@ function Header() {
 
 function DayTabs({ selectedDay, onSelect }: { selectedDay: DayOffset; onSelect: (day: DayOffset) => void }) {
   return (
-    <nav aria-label="일정 날짜" style={{ display: 'flex', gap: 8, padding: '0 24px 20px' }}>
+    <nav aria-label="일정 날짜" style={{ display: 'flex', gap: 8, padding: '0 24px 16px' }}>
       {DAY_LABELS.map((label, index) => (
         <button key={label} type="button" onClick={() => onSelect(index as DayOffset)} style={tabStyle(selectedDay === index)}>{label}</button>
       ))}
@@ -173,9 +191,10 @@ function DayTabs({ selectedDay, onSelect }: { selectedDay: DayOffset; onSelect: 
 
 function EmptyState({ selectedDay }: { selectedDay: DayOffset }) {
   return (
-    <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-      <p style={{ color: '#B5A89E', fontSize: 15 }}>{DAY_LABELS[selectedDay]} {SLC_SAFE_COPY.noSchedule}</p>
-      <Link href="/add" style={emptyLinkStyle}>일정 추가</Link>
+    <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+      <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>{DAY_LABELS[selectedDay]}은 비어 있어요</p>
+      <p style={{ color: '#B5A89E', fontSize: 13, lineHeight: 1.5, margin: 0 }}>{SLC_SAFE_COPY.noSchedule}</p>
+      <Link href="/add" style={emptyLinkStyle}>추가하기</Link>
     </div>
   );
 }
@@ -232,11 +251,10 @@ function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
   });
 
   return (
-    <div data-testid="clinic-follow-up-prompt" style={{ padding: '16px 20px', background: '#FFF8F5', borderRadius: 18, border: '1.5px solid #F4D4C8' }}>
-      <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 700, margin: '0 0 6px' }}>오늘 {timeStr} 병원 일정</p>
-      <p style={{ fontSize: 16, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 6px' }}>병원 다녀오셨나요?</p>
-      <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 10px', lineHeight: 1.5 }}>바뀐 내용만 간단히 반영해요.</p>
-      <Link href="/clinic-update" style={{ fontSize: 14, color: 'var(--slc-coral)', fontWeight: 800, textDecoration: 'none' }}>업데이트하기 →</Link>
+    <div data-testid="clinic-follow-up-prompt" style={{ padding: '16px 18px', background: '#FFF8F5', borderRadius: 20, border: '1.5px solid #F4D4C8' }}>
+      <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 800, margin: '0 0 6px' }}>{timeStr} 병원</p>
+      <p style={{ fontSize: 18, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>바뀐 게 있나요?</p>
+      <Link href="/clinic-update" style={{ fontSize: 14, color: 'var(--slc-coral)', fontWeight: 900, textDecoration: 'none' }}>업데이트</Link>
     </div>
   );
 }

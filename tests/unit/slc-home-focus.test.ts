@@ -30,11 +30,11 @@ describe('SLC home focus', () => {
 
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'missed',
-      badgeLabel: '확인 필요',
+      badgeLabel: '확인',
       heading: '놓친 일정이 있어요',
       primaryItem: { id: 'late-injection' },
     });
-    expect(resolveHomeVisualAsset('missed').src).toBe('/assets/slc/home-waiting-bg.png');
+    expect(resolveHomeVisualAsset('missed').src).toBe('/assets/slc/home-missed-recovery.png');
   });
 
   it('prioritizes a clinic schedule within 60 minutes over medication cards', () => {
@@ -45,8 +45,8 @@ describe('SLC home focus', () => {
 
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'clinic_soon',
-      badgeLabel: '병원 일정',
-      heading: '병원 일정이 다가오고 있어요',
+      badgeLabel: '병원',
+      heading: '병원 시간이 가까워요',
       primaryItem: { id: 'clinic-soon' },
     });
     expect(getHomePendingItems(items, now).map((item) => item.id)).toEqual(['clinic-soon', 'med-now']);
@@ -60,8 +60,8 @@ describe('SLC home focus', () => {
 
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'clinic_tomorrow',
-      badgeLabel: '내일 병원',
-      heading: '내일 병원 가는 날이에요',
+      badgeLabel: '내일',
+      heading: '내일 병원이에요',
       primaryItem: { id: 'clinic-tomorrow' },
     });
   });
@@ -74,16 +74,25 @@ describe('SLC home focus', () => {
 
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'medication_due',
-      badgeLabel: '투약 예정',
-      heading: '투약 예정이 있어요',
+      badgeLabel: '지금',
+      heading: '지금 챙길 시간이에요',
       primaryItem: { id: 'injection-due' },
+    });
+  });
+
+  it('separates missed medication into a confirmation-first focus', () => {
+    expect(resolveHomeFocus([baseItem({ id: 'med-missed', scheduled_at: '2026-05-14T08:00:00.000Z' })], now)).toMatchObject({
+      kind: 'missed',
+      badgeLabel: '확인',
+      heading: '놓친 일정이 있어요',
+      primaryItem: { id: 'med-missed' },
     });
   });
 
   it('returns upcoming medication focus before the empty state', () => {
     expect(resolveHomeFocus([baseItem({ id: 'med-upcoming', scheduled_at: '2026-05-14T11:00:00.000Z' })], now)).toMatchObject({
       kind: 'medication_upcoming',
-      badgeLabel: '다음 투약',
+      badgeLabel: '다음',
       primaryItem: { id: 'med-upcoming' },
     });
   });
