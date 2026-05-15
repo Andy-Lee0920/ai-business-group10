@@ -1,6 +1,7 @@
-import { isPresentationMode } from '../../../src/config';
+import { headers } from 'next/headers';
+import { isPresentationRequest } from '../../../src/config';
 import { RecordsScreen } from '../../../src/features/records/records-screen';
-import { hasSupabasePublicConfig } from '../../../src/lib/env';
+import { buildPresentationClinicUpdates, buildPresentationCompletions, buildPresentationItems } from '../../../src/features/presentation/presentation-testbed';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import type { Receipt } from '../../../src/types/slc.types';
 
@@ -9,8 +10,16 @@ export const dynamic = 'force-dynamic';
 type CoupleMemberRow = { couple_id: string };
 
 export default async function RecordsPage() {
-  if (isPresentationMode() && !hasSupabasePublicConfig()) {
-    return <RecordsScreen items={[]} completions={[]} clinicUpdates={[]} receipts={[]} />;
+  const requestHeaders = await headers();
+  if (isPresentationRequest({ headers: requestHeaders })) {
+    return (
+      <RecordsScreen
+        items={buildPresentationItems()}
+        completions={buildPresentationCompletions()}
+        clinicUpdates={buildPresentationClinicUpdates()}
+        receipts={[]}
+      />
+    );
   }
 
   const supabase = await createCookieBackedSupabaseClient();

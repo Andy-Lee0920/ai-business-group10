@@ -1,6 +1,7 @@
-import { isPresentationMode } from '../../../src/config';
+import { headers } from 'next/headers';
+import { isPresentationRequest } from '../../../src/config';
 import { CalendarScreen } from '../../../src/features/calendar/calendar-screen';
-import { hasSupabasePublicConfig } from '../../../src/lib/env';
+import { PresentationCalendarDemo } from '../../../src/features/presentation/presentation-calendar-demo';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import type { ScheduleItem } from '../../../src/types/slc.types';
@@ -8,9 +9,8 @@ import type { ScheduleItem } from '../../../src/types/slc.types';
 export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {
-  if (isPresentationMode() && !hasSupabasePublicConfig()) {
-    return <CalendarScreen items={fallbackScheduleItems('presentation-user')} />;
-  }
+  const requestHeaders = await headers();
+  if (isPresentationRequest({ headers: requestHeaders })) return <PresentationCalendarDemo />;
 
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();

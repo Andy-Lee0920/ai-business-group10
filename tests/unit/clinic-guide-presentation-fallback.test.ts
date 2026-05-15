@@ -14,12 +14,16 @@ const settingsPage = readFileSync('app/(authed)/settings/page.tsx', 'utf8');
 describe('Clinic Guide presentation fallback without Supabase env', () => {
   it('can render the protected clinic guide smoke path without requiring Supabase public config', () => {
     expect(env).toContain('hasSupabasePublicConfig');
-    expect(authedLayout).toContain('presentationMode && !hasSupabasePublicConfig()');
-    expect(clinicPage).toContain('isPresentationMode() && !hasSupabasePublicConfig()');
+    expect(authedLayout).toContain('isPresentationRequest({ headers: requestHeaders })');
+    expect(authedLayout).toContain('const skipSupabase = presentationMode;');
+    expect(clinicPage).toContain('isPresentationRequest({ headers: requestHeaders })');
     expect(clinicPage).toContain('fallbackMedications()');
     expect(morePage).toContain("permanentRedirect('/settings')");
     for (const page of [addPage, homePage, recordsPage, partnerPage, settingsPage]) {
-      expect(page).toContain('isPresentationMode() && !hasSupabasePublicConfig()');
+      expect(page).toContain('isPresentationRequest({ headers: requestHeaders })');
     }
+    expect(homePage).toContain('PresentationHomeDemo');
+    expect(recordsPage).toContain('buildPresentationItems()');
+    expect(settingsPage).toContain('buildPresentationPartnerLinks()');
   });
 });

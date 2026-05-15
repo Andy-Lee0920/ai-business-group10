@@ -1,0 +1,38 @@
+name: Green evidence guard
+
+on:
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  guard:
+    if: contains(github.event.comment.body, 'Green evidence') || contains(github.event.comment.body, 'URL-action-result') || contains(github.event.comment.body, 'Deploy ID') || contains(github.event.comment.body, '배포')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check evidence commit is on main
+        id: guard
+        continue-on-error: true
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          GREEN_EVIDENCE_WARNING_FILE: green-evidence-warning.md
+        run: node scripts/check-green-evidence-comment.mjs
+
+      - name: Comment warning when evidence is branch-only
+        if: steps.guard.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: gh issue comment "$ISSUE_NUMBER" --body-file green-evidence-warning.md
+
+      - name: Fail guard on branch-only evidence
+        if: steps.guard.outcome == 'failure'
+        run: exit 1

@@ -29,6 +29,7 @@ describe('README current product contract', () => {
 
     expect(doc).toContain('No medical judgment');
     expect(doc).toContain('Raw clinic text는 partner view에 노출하지 않는다');
-    expect(doc).toContain('LLM 기능은 P0 실행 경로에 없다');
+    expect(doc).toContain('LLM은 비정형 병원 안내/사진/문자를 일정 후보로 바꾸는 보조 도구다');
+    expect(doc).toContain('사용자가 확인하기 전에는 실행 일정으로 저장하지 않는다');
   });
 });
