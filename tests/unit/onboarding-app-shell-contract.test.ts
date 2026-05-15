@@ -17,16 +17,16 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain('as const satisfies readonly OnboardingStep[]');
   });
 
-  it('renders brand intro, role select with patient experience sub-step, partner exit, and add method cards', () => {
+  it('renders premium brand intro, role select, first-add prompt, partner exit, and add method cards', () => {
     for (const copy of [
       'Fevio',
       '오늘 필요한 것만 보여드릴게요',
       '시작하기',
       '치료자',
       '파트너',
-      '처음',
-      '해본 적 있음',
-      '다시 준비 중',
+      '오늘 기억할 것',
+      '하나만 남겨주세요',
+      '추가하기',
       '파트너는 초대 링크로 들어와 주세요',
       '어떻게 추가할까요?',
       '사진으로 남기기',
