@@ -97,6 +97,8 @@ export function OnboardingClient() {
 
   const activeIndex = VISIBLE_PROGRESS_STEPS.findIndex((step) => step.id === progressStep);
   const progressLabel = `처음 설정 ${activeIndex + 1}/${VISIBLE_PROGRESS_STEPS.length}`;
+  const hasMissingCandidateTime = reviewCandidates.some((candidate) => candidate.decision === 'confirmed' && !candidate.scheduled_at);
+  const hasMissingCandidateDose = reviewCandidates.some((candidate) => candidate.decision === 'confirmed' && candidate.type !== 'clinic' && !candidate.dose);
 
   function goToStep(step: OnboardingStep) {
     setError(null);
@@ -354,7 +356,7 @@ export function OnboardingClient() {
           <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="brand-intro-title">
             <div className={styles.brandStack}>
               <img className={styles.brandLogo} alt="Fevio" src="/assets/onboarding/fevio-logo.svg" />
-              <h1 className={styles.brandIntroTitle} id="brand-intro-title">오늘 필요한 것만 보여드릴게요</h1>
+              <h1 className={styles.brandIntroTitle} id="brand-intro-title">소중한 시작을,<br />Fevio와 함께</h1>
               <p className={styles.questionLead}>병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.</p>
             </div>
             <BottomDock activeIndex={activeIndex}>
@@ -369,19 +371,19 @@ export function OnboardingClient() {
           <section className={styles.screen} aria-labelledby="role-select-title">
             <BackButton onClick={goBack} />
             <div className={styles.stepHeader}>
-              <h2 className={styles.sectionTitle} id="role-select-title">누구로 시작할까요?</h2>
+              <h2 className={styles.sectionTitle} id="role-select-title">어떤 화면으로 시작할까요?</h2>
               <p className={styles.questionLead}>필요한 화면만 먼저 보여드릴게요.</p>
             </div>
             <div className={styles.roleGrid} role="group" aria-label="역할 선택">
               <SelectionChip className={styles.roleCard} onClick={selectPatientRole} selected={selectedRole === 'patient'} tone="sage">
                 <span className={styles.roleImageWrap}><img alt="" src="/assets/onboarding/role-patient.png" /></span>
-                <strong>치료자</strong>
-                <small>오늘 일정 · 완료 기록</small>
+                <strong>본인</strong>
+                <small>일정 확인 · 주사 기록</small>
               </SelectionChip>
               <SelectionChip className={styles.roleCard} onClick={selectPartnerRole} selected={selectedRole === 'partner'} tone="lavender">
                 <span className={styles.roleImageWrap}><img alt="" src="/assets/onboarding/role-partner.png" /></span>
                 <strong>파트너</strong>
-                <small>공유 일정 · 읽기 전용</small>
+                <small>일정 공유 · 확인 전용</small>
               </SelectionChip>
             </div>
             <BottomDock activeIndex={activeIndex}>
@@ -395,10 +397,10 @@ export function OnboardingClient() {
         {activeStep === 'add_method' && !addMethodIntroSeen ? (
           <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="first-add-title">
             <BackButton onClick={goBack} />
-            <HeroGlyph kind="calendar" />
+            <img className={styles.heroImage} alt="" src="/assets/slc/clinic-visit-clipboard.png" />
             <div className={styles.heroCopy}>
-              <h2 className={styles.sectionTitle} id="first-add-title">오늘 기억할 것<br />하나만 남겨주세요</h2>
-              <p className={styles.questionLead}>병원 안내를 그대로 옮겨주시면 오늘 일정으로 만들어드릴게요.</p>
+              <h2 className={styles.sectionTitle} id="first-add-title">병원 안내를<br />그대로 옮겨주세요</h2>
+              <p className={styles.questionLead}>확인 전에는 일정으로 저장하지 않아요.</p>
             </div>
             <BottomDock activeIndex={activeIndex}>
               <CtaButton className={styles.primaryCta} onClick={() => setAddMethodIntroSeen(true)} type="button">
@@ -484,9 +486,11 @@ export function OnboardingClient() {
               <BackButton onClick={goBack} />
               <div className={styles.stepHeader}>
                 <p className={styles.kicker}>확인 필요</p>
-                <h2 className={styles.sectionTitle} id="candidate-review-title">일정을 확인해 주세요</h2>
+                <h2 className={styles.sectionTitle} id="candidate-review-title">저장 전,<br />일정을 확인해 주세요</h2>
                 <p className={styles.questionLead}>확인한 일정만 저장합니다.</p>
               </div>
+              {hasMissingCandidateTime ? <Notice className={styles.notice} tone="coral">접종 시간이 아직 비어 있어요. 필요한 시간을 알려주세요.</Notice> : null}
+              {hasMissingCandidateDose ? <Notice className={styles.notice} tone="sage">용량이 확인되지 않았어요. 처방지에 적힌 용량을 확인해 주세요.</Notice> : null}
               <div className={styles.candidateList}>
                 {reviewCandidates.map((candidate) => (
                   <article key={candidate.id} className={styles.candidateCard} data-decision={candidate.decision}>
@@ -637,7 +641,7 @@ export function OnboardingClient() {
               <BackButton onClick={goBack} />
               <HeroGlyph kind="document" done />
               <div className={styles.heroCopy}>
-                <h2 className={styles.sectionTitle} id="complete-title">거의 다 왔어요!</h2>
+                <h2 className={styles.sectionTitle} id="complete-title">일정 후보를 만들었어요</h2>
                 <p className={styles.questionLead}>일정 후보를 확인하고 오늘 홈에서 만나보세요.</p>
               </div>
               <div className={styles.homePreviewCard} aria-label="일정 후보 요약">
@@ -738,7 +742,7 @@ function formatCandidateDateTime(value: string | null) {
 }
 
 function formatCandidateDose(dose: string | null, unit: string | null) {
-  if (!dose && !unit) return '용량 없음';
+  if (!dose && !unit) return '용량 미입력';
   return `${dose ?? ''}${dose && unit ? ' ' : ''}${unit ?? ''}`.trim();
 }
 

@@ -786,7 +786,7 @@ function formatCandidateType(type: ScheduleType) {
 }
 
 function formatCandidateDose(dose: string | null, unit: string | null) {
-  if (!dose && !unit) return '용량 없음';
+  if (!dose && !unit) return '용량 미입력';
   return `${dose ?? ''}${dose && unit ? ' ' : ''}${unit ?? ''}`.trim();
 }
 

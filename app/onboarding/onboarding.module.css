@@ -204,6 +204,13 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.heroImage {
+  width: min(154px, 42vw);
+  height: auto;
+  margin-bottom: 28px;
+  filter: drop-shadow(0 22px 42px rgba(149, 94, 72, 0.13));
+}
+
 .methodGrid {
   display: grid;
   gap: 14px;

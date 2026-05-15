@@ -153,6 +153,109 @@ describe('/api/onboard/text-analyze', () => {
     vi.useRealTimers();
   });
 
+  it('expands duration and twice-daily frequency into six pending candidates when exact times are missing', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '오늘밤부터 고날에프 3일간 하루 두번' }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null; dose: string | null; unit: string | null }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toHaveLength(6);
+    expect(payload.candidates.every((candidate) => candidate.type === 'injection')).toBe(true);
+    expect(payload.candidates.every((candidate) => candidate.title.startsWith('고날에프'))).toBe(true);
+    expect(payload.candidates.every((candidate) => candidate.scheduled_at === null)).toBe(true);
+    expect(payload.candidates.every((candidate) => candidate.dose === null && candidate.unit === null)).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('extracts tomorrow night one-time Ovidrel as one scheduled candidate', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '내일부터 오비드렐 밤 10시에 1회' }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toEqual([
+      expect.objectContaining({
+        title: '오비드렐',
+        type: 'injection',
+        scheduled_at: '2026-05-16T13:00:00.000Z',
+      }),
+    ]);
+    vi.useRealTimers();
+  });
+
+  it('expands explicit start date, dose, duration, and daily time into dated candidates', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '5월 28일부터 고날에프 150IU 3일간 매일 오전 9시' }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null; dose: string | null; unit: string | null }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toHaveLength(3);
+    expect(payload.candidates.map((candidate) => candidate.scheduled_at)).toEqual([
+      '2026-05-28T00:00:00.000Z',
+      '2026-05-29T00:00:00.000Z',
+      '2026-05-30T00:00:00.000Z',
+    ]);
+    expect(payload.candidates.every((candidate) => candidate.title.startsWith('고날에프'))).toBe(true);
+    expect(payload.candidates.every((candidate) => candidate.dose === '150' && candidate.unit === 'IU')).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('creates two daily vaginal tablet candidates with missing exact times for morning and evening wording', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '오늘부터 질정 하루 2번 아침 저녁' }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null; dose: string | null }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toHaveLength(2);
+    expect(payload.candidates.map((candidate) => candidate.type)).toEqual(['medication', 'medication']);
+    expect(payload.candidates.map((candidate) => candidate.scheduled_at)).toEqual([null, null]);
+    expect(payload.candidates.every((candidate) => candidate.dose === null)).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('keeps a generic injection candidate when medication name, time, and dose are missing', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '3일간 주사' }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null; dose: string | null; unit: string | null }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.candidates).toEqual([
+      expect.objectContaining({
+        title: '주사',
+        type: 'injection',
+        scheduled_at: null,
+        dose: null,
+        unit: null,
+      }),
+    ]);
+    vi.useRealTimers();
+  });
+
   it('returns an empty candidate array without inserting when extraction finds nothing', async () => {
     state.user = { id: 'patient-1' };
     const { POST } = await import('../../app/api/onboard/text-analyze/route');
