@@ -1,0 +1,16 @@
+<svg width="642" height="201" viewBox="0 0 642 201" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Fevio logo</title>
+  <desc id="desc">A coral care timer icon next to the Fevio wordmark.</desc>
+  <g fill="none" stroke="#EA7059" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52 73C37 97 34 127 49 153C70 190 121 193 149 162" stroke-width="16"/>
+    <path d="M42 76C43 66 45 63 50 62" stroke-width="16"/>
+    <path d="M105 104L135 72" stroke-width="16"/>
+    <path d="M96 113L106 103" stroke-width="16"/>
+  </g>
+  <circle cx="87" cy="52" r="9" fill="#EA7059"/>
+  <circle cx="130" cy="33" r="9" fill="#EA7059"/>
+  <circle cx="168" cy="45" r="9" fill="#EA7059"/>
+  <circle cx="194" cy="75" r="9" fill="#EA7059"/>
+  <circle cx="203" cy="115" r="9" fill="#EA7059"/>
+  <text x="272" y="145" fill="#5A5651" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="106" font-weight="400" letter-spacing="-6">Fevio</text>
+</svg>

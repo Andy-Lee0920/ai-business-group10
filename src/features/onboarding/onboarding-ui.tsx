@@ -12,18 +12,32 @@ export const onboardingTokens = {
   radiusPill: 999,
 } as const;
 
-export function RoleButton({ active, icon, title, description, onClick }: { active: boolean; icon?: string; title: string; description: string; onClick: () => void }) {
+type RoleButtonProps = {
+  active: boolean;
+  imageSrc?: string;
+  imageAlt?: string;
+  icon?: string;
+  title: string;
+  description: string;
+  onClick: () => void;
+};
+
+export function RoleButton({ active, imageSrc, imageAlt, icon, title, description, onClick }: RoleButtonProps) {
   return (
     <button type="button" onClick={onClick} style={{
-      display: 'block', width: '100%', minHeight: 96, padding: '20px 22px',
+      display: 'grid', justifyItems: 'center', width: '100%', minHeight: 224, padding: '18px 14px 20px',
       background: active ? onboardingTokens.activeBg : onboardingTokens.card,
       border: `2px solid ${active ? onboardingTokens.primary : onboardingTokens.border}`,
-      borderRadius: onboardingTokens.radiusCard, marginBottom: 14, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
-      boxShadow: active ? '0 14px 30px rgba(196, 97, 74, 0.12)' : 'none',
+      borderRadius: 22, marginBottom: 0, cursor: 'pointer', textAlign: 'center', fontFamily: 'inherit',
+      boxShadow: active ? '0 18px 34px rgba(196, 97, 74, 0.14)' : '0 10px 24px rgba(42, 31, 26, 0.04)',
     }}>
-      {icon ? <span style={{ display: 'inline-grid', placeItems: 'center', width: 40, height: 40, marginBottom: 10, borderRadius: onboardingTokens.radiusPill, background: '#FCE9E3', color: onboardingTokens.primary, fontWeight: 900 }}>{icon}</span> : null}
-      <span style={{ display: 'block', fontSize: 17, fontWeight: 800, color: onboardingTokens.textMain, marginBottom: 4 }}>{title}</span>
-      <span style={{ display: 'block', fontSize: 14, color: onboardingTokens.textMuted, lineHeight: 1.45 }}>{description}</span>
+      {imageSrc ? (
+        <img src={imageSrc} alt={imageAlt ?? ''} width={104} height={118} style={{ width: '100%', maxWidth: 104, height: 118, objectFit: 'contain', marginBottom: 12 }} />
+      ) : icon ? (
+        <span style={{ display: 'inline-grid', placeItems: 'center', width: 52, height: 52, marginBottom: 14, borderRadius: onboardingTokens.radiusPill, background: '#FCE9E3', color: onboardingTokens.primary, fontWeight: 900 }}>{icon}</span>
+      ) : null}
+      <span style={{ display: 'block', fontSize: 21, fontWeight: 900, color: active ? onboardingTokens.primary : onboardingTokens.textMain, marginBottom: 6 }}>{title}</span>
+      <span style={{ display: 'block', fontSize: 13, color: onboardingTokens.textMuted, lineHeight: 1.45, wordBreak: 'keep-all' }}>{description}</span>
     </button>
   );
 }

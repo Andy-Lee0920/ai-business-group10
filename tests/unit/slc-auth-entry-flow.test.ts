@@ -23,8 +23,9 @@ describe('SLC auth entry contract', () => {
 
   it('starts onboarding with Welcome, then Role, Consent, First Schedule, and Confirm without prechecked consent', () => {
     expect(onboardingScreen).toContain("useState<OnboardingStep>('brand_intro')");
-    expect(onboardingScreen).toContain('오늘의 주사와 약을 조용히 챙겨드릴게요');
-    expect(onboardingScreen).toContain('어떤 역할로 시작하시나요?');
+    expect(onboardingScreen).toContain('오늘 필요한 것만');
+    expect(onboardingScreen).toContain('보여드릴게요');
+    expect(onboardingScreen).toContain('누구로 시작할까요?');
     expect(onboardingScreen).toContain('Fevio 민감정보 동의');
     expect(onboardingScreen).toContain('처음 확인할 일정을 하나만 남겨주세요');
     expect(onboardingScreen).toContain('이 일정으로 Home을 시작할게요');
