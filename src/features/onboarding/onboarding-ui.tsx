@@ -23,7 +23,7 @@ type RoleButtonProps = {
 export function RoleButton({ active, illustration, title, description, onClick }: RoleButtonProps) {
   return (
     <button type="button" onClick={onClick} style={{
-      display: 'grid', justifyItems: 'center', width: '100%', minHeight: 224, padding: '18px 14px 20px',
+      display: 'grid', justifyItems: 'center', alignContent: 'center', width: '100%', minHeight: illustration ? 224 : 132, padding: '18px 14px 20px',
       background: active ? onboardingTokens.activeBg : onboardingTokens.card,
       border: `2px solid ${active ? onboardingTokens.primary : onboardingTokens.border}`,
       borderRadius: 22, marginBottom: 0, cursor: 'pointer', textAlign: 'center', fontFamily: 'inherit',

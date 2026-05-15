@@ -45,11 +45,13 @@ describe('SLC records screen', () => {
     expect(markup).not.toContain('예정 19:00 · 완료');
   });
 
-  it('uses the canonical records empty-state illustration asset', () => {
+  it('uses the canonical records ambient asset instead of an inline empty-state illustration', () => {
     const source = readFileSync('src/features/records/records-screen.tsx', 'utf8');
 
-    expect(source).toContain('SLCIllustration');
-    expect(source).toContain('slcAssets.empty.records');
+    expect(source).toContain('AmbientStoryBackground');
+    expect(source).toContain('slcAssets.home.missedRecovery');
+    expect(source).not.toContain('SLCIllustration');
+    expect(source).not.toContain('slcAssets.empty.records');
     expect(source).not.toContain('<img');
   });
 });

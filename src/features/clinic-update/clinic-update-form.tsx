@@ -6,7 +6,7 @@ import type { ClinicUpdate, Medication, ScheduleItem, ScheduleType } from '../..
 import type { ClinicGuideAnswer, ClinicGuideMedicationNormalizeResponse, ClinicGuideResponse, ClinicGuideStep } from '../../types/clinic-guide.types';
 import { resolveMedicationNames } from '../../domain/clinic-guide-medication-normalizer';
 import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../domain/slc-clinic-update';
-import { SLCIllustration } from '../../components/slc-illustration';
+import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { slcAssets } from '../../design/slc-assets';
 
 type MedicationOption = Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'aliases' | 'default_unit' | 'default_cta'>;
@@ -460,7 +460,6 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   if (step === 'entry') return (
     <Shell>
       <div style={{ flex: 1, display: 'grid', alignContent: 'center', gap: 18 }}>
-        <SLCIllustration asset={slcAssets.clinic.visitClipboard} size="banner" priority style={entryBannerStyle} />
         <h1 style={heroTitleStyle}>{copy.entryTitle.split('\\n').map((line, index) => <span key={line}>{index > 0 ? <br /> : null}{line}</span>)}</h1>
         <p style={subtitleStyle}>{copy.entrySubtitle}</p>
         <div style={methodGridStyle} aria-label={copy.methodLabel}>
@@ -497,7 +496,6 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
       <input ref={cameraInputRef} aria-label="사진 촬영" type="file" accept="image/*" capture="environment" hidden onChange={(event) => { void processPhotoFile(event.target.files?.[0]); event.currentTarget.value = ''; }} />
       <input ref={galleryInputRef} aria-label="사진 선택" type="file" accept="image/*" hidden onChange={(event) => { void processPhotoFile(event.target.files?.[0]); event.currentTarget.value = ''; }} />
       <section style={questionCardStyle} aria-label="사진으로 업데이트">
-        <SLCIllustration asset={slcAssets.clinic.visitClipboard} size="card" style={landingIllustrationStyle} />
         <h1 style={titleStyle}>사진으로 업데이트</h1>
         <p style={subtitleStyle}>병원 안내 사진을 올리면 일정 후보만 추려서 보여드려요.</p>
         <p style={statusLineStyle}>{captureMessage}</p>
@@ -541,7 +539,6 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   if (step === 'manual_entry') return (
     <Shell>
       <section style={questionCardStyle} aria-label="직접 수정 fallback">
-        <SLCIllustration asset={slcAssets.clinic.fallback} size="card" style={landingIllustrationStyle} />
         <h1 style={titleStyle}>직접 수정할게요</h1>
         <p style={subtitleStyle}>사진이나 문자에서 찾지 못한 내용은 질문 카드로 직접 확인할 수 있어요.</p>
         <button type="button" onClick={() => setStep('same_med')} style={ctaStyle()}>직접 입력 form 열기</button>
@@ -553,7 +550,6 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   if (step === 'diff_review') return (
     <Shell>
       <section style={questionCardStyle} aria-label="변경사항 diff 확인">
-        <SLCIllustration asset={slcAssets.clinic.diff} size="card" style={diffHeroStyle} />
         <h1 style={titleStyle}>{copy.diffTitle}</h1>
         <p style={subtitleStyle}>{copy.diffDescription}</p>
         <div style={diffGridStyle}>
@@ -656,7 +652,6 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
             ))}
             {!filteredMedications.length ? (
               <div style={emptyFallbackStyle}>
-                <SLCIllustration asset={slcAssets.clinic.fallback} size="empty" style={fallbackIllustrationStyle} />
                 <p style={emptyListStyle}>검색 결과가 없어요. 직접 입력으로 추가할 수 있어요.</p>
               </div>
             ) : null}
@@ -848,7 +843,11 @@ function GuideHeader({ current, total, aiAvailable }: { current: number; total: 
 }
 
 function Shell({ children, header }: { children: ReactNode; header?: ReactNode }) {
-  return <main style={containerStyle}>{header}{children}</main>;
+  return (
+    <AmbientStoryBackground as="main" asset={slcAssets.clinic.visitClipboard} intensity="subtle" style={containerStyle}>
+      {header}{children}
+    </AmbientStoryBackground>
+  );
 }
 
 function QuestionCard({ icon, title, lead, children }: { icon?: string; title: string; lead: string; children: ReactNode }) {
@@ -865,7 +864,6 @@ function QuestionCard({ icon, title, lead, children }: { icon?: string; title: s
 function DraftPanel({ medicationNames, nextVisit, memo, aiDraft }: { medicationNames: string[]; nextVisit: string; memo: string; aiDraft: Partial<ClinicUpdate> }) {
   return (
     <section style={panelStyle} aria-label="정리된 내용">
-      <SLCIllustration asset={slcAssets.clinic.diff} size="icon" style={draftIllustrationStyle} />
       <h2 style={{ ...sectionTitleStyle, color: 'var(--slc-coral)' }}>정리된 내용</h2>
       <p>• 새 약: {medicationNames.length ? medicationNames.join(', ') : '없음'}</p>
       <p>• 다음 방문: {nextVisit}</p>
@@ -1008,17 +1006,12 @@ const methodCardStyle: CSSProperties = { display: 'grid', gridTemplateColumns: '
 const statusLineStyle: CSSProperties = { margin: '12px 0', padding: '12px 14px', borderRadius: 14, background: '#FFF8F5', border: '1px solid #F4D4C8', color: 'var(--slc-coral)', fontSize: 14, fontWeight: 900, textAlign: 'center' };
 const progressStepsStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, margin: '12px 0 16px' };
 const progressPillStyle = (active: boolean): CSSProperties => ({ padding: '8px 6px', borderRadius: 999, background: active ? '#D5634D' : '#F7F0E9', color: active ? '#fff' : '#74675F', fontSize: 12, fontWeight: 900, textAlign: 'center' });
-const diffHeroStyle: CSSProperties = { width: 'min(58%, 160px)', margin: '0 auto 12px', opacity: 0.9 };
 const diffGridStyle: CSSProperties = { display: 'grid', gap: 12, marginTop: 12 };
 const diffColumnStyle: CSSProperties = { display: 'grid', gap: 10, padding: 12, borderRadius: 18, background: '#FFFCFA', border: '1px solid #F0E1D6' };
 const currentItemStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 10px', alignItems: 'center', padding: '12px 10px', borderRadius: 14, background: '#fff', border: '1px solid #EFE4DC' };
 const candidateCardStyle = (active: boolean): CSSProperties => ({ display: 'grid', gap: 10, padding: 12, borderRadius: 16, background: active ? '#FFF8F5' : '#fff', border: `1.5px solid ${active ? 'var(--slc-coral)' : '#EFE4DC'}` });
 const fieldLabelStyle: CSSProperties = { display: 'grid', gap: 6, color: '#74675F', fontSize: 12, fontWeight: 900 };
 const twoColumnStyle: CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 };
-const entryBannerStyle: CSSProperties = { maxHeight: 132, opacity: 0.92, boxShadow: '0 16px 30px rgba(82,57,45,0.08)' };
-const landingIllustrationStyle: CSSProperties = { width: 'min(48%, 142px)', marginBottom: 2 };
-const fallbackIllustrationStyle: CSSProperties = { width: 86, margin: '0 auto 8px', opacity: 0.86 };
-const draftIllustrationStyle: CSSProperties = { float: 'right', width: 58, margin: '0 0 8px 12px', opacity: 0.88 };
 const hospitalIconStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 58, height: 58, borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', fontSize: 28, margin: '0 auto 8px' };
 const questionCardStyle: CSSProperties = { padding: 20, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 28px rgba(82,57,45,0.08)' };
 const panelStyle: CSSProperties = { marginTop: 16, padding: 16, border: '1px solid #F0E1D6', borderRadius: 18, background: 'rgba(255,255,255,0.78)' };

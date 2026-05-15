@@ -1,6 +1,8 @@
 'use client';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { AmbientStoryBackground } from '../../components/ambient-story-background';
+import { slcAssets } from '../../design/slc-assets';
 import type { ScheduleItem } from '../../types/slc.types';
 
 interface CalendarScreenProps {
@@ -20,7 +22,7 @@ export function CalendarScreen({ items, initialDate }: CalendarScreenProps) {
   const selectedItems = itemsByDate.get(selectedDateKey) ?? [];
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '54px 0 112px', background: 'var(--slc-bg)' }}>
+    <AmbientStoryBackground asset={slcAssets.home.waiting} intensity="subtle" style={{ minHeight: '100dvh', padding: '54px 0 112px' }}>
       <header style={{ padding: '0 24px 18px' }}>
         <p style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 700, margin: '0 0 4px' }}>캘린더</p>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: '0 0 8px', letterSpacing: '-0.05em' }}>{monthLabel}</h1>
@@ -63,7 +65,7 @@ export function CalendarScreen({ items, initialDate }: CalendarScreenProps) {
           <p style={emptyStateStyle}>이 날은 예정된 케어가 없습니다</p>
         )}
       </section>
-    </div>
+    </AmbientStoryBackground>
   );
 }
 
@@ -140,8 +142,9 @@ const calendarCardStyle = {
   margin: '0 16px 18px',
   padding: '16px 14px 18px',
   borderRadius: 24,
-  background: 'var(--slc-surface)',
+  background: 'rgba(252, 238, 232, 0.88)',
   border: '1px solid var(--slc-border)',
+  backdropFilter: 'blur(14px)',
 } as const;
 
 const weekdayGridStyle = {
@@ -201,11 +204,12 @@ const emptyStateStyle = {
   margin: 0,
   padding: '28px 18px',
   borderRadius: 22,
-  background: 'var(--slc-surface)',
+  background: 'rgba(252, 238, 232, 0.88)',
   border: '1px solid var(--slc-border)',
   color: 'var(--slc-muted)',
   textAlign: 'center',
   fontSize: 14,
+  backdropFilter: 'blur(14px)',
 } as const;
 
 const timelineCardStyle = {
@@ -216,8 +220,9 @@ const timelineCardStyle = {
   gap: 12,
   padding: '12px 14px',
   borderRadius: 18,
-  background: 'var(--slc-surface)',
+  background: 'rgba(252, 238, 232, 0.88)',
   border: '1px solid var(--slc-border)',
+  backdropFilter: 'blur(14px)',
 } as const;
 
 const timeStyle = {

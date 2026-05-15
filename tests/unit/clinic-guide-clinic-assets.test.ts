@@ -4,20 +4,21 @@ import { describe, expect, it } from 'vitest';
 const form = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');
 
 describe('Clinic Guide clinic asset contract', () => {
-  it('renders clinic update surfaces through SLCIllustration and canonical slcAssets only', () => {
-    expect(form).toContain("import { SLCIllustration } from '../../components/slc-illustration'");
+  it('renders clinic update through the shared ambient story background only', () => {
+    expect(form).toContain("import { AmbientStoryBackground } from '../../components/ambient-story-background'");
     expect(form).toContain("import { slcAssets } from '../../design/slc-assets'");
     expect(form).toContain('asset={slcAssets.clinic.visitClipboard}');
-    expect(form).toContain('asset={slcAssets.clinic.diff}');
-    expect(form).toContain('asset={slcAssets.clinic.fallback}');
+    expect(form).not.toContain('SLCIllustration');
+    expect(form).not.toContain('slcAssets.clinic.diff');
+    expect(form).not.toContain('slcAssets.clinic.fallback');
     expect(form).not.toContain('<img');
   });
 
-  it('places clinic visuals on entry, diff review, and manual fallback states', () => {
-    expect(form.indexOf("step === 'entry'")).toBeLessThan(form.indexOf('asset={slcAssets.clinic.visitClipboard}'));
-    expect(form.indexOf('asset={slcAssets.clinic.visitClipboard}')).toBeLessThan(form.indexOf('copy.photoAction'));
-    expect(form.indexOf("step === 'diff_review'")).toBeLessThan(form.indexOf('asset={slcAssets.clinic.diff}'));
-    expect(form.indexOf("step === 'manual_entry'")).toBeLessThan(form.indexOf('asset={slcAssets.clinic.fallback}'));
-    expect(form.indexOf('asset={slcAssets.clinic.fallback}')).toBeLessThan(form.indexOf('직접 입력 form 열기'));
+  it('keeps clinic update copy readable while PNG is ambient rather than state-specific', () => {
+    expect(form).toContain("step === 'entry'");
+    expect(form).toContain("step === 'diff_review'");
+    expect(form).toContain("step === 'manual_entry'");
+    expect(form).toContain('copy.photoAction');
+    expect(form).toContain('직접 입력 form 열기');
   });
 });

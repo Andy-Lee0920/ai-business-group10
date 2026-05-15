@@ -9,16 +9,13 @@ const assets = readFileSync('src/design/slc-assets.ts', 'utf8');
 describe('Session A onboarding redesign contract', () => {
   it('starts with brand welcome, then role cards, first schedule interview, and confirmation after the privacy gate', () => {
     for (const copy of [
-      'SLCIllustration',
+      'AmbientStoryBackground',
       'slcAssets.onboarding.coupleHero',
-      'slcAssets.onboarding.scheduleHero',
-      'slcAssets.onboarding.patientRole',
-      'slcAssets.onboarding.partnerRole',
-      'slcAssets.empty.medication',
-      '함께 태블릿을 보는 커플 일러스트',
+      'slcAssets.partner.readonly',
+      'slcAssets.home.injectionWide',
+      'slcAssets.home.clinicWide',
       'Fevio 기능 설명',
       '확인한 주사·복용·병원 일정을 오늘 화면에 차분히 정리합니다.',
-      'decorative',
       '오늘 필요한 것만',
       '보여드릴게요',
       '병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.',
@@ -50,6 +47,11 @@ describe('Session A onboarding redesign contract', () => {
     expect(screen).toContain('onboardingTokens.primary');
     expect(screen).toContain("fetch('/api/clinic-guide/normalize'");
     expect(screen).toContain("fetch('/api/onboarding'");
+    expect(screen).not.toContain('SLCIllustration');
+    expect(screen).not.toContain('slcAssets.onboarding.scheduleHero');
+    expect(screen).not.toContain('slcAssets.onboarding.patientRole');
+    expect(screen).not.toContain('slcAssets.onboarding.partnerRole');
+    expect(screen).not.toContain('slcAssets.empty.medication');
     expect(screen).not.toContain('<img');
     expect(screen).not.toContain('FEVIO_LOGO_SRC');
     expect(screen).not.toContain('ROLE_PATIENT_IMAGE_SRC');

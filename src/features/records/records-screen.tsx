@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
 import type { ScheduleItem, CompletionRecord, ClinicUpdate, Receipt } from '../../types/slc.types';
 import { buildRecordsViewModel, RECORD_FILTERS, type RecordsFilter, type RecordsViewRecord } from '../../domain/slc-records';
-import { SLCIllustration } from '../../components/slc-illustration';
+import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { slcAssets } from '../../design/slc-assets';
 
 const RECEIPT_CATEGORIES = ['진료비', '약제비', '검사비', '정부지원금', '기타'] as const;
@@ -63,7 +63,7 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
   }
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '54px 0 112px', background: 'var(--slc-bg)' }}>
+    <AmbientStoryBackground asset={slcAssets.home.missedRecovery} intensity="subtle" style={{ minHeight: '100dvh', padding: '54px 0 112px' }}>
       <div style={{ padding: '0 24px 18px' }}>
         <p style={{ fontSize: 13, color: '#B5A89E', fontWeight: 700, margin: '0 0 4px' }}>최근 7일</p>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: '0 0 8px', letterSpacing: '-0.05em' }}>기록</h1>
@@ -93,7 +93,6 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
 
       {groups.length === 0 ? (
         <div style={{ padding: '36px 24px 60px', textAlign: 'center' }}>
-          <SLCIllustration asset={slcAssets.empty.records} size="empty" style={{ opacity: 0.82, marginBottom: 12 }} />
           <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>아직 기록이 없어요</p>
           <p style={{ color: '#B5A89E', fontSize: 13, lineHeight: 1.5, margin: 0 }}>완료하면 여기에 남겨둘게요.</p>
         </div>
@@ -111,7 +110,7 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
           ))}
         </div>
       )}
-    </div>
+    </AmbientStoryBackground>
   );
 }
 
@@ -146,7 +145,7 @@ function ReceiptPanel({
 }) {
   return (
     <section aria-label="영수증 기록" style={{ padding: '0 16px 16px' }}>
-      <div style={{ background: 'var(--slc-surface)', border: '1px solid var(--slc-border)', borderRadius: 24, padding: 18, boxShadow: '0 10px 28px rgba(80, 50, 40, 0.05)' }}>
+      <div style={{ background: 'rgba(252, 238, 232, 0.9)', border: '1px solid var(--slc-border)', borderRadius: 24, padding: 18, boxShadow: '0 10px 28px rgba(80, 50, 40, 0.05)', backdropFilter: 'blur(14px)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
           <div>
             <p style={{ fontSize: 12, color: 'var(--slc-coral)', fontWeight: 900, margin: '0 0 5px' }}>영수증 입력</p>
@@ -208,11 +207,12 @@ function RecordCard({ record }: { record: RecordsViewRecord }) {
   return (
     <article data-testid="records-calm-card" style={{
       minHeight: 84,
-      background: 'var(--slc-card)',
+      background: 'rgba(255, 252, 250, 0.9)',
       border: '1.5px solid #EFE7E0',
       borderRadius: 22,
       padding: '16px 18px',
       boxShadow: '0 8px 26px rgba(80, 50, 40, 0.055)',
+      backdropFilter: 'blur(14px)',
       display: 'grid',
       gridTemplateColumns: '1fr auto',
       alignItems: 'start',

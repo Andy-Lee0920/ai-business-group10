@@ -24,10 +24,12 @@ describe('ManualAddForm search and range repeat contract', () => {
     expect(formSource).not.toContain('medications.map((m)');
   });
 
-  it('shows the canonical search empty-state illustration when medication search has no matches', () => {
-    expect(formSource).toContain('SLCIllustration');
-    expect(formSource).toContain('slcAssets.empty.search');
+  it('uses ambient PNG background instead of inline empty-state illustration for search misses', () => {
+    expect(formSource).toContain('AmbientStoryBackground');
+    expect(formSource).toContain('slcAssets.home.injectionWide');
+    expect(formSource).toContain('slcAssets.home.clinicWide');
     expect(formSource).toContain('검색 결과가 없어요');
+    expect(formSource).not.toContain('slcAssets.empty.search');
     expect(formSource).not.toContain('<img');
   });
 

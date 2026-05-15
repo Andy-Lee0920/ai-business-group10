@@ -32,17 +32,18 @@ describe('More and partner read-only state contract', () => {
     expect(settingsPage).toContain("redirect('/partner')");
   });
 
-  it('uses the required SLC illustration assets for partner and More surfaces', () => {
+  it('uses ambient PNG treatment for More while partner views keep required SLC illustrations', () => {
     const directImageTag = ['<', 'img'].join('');
     expect(`${moreScreen}
 ${partnerView}
 ${partnerPage}
 ${partnerTokenPage}`).not.toContain(directImageTag);
 
-    expect(moreScreen).toContain('SLCIllustration');
+    expect(moreScreen).toContain('AmbientStoryBackground');
     expect(moreScreen).toContain('slcAssets.partner.syncOverview');
-    expect(moreScreen).toContain('slcAssets.partner.invite');
-    expect(moreScreen).toContain('slcAssets.partner.connectedSuccess');
+    expect(moreScreen).not.toContain('SLCIllustration');
+    expect(moreScreen).not.toContain('slcAssets.partner.invite');
+    expect(moreScreen).not.toContain('slcAssets.partner.connectedSuccess');
     expect(moreScreen).toContain('href="/home"');
     expect(moreScreen).toContain('>확인</a>');
 

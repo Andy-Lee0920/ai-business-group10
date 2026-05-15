@@ -35,7 +35,9 @@ describe('Records receipts', () => {
     expect(markup).toContain('data-testid="receipt-total"');
     expect(markup).toContain('25,000원');
     expect(markup).toContain('정부지원금');
-    expect(markup).toContain('var(--slc-surface)');
+    expect(markup).toContain('data-testid="ambient-story-background"');
+    expect(markup).toContain('rgba(252, 238, 232, 0.9)');
+    expect(markup).toContain('backdrop-filter:blur(14px)');
   });
 
   it('keeps receipts under couple-scoped RLS and inserts only after privacy acceptance', () => {

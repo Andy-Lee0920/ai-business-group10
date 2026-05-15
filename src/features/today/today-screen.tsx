@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ActionCard } from '../../components/action-card';
+import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { ConfirmSheet } from '../../components/confirm-sheet';
 import { InjectionCountdownArc } from '../../components/injection-countdown-arc';
 import { PostClinicBanner } from '../../components/post-clinic-banner';
@@ -132,42 +133,23 @@ function HeroZone({
   const asset = resolveHomeVisualAsset(story.focus.kind);
 
   return (
-    <section
-      aria-label="오늘의 케어 상태"
-      data-testid="home-hero-zone"
-      data-focus-kind={focus.kind}
-      style={{ position: 'relative', minHeight: 340, overflow: 'hidden', marginBottom: 16 }}
+    <AmbientStoryBackground
+      ariaLabel="오늘의 케어 상태"
+      asset={asset}
+      as="section"
+      intensity="hero"
+      priority
+      style={{ marginBottom: 16 }}
     >
-      <SLCIllustration
-        asset={asset}
-        size="banner"
-        priority
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          maxHeight: 'none',
-          borderRadius: 0,
-          objectFit: 'cover',
-          opacity: 0.7,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(to bottom, transparent 40%, var(--slc-bg) 100%)',
-        }}
-      />
-      <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px 28px' }}>
-        {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
-        {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
-        {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
-        {story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
+      <div data-testid="home-hero-zone" data-focus-kind={focus.kind} style={{ minHeight: 340 }}>
+        <div style={{ padding: '24px 20px 28px' }}>
+          {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
+          {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
+          {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
+          {story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
+        </div>
       </div>
-    </section>
+    </AmbientStoryBackground>
   );
 }
 
