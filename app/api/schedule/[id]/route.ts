@@ -67,6 +67,23 @@ function normalizeScheduleUpdate(body: ScheduleUpdateBody):
   };
 }
 
+export async function DELETE(_request: NextRequest, context: RouteContext) {
+  const { id } = await context.params;
+
+  const supabase = await createCookieBackedSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const { error } = await supabase
+    .from('schedule_items')
+    .delete()
+    .eq('id', id)
+    .eq('patient_id', user.id);
+
+  if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
 function normalizeText(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }

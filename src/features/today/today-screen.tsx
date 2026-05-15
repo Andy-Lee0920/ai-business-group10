@@ -144,7 +144,6 @@ function HeroZone({
       priority
       style={{
         marginBottom: 16,
-        borderLeft: story.focus.kind === 'missed' ? '3px solid var(--slc-coral)' : undefined,
       }}
     >
       <div data-testid="home-hero-zone" data-focus-kind={story.focus.kind} style={{ minHeight: 340 }}>

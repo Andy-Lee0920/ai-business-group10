@@ -215,6 +215,83 @@ describe('/api/onboard/text-analyze', () => {
     vi.useRealTimers();
   });
 
+  it('extracts explicit times per clinic notice line without leaking missing-time wording across medications', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));
+    state.user = { id: 'patient-1' };
+    state.candidates = [];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const rawText = [
+      '페비오 여성의원 안내문',
+      '오늘 밤부터 고날에프 150 IU를 3일간 하루 두 번 맞으세요.',
+      '1회차와 2회차 시간은 본인이 정해서 기록해 주세요.',
+      '메노푸어 75 IU는 2026년 5월 15일 오후 9시에 1회 주사하세요.',
+      '세트로타이드 0.25 mg은 2026년 5월 16일부터 2일간 매일 오전 9시에 주사하세요.',
+      '질정은 오늘부터 3일간 아침, 저녁으로 사용하세요.',
+      '정확한 시간은 확인 후 입력해 주세요.',
+      '오비드렐은 2026년 5월 18일 밤 10시에 1회 주사 예정입니다.',
+      '최종 주사 여부는 병원 안내를 다시 확인해 주세요.',
+      '다음 병원 방문은 2026년 5월 19일 오전 10시입니다.',
+      '파트너에게는 오늘 일정과 완료 여부만 공유해 주세요.',
+    ].join('\n');
+
+    const response = await POST(request({ rawText }));
+    const payload = await response.json() as { candidates: Array<{ title: string; type: string; scheduled_at: string | null; dose: string | null; unit: string | null }> };
+
+    expect(response.status).toBe(200);
+
+    const gonalf = payload.candidates.filter((candidate) => candidate.title.startsWith('고날에프'));
+    expect(gonalf).toHaveLength(6);
+    expect(gonalf.every((candidate) => candidate.scheduled_at === null)).toBe(true);
+    expect(gonalf.every((candidate) => candidate.dose === '150' && candidate.unit === 'IU')).toBe(true);
+
+    expect(payload.candidates).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        title: '메노푸어',
+        type: 'injection',
+        scheduled_at: '2026-05-15T12:00:00.000Z',
+        dose: '75',
+        unit: 'IU',
+      }),
+      expect.objectContaining({
+        title: '세트로타이드',
+        type: 'injection',
+        scheduled_at: '2026-05-16T00:00:00.000Z',
+        dose: '0.25',
+        unit: 'mg',
+      }),
+      expect.objectContaining({
+        title: '세트로타이드',
+        type: 'injection',
+        scheduled_at: '2026-05-17T00:00:00.000Z',
+        dose: '0.25',
+        unit: 'mg',
+      }),
+      expect.objectContaining({
+        title: '오비드렐',
+        type: 'injection',
+        scheduled_at: '2026-05-18T13:00:00.000Z',
+      }),
+      expect.objectContaining({
+        title: '병원 방문',
+        type: 'clinic',
+        scheduled_at: '2026-05-19T01:00:00.000Z',
+      }),
+    ]));
+
+    const vaginalTablets = payload.candidates.filter((candidate) => candidate.title.startsWith('질정'));
+    expect(vaginalTablets).toHaveLength(6);
+    expect(vaginalTablets.every((candidate) => candidate.type === 'medication')).toBe(true);
+    expect(vaginalTablets.every((candidate) => candidate.scheduled_at === null)).toBe(true);
+
+    expect(payload.candidates.some((candidate) => candidate.title === '주사')).toBe(false);
+    const explicitTitles = ['메노푸어', '세트로타이드', '오비드렐', '병원 방문'];
+    const explicitCandidates = payload.candidates.filter((candidate) => explicitTitles.includes(candidate.title));
+    expect(explicitCandidates.every((candidate) => candidate.scheduled_at !== null)).toBe(true);
+    vi.useRealTimers();
+  });
+
   it('creates two daily vaginal tablet candidates with missing exact times for morning and evening wording', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));

@@ -20,7 +20,6 @@ export function PostClinicBanner({ lastInjectionAt, hasNextSchedule }: PostClini
         width: '100%',
         maxWidth: 430,
         background: 'var(--slc-surface)',
-        borderLeft: '3px solid var(--slc-coral)',
         zIndex: 49,
         display: 'flex',
         alignItems: 'center',

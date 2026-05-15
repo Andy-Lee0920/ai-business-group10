@@ -586,7 +586,6 @@
   align-items: center;
   gap: 0;
   padding: 10px 14px;
-  border-left: 3px solid rgba(216, 98, 77, 0.42);
   border-radius: 18px;
   background: linear-gradient(90deg, rgba(255, 253, 251, 0.74), rgba(255, 253, 251, 0.28));
 }
