@@ -15,7 +15,9 @@
     "typecheck": "tsc --noEmit",
     "verify:real-medication-input": "node scripts/verify-real-medication-e2e.mjs",
     "test:e2e:legacy": "playwright test",
-    "verify:clinic-guide-ai": "node scripts/smoke-clinic-guide-ai.mjs"
+    "verify:clinic-guide-ai": "node scripts/smoke-clinic-guide-ai.mjs",
+    "verify:prod-deploy-source": "node scripts/verify-production-deploy-source.mjs",
+    "deploy:production": "node scripts/deploy-production.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.3",

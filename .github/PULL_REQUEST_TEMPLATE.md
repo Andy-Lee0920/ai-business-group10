@@ -14,6 +14,13 @@
 - [ ] `npm run build`
 - [ ] `npm run test:e2e` when navigation, auth, partner view, or visual shell changed
 
+
+## Mainline / deploy drift guard
+
+- [ ] Any issue comment marked Green evidence references a commit that is merged into `main`
+- [ ] Production deploys to `project-oznp0` use `npm run deploy:production` from `origin/main`
+- [ ] If this PR restores branch-only work, the restored issue evidence is refreshed after production redeploy
+
 ## Vercel Preview QA
 
 Follow `docs/03-engineering/vercel-preview-sop.md`.
