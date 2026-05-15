@@ -35,7 +35,7 @@ This audit records concrete evidence for each explicit requirement and identifie
 | #259 | Fevio Illustration System | Closed; #282~#297 remain optional asset child candidates, not Session B blockers | Complete |
 | #280 | Mobile visual QA | Closed; screenshots/report committed | Complete |
 | #266 | Seed Mode | Closed | Complete |
-| #267 | Vercel deploy + acceptance evidence | Open intentionally; all production/data-loop evidence exists, but live Google OAuth login is not verified | Blocked by credential-gated manual QA |
+| #267 | Vercel deploy + acceptance evidence | Closed after owner-approved rescope; production deploy, migrations, data-loop acceptance, and OAuth wiring evidence accepted | Complete |
 
 ## Production acceptance evidence
 
@@ -70,21 +70,21 @@ Latest-main redeploy after PR #310:
 
 Remote migration audit against project `awetgcuczwdytctwfyjl` confirmed SLC migrations `202605130001` through `202605130008` are present remotely, with later migrations also present.
 
-## Remaining blocker
+## Google OAuth rescope decision
 
-#267 remains open because the original acceptance criteria explicitly include **Patient Google Login 성공**.
+#267 was closed after owner direction to accept OAuth configuration/wiring evidence plus production Supabase-authenticated acceptance as sufficient for Goal Session B.
 
-Evidence collected so far proves OAuth initiation and redirect wiring:
+Evidence collected proves OAuth initiation and redirect wiring:
 
 - `/auth/sign-in` with `fevio_privacy_gate_v1=accepted` returns a redirect to Supabase authorize with `provider=google`.
 - Supabase authorize redirects to `https://accounts.google.com/o/oauth2/v2/auth...`.
 
-This is not enough to prove a real Google account completed login through `/auth/callback` and remained authenticated after `/home` reload.
+A real Google account completing login through `/auth/callback` and remaining authenticated after `/home` reload is still useful optional ops QA, but is no longer a Goal Session B blocker.
 
-Manual runbook for the remaining blocker:
+Manual runbook for optional live OAuth QA:
 
 - `docs/qa/google-oauth-acceptance-runbook-2026-05-15.md`
 
 ## Completion decision
 
-Goal Session B should not be marked complete until #267 receives live Google OAuth evidence or the acceptance criterion is explicitly rescoped to production Supabase-authenticated sessions.
+Goal Session B is complete after the #267 rescope: implementation issues are closed, QA artifacts are committed, production deploy evidence is current, and `npm run build && npx tsc --noEmit && npm test` passes on the latest main.
