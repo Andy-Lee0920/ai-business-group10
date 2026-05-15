@@ -9,6 +9,7 @@ export type OnboardingStep = 'brand_intro' | 'role_select' | 'add_method' | 'pho
 type TreatmentRole = 'patient' | 'partner';
 type TreatmentExperience = 'first' | 'experienced' | 'returning';
 type AddMethodStep = Extract<OnboardingStep, 'photo_processing' | 'text_paste' | 'direct_entry'>;
+type DirectEntryType = 'injection' | 'medication' | 'clinic';
 type NavigationDirection = 'next' | 'back';
 
 type StepDefinition = { id: OnboardingStep; label: string };
@@ -66,6 +67,13 @@ export function OnboardingClient() {
   const [activeStep, setActiveStep] = useState<OnboardingStep>('brand_intro');
   const [selectedRole, setSelectedRole] = useState<TreatmentRole | null>(null);
   const [treatmentExperience, setTreatmentExperience] = useState<TreatmentExperience | null>(null);
+  const [directType, setDirectType] = useState<DirectEntryType>('injection');
+  const [directTitle, setDirectTitle] = useState('');
+  const [directDate, setDirectDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [directTime, setDirectTime] = useState('09:00');
+  const [directDose, setDirectDose] = useState('');
+  const [directUnit, setDirectUnit] = useState('');
+  const [savingDirectEntry, setSavingDirectEntry] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const progressStep = useMemo(() => {
@@ -115,6 +123,42 @@ export function OnboardingClient() {
     }
 
     goToStep('add_method');
+  }
+
+  function directScheduledAt() {
+    const date = directDate || new Date().toISOString().slice(0, 10);
+    const time = directTime || '09:00';
+    return new Date(`${date}T${time}:00+09:00`).toISOString();
+  }
+
+  async function rememberDirectEntry() {
+    const title = directTitle.trim();
+    if (!title) {
+      setError('일정 이름을 입력해 주세요.');
+      return;
+    }
+
+    setSavingDirectEntry(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/schedule/add', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type: directType,
+          title,
+          dose: directDose.trim() || null,
+          unit: directUnit.trim() || null,
+          scheduledAt: directScheduledAt(),
+        }),
+      });
+      if (!response.ok) throw new Error('save_failed');
+      goToStep('sharing');
+    } catch {
+      setError('저장하지 못했어요. 네트워크 상태를 확인한 뒤 다시 시도해주세요.');
+    } finally {
+      setSavingDirectEntry(false);
+    }
   }
 
   return (
@@ -208,11 +252,57 @@ export function OnboardingClient() {
       ) : null}
 
       {activeStep === 'direct_entry' ? (
-        <PlaceholderStep
-          body="직접 입력 저장은 이번 이슈 범위 밖입니다. 확인 전 데이터 저장은 하지 않습니다."
-          onBack={goBack}
-          title="직접 적기는 곧 이어집니다"
-        />
+        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="direct-entry-title">
+          <StatusBadge state="shared">직접 입력</StatusBadge>
+          <h2 className={styles.sectionTitle} id="direct-entry-title">기억나는 일정만 적어주세요</h2>
+          <p className={styles.questionLead}>확인한 내용만 저장합니다. 나중에 홈에서 다시 추가할 수도 있어요.</p>
+
+          <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="일정 종류 선택">
+            {(['injection', 'medication', 'clinic'] as const).map((type) => (
+              <SelectionChip key={type} className={styles.choiceChip} onClick={() => setDirectType(type)} selected={directType === type} tone={type === 'clinic' ? 'lavender' : 'sage'}>
+                <span>{type === 'injection' ? '주사' : type === 'medication' ? '약 복용' : '병원 방문'}</span>
+              </SelectionChip>
+            ))}
+          </div>
+
+          <div className={styles.profileGrid}>
+            <label className={styles.directField}>
+              <span>일정 이름</span>
+              <input value={directTitle} onChange={(event) => setDirectTitle(event.target.value)} placeholder="예: 고날에프 주사" />
+            </label>
+            <div className={styles.directFieldRow}>
+              <label className={styles.directField}>
+                <span>날짜</span>
+                <input type="date" value={directDate} onChange={(event) => setDirectDate(event.target.value)} />
+              </label>
+              <label className={styles.directField}>
+                <span>시간</span>
+                <input type="time" value={directTime} onChange={(event) => setDirectTime(event.target.value)} />
+              </label>
+            </div>
+            <div className={styles.directFieldRow}>
+              <label className={styles.directField}>
+                <span>용량</span>
+                <input inputMode="decimal" value={directDose} onChange={(event) => setDirectDose(event.target.value)} placeholder="150" />
+              </label>
+              <label className={styles.directField}>
+                <span>단위</span>
+                <input value={directUnit} onChange={(event) => setDirectUnit(event.target.value)} placeholder="IU" />
+              </label>
+            </div>
+          </div>
+
+          <div className={styles.homePreviewCard} aria-label="홈 미리보기">
+            <small>홈 미리보기</small>
+            <strong>{directTitle.trim() || '일정 이름이 여기에 보여요'}</strong>
+            <span>{directDate || '날짜'} · {directTime || '시간'} · {directType === 'injection' ? '주사' : directType === 'medication' ? '약 복용' : '병원 방문'}{directDose.trim() ? ` · ${directDose.trim()}${directUnit.trim() ? ` ${directUnit.trim()}` : ''}` : ''}</span>
+          </div>
+
+          <div className={styles.slideActions}>
+            <CtaButton onClick={() => goToStep('sharing')} variant="secondary" type="button">나중에 홈에서 추가</CtaButton>
+            <CtaButton disabled={!directTitle.trim() || savingDirectEntry} onClick={rememberDirectEntry} type="button">{savingDirectEntry ? '저장 중' : '이 일정 기억하기'}</CtaButton>
+          </div>
+        </section>
       ) : null}
 
       {activeStep === 'sharing' ? (

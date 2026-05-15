@@ -19,17 +19,30 @@ describe('schedule-extract Edge Function image contract', () => {
   it('uses the service role key to create a Supabase Storage signed URL before OpenRouter vision extraction', () => {
     const code = source();
     const signedUrlIndex = code.indexOf('async function createStorageSignedUrl');
-    const openRouterIndex = code.indexOf('async function extractCandidatesWithOpenRouter');
+    const openRouterIndex = code.indexOf('async function extractCandidatesFromImageWithOpenRouter');
 
     expect(code).toContain("Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')");
     expect(code).toContain('/storage/v1/object/sign/');
     expect(code).toContain('authorization: `Bearer ${serviceRoleKey}`');
-    expect(code).toContain("model: OPENROUTER_MODEL");
-    expect(code).toContain("const OPENROUTER_MODEL = 'anthropic/claude-3-haiku-vision'");
+    expect(code).toContain("model: OPENROUTER_VISION_MODEL");
+    expect(code).toContain("const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku-vision'");
     expect(code).toContain("type: 'image_url'");
     expect(signedUrlIndex).toBeGreaterThan(-1);
     expect(openRouterIndex).toBeGreaterThan(-1);
     expect(signedUrlIndex).toBeLessThan(openRouterIndex);
+  });
+
+
+
+  it('accepts text mode and uses non-vision Claude for raw text extraction', () => {
+    const code = source();
+
+    expect(code).toContain("| { mode: 'text'; rawText: string; patientId: string }");
+    expect(code).toContain("if (body.mode === 'text')");
+    expect(code).toContain('function normalizeTextRequest');
+    expect(code).toContain('async function extractCandidatesFromTextWithOpenRouter');
+    expect(code).toContain("const OPENROUTER_TEXT_MODEL = 'anthropic/claude-3-haiku'");
+    expect(code).toContain('rawText,');
   });
 
   it('returns only the schedule candidates response shape and fails closed to an empty array for extraction failures', () => {
