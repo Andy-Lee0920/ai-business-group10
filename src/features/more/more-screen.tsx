@@ -15,15 +15,26 @@ interface Props {
 export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: Props) {
   const [inviteCode, setInviteCode] = useState<string | null>(existingLink?.invite_code ?? null);
   const [generating, setGenerating] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   const generateLink = async () => {
     setGenerating(true);
-    const res = await fetch('/api/partner/invite', { method: 'POST' });
-    const data = await res.json() as { inviteCode?: string };
-    if (data.inviteCode) setInviteCode(data.inviteCode);
-    setGenerating(false);
+    setLinkError(null);
+    try {
+      const res = await fetch('/api/partner/invite', { method: 'POST' });
+      const data = await res.json() as { inviteCode?: string; error?: string };
+      if (!res.ok || !data.inviteCode) {
+        setLinkError(data.error ?? '링크를 만들지 못했어요. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      setInviteCode(data.inviteCode);
+    } catch {
+      setLinkError('네트워크 오류가 발생했어요. 다시 시도해 주세요.');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const copyLink = async () => {
@@ -120,6 +131,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
             <button onClick={generateLink} disabled={generating} style={{ ...pillButtonStyle('primary'), width: '100%', minHeight: 46, opacity: generating ? 0.7 : 1 }}>
               {generating ? '생성 중...' : '파트너 초대 링크 만들기'}
             </button>
+            {linkError ? <p style={{ margin: '8px 0 0', fontSize: 13, color: '#C44F4F' }}>{linkError}</p> : null}
           </div>
         )}
       </section>
