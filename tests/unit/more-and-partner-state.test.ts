@@ -23,6 +23,9 @@ describe('More and partner read-only state contract', () => {
     expect(moreScreen).toContain('알림 상태');
     expect(moreScreen).toContain('15분 전 표시');
     expect(moreScreen).toContain('로그아웃');
+    expect(moreScreen).toContain('모든 정보 지우기');
+    expect(moreScreen).toContain('/api/account/reset');
+    expect(moreScreen).toContain('온보딩 다시');
     expect(moreScreen).toContain('승인하기');
     expect(moreScreen).toContain('나중에');
     expect(moreScreen).toContain('공유와 설정 관리');
