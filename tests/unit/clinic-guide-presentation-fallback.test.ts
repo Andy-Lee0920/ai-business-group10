@@ -16,8 +16,10 @@ describe('Clinic Guide presentation fallback without Supabase env', () => {
     expect(authedLayout).toContain('presentationMode && !hasSupabasePublicConfig()');
     expect(clinicPage).toContain('isPresentationMode() && !hasSupabasePublicConfig()');
     expect(clinicPage).toContain('fallbackMedications()');
-    for (const page of [addPage, homePage, recordsPage, partnerPage, morePage]) {
+    for (const page of [addPage, recordsPage, partnerPage, morePage]) {
       expect(page).toContain('isPresentationMode() && !hasSupabasePublicConfig()');
     }
+    expect(homePage).toContain('const presentationMode = isPresentationMode()');
+    expect(homePage).toContain('presentationMode && !hasSupabasePublicConfig()');
   });
 });

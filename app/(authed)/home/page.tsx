@@ -10,14 +10,21 @@ import type { ClinicUpdate, PartnerLink, ScheduleItem } from '../../../src/types
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+  const presentationMode = isPresentationMode();
+  if (presentationMode && !hasSupabasePublicConfig()) {
     const userId = 'presentation-user';
     return <TodayScreen initialItems={fallbackScheduleItems(userId)} userId={userId} pendingPartnerRequest={null} initialClinicUpdates={[]} />;
   }
 
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/sign-in');
+  if (!user) {
+    if (presentationMode) {
+      const userId = 'presentation-user';
+      return <TodayScreen initialItems={fallbackScheduleItems(userId)} userId={userId} pendingPartnerRequest={null} initialClinicUpdates={[]} />;
+    }
+    redirect('/auth/sign-in');
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')

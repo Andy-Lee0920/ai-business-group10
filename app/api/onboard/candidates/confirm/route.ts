@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { isPresentationRequest } from '../../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 import { maskTechnicalError } from '../../../../../src/domain/slc-copy';
 import type { ScheduleItem, ScheduleType } from '../../../../../src/types/slc.types';
@@ -39,7 +40,6 @@ interface OnboardConfirmClient {
 export async function POST(request: NextRequest) {
   const supabase = (await createCookieBackedSupabaseClient()) as unknown as OnboardConfirmClient;
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const body = (await request.json().catch(() => ({}))) as ConfirmBody;
   const confirmedIds = normalizeIds(body.confirmedIds);
@@ -47,6 +47,13 @@ export async function POST(request: NextRequest) {
   const candidateEdits = normalizeCandidateEdits(body.candidateEdits);
   const requestedIds = unique([...confirmedIds, ...rejectedIds]);
   if (requestedIds.length === 0) return NextResponse.json({ savedCount: 0, items: [] });
+
+  if (!user) {
+    if (!isPresentationRequest(request) || !hasPrivacyGateCookie(request.headers.get('cookie'))) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+    return confirmPresentationCandidates(confirmedIds, candidateEdits);
+  }
 
   const { data: ownedCandidates, error: selectError } = await supabase
     .from('schedule_candidates')
@@ -89,6 +96,37 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ savedCount: items.length, items });
+}
+
+
+
+function confirmPresentationCandidates(confirmedIds: string[], candidateEdits: CandidateEdit[]) {
+  const editById = new Map(candidateEdits.map((edit) => [edit.id, edit]));
+  const items = confirmedIds
+    .map((id) => editById.get(id))
+    .filter((candidate): candidate is CandidateEdit => Boolean(candidate))
+    .map((candidate) => ({
+      id: `presentation-item-${candidate.id}`,
+      patient_id: 'presentation',
+      medication_id: null,
+      type: candidate.type,
+      title: candidate.title,
+      dose: candidate.dose,
+      unit: candidate.unit,
+      scheduled_at: candidate.scheduled_at,
+      status: 'upcoming',
+      source: 'capture',
+      created_at: new Date().toISOString(),
+    }));
+
+  return NextResponse.json({ savedCount: items.length, items, presentation: true });
+}
+
+function hasPrivacyGateCookie(cookieHeader: string | null) {
+  return cookieHeader?.split(';').some((part) => {
+    const trimmed = part.trim();
+    return trimmed === 'fevio_privacy_gate_v1=accepted' || trimmed === 'fevio_privacy_accepted=1';
+  }) ?? false;
 }
 
 function normalizeIds(value: unknown) {
