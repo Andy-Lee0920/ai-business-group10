@@ -19,27 +19,45 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain('as const satisfies readonly OnboardingStep[]');
   });
 
-  it('renders premium brand intro, role select, first-add prompt, partner exit, and add method cards', () => {
+  it('renders premium brand intro, role select, partner exit, and merged add method cards', () => {
     for (const copy of [
       'Fevio',
       '소중한 시작을,',
       '시작하기',
       '본인',
       '파트너',
-      '자료 사진이나',
-      '안내문을 넣어주세요',
-      '요약본으로 정리',
-      '추가하기',
-      'addMethodIntroScreen',
-      'onboardingShellAddIntro',
       '파트너는 초대 링크로 들어와 주세요',
       '어떻게 추가할까요?',
+      '확인 후에만 저장해요.',
       '사진으로 남기기',
-      '문자로 붙여넣기',
+      '처방지나 안내문을 찍어주세요',
+      '문자로',
+      '붙여넣기',
       '직접 적기',
+      '이름·시간·용량',
     ]) {
       expect(onboardingClient).toContain(copy);
     }
+
+    for (const styleName of [
+      'brandIntroVideo',
+      'roleImageWrap',
+      'methodGridFull',
+      'methodHeroCard',
+      'methodSecondaryRow',
+      'methodSecondaryCard',
+      'completeAmbientScreen',
+    ]) {
+      expect(onboardingStyles).toContain(styleName);
+    }
+
+    expect(onboardingClient).not.toContain('addMethodIntroSeen');
+    expect(onboardingClient).not.toContain('setAddMethodIntroSeen');
+    expect(onboardingClient).not.toContain('addIntroAsBackground');
+    expect(onboardingClient).not.toContain("activeStep === 'add_method' && !");
+    expect(onboardingClient).not.toContain("activeStep === 'add_method' && addMethodIntroSeen");
+    expect(onboardingStyles).not.toContain('addMethodIntroScreen');
+    expect(onboardingStyles).not.toContain('onboardingShellAddIntro');
   });
 
   it('keeps direct entry confirmation-first and preview-driven', () => {
@@ -88,14 +106,46 @@ describe('app onboarding shell contract', () => {
   });
 
   it('implements sharing and complete handoff with partner invite intent and home redirect', () => {
-    for (const copy of ['나 혼자 시작할게요', '파트너와 함께 쓸게요', '일정 후보를 만들었어요', '일정 후보 요약']) {
+    for (const copy of [
+      '나 혼자 시작할게요',
+      '먼저 내 홈에서 오늘 할 일만 확인해요',
+      '파트너와 함께 쓸게요',
+      '완료 후 초대 링크를 준비해요',
+      '일정 후보를 만들었어요',
+      '일정 후보 요약',
+    ]) {
       expect(onboardingClient).toContain(copy);
     }
+    for (const styleName of [
+      'methodHeroCardGreen',
+      'methodHeroCardGreenSelected',
+      'methodHeroIconGreen',
+      'sharingPartnerCard',
+      'sharingPartnerCardSelected',
+      'sharingPartnerIcon',
+    ]) {
+      expect(onboardingClient).toContain(styleName);
+      expect(onboardingStyles).toContain(styleName);
+    }
+    expect(onboardingClient).toContain('aria-pressed={sharingChoice ===');
+    expect(onboardingClient).toContain('disabled={!sharingChoice}');
     expect(onboardingClient).toContain("fetch('/api/onboarding/complete'");
     expect(onboardingClient).toContain("partnerInvite: { intent: partnerIntent }");
     expect(onboardingClient).toContain("window.location.assign(payload.redirectTo ?? '/home')");
     expect(onboardingClient).toContain("'prepare_invite'");
     expect(onboardingClient).toContain('completeAmbientScreen');
+  });
+
+  it('keeps role cards tall enough for the redesigned role select', () => {
+    const roleCardBlock = onboardingStyles.slice(
+      onboardingStyles.indexOf('.roleCard {'),
+      onboardingStyles.indexOf('.roleCard[aria-pressed'),
+    );
+
+    expect(roleCardBlock).toContain('min-height: 240px');
+    expect(roleCardBlock).toContain('border-radius: 26px !important');
+    expect(onboardingStyles).toContain('width: 100px');
+    expect(onboardingStyles).toContain('height: 100px');
   });
 
   it('does not render onboarding back buttons that can overlap copy', () => {
@@ -109,7 +159,7 @@ describe('app onboarding shell contract', () => {
       onboardingClient.indexOf('{sharingChoice ==='),
     );
 
-    expect(onboardingStyles).toContain("url('/assets/slc/home-clinic-bg.png')");
+    expect(onboardingStyles).not.toContain("url('/assets/slc/home-clinic-bg.png')");
     expect(onboardingStyles).toContain("url('/assets/slc/home-empty-bg.png')");
     expect(onboardingStyles).toContain('completeAmbientScreen::before');
     expect(patientCompleteBranch).not.toContain('<HeroGlyph');
