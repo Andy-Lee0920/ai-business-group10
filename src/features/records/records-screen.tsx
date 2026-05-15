@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
 import type { ScheduleItem, CompletionRecord, ClinicUpdate, Receipt } from '../../types/slc.types';
 import { buildRecordsViewModel, RECORD_FILTERS, type RecordsFilter, type RecordsViewRecord } from '../../domain/slc-records';
@@ -221,8 +222,13 @@ function RecordCard({ record }: { record: RecordsViewRecord }) {
         <p style={{ fontSize: 12, color: '#B5A89E', fontWeight: 800, margin: '0 0 7px' }}>{recordCaption(record)}</p>
         <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.25, color: 'var(--slc-text)', margin: 0 }}>{record.title}</h2>
       </div>
-      <span style={{ flex: '0 0 auto', fontSize: 12, fontWeight: 900, padding: '6px 11px', borderRadius: 999, background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}>
-        {record.statusLabel}
+      <span style={{ display: 'grid', justifyItems: 'end', gap: 6 }}>
+        <span style={{ flex: '0 0 auto', fontSize: 12, fontWeight: 900, padding: '6px 11px', borderRadius: 999, background: tone.bg, color: tone.fg, border: `1px solid ${tone.border}` }}>
+          {record.statusLabel}
+        </span>
+        {record.kind === 'schedule' ? (
+          <Link href={`/schedule/${record.id}/edit`} aria-label={`${record.title} 수정`} style={{ color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900, textDecoration: 'none' }}>수정</Link>
+        ) : null}
       </span>
     </article>
   );

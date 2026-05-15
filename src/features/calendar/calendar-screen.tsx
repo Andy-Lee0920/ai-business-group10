@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { ScheduleItem } from '../../types/slc.types';
 
@@ -74,6 +75,7 @@ function TimelineCard({ item }: { item: ScheduleItem }) {
         <strong style={titleStyle}>{formatTitle(item)}</strong>
         <small style={metaStyle}>{typeLabel(item.type)} · {statusLabel(item.status)}</small>
       </span>
+      <Link href={`/schedule/${item.id}/edit`} aria-label={`${formatTitle(item)} 수정`} style={editLinkStyle}>수정</Link>
     </article>
   );
 }
@@ -209,7 +211,7 @@ const emptyStateStyle = {
 const timelineCardStyle = {
   minHeight: 66,
   display: 'grid',
-  gridTemplateColumns: '58px 1fr',
+  gridTemplateColumns: '58px 1fr auto',
   alignItems: 'center',
   gap: 12,
   padding: '12px 14px',
@@ -240,4 +242,11 @@ const metaStyle = {
   fontSize: 12,
   fontWeight: 700,
   marginTop: 3,
+} as const;
+
+const editLinkStyle = {
+  color: 'var(--slc-coral)',
+  fontSize: 12,
+  fontWeight: 900,
+  textDecoration: 'none',
 } as const;

@@ -206,21 +206,22 @@ function InjectionCountdownFocus({ item, nextInjection }: { item: ScheduleItem; 
         </strong>
       </div>
       <div style={{ width: '100%', display: 'grid', gap: 8, marginTop: 8 }}>
-        <CountdownInfoRow label="주사 시간" value={formatScheduleTime(item.scheduled_at)} />
-        <CountdownInfoRow label="약물명" value={formatScheduleTitle(item)} />
+        <CountdownInfoRow label="주사 시간" value={formatScheduleTime(item.scheduled_at)} href={`/schedule/${item.id}/edit`} />
+        <CountdownInfoRow label="약물명" value={formatScheduleTitle(item)} href={`/schedule/${item.id}/edit`} />
         <CountdownInfoRow
           label="다음 주사"
           value={nextInjection ? `${formatScheduleTime(nextInjection.scheduled_at)} ${formatScheduleTitle(nextInjection)}` : '미정'}
+          href={nextInjection ? `/schedule/${nextInjection.id}/edit` : '/add'}
         />
       </div>
     </section>
   );
 }
 
-function CountdownInfoRow({ label, value }: { label: string; value: string }) {
+function CountdownInfoRow({ label, value, href }: { label: string; value: string; href: string }) {
   return (
     <Link
-      href="/add"
+      href={href}
       style={{
         minHeight: 48,
         width: '100%',
@@ -304,13 +305,14 @@ function CompletedList({ items }: { items: ScheduleItem[] }) {
 function ScheduleFlowRow({ item, statusLabel }: { item: ScheduleItem; statusLabel: '예정' | '완료' }) {
   const timeStr = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
   return (
-    <div data-card-emphasis="secondary" data-home-flow-row={item.type} style={{ minHeight: 62, display: 'grid', gridTemplateColumns: '54px 1fr auto', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 18, background: 'var(--slc-surface)', border: '1px solid var(--slc-border)' }}>
+    <div data-card-emphasis="secondary" data-home-flow-row={item.type} style={{ minHeight: 62, display: 'grid', gridTemplateColumns: '54px 1fr auto auto', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 18, background: 'var(--slc-surface)', border: '1px solid var(--slc-border)' }}>
       <span style={{ color: 'var(--slc-text)', fontSize: 14, fontWeight: 900 }}>{timeStr}</span>
       <span style={{ minWidth: 0 }}>
         <strong style={{ display: 'block', color: 'var(--slc-text)', fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatScheduleRowTitle(item)}</strong>
         <small style={{ display: 'block', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 700, marginTop: 3 }}>{scheduleTypeLabel(item.type)}</small>
       </span>
       <span style={{ padding: '5px 10px', borderRadius: 999, background: statusLabel === '완료' ? 'var(--slc-coral-light)' : 'var(--slc-border)', color: statusLabel === '완료' ? 'var(--slc-coral)' : 'var(--slc-muted)', fontSize: 11, fontWeight: 900 }}>{statusLabel}</span>
+      <Link href={`/schedule/${item.id}/edit`} aria-label={`${formatScheduleRowTitle(item)} 수정`} style={{ color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900, textDecoration: 'none' }}>수정</Link>
     </div>
   );
 }
