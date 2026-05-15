@@ -2,13 +2,16 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { POST as completeOnboarding } from '../../app/api/onboarding/complete/route';
 import { createCaptureStore, type CaptureStore } from '../../src/lib/capture-confirm-store';
+import { createCookieBackedSupabaseClient } from '../../src/lib/server-supabase';
 
 vi.mock('../../src/lib/capture-confirm-store', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../src/lib/capture-confirm-store')>();
   return { ...actual, createCaptureStore: vi.fn() };
 });
+vi.mock('../../src/lib/server-supabase', () => ({ createCookieBackedSupabaseClient: vi.fn() }));
 
 const mockedCreateStore = vi.mocked(createCaptureStore);
+const mockedCreateSupabase = vi.mocked(createCookieBackedSupabaseClient);
 
 function jsonRequest(body: unknown) {
   return new NextRequest('http://localhost/api/onboarding/complete', {
@@ -18,8 +21,36 @@ function jsonRequest(body: unknown) {
   });
 }
 
+function createConsentSupabaseMock(userId = 'patient-1') {
+  const calls: Array<{ table: string; action: string; payload: unknown }> = [];
+  const profileUpsert = vi.fn((payload: unknown) => {
+    calls.push({ table: 'user_profiles', action: 'upsert', payload });
+    return Promise.resolve({ error: null });
+  });
+  const consentUpsert = vi.fn((payload: unknown) => {
+    calls.push({ table: 'user_consents', action: 'upsert', payload });
+    return Promise.resolve({ error: null });
+  });
+  const from = vi.fn((table: string) => {
+    if (table === 'user_profiles') return { upsert: profileUpsert };
+    if (table === 'user_consents') return { upsert: consentUpsert };
+    return { upsert: vi.fn().mockResolvedValue({ error: null }) };
+  });
+
+  return {
+    calls,
+    client: {
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: userId, user_metadata: { full_name: 'Lee' } } }, error: null }) },
+      from,
+    },
+  };
+}
+
 describe('/api/onboarding/complete', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockedCreateSupabase.mockResolvedValue(createConsentSupabaseMock().client as never);
+  });
 
   it('requires Privacy Gate acceptance before writing first care data', async () => {
     mockedCreateStore.mockResolvedValue(Response.json({ error: 'Privacy Gate must be accepted' }, { status: 403 }));
@@ -27,6 +58,39 @@ describe('/api/onboarding/complete', () => {
     const response = await completeOnboarding(jsonRequest({ treatmentContext: 'ivf_cycle', partnerInviteSkipped: true }));
 
     expect(response.status).toBe(403);
+  });
+
+  it('persists shell consent before redirecting so /home does not bounce back to onboarding', async () => {
+    const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
+    const confirm = vi.fn().mockResolvedValue({ createdCardCount: 1 });
+    const supabase = createConsentSupabaseMock();
+    mockedCreateSupabase.mockResolvedValue(supabase.client as never);
+    mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture, confirm } satisfies CaptureStore);
+
+    const response = await completeOnboarding(
+      jsonRequest({
+        treatmentContext: 'ivf_cycle',
+        roleContext: 'primary_solo',
+        partnerInvite: { intent: 'skip' },
+        firstItem: { kind: 'schedule', text: '내일 병원 방문' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.calls).toContainEqual({
+      table: 'user_profiles',
+      action: 'upsert',
+      payload: expect.objectContaining({ id: 'patient-1', role: 'patient' }),
+    });
+    expect(supabase.calls).toContainEqual({
+      table: 'user_consents',
+      action: 'upsert',
+      payload: expect.objectContaining({
+        user_id: 'patient-1',
+        role: 'patient',
+        consent_source: 'onboarding',
+      }),
+    });
   });
 
   it('lets a user skip partner invite and create one confirmed injection card for home state', async () => {
