@@ -78,6 +78,20 @@ describe('app onboarding shell contract', () => {
     expect(onboardingStyles).not.toContain('#d95f4c');
   });
 
+  it('keeps sharing choice cards from fading into bland pastel blocks', () => {
+    for (const token of [
+      '.methodHeroCardGreen::before',
+      '.sharingPartnerCard::before',
+      'linear-gradient(180deg, var(--onboarding-coral-bright), var(--onboarding-coral-deep))',
+      'radial-gradient(circle at 12% 28%, rgba(231, 101, 81, 0.16)',
+      'radial-gradient(circle at 13% 34%, rgba(231, 101, 81, 0.11)',
+      '0 0 0 8px rgba(231, 101, 81, 0.08)',
+      '0 0 0 7px rgba(126, 101, 200, 0.08)',
+    ]) {
+      expect(onboardingStyles).toContain(token);
+    }
+  });
+
   it('keeps direct entry confirmation-first and preview-driven', () => {
     expect(onboardingClient).toContain('이 일정 기억하기');
     expect(onboardingClient).toContain("fetch('/api/schedule/add'");
