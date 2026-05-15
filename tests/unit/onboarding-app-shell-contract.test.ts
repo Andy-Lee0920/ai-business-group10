@@ -37,12 +37,10 @@ describe('app onboarding shell contract', () => {
     }
   });
 
-  it('keeps direct entry confirmation-first and avoids text sensitive inputs in unfinished steps', () => {
+  it('keeps direct entry confirmation-first and preview-driven', () => {
     expect(onboardingClient).toContain('이 일정 기억하기');
     expect(onboardingClient).toContain("fetch('/api/schedule/add'");
     expect(onboardingClient).toContain('홈 미리보기');
-    expect(onboardingClient).not.toContain("fetch('/api/onboarding/complete'");
-    expect(onboardingClient).not.toContain('<textarea');
   });
 
   it('implements photo processing with native image pickers, upload/analyze progress, and safe fallback', () => {
@@ -67,6 +65,27 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain('rejectedIds');
     expect(onboardingClient).toContain("fetch('/api/onboard/candidates/confirm'");
     expect(onboardingClient).toContain('후보가 없어요');
+  });
+
+  it('implements text paste analysis with a bounded textarea and candidate review reuse', () => {
+    expect(onboardingClient).toContain("activeStep === 'text_paste'");
+    expect(onboardingClient).toContain('maxLength={1000}');
+    expect(onboardingClient).toContain('{textPasteValue.length}/1000');
+    expect(onboardingClient).toContain("fetch('/api/onboard/text-analyze'");
+    expect(onboardingClient).toContain('분석하기');
+    expect(onboardingClient).toContain('일정을 찾지 못했어요');
+    expect(onboardingClient).toContain('직접 입력으로 바꾸기');
+    expect(onboardingClient).toContain("goToStep('candidate_review')");
+  });
+
+  it('implements sharing and complete handoff with partner invite intent and home redirect', () => {
+    for (const copy of ['나 혼자 시작할게요', '파트너와 함께 쓸게요', '거의 다 왔어요!', '일정 후보 요약']) {
+      expect(onboardingClient).toContain(copy);
+    }
+    expect(onboardingClient).toContain("fetch('/api/onboarding/complete'");
+    expect(onboardingClient).toContain("partnerInvite: { intent: partnerIntent }");
+    expect(onboardingClient).toContain("window.location.assign(payload.redirectTo ?? '/home')");
+    expect(onboardingClient).toContain("'prepare_invite'");
   });
 
   it('renders the new app onboarding shell from /onboarding after privacy acceptance', () => {

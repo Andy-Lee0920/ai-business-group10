@@ -105,6 +105,22 @@ test('photo processing uses native picker, shows progress, and sends edited cand
       }),
     });
   });
+  await page.route('**/api/onboarding/complete', async (route) => {
+    const body = route.request().postDataJSON() as { partnerInvite: { intent: string } };
+    expect(body.partnerInvite.intent).toBe('prepare_invite');
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ redirectTo: '/home' }),
+    });
+  });
+  await page.route('**/home', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body: '<main><h1>오늘 일정</h1><article>수정한 고날에프 225 IU</article></main>',
+    });
+  });
 
   await goToAddMethod(page);
   await page.getByRole('button', { name: /사진으로 남기기/ }).click();
@@ -131,8 +147,70 @@ test('photo processing uses native picker, shows progress, and sends edited cand
   await page.getByLabel('단위').fill('IU');
   await page.getByRole('button', { name: '일정 확인하기' }).click();
 
-  await expect(page.getByRole('heading', { name: '공유 설정은 다음 단계에서 준비됩니다' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '어떻게 시작할까요?' })).toBeVisible();
   await expect(page.getByText('수정한 고날에프 일정이 홈에 반영되도록 저장됐어요.')).toBeVisible();
+  await page.getByRole('button', { name: /파트너와 함께 쓸게요/ }).click();
+  await page.getByRole('button', { name: '다음' }).click();
+  await expect(page.getByRole('heading', { name: '거의 다 왔어요!' })).toBeVisible();
+  await expect(page.getByLabel('일정 후보 요약')).toContainText('수정한 고날에프');
+  await page.getByRole('button', { name: '시작하기' }).click();
+  await expect(page.getByRole('heading', { name: '오늘 일정' })).toBeVisible();
+  await expect(page.getByText('수정한 고날에프 225 IU')).toBeVisible();
+});
+
+test('text paste analyzes pasted clinic text into reusable candidate review', async ({ context, page }) => {
+  await acceptPrivacyForOnboarding(context);
+  await page.route('**/api/onboard/text-analyze', async (route) => {
+    const body = route.request().postDataJSON() as { rawText: string };
+    expect(body.rawText).toContain('세트로타이드');
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        candidates: [
+          {
+            id: 'candidate-text-1',
+            type: 'medication',
+            title: '세트로타이드',
+            scheduled_at: '2026-05-15T10:00:00.000Z',
+            dose: '0.25',
+            unit: 'mg',
+          },
+        ],
+      }),
+    });
+  });
+
+  await goToAddMethod(page);
+  await page.getByRole('button', { name: /문자로 붙여넣기/ }).click();
+  await expect(page.getByRole('heading', { name: '병원 안내를 붙여넣어 주세요' })).toBeVisible();
+  await page.getByLabel('병원 안내문').fill('오늘 오전 10시 세트로타이드 0.25 mg');
+  await expect(page.getByText(/\d+\/1000/)).toBeVisible();
+  await page.getByRole('button', { name: '분석하기' }).click();
+
+  await expect(page.getByRole('heading', { name: '일정을 확인해 주세요' })).toBeVisible();
+  await expect(page.getByLabel('세트로타이드 요약')).toContainText('약 복용');
+  await expect(page.getByLabel('세트로타이드 요약')).toContainText('0.25 mg');
+});
+
+test('text paste offers direct entry fallback when no schedule candidates are found', async ({ context, page }) => {
+  await acceptPrivacyForOnboarding(context);
+  await page.route('**/api/onboard/text-analyze', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ candidates: [] }),
+    });
+  });
+
+  await goToAddMethod(page);
+  await page.getByRole('button', { name: /문자로 붙여넣기/ }).click();
+  await page.getByLabel('병원 안내문').fill('오늘 컨디션 잘 보세요');
+  await page.getByRole('button', { name: '분석하기' }).click();
+
+  await expect(page.getByText('일정을 찾지 못했어요')).toBeVisible();
+  await page.getByRole('button', { name: '직접 입력으로 바꾸기' }).click();
+  await expect(page.getByRole('heading', { name: '기억나는 일정만 적어주세요' })).toBeVisible();
 });
 
 test('photo processing falls back to direct entry when no candidates are extracted', async ({ context, page }) => {
@@ -172,7 +250,7 @@ test('direct entry path previews and saves the remembered schedule before sharin
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ item: { id: 'schedule-1', status: 'upcoming', source: 'manual', ...body } }),
+      body: JSON.stringify({ item: { id: 'schedule-1', status: 'upcoming', source: 'manual', scheduled_at: body.scheduledAt, ...body } }),
     });
   });
 
@@ -189,5 +267,6 @@ test('direct entry path previews and saves the remembered schedule before sharin
   await expect(page.getByLabel('홈 미리보기')).toContainText('21:00');
   await page.getByRole('button', { name: '이 일정 기억하기' }).click();
 
-  await expect(page.getByRole('heading', { name: '공유 설정은 다음 단계에서 준비됩니다' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '어떻게 시작할까요?' })).toBeVisible();
+  await expect(page.getByText('고날에프 주사 일정이 홈에 반영되도록 저장됐어요.')).toBeVisible();
 });
