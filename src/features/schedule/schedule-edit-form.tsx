@@ -22,6 +22,7 @@ export function ScheduleEditForm({ item }: ScheduleEditFormProps) {
   const [dose, setDose] = useState(item.dose ?? '');
   const [unit, setUnit] = useState(item.unit ?? '');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -88,8 +89,31 @@ export function ScheduleEditForm({ item }: ScheduleEditFormProps) {
           </label>
         </div>
         {error ? <p role="alert" style={{ margin: 0, color: 'var(--slc-coral)', fontSize: 13, fontWeight: 800 }}>{error}</p> : null}
-        <button type="submit" disabled={saving} style={submitStyle(saving)}>{saving ? '저장 중' : '수정 저장'}</button>
+        <button type="submit" disabled={saving || deleting} style={submitStyle(saving)}>{saving ? '저장 중' : '수정 저장'}</button>
       </form>
+      <button
+        type="button"
+        disabled={deleting || saving}
+        onClick={async () => {
+          if (!window.confirm('이 일정을 삭제할까요?')) return;
+          setDeleting(true);
+          try {
+            const res = await fetch(`/api/schedule/${item.id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const payload = await res.json().catch(() => ({})) as { error?: string };
+              setError(payload.error ?? '삭제하지 못했어요. 다시 시도해 주세요.');
+              return;
+            }
+            router.push('/home');
+            router.refresh();
+          } finally {
+            setDeleting(false);
+          }
+        }}
+        style={deleteStyle(deleting)}
+      >
+        {deleting ? '삭제 중' : '이 일정 삭제'}
+      </button>
     </main>
   );
 }
@@ -125,6 +149,8 @@ const labelStyle = {
 } as const;
 
 const fieldStyle = {
+  width: '100%',
+  boxSizing: 'border-box',
   minHeight: 46,
   borderRadius: 15,
   border: '1px solid var(--slc-border)',
@@ -150,3 +176,21 @@ function submitStyle(saving: boolean) {
     opacity: saving ? 0.72 : 1,
   } as const;
 }
+
+function deleteStyle(deleting: boolean) {
+  return {
+    width: '100%',
+    minHeight: 48,
+    marginTop: 12,
+    border: '1px solid var(--slc-border)',
+    borderRadius: 999,
+    background: 'var(--slc-surface)',
+    color: 'var(--slc-coral)',
+    fontSize: 14,
+    fontWeight: 900,
+    fontFamily: 'inherit',
+    cursor: deleting ? 'wait' : 'pointer',
+    opacity: deleting ? 0.72 : 1,
+  } as const;
+}
+
