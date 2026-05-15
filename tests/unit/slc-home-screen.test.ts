@@ -46,9 +46,27 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-focus-kind="clinic_soon"');
+    expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).toContain('병원 시간이 가까워요');
     expect(markup).toContain('방문 시간만 먼저 볼게요');
     expect(markup.indexOf('병원 시간이 가까워요')).toBeLessThan(markup.indexOf('듀파스톤'));
+  });
+
+  it('renders the storyline hero as a full-bleed zone before day tabs and cards', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'injection-now', type: 'injection', title: 'Menopur', dose: '150', unit: 'IU', scheduled_at: '2026-05-14T09:10:00.000Z' }),
+      item({ id: 'injection-next', type: 'injection', title: 'Cetrotide', dose: '0.25', unit: 'mg', scheduled_at: '2026-05-14T19:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-testid="home-hero-zone"');
+    expect(markup).toContain('min-height:340px');
+    expect(markup).toContain('object-fit:cover');
+    expect(markup).toContain('home-injection-bg-v2.png');
+    expect(markup).not.toContain('data-testid="home-focus-hero"');
+    expect(markup.indexOf('data-testid="home-hero-zone"')).toBeLessThan(markup.indexOf('aria-label="일정 날짜"'));
+    expect(markup.indexOf('aria-label="일정 날짜"')).toBeLessThan(markup.indexOf('data-card-emphasis="primary"'));
   });
 
 
@@ -65,7 +83,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('data-card-emphasis="secondary"');
     expect(markup).toContain('주사');
     expect(markup).toContain('border:1.5px solid #E8A898');
-    expect(markup).toContain('background:#FFFBF8');
+    expect(markup).toContain('background:var(--slc-surface)');
     expect(markup.indexOf('data-card-emphasis="primary"')).toBeLessThan(markup.indexOf('data-card-emphasis="secondary"'));
   });
 
@@ -79,6 +97,21 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('고날에프 주사');
     expect(markup).toContain('주사');
+  });
+
+  it('renders the one-hour injection countdown arc on /home', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'injection-countdown', type: 'injection', title: '고날에프 주사', scheduled_at: '2026-05-14T09:45:00.000Z' }),
+      item({ id: 'next-injection', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-14T21:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-testid="injection-countdown-hero"');
+    expect(markup).toContain('data-testid="injection-countdown-arc"');
+    expect(markup).toContain('남은 시간');
+    expect(markup).toContain('00:45');
+    expect(markup).toContain('다음 주사');
   });
 
   it('does not render post-clinic prompt after a relevant clinic update exists', () => {
@@ -107,25 +140,39 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('href="/clinic-update"');
   });
 
-  it('renders safe empty-home copy and partner approval actions', () => {
+  it('renders a post-clinic banner after a past injection without a next injection schedule', () => {
+    vi.setSystemTime(new Date('2026-05-14T10:30:00.000Z'));
+
+    const markup = render([
+      item({ id: 'past-injection', type: 'injection', title: '고날에프 주사', scheduled_at: '2026-05-14T09:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-testid="post-clinic-banner"');
+    expect(markup).toContain('병원 다녀오셨나요? 기록해두면 다음 주사 알림이 정확해져요');
+  });
+
+  it('hides the post-clinic banner when a future injection schedule exists', () => {
+    vi.setSystemTime(new Date('2026-05-14T10:30:00.000Z'));
+
+    const markup = render([
+      item({ id: 'past-injection', type: 'injection', title: '고날에프 주사', scheduled_at: '2026-05-14T09:00:00.000Z' }),
+      item({ id: 'future-injection', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-14T21:00:00.000Z' }),
+    ]);
+
+    expect(markup).not.toContain('data-testid="post-clinic-banner"');
+  });
+
+  it('renders safe empty-home copy without a partner banner', () => {
     const markup = renderToStaticMarkup(React.createElement(TodayScreen, {
       initialItems: [],
       initialClinicUpdates: [],
       userId: 'patient-1',
-      pendingPartnerRequest: {
-        id: 'link-1',
-        patient_id: 'patient-1',
-        partner_id: 'partner-1',
-        invite_code: 'ABC123',
-        status: 'requested',
-        partner_profile: { display_name: '민수' },
-      },
     }));
 
     expect(markup).toContain('아직 사이클 기록이 없습니다');
     expect(markup).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
-    expect(markup).toContain('승인하기');
-    expect(markup).toContain('나중에');
+    expect(markup).not.toContain('data-testid="pending-partner-request-card"');
+    expect(markup).not.toContain('승인하기');
   });
 
   it('shows the first-schedule medication empty illustration after the user skips onboarding schedule', () => {

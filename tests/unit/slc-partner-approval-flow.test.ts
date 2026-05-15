@@ -4,16 +4,16 @@ import { describe, expect, it } from 'vitest';
 const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('SLC partner approval flow', () => {
-  it('surfaces requested partner links on the home screen with identity-aware props', () => {
+  it('keeps requested partner link approval out of the home surface', () => {
     const homePage = read('app/(authed)/home/page.tsx');
     const todayScreen = read('src/features/today/today-screen.tsx');
 
-    expect(homePage).toContain(".from('partner_links')");
-    expect(homePage).toContain(".eq('status', 'requested')");
-    expect(homePage).toContain('pendingPartnerRequest={pendingPartnerRequest}');
-    expect(todayScreen).toContain('pendingPartnerRequest?: PartnerLink | null');
-    expect(todayScreen).toContain('data-testid="pending-partner-request-card"');
-    expect(todayScreen).toContain('파트너 연결 요청이 있어요');
+    expect(homePage).not.toContain(".from('partner_links')");
+    expect(homePage).not.toContain(".eq('status', 'requested')");
+    expect(homePage).not.toContain('pendingPartnerRequest');
+    expect(todayScreen).not.toContain('pendingPartnerRequest');
+    expect(todayScreen).not.toContain('data-testid="pending-partner-request-card"');
+    expect(todayScreen).not.toContain('파트너 연결 요청이 있어요');
   });
 
   it('hydrates partner display names before rendering approval surfaces', () => {

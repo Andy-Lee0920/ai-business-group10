@@ -173,14 +173,14 @@ export function resolveHomeVisualAsset(kind: HomeFocusKind): SLCAsset {
     case 'clinic_soon':
       return slcAssets.home.clinicWide;
     case 'clinic_tomorrow':
-      return slcAssets.home.clinic;
+      return slcAssets.home.waiting;
     case 'medication_due':
-      return slcAssets.home.injection;
+      return slcAssets.home.injectionWide;
     case 'medication_upcoming':
       return slcAssets.home.injectionWide;
     case 'missed':
       return slcAssets.home.missedRecovery;
     case 'empty':
-      return slcAssets.home.empty;
+      return slcAssets.home.clinic;
   }
 }

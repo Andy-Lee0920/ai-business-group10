@@ -76,11 +76,8 @@ const navStyle: CSSProperties = {
   transform: 'translateX(-50%)',
   width: '100%',
   maxWidth: 430,
-  background: 'linear-gradient(180deg, rgba(255, 252, 250, 0.82) 0%, rgba(255, 252, 250, 0.98) 34%)',
-  backdropFilter: 'blur(22px)',
-  WebkitBackdropFilter: 'blur(22px)',
-  borderTop: '1px solid rgba(232, 224, 216, 0.9)',
-  boxShadow: '0 -18px 40px rgba(92, 68, 54, 0.08)',
+  background: 'var(--slc-bg)',
+  borderTop: '1px solid #E0D8CF',
   display: 'grid',
   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
   gap: 6,
@@ -96,17 +93,12 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-    color: active || center ? '#8D4A39' : '#9C9087',
+    color: active ? 'var(--slc-coral)' : 'var(--slc-muted)',
     textDecoration: 'none',
     fontSize: 12,
-    fontWeight: active || center ? 800 : 650,
+    fontWeight: active ? 800 : 650,
     borderRadius: center ? 24 : 22,
-    background: center
-      ? 'linear-gradient(180deg, rgba(255, 240, 235, 0.98) 0%, rgba(255, 252, 250, 0.98) 100%)'
-      : active ? 'rgba(196, 97, 74, 0.11)' : 'rgba(255, 255, 255, 0.42)',
-    border: active || center ? '1px solid rgba(196, 97, 74, 0.18)' : '1px solid rgba(240, 237, 232, 0.72)',
-    boxShadow: center ? '0 10px 26px rgba(196, 97, 74, 0.14)' : undefined,
-    transform: center ? 'translateY(-6px)' : 'none',
+    transform: 'none',
     transition: 'background 160ms ease, color 160ms ease, transform 160ms ease',
   };
 }
@@ -117,7 +109,7 @@ function iconShellStyle(active: boolean, center: boolean): CSSProperties {
     height: center ? 28 : 26,
     display: 'grid',
     placeItems: 'center',
-    color: active || center ? 'var(--slc-coral)' : '#A99D94',
+    color: active || center ? 'var(--slc-coral)' : 'var(--slc-muted)',
     transform: active ? 'translateY(-1px)' : 'none',
   };
 }
