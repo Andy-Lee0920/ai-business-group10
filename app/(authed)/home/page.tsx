@@ -1,8 +1,8 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { isPresentationMode } from '../../../src/config';
+import { isPresentationRequest } from '../../../src/config';
+import { PresentationHomeDemo } from '../../../src/features/today/presentation-home-demo';
 import { TodayScreen } from '../../../src/features/today/today-screen';
-import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import type { ClinicUpdate, PartnerLink, ScheduleItem } from '../../../src/types/slc.types';
@@ -10,9 +10,10 @@ import type { ClinicUpdate, PartnerLink, ScheduleItem } from '../../../src/types
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  if (isPresentationMode() && !hasSupabasePublicConfig()) {
-    const userId = 'presentation-user';
-    return <TodayScreen initialItems={fallbackScheduleItems(userId)} userId={userId} pendingPartnerRequest={null} initialClinicUpdates={[]} />;
+  const requestHeaders = await headers();
+
+  if (isPresentationRequest({ headers: requestHeaders })) {
+    return <PresentationHomeDemo />;
   }
 
   const supabase = await createCookieBackedSupabaseClient();

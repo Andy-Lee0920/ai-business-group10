@@ -1,6 +1,6 @@
-import { isPresentationMode } from '../../../src/config';
+import { headers } from 'next/headers';
+import { isPresentationRequest } from '../../../src/config';
 import { ClinicUpdateForm } from '../../../src/features/clinic-update/clinic-update-form';
-import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import type { ScheduleItem } from '../../../src/types/slc.types';
 import { fallbackMedications, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
@@ -8,7 +8,8 @@ import { fallbackMedications, fallbackScheduleItems, isMissingSlcTable } from '.
 export const dynamic = 'force-dynamic';
 
 export default async function ClinicUpdatePage() {
-  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+  const requestHeaders = await headers();
+  if (isPresentationRequest({ headers: requestHeaders })) {
     return <ClinicUpdateForm medications={fallbackMedications()} currentItems={fallbackScheduleItems('presentation-user')} />;
   }
 

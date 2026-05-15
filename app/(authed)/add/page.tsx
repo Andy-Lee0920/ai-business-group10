@@ -1,13 +1,14 @@
-import { isPresentationMode } from '../../../src/config';
+import { headers } from 'next/headers';
+import { isPresentationRequest } from '../../../src/config';
 import { ManualAddForm } from '../../../src/features/add/manual-add-form';
-import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { fallbackMedications } from '../../../src/lib/slc-fallback';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AddPage() {
-  if (isPresentationMode() && !hasSupabasePublicConfig()) {
+  const requestHeaders = await headers();
+  if (isPresentationRequest({ headers: requestHeaders })) {
     return <ManualAddForm medications={fallbackMedications()} />;
   }
 
