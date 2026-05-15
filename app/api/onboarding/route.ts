@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { SLC_CONSENT_COOKIE, SLC_ROLE_COOKIE, fallbackCookieOptions, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
+import { createSupabaseServiceRoleClient } from '../../../src/lib/server-supabase-admin';
 import { maskTechnicalError } from '../../../src/domain/slc-copy';
 import { hasRequiredConsentChecks, type ConsentCheckState, type OnboardingRole } from '../../../src/features/onboarding/onboarding-flow';
 import type { ScheduleType } from '../../../src/types/slc.types';
@@ -23,8 +24,6 @@ type OnboardingBody = {
   firstSchedule?: unknown;
   skipFirstSchedule?: unknown;
 };
-
-type OnboardingSupabase = Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>;
 
 type ScheduleInsertRow = {
   patient_id: string;
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
   if (role === 'partner') {
     const inviteCode = normalizeText(body.inviteCode);
     if (!inviteCode) return NextResponse.json({ error: '초대 코드를 입력해 주세요.' }, { status: 400 });
-    const linkResult = await requestPartnerLink(supabase, inviteCode, user.id);
+    const linkResult = await requestPartnerLink(inviteCode, user.id);
     if (linkResult) return linkResult;
     return NextResponse.json({ ok: true, role, redirectTo: '/partner' });
   }
@@ -125,20 +124,24 @@ export async function GET() {
   return NextResponse.json({ profile: data ?? null });
 }
 
-async function requestPartnerLink(supabase: OnboardingSupabase, inviteCode: string, partnerId: string) {
-  const { data: link, error: linkError } = await supabase
+async function requestPartnerLink(inviteCode: string, partnerId: string) {
+  const admin = createSupabaseServiceRoleClient();
+  const { data: link, error: linkError } = await admin
     .from('partner_links')
-    .select('*')
+    .select('id')
     .eq('invite_code', inviteCode)
     .eq('status', 'pending')
+    .is('partner_id', null)
     .maybeSingle();
 
   if (linkError || !link) return NextResponse.json({ error: '유효하지 않은 초대 코드입니다' }, { status: 400 });
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await admin
     .from('partner_links')
     .update({ partner_id: partnerId, status: 'requested', requested_at: new Date().toISOString() })
-    .eq('id', link.id);
+    .eq('id', link.id)
+    .eq('status', 'pending')
+    .is('partner_id', null);
 
   if (updateError) return NextResponse.json({ error: maskTechnicalError(updateError.message) }, { status: 500 });
   return null;
