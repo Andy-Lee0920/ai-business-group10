@@ -129,7 +129,7 @@ const pageStyle = {
   maxWidth: '100%',
   minWidth: 0,
   minHeight: '100dvh',
-  padding: '54px 20px 112px',
+  padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)',
   overflowX: 'hidden',
   background: 'var(--slc-bg)',
 } as const;

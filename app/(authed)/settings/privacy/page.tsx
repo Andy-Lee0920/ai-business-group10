@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 export default function SettingsPrivacyPage() {
   return (
-    <main style={{ minHeight: '100dvh', padding: '54px 20px 112px', background: 'var(--slc-bg)', color: 'var(--slc-text)' }}>
+    <main style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)', background: 'var(--slc-bg)', color: 'var(--slc-text)' }}>
       <Link href="/settings" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--slc-muted)', textDecoration: 'none', fontSize: 14, fontWeight: 800, marginBottom: 26 }}>
         <span aria-hidden="true">←</span>
         관리로 돌아가기

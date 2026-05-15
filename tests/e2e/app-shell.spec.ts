@@ -15,7 +15,7 @@ test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await page.goto('/home?care=injection');
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('navigation', { name: '주 탐색' })).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: '오늘 일정' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^오늘$/ }).first()).toBeVisible();
   const bottomNav = page.getByRole('navigation', { name: '하단 주요 메뉴' });
   await expect(bottomNav).toBeVisible();
   await expect(bottomNav.getByRole('link').nth(0)).toHaveAccessibleName('홈');

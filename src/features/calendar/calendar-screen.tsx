@@ -22,7 +22,7 @@ export function CalendarScreen({ items, initialDate }: CalendarScreenProps) {
   const selectedItems = itemsByDate.get(selectedDateKey) ?? [];
 
   return (
-    <AmbientStoryBackground asset={slcAssets.home.waiting} intensity="subtle" style={{ minHeight: '100dvh', padding: '54px 0 112px' }}>
+    <AmbientStoryBackground asset={slcAssets.home.waiting} intensity="subtle" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) 0 var(--fevio-page-bottom)' }}>
       <header style={{ padding: '0 24px 18px' }}>
         <p style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 700, margin: '0 0 4px' }}>캘린더</p>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: '0 0 8px', letterSpacing: '-0.05em' }}>{monthLabel}</h1>
@@ -142,7 +142,7 @@ const calendarCardStyle = {
   margin: '0 16px 18px',
   padding: '16px 14px 18px',
   borderRadius: 24,
-  background: 'rgba(252, 238, 232, 0.88)',
+  background: 'rgba(255, 255, 255, 0.88)',
   border: '1px solid var(--slc-border)',
   backdropFilter: 'blur(14px)',
 } as const;
@@ -204,7 +204,7 @@ const emptyStateStyle = {
   margin: 0,
   padding: '28px 18px',
   borderRadius: 22,
-  background: 'rgba(252, 238, 232, 0.88)',
+  background: 'rgba(255, 255, 255, 0.88)',
   border: '1px solid var(--slc-border)',
   color: 'var(--slc-muted)',
   textAlign: 'center',
@@ -220,7 +220,7 @@ const timelineCardStyle = {
   gap: 12,
   padding: '12px 14px',
   borderRadius: 18,
-  background: 'rgba(252, 238, 232, 0.88)',
+  background: 'rgba(255, 255, 255, 0.88)',
   border: '1px solid var(--slc-border)',
   backdropFilter: 'blur(14px)',
 } as const;

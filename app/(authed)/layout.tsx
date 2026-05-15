@@ -53,10 +53,12 @@ export default async function AuthedLayout({ children }: { children: React.React
   const redirectTo = computeConsentRedirect(effectiveConsent, hasExistingCareData);
   if (redirectTo) redirect(redirectTo);
 
+  const showBottomNav = effectiveConsent?.role === 'patient';
+
   return (
-    <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', minHeight: '100dvh', background: 'var(--slc-bg)' }}>
-      <main style={{ minHeight: '100dvh', paddingBottom: effectiveConsent?.role === 'patient' ? 88 : 0 }}>{children}</main>
-      {effectiveConsent?.role === 'patient' && <BottomNav />}
+    <div className="fevio-authed-frame" data-bottom-nav={showBottomNav ? 'true' : 'false'}>
+      <main className="fevio-authed-main">{children}</main>
+      {showBottomNav && <BottomNav />}
     </div>
   );
 }

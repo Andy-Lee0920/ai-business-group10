@@ -63,7 +63,7 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
   }
 
   return (
-    <AmbientStoryBackground asset={slcAssets.home.missedRecovery} intensity="subtle" style={{ minHeight: '100dvh', padding: '54px 0 112px' }}>
+    <AmbientStoryBackground asset={slcAssets.home.missedRecovery} intensity="subtle" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) 0 var(--fevio-page-bottom)' }}>
       <div style={{ padding: '0 24px 18px' }}>
         <p style={{ fontSize: 13, color: '#B5A89E', fontWeight: 700, margin: '0 0 4px' }}>최근 7일</p>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: '0 0 8px', letterSpacing: '-0.05em' }}>기록</h1>

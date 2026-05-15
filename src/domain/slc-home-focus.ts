@@ -15,13 +15,11 @@ export interface HomeFocus {
   kind: HomeFocusKind;
   badgeLabel: '병원' | '내일' | '확인' | '지금' | '다음' | '비어 있음';
   heading:
-    | '병원 시간이 가까워요'
-    | '내일 병원이에요'
-    | '내일 투약이에요'
+    | '오늘 병원 가는 날'
+    | '내일 준비되셨나요'
     | '확인이 필요한 주사가 있어요'
-    | '지금 챙길 시간이에요'
-    | '다음 투약이 있어요'
-    | '오늘은 예정된 일정이 없어요';
+    | '오늘 밤, 주사'
+    | '쉬어가는 날';
   description: string;
   primaryItem: ScheduleItem | null;
 }
@@ -68,7 +66,7 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     return {
       kind: 'clinic_soon',
       badgeLabel: '병원',
-      heading: '병원 시간이 가까워요',
+      heading: '오늘 병원 가는 날',
       description: formatFocusTime(clinicSoon, '방문 시간만 먼저 볼게요.'),
       primaryItem: clinicSoon,
     };
@@ -79,7 +77,7 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     return {
       kind: 'medication_due',
       badgeLabel: '지금',
-      heading: '지금 챙길 시간이에요',
+      heading: '오늘 밤, 주사',
       description: formatFocusTime(medicationDue, '할 일만 먼저 보여드려요.'),
       primaryItem: medicationDue,
     };
@@ -90,7 +88,7 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     return {
       kind: 'medication_upcoming',
       badgeLabel: '다음',
-      heading: '다음 투약이 있어요',
+      heading: '내일 준비되셨나요',
       description: formatFocusTime(medicationUpcoming, '다음 시간만 확인해요.'),
       primaryItem: medicationUpcoming,
     };
@@ -101,7 +99,7 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     return {
       kind: 'clinic_tomorrow',
       badgeLabel: '내일',
-      heading: '내일 병원이에요',
+      heading: '내일 준비되셨나요',
       description: formatFocusTime(clinicTomorrow, '방문 시간만 남겨둘게요.'),
       primaryItem: clinicTomorrow,
     };
@@ -110,7 +108,7 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
   return {
     kind: 'empty',
     badgeLabel: '비어 있음',
-    heading: '오늘은 예정된 일정이 없어요',
+    heading: '쉬어가는 날',
     description: '새 일정이 생기면 여기에서 바로 보여드릴게요.',
     primaryItem: null,
   };

@@ -40,7 +40,8 @@ describe('Fevio design tokens and UI primitive class contracts', () => {
       slcBg: '#FAF7F2',
       slcText: '#2F2926',
     });
-    expect(fevioPrimitiveStyles.screenShell().maxWidth).toBe(430);
+    expect(fevioPrimitiveStyles.screenShell().maxWidth).toBe('var(--fevio-mobile-frame-max)');
+    expect(fevioPrimitiveStyles.screenShell().padding).toBe('var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)');
     expect(fevioPrimitiveStyles.primaryCta(false).minHeight).toBe(52);
     expect(fevioPrimitiveStyles.choiceCard(true).border).toContain('var(--slc-coral)');
     expect(fevioPrimitiveStyles.settingsRow().minHeight).toBe(56);

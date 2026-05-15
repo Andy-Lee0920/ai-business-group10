@@ -182,19 +182,21 @@ const navStyle: CSSProperties = {
   left: '50%',
   transform: 'translateX(-50%)',
   width: '100%',
-  maxWidth: 430,
+  maxWidth: 'var(--fevio-mobile-frame-max)',
   background: 'var(--slc-bg)',
   borderTop: '1px solid #E0D8CF',
   display: 'grid',
   gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
   gap: 4,
-  padding: '10px 8px max(16px, env(safe-area-inset-bottom))',
+  padding: '8px 8px max(12px, env(safe-area-inset-bottom))',
+  minHeight: 'var(--fevio-bottom-nav-height)',
+  boxShadow: '0 -10px 26px rgba(47, 41, 38, 0.04)',
   zIndex: 50,
 };
 
 function itemStyle(active: boolean, center: boolean): CSSProperties {
   return {
-    minHeight: center ? 64 : 58,
+    minHeight: 56,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -204,7 +206,7 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
     textDecoration: 'none',
     fontSize: 11,
     fontWeight: active ? 800 : 650,
-    borderRadius: center ? 24 : 22,
+    borderRadius: 22,
     transform: 'none',
     transition: 'background 160ms ease, color 160ms ease, transform 160ms ease',
   };
@@ -212,8 +214,8 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
 
 function iconShellStyle(active: boolean, center: boolean): CSSProperties {
   return {
-    width: center ? 34 : 30,
-    height: center ? 28 : 26,
+    width: 30,
+    height: 26,
     display: 'grid',
     placeItems: 'center',
     color: active || center ? 'var(--slc-coral)' : 'var(--slc-muted)',
@@ -255,7 +257,7 @@ const sheetStyle: CSSProperties = {
   bottom: 0,
   transform: 'translateX(-50%)',
   width: '100%',
-  maxWidth: 430,
+  maxWidth: 'var(--fevio-mobile-frame-max)',
   padding: '10px 18px max(22px, env(safe-area-inset-bottom))',
   background: 'var(--slc-surface)',
   border: '1px solid var(--slc-border)',

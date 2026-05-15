@@ -14,11 +14,11 @@ export function PostClinicBanner({ lastInjectionAt, hasNextSchedule }: PostClini
       data-testid="post-clinic-banner"
       style={{
         position: 'fixed',
-        bottom: 72,
+        bottom: 'calc(var(--fevio-bottom-nav-height) + 8px)',
         left: '50%',
         transform: 'translateX(-50%)',
         width: '100%',
-        maxWidth: 430,
+        maxWidth: 'var(--fevio-mobile-frame-max)',
         background: 'var(--slc-surface)',
         zIndex: 49,
         display: 'flex',

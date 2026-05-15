@@ -46,6 +46,11 @@
   --fevio-dynamic-island-width: 125.67px;
   --fevio-dynamic-island-height: 36.67px;
   --fevio-dynamic-island-radius: 18.33px;
+  --fevio-mobile-frame-max: var(--fevio-phone-frame-max);
+  --fevio-page-gutter: clamp(16px, 5.13vw, 24px);
+  --fevio-page-top: max(52px, calc(env(safe-area-inset-top, 0px) + 18px));
+  --fevio-bottom-nav-height: calc(78px + env(safe-area-inset-bottom, 0px));
+  --fevio-page-bottom: calc(var(--fevio-bottom-nav-height) + 22px);
 }
 
 * {
@@ -104,6 +109,29 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.fevio-authed-frame {
+  position: relative;
+  width: 100%;
+  max-width: var(--fevio-mobile-frame-max);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  overflow-x: hidden;
+  background: var(--slc-bg);
+}
+
+.fevio-authed-main {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+  scroll-padding-bottom: var(--fevio-page-bottom);
+}
+
+.fevio-authed-frame[data-bottom-nav="true"] .fevio-authed-main {
+  padding-bottom: var(--fevio-bottom-nav-height);
+}
+
 @media (min-width: 768px) {
   html,
   body {
@@ -132,6 +160,11 @@ body {
       inset 0 0 0 1px rgba(255, 255, 255, 0.16),
       0 0 0 1px rgba(255, 255, 255, 0.08);
     scrollbar-width: none;
+  }
+
+  .fevio-authed-frame {
+    width: min(100vw, var(--fevio-mobile-frame-max));
+    max-width: var(--fevio-mobile-frame-max);
   }
 
   .app-shell::-webkit-scrollbar {

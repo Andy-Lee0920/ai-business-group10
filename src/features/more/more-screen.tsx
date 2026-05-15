@@ -81,7 +81,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
   };
 
   return (
-    <AmbientStoryBackground asset={slcAssets.partner.syncOverview} intensity="subtle" style={{ minHeight: '100dvh', padding: '60px 20px 112px' }}>
+    <AmbientStoryBackground asset={slcAssets.partner.syncOverview} intensity="subtle" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)' }}>
       <header style={{ marginBottom: 22 }}>
         <p style={{ fontSize: 12, fontWeight: 900, color: 'var(--slc-coral)', margin: '0 0 6px' }}>공유와 설정 관리</p>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: 0, letterSpacing: '-0.03em' }}>관리</h1>

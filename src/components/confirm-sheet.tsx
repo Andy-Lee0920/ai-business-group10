@@ -63,12 +63,13 @@ export function ConfirmSheet({ item, onComplete, onClose }: ConfirmSheetProps) {
 
 const overlayStyle: CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(42, 31, 26, 0.48)', zIndex: 100,
-  display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+  display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center',
 };
 
 const sheetStyle: CSSProperties = {
   background: '#FFFCFA', borderRadius: '28px 28px 0 0',
-  padding: '20px 24px 32px', display: 'flex', flexDirection: 'column', gap: 0,
+  width: '100%', maxWidth: 'var(--fevio-mobile-frame-max)',
+  padding: '20px var(--fevio-page-gutter) calc(28px + env(safe-area-inset-bottom, 0px))', display: 'flex', flexDirection: 'column', gap: 0,
   boxShadow: '0 -18px 50px rgba(75, 52, 42, 0.18)',
 };
 

@@ -6,7 +6,7 @@ export function PresentationCalendarDemo() {
   const grouped = groupByDay(items);
 
   return (
-    <main data-testid="presentation-calendar-demo" style={{ minHeight: '100dvh', padding: '48px 20px 112px', background: 'var(--slc-bg)' }}>
+    <main data-testid="presentation-calendar-demo" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)', background: 'var(--slc-bg)' }}>
       <header style={{ marginBottom: 18, display: 'grid', gap: 10 }}>
         <p style={{ margin: 0, color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드</p>
         <h1 style={{ margin: 0, color: 'var(--slc-text)', fontSize: 28, letterSpacing: '-0.05em' }}>Calendar</h1>

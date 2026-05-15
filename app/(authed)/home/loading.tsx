@@ -5,7 +5,7 @@ export default function HomeLoading() {
   };
 
   return (
-    <main className="app-shell" aria-busy="true" aria-label="홈 로딩 중">
+    <div className="app-shell" aria-busy="true" aria-label="홈 로딩 중">
       <div
         style={{
           background: 'var(--fevio-card)',
@@ -21,6 +21,6 @@ export default function HomeLoading() {
         <div style={{ ...skeletonBlock, width: '100%', height: 80 }} />
         <div style={{ ...skeletonBlock, width: '100%', height: 80 }} />
       </div>
-    </main>
+    </div>
   );
 }

@@ -1008,7 +1008,7 @@ function todayAtLocalTime(time: '19:00') {
   return date.toISOString();
 }
 
-const containerStyle: CSSProperties = { padding: '54px 24px 112px', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #FFFCF7 0%, #F8F1E9 100%)', color: 'var(--slc-text)' };
+const containerStyle: CSSProperties = { padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #FFFCF7 0%, #F8F1E9 100%)', color: 'var(--slc-text)' };
 const heroTitleStyle: CSSProperties = { margin: 0, textAlign: 'center', fontSize: 34, fontWeight: 900, letterSpacing: '-0.06em' };
 const titleStyle: CSSProperties = { margin: '0 0 8px', textAlign: 'center', fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.25 };
 const sectionTitleStyle: CSSProperties = { margin: '0 0 8px', fontSize: 16, fontWeight: 900 };

@@ -47,9 +47,22 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-focus-kind="clinic_soon"');
     expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).toContain('병원 시간이 가까워요');
+    expect(markup).toContain('오늘 병원 가는 날');
     expect(markup).toContain('방문 시간만 먼저 볼게요');
-    expect(markup.indexOf('병원 시간이 가까워요')).toBeLessThan(markup.indexOf('듀파스톤'));
+    expect(markup.indexOf('오늘 병원 가는 날')).toBeLessThan(markup.indexOf('듀파스톤'));
+  });
+
+  it('uses the home header action for reminder settings instead of duplicating schedule add', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-testid="home-reminder-toggle"');
+    expect(markup).toContain('aria-pressed="true"');
+    expect(markup).toContain('알림 켬');
+    expect(markup).not.toContain('aria-label="일정 추가"');
   });
 
   it('renders the storyline hero as a full-bleed zone before day tabs and cards', () => {
@@ -169,8 +182,7 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'tomorrow-injection', type: 'injection', title: '내일 고날에프', scheduled_at: '2026-05-15T09:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('내일 투약이에요');
-    expect(markup).not.toContain('내일 병원이에요');
+    expect(markup).toContain('내일 준비되셨나요');
     expect(markup).toContain('내일 고날에프');
   });
 

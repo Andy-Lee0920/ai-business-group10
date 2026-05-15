@@ -31,6 +31,7 @@ type HeroStory =
   | { kind: 'quiet'; focus: HomeFocus };
 
 const DAY_LABELS = ['오늘', '내일', '모레'] as const;
+const HOME_REMINDER_SETTING_KEY = 'fevio_home_reminder_enabled';
 
 export function TodayScreen({
   initialItems,
@@ -41,6 +42,29 @@ export function TodayScreen({
   const [items, setItems] = useState<ScheduleItem[]>(initialItems);
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderPreferenceLoaded, setReminderPreferenceLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(HOME_REMINDER_SETTING_KEY);
+      if (stored === 'off') setReminderEnabled(false);
+      if (stored === 'on') setReminderEnabled(true);
+    } catch {
+      // localStorage access can fail in restricted browser modes.
+    } finally {
+      setReminderPreferenceLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!reminderPreferenceLoaded) return;
+    try {
+      window.localStorage.setItem(HOME_REMINDER_SETTING_KEY, reminderEnabled ? 'on' : 'off');
+    } catch {
+      // localStorage access can fail in restricted browser modes.
+    }
+  }, [reminderEnabled, reminderPreferenceLoaded]);
 
   useEffect(() => {
     const id = setInterval(() => setItems((prev) => [...prev]), 1_000);
@@ -82,8 +106,8 @@ export function TodayScreen({
   }, [activeItem]);
 
   return (
-    <div style={{ minHeight: '100dvh', padding: '0 0 112px', background: 'var(--slc-bg)' }}>
-      <Header />
+    <div style={{ minHeight: '100dvh', padding: '0 0 var(--fevio-page-bottom)', background: 'var(--slc-bg)' }}>
+      <Header reminderEnabled={reminderEnabled} onToggleReminder={() => setReminderEnabled((value) => !value)} />
       <HeroZone story={heroStory} onCta={setActiveItem} />
       <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
       <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -202,7 +226,7 @@ function buildTomorrowFocus(item: ScheduleItem): HomeFocus {
   return {
     kind: isClinic ? 'clinic_tomorrow' : 'medication_upcoming',
     badgeLabel: '내일',
-    heading: isClinic ? '내일 병원이에요' : '내일 투약이에요',
+    heading: '내일 준비되셨나요',
     description: `${formatScheduleTime(item.scheduled_at)} · ${isClinic ? '방문 시간만 미리 확인해요.' : '준비해두세요.'}`,
     primaryItem: item,
   };
@@ -384,7 +408,7 @@ const heroCtaStyle = {
   marginTop: 2,
 } as const;
 
-function Header() {
+function Header({ reminderEnabled, onToggleReminder }: { reminderEnabled: boolean; onToggleReminder: () => void }) {
   const today = new Date();
   return (
     <header style={{ padding: '54px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -394,7 +418,17 @@ function Header() {
         </p>
         <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--slc-text)', margin: 0 }}>오늘</h1>
       </div>
-      <Link href="/add" aria-label="일정 추가" style={addButtonStyle}>+</Link>
+      <button
+        type="button"
+        aria-pressed={reminderEnabled}
+        aria-label={reminderEnabled ? '홈 알림 끄기' : '홈 알림 켜기'}
+        data-testid="home-reminder-toggle"
+        onClick={onToggleReminder}
+        style={reminderToggleStyle(reminderEnabled)}
+      >
+        <span aria-hidden="true">🔔</span>
+        <span>{reminderEnabled ? '알림 켬' : '알림 끔'}</span>
+      </button>
     </header>
   );
 }
@@ -491,11 +525,25 @@ function isOnDay(iso: string, offset: DayOffset) {
   return isInKstDay(iso, offset);
 }
 
-const addButtonStyle = {
-  width: 44, height: 44, borderRadius: '50%', background: 'var(--slc-coral-light)', border: '1.5px solid var(--slc-border)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--slc-coral)', fontSize: 22,
-  textDecoration: 'none', fontWeight: 500,
-} as const;
+function reminderToggleStyle(enabled: boolean) {
+  return {
+    minHeight: 44,
+    padding: '0 13px',
+    borderRadius: 999,
+    background: enabled ? 'var(--slc-coral-light)' : 'var(--slc-surface)',
+    border: '1.5px solid var(--slc-border)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    color: enabled ? 'var(--slc-coral)' : 'var(--slc-muted)',
+    fontSize: 13,
+    textDecoration: 'none',
+    fontWeight: 900,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+  } as const;
+}
 
 const emptyLinkStyle = {
   display: 'inline-block', marginTop: 16, padding: '12px 24px', background: 'var(--slc-coral)', color: 'var(--slc-bg)',

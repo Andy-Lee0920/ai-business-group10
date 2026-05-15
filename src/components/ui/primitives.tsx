@@ -14,9 +14,9 @@ export function classNames(...values: Array<string | false | null | undefined>) 
 export const fevioPrimitiveStyles = {
   screenShell: (tone: ShellTone = 'warm'): CSSProperties => ({
     minHeight: '100dvh',
-    maxWidth: 430,
+    maxWidth: 'var(--fevio-mobile-frame-max)',
     margin: '0 auto',
-    padding: 'max(48px, env(safe-area-inset-top)) 24px max(112px, env(safe-area-inset-bottom))',
+    padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)',
     background: tone === 'warm' ? 'var(--slc-bg)' : 'var(--slc-card)',
     color: 'var(--slc-text)',
   }),

@@ -187,7 +187,7 @@ export function ManualAddForm({ medications }: Props) {
   const ambientAsset = form.type === 'clinic' ? slcAssets.home.clinicWide : slcAssets.home.injectionWide;
 
   return (
-    <AmbientStoryBackground asset={ambientAsset} intensity="subtle" style={{ minHeight: '100dvh', padding: '60px 24px 112px' }}>
+    <AmbientStoryBackground asset={ambientAsset} intensity="subtle" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)' }}>
       <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: 'var(--slc-muted)', fontSize: 15, cursor: 'pointer', marginBottom: 20, fontFamily: 'inherit' }}>
         ← 뒤로
       </button>

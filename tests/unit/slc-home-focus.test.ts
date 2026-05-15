@@ -46,7 +46,7 @@ describe('SLC home focus', () => {
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'clinic_soon',
       badgeLabel: '병원',
-      heading: '병원 시간이 가까워요',
+      heading: '오늘 병원 가는 날',
       primaryItem: { id: 'clinic-soon' },
     });
     expect(getHomePendingItems(items, now).map((item) => item.id)).toEqual(['clinic-soon', 'med-now']);
@@ -61,7 +61,7 @@ describe('SLC home focus', () => {
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'medication_upcoming',
       badgeLabel: '다음',
-      heading: '다음 투약이 있어요',
+      heading: '내일 준비되셨나요',
       primaryItem: { id: 'med-today' },
     });
   });
@@ -74,7 +74,7 @@ describe('SLC home focus', () => {
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'clinic_tomorrow',
       badgeLabel: '내일',
-      heading: '내일 병원이에요',
+      heading: '내일 준비되셨나요',
       primaryItem: { id: 'clinic-tomorrow' },
     });
   });
@@ -88,7 +88,7 @@ describe('SLC home focus', () => {
     expect(resolveHomeFocus(items, now)).toMatchObject({
       kind: 'medication_due',
       badgeLabel: '지금',
-      heading: '지금 챙길 시간이에요',
+      heading: '오늘 밤, 주사',
       primaryItem: { id: 'injection-due' },
     });
   });
