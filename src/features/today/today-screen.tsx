@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Bell, BellOff } from 'lucide-react';
 import { ActionCard } from '../../components/action-card';
 import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { ConfirmSheet } from '../../components/confirm-sheet';
@@ -410,6 +411,7 @@ const heroCtaStyle = {
 
 function Header({ reminderEnabled, onToggleReminder }: { reminderEnabled: boolean; onToggleReminder: () => void }) {
   const today = new Date();
+  const ReminderIcon = reminderEnabled ? Bell : BellOff;
   return (
     <header style={{ padding: '54px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
@@ -422,12 +424,13 @@ function Header({ reminderEnabled, onToggleReminder }: { reminderEnabled: boolea
         type="button"
         aria-pressed={reminderEnabled}
         aria-label={reminderEnabled ? '홈 알림 끄기' : '홈 알림 켜기'}
+        data-reminder-state={reminderEnabled ? 'on' : 'off'}
         data-testid="home-reminder-toggle"
         onClick={onToggleReminder}
         style={reminderToggleStyle(reminderEnabled)}
       >
-        <span aria-hidden="true">🔔</span>
-        <span>{reminderEnabled ? '알림 켬' : '알림 끔'}</span>
+        <ReminderIcon aria-hidden="true" size={20} strokeWidth={2.35} />
+        <span aria-hidden="true" style={reminderToggleDotStyle(reminderEnabled)} />
       </button>
     </header>
   );
@@ -527,21 +530,34 @@ function isOnDay(iso: string, offset: DayOffset) {
 
 function reminderToggleStyle(enabled: boolean) {
   return {
-    minHeight: 44,
-    padding: '0 13px',
+    width: 44,
+    height: 44,
+    padding: 0,
     borderRadius: 999,
-    background: enabled ? 'var(--slc-coral-light)' : 'var(--slc-surface)',
-    border: '1.5px solid var(--slc-border)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+    background: enabled ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.96), var(--slc-coral-light))' : 'rgba(255, 255, 255, 0.74)',
+    border: enabled ? '1px solid rgba(196, 97, 74, 0.28)' : '1px solid var(--slc-border)',
+    boxShadow: enabled ? '0 12px 28px rgba(196, 97, 74, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9)' : '0 10px 24px rgba(42, 31, 26, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.86)',
+    display: 'inline-grid',
+    placeItems: 'center',
     color: enabled ? 'var(--slc-coral)' : 'var(--slc-muted)',
-    fontSize: 13,
-    textDecoration: 'none',
-    fontWeight: 900,
     fontFamily: 'inherit',
     cursor: 'pointer',
+    position: 'relative',
+    backdropFilter: 'blur(14px)',
+  } as const;
+}
+
+function reminderToggleDotStyle(enabled: boolean) {
+  return {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    width: 7,
+    height: 7,
+    borderRadius: '50%',
+    background: enabled ? 'var(--slc-coral)' : 'var(--slc-muted)',
+    border: '1.5px solid #fff',
+    boxShadow: enabled ? '0 0 0 3px rgba(196, 97, 74, 0.12)' : 'none',
   } as const;
 }
 

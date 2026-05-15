@@ -60,8 +60,13 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-testid="home-reminder-toggle"');
+    expect(markup).toContain('data-reminder-state="on"');
     expect(markup).toContain('aria-pressed="true"');
-    expect(markup).toContain('알림 켬');
+    expect(markup).toContain('lucide-bell');
+    expect(markup).toContain('width:44px;height:44px');
+    expect(markup).toContain('box-shadow:0 12px 28px rgba(196, 97, 74, 0.16)');
+    expect(markup).not.toContain('알림 켬');
+    expect(markup).not.toContain('알림 끔');
     expect(markup).not.toContain('aria-label="일정 추가"');
   });
 
