@@ -108,6 +108,35 @@ describe('SLC Supabase migrations', () => {
     }
   });
 
+  it('adds schedule capture candidates with owner RLS and capture schedule item source (#312)', () => {
+    const captureSchedule = readMigration('202605150002_schedule_candidates_capture_source.sql');
+
+    expect(captureSchedule).toContain('create table if not exists public.schedule_candidates');
+
+    for (const columnDefinition of [
+      'id uuid primary key default gen_random_uuid()',
+      'patient_id uuid not null references auth.users(id) on delete cascade',
+      'image_path text',
+      'raw_text text',
+      "status text not null default 'draft' check (status in ('draft','confirmed','rejected'))",
+      'type text not null',
+      'title text not null',
+      'scheduled_at timestamptz',
+      'dose text',
+      'unit text',
+      'created_at timestamptz not null default now()',
+    ]) {
+      expect(captureSchedule).toContain(columnDefinition);
+    }
+
+    expect(captureSchedule).toContain('alter table public.schedule_candidates enable row level security');
+    expect(captureSchedule).toContain('for all to authenticated');
+    expect(captureSchedule).toContain('using (auth.uid() = patient_id)');
+    expect(captureSchedule).toContain('with check (auth.uid() = patient_id)');
+    expect(captureSchedule).toContain('drop constraint if exists schedule_items_source_check');
+    expect(captureSchedule).toContain("source in ('seed','manual','clinic_update','onboarding_interview','capture')");
+  });
+
   it('seeds Clinic Guide aliases for the required 10 IVF medications', () => {
     const aliases = readMigration('202605140002_slc_clinic_guide_medication_aliases.sql');
 
