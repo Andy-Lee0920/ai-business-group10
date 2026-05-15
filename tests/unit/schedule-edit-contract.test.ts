@@ -45,4 +45,18 @@ describe('schedule edit contract', () => {
     expect(editPage).toContain("from('schedule_items')");
     expect(editPage).toContain(".eq('patient_id', user.id)");
   });
+
+  it('uses chevron edit affordances on schedule timeline rows', () => {
+    for (const source of [todayScreen, recordsScreen]) {
+      expect(source).toContain('>›</Link>');
+      expect(source).toContain('fontSize: 22');
+      expect(source).toContain('lineHeight: 1');
+      expect(source).not.toContain('>수정</Link>');
+    }
+    expect(calendarScreen).toContain('function TimelineRow');
+    expect(calendarScreen).toContain('paddingLeft: 28');
+    expect(calendarScreen).toContain('left: 10');
+    expect(calendarScreen).toContain('>›</span>');
+    expect(calendarScreen).not.toContain('function TimelineCard');
+  });
 });
