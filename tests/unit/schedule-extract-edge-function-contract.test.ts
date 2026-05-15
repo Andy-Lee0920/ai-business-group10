@@ -116,6 +116,9 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain("normalizeScheduleType(readProperty(value, 'type'), title)");
     expect(code).toContain("if (isKnownInjectionMedication(titleText)) return 'injection'");
     expect(code).toContain('function extractDoseParts');
+    expect(code).toContain("readLooseProperty(value, 'dosage')");
+    expect(code).toContain("readLooseProperty(value, 'dosage_unit')");
+    expect(code).toContain("readLooseProperty(value, 'dosage_units')");
     expect(code).toContain('function isUserTimeGuidanceTitle');
     expect(code).toContain('if (!title || isUserTimeGuidanceTitle(title)) return null');
     expect(code).toContain("normalized.includes('메노푸')");

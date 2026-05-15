@@ -289,8 +289,8 @@ function normalizeCandidate(value: unknown): ScheduleCandidate | null {
   if (!title || isUserTimeGuidanceTitle(title)) return null;
 
   const doseFromTitle = extractDoseParts(title);
-  const dose = normalizeNullableText(readProperty(value, 'dose')) ?? doseFromTitle?.dose ?? null;
-  const unit = normalizeNullableText(readProperty(value, 'unit')) ?? doseFromTitle?.unit ?? null;
+  const dose = normalizeNullableText(readProperty(value, 'dose') ?? readLooseProperty(value, 'dosage')) ?? doseFromTitle?.dose ?? null;
+  const unit = normalizeNullableText(readProperty(value, 'unit') ?? readLooseProperty(value, 'dosage_unit') ?? readLooseProperty(value, 'dosage_units')) ?? doseFromTitle?.unit ?? null;
   const type = normalizeScheduleType(readProperty(value, 'type'), title);
   if (!type) return null;
 
