@@ -17,8 +17,30 @@ type Medication = {
   is_slc_seed: boolean;
 };
 
-type ClinicGuideAiRequest = { userInput: string; patientId: string };
-type ClinicGuideAiResponse = { matched: Medication | null; source: 'aliases' | 'llm' | 'none' };
+type ClinicGuideStep = 'same_medication' | 'add_medication' | 'medication_days' | 'next_visit' | 'trigger_plan' | 'memo';
+type TriggerPlan = 'today' | 'tomorrow' | 'not_yet' | 'unknown';
+type ClinicGuideDraft = {
+  same_medication?: boolean | null;
+  added_medication_ids?: string[];
+  medication_days?: number | null;
+  next_visit_at?: string | null;
+  trigger_plan?: TriggerPlan | null;
+  memo?: string | null;
+};
+
+type NormalizeRequest = { mode?: 'normalizeMedication'; userInput: string; patientId: string };
+type InterviewRequest = { mode: 'interview'; patientId: string; step: ClinicGuideStep; context: ClinicGuideDraft; userInput: string };
+type ClinicGuideAiRequest = NormalizeRequest | InterviewRequest;
+type ClinicGuideNormalizeResponse = { matched: Medication | null; source: 'aliases' | 'llm' | 'none' };
+type ClinicGuideInterviewResponse = {
+  nextStep: ClinicGuideStep | null;
+  question: string;
+  chips?: string[];
+  draft: ClinicGuideDraft;
+  warnings?: string[];
+  fallbackReason?: string;
+  requiresUserConfirmation: true;
+};
 
 type OpenRouterChoice = { message?: { content?: string } };
 type OpenRouterResponse = { choices?: OpenRouterChoice[] };
@@ -34,6 +56,11 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
   const body = await request.json().catch(() => ({})) as Partial<ClinicGuideAiRequest>;
+  if (body.mode === 'interview') return handleInterview(body as Partial<InterviewRequest>);
+  return handleNormalize(body as Partial<NormalizeRequest>);
+});
+
+async function handleNormalize(body: Partial<NormalizeRequest>) {
   const userInput = typeof body.userInput === 'string' ? body.userInput.trim() : '';
   const patientId = typeof body.patientId === 'string' ? body.patientId.trim() : '';
   if (!userInput || !patientId) return json({ matched: null, source: 'none' }, 400);
@@ -42,13 +69,20 @@ Deno.serve(async (request) => {
   const aliasMatch = findAliasMatch(medications, userInput);
   if (aliasMatch) return json({ matched: aliasMatch, source: 'aliases' });
 
-  const llmMatch = await matchWithOpenRouter(userInput, medications);
+  const llmMatch = await matchMedicationWithOpenRouter(userInput, medications);
   if (llmMatch) return json({ matched: llmMatch, source: 'llm' });
 
   return json({ matched: null, source: 'none' });
-});
+}
 
-function json(payload: ClinicGuideAiResponse | { error: string }, status = 200) {
+async function handleInterview(body: Partial<InterviewRequest>) {
+  const request = normalizeInterviewRequest(body);
+  if (!request) return json({ error: 'invalid_interview_request' }, 400);
+  const aiResponse = await interviewWithOpenRouter(request);
+  return json(aiResponse ?? buildInterviewFallback(request, 'deterministic_fallback'));
+}
+
+function json(payload: ClinicGuideNormalizeResponse | ClinicGuideInterviewResponse | { error: string }, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: { ...corsHeaders, 'content-type': 'application/json' },
@@ -82,7 +116,7 @@ function findAliasMatch(medications: Medication[], userInput: string) {
   }) ?? null;
 }
 
-async function matchWithOpenRouter(userInput: string, medications: Medication[]) {
+async function matchMedicationWithOpenRouter(userInput: string, medications: Medication[]) {
   const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
   if (!openRouterApiKey || medications.length === 0) return null;
 
@@ -119,6 +153,34 @@ async function matchWithOpenRouter(userInput: string, medications: Medication[])
   return id ? medications.find((medication) => medication.id === id) ?? null : null;
 }
 
+async function interviewWithOpenRouter(request: InterviewRequest): Promise<ClinicGuideInterviewResponse | null> {
+  const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+  if (!openRouterApiKey) return null;
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${openRouterApiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'anthropic/claude-3-haiku',
+      messages: [
+        {
+          role: 'system',
+          content: 'You help Korean IVF patients summarize only facts they report after a clinic visit. Ask exactly one next question. Do not provide medical advice, dosing recommendations, treatment-stage judgment, or automatic saving. Return JSON only with nextStep, question, chips, draft, warnings, requiresUserConfirmation:true.',
+        },
+        { role: 'user', content: JSON.stringify(request) },
+      ],
+      temperature: 0.2,
+    }),
+  }).catch(() => null);
+  if (!response?.ok) return null;
+  const data = await response.json().catch(() => null) as OpenRouterResponse | null;
+  const content = data?.choices?.[0]?.message?.content ?? '';
+  return parseInterviewResponse(content, request);
+}
+
 function parseMedicationId(content: string) {
   try {
     const parsed = JSON.parse(content) as { id?: unknown };
@@ -126,6 +188,140 @@ function parseMedicationId(content: string) {
   } catch {
     return null;
   }
+}
+
+function parseInterviewResponse(content: string, request: InterviewRequest): ClinicGuideInterviewResponse | null {
+  try {
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    const question = typeof parsed.question === 'string' && parsed.question.trim() ? parsed.question.trim() : null;
+    if (!question || !containsKorean(question)) return null;
+    const draft = isRecord(parsed.draft) ? normalizeDraft({ ...request.context, ...inferDraft(request.step, request.userInput), ...parsed.draft }) : normalizeDraft({ ...request.context, ...inferDraft(request.step, request.userInput) });
+    return {
+      nextStep: isClinicGuideStep(parsed.nextStep) ? parsed.nextStep : parsed.nextStep === null ? null : resolveNextStep(request.step, draft),
+      question,
+      chips: normalizeStringArray(parsed.chips),
+      draft,
+      warnings: normalizeStringArray(parsed.warnings),
+      requiresUserConfirmation: true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeInterviewRequest(body: Partial<InterviewRequest>): InterviewRequest | null {
+  const patientId = typeof body.patientId === 'string' ? body.patientId.trim() : '';
+  const userInput = typeof body.userInput === 'string' ? body.userInput.trim() : '';
+  if (!patientId || !userInput || !isClinicGuideStep(body.step)) return null;
+  return {
+    mode: 'interview',
+    patientId,
+    step: body.step,
+    context: isRecord(body.context) ? normalizeDraft(body.context) : {},
+    userInput,
+  };
+}
+
+function buildInterviewFallback(request: InterviewRequest, fallbackReason: string): ClinicGuideInterviewResponse {
+  const draft = normalizeDraft({ ...request.context, ...inferDraft(request.step, request.userInput) });
+  const nextStep = resolveNextStep(request.step, draft);
+  return {
+    nextStep,
+    question: nextStep ? fallbackQuestion(nextStep) : '정리된 내용을 저장 전에 확인해 주세요.',
+    chips: nextStep ? fallbackChips(nextStep) : ['저장 전 확인'],
+    draft,
+    warnings: ['의학적 판단 없이 입력한 사실만 정리했어요. 저장 전 병원 안내와 다시 확인해 주세요.'],
+    fallbackReason,
+    requiresUserConfirmation: true,
+  };
+}
+
+function inferDraft(step: ClinicGuideStep, userInput: string): ClinicGuideDraft {
+  const normalized = userInput.trim().toLocaleLowerCase('ko-KR');
+  if (step === 'same_medication') {
+    if (/(바뀌|변경|새|추가|changed|change)/u.test(normalized)) return { same_medication: false };
+    if (/(그대로|같|same|유지|없)/u.test(normalized)) return { same_medication: true };
+    return { same_medication: null };
+  }
+  if (step === 'medication_days') return { medication_days: parsePositiveInteger(normalized) };
+  if (step === 'next_visit') return { next_visit_at: parseDateLike(userInput) };
+  if (step === 'trigger_plan') {
+    if (normalized.includes('오늘')) return { trigger_plan: 'today' };
+    if (normalized.includes('내일')) return { trigger_plan: 'tomorrow' };
+    if (/(미정|아직|not yet)/u.test(normalized)) return { trigger_plan: 'not_yet' };
+    if (/(모르|unknown)/u.test(normalized)) return { trigger_plan: 'unknown' };
+    return { trigger_plan: null };
+  }
+  if (step === 'memo') return { memo: userInput.trim() || null };
+  return {};
+}
+
+function resolveNextStep(step: ClinicGuideStep, draft: ClinicGuideDraft): ClinicGuideStep | null {
+  if (step === 'same_medication') return draft.same_medication === false ? 'add_medication' : 'medication_days';
+  if (step === 'add_medication') return 'medication_days';
+  if (step === 'medication_days') return 'next_visit';
+  if (step === 'next_visit') return 'trigger_plan';
+  if (step === 'trigger_plan') return 'memo';
+  return null;
+}
+
+function fallbackQuestion(step: ClinicGuideStep) {
+  if (step === 'add_medication') return '새로 받은 약이 있다면 이름만 적어주세요. 없으면 없다고 답해도 괜찮아요.';
+  if (step === 'medication_days') return '며칠치 처방을 받았나요?';
+  if (step === 'next_visit') return '다음 방문일을 들었다면 날짜를 알려주세요.';
+  if (step === 'trigger_plan') return '트리거 주사 계획을 들었나요?';
+  if (step === 'memo') return '마지막으로 병원에서 들은 내용을 그대로 메모해 주세요.';
+  return '오늘 병원에서 약이 그대로인지, 바뀌었는지만 먼저 확인할게요.';
+}
+
+function fallbackChips(step: ClinicGuideStep) {
+  if (step === 'same_medication') return ['그대로예요', '바뀌었어요', '잘 모르겠어요'];
+  if (step === 'add_medication') return ['새 약 있어요', '없어요', '직접 입력할게요'];
+  if (step === 'medication_days') return ['1일', '2일', '3일', '직접 입력'];
+  if (step === 'next_visit') return ['처방일 기준으로 제안', '날짜 직접 선택', '아직 몰라요'];
+  if (step === 'trigger_plan') return ['오늘', '내일', '아직 미정', '잘 모르겠어요'];
+  return ['메모 없음', '저장 전 확인할게요'];
+}
+
+function normalizeDraft(raw: Record<string, unknown>): ClinicGuideDraft {
+  return {
+    same_medication: typeof raw.same_medication === 'boolean' ? raw.same_medication : raw.same_medication === null ? null : undefined,
+    added_medication_ids: normalizeStringArray(raw.added_medication_ids),
+    medication_days: typeof raw.medication_days === 'number' && Number.isFinite(raw.medication_days) ? Math.max(1, Math.min(30, Math.trunc(raw.medication_days))) : raw.medication_days === null ? null : undefined,
+    next_visit_at: typeof raw.next_visit_at === 'string' && raw.next_visit_at.trim() ? raw.next_visit_at.trim() : raw.next_visit_at === null ? null : undefined,
+    trigger_plan: raw.trigger_plan === 'today' || raw.trigger_plan === 'tomorrow' || raw.trigger_plan === 'not_yet' || raw.trigger_plan === 'unknown' || raw.trigger_plan === null ? raw.trigger_plan : undefined,
+    memo: typeof raw.memo === 'string' && raw.memo.trim() ? raw.memo.trim() : raw.memo === null ? null : undefined,
+  };
+}
+
+function normalizeStringArray(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim()) : [];
+}
+
+function parsePositiveInteger(value: string) {
+  const match = value.match(/\d+/u);
+  if (!match) return null;
+  const parsed = Number.parseInt(match[0], 10);
+  return Number.isFinite(parsed) ? Math.max(1, Math.min(30, parsed)) : null;
+}
+
+function parseDateLike(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^\d{4}-\d{2}-\d{2}/u.test(trimmed)) return trimmed.length === 10 ? `${trimmed}T09:00:00.000Z` : trimmed;
+  return null;
+}
+
+function containsKorean(value: string) {
+  return /[가-힣]/u.test(value);
+}
+
+function isClinicGuideStep(value: unknown): value is ClinicGuideStep {
+  return value === 'same_medication' || value === 'add_medication' || value === 'medication_days' || value === 'next_visit' || value === 'trigger_plan' || value === 'memo';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function normalizeMedicationText(value: string) {

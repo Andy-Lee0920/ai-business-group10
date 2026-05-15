@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
-import type { Medication } from '../../types/slc.types';
-import type { ClinicGuideMedicationNormalizeResponse } from '../../types/clinic-guide.types';
+import type { ClinicUpdate, Medication } from '../../types/slc.types';
+import type { ClinicGuideMedicationNormalizeResponse, ClinicGuideResponse, ClinicGuideStep } from '../../types/clinic-guide.types';
 import { resolveMedicationNames } from '../../domain/clinic-guide-medication-normalizer';
 import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../domain/slc-clinic-update';
 
@@ -47,6 +47,11 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   const [showDirectInput, setShowDirectInput] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [savedScheduleItems, setSavedScheduleItems] = useState<SavedScheduleItem[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('병원에서 들은 내용을 답하면 다음 질문과 정리 초안을 업데이트해요.');
+  const [aiChips, setAiChips] = useState<string[]>(['그대로예요', '바뀌었어요', '잘 모르겠어요']);
+  const [aiDraft, setAiDraft] = useState<Partial<ClinicUpdate>>({});
+  const [aiError, setAiError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
     medicationChange: null,
     addedMedicationIds: [],
@@ -118,6 +123,53 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
     return () => window.clearTimeout(timer);
   }, [router, step]);
 
+  const runInterview = async (clinicStep: ClinicGuideStep, userInput: string, formSnapshot = form) => {
+    const trimmed = userInput.trim();
+    if (!trimmed) return;
+    setAiLoading(true);
+    setAiError(null);
+    const response = await fetch('/api/clinic-guide/interview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        step: clinicStep,
+        userInput: trimmed,
+        context: clinicGuideContextFromForm(formSnapshot),
+      }),
+    }).catch(() => null);
+    if (!response?.ok) {
+      setAiError('AI 정리가 잠시 불안정해요. 기본 질문으로 계속 진행할게요.');
+      setAiLoading(false);
+      return;
+    }
+    const payload = await response.json().catch(() => null) as ClinicGuideResponse | null;
+    if (!payload?.requiresUserConfirmation) {
+      setAiError('AI 정리가 잠시 불안정해요. 기본 질문으로 계속 진행할게요.');
+      setAiLoading(false);
+      return;
+    }
+    setAiQuestion(payload.question);
+    setAiChips(payload.chips ?? []);
+    setAiDraft(payload.draft);
+    setAiError(payload.fallbackReason ? 'AI 정리가 잠시 불안정해요. 기본 질문으로 계속 진행할게요.' : null);
+    setAiLoading(false);
+  };
+
+  const chooseMedicationChange = (answer: Exclude<MedicationChangeAnswer, null>) => {
+    const nextForm = { ...form, medicationChange: answer };
+    setForm(nextForm);
+    void runInterview('same_medication', medicationChangeLabel(answer), nextForm);
+  };
+
+  const chooseMedicationFromList = (medication: MedicationOption) => {
+    const selected = form.addedMedicationIds.includes(medication.id)
+      ? form.addedMedicationIds.filter((id) => id !== medication.id)
+      : [...form.addedMedicationIds, medication.id];
+    const nextForm = { ...form, addedMedicationIds: selected };
+    setForm(nextForm);
+    void runInterview('add_medication', medication.brand_name_ko, nextForm);
+  };
+
   const setMedicationId = (medicationId: string) => {
     setForm((current) => ({
       ...current,
@@ -142,7 +194,11 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
     setShowDirectInput(true);
   };
 
-  const addDirectMedication = () => syncDirectMedication(form.directMedicationTitle || form.medicationSearch);
+  const addDirectMedication = () => {
+    const title = form.directMedicationTitle || form.medicationSearch;
+    syncDirectMedication(title);
+    void runInterview('add_medication', title || '직접 입력');
+  };
 
   const updateDirectMedicationTitle = (rawTitle: string) => {
     const title = rawTitle.trim();
@@ -156,8 +212,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   };
 
   const setNewMedicationIntent = (intent: Exclude<NewMedicationIntent, null>) => {
-    setForm((current) => ({
-      ...current,
+    const nextForm = {
+      ...form,
       newMedicationIntent: intent,
       ...(intent === 'no'
         ? {
@@ -166,7 +222,9 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
           medicationSearch: '',
         }
         : {}),
-    }));
+    };
+    setForm(nextForm);
+    void runInterview('add_medication', intent === 'yes' ? '새 약 있어요' : '새 약 없어요', nextForm);
     if (intent === 'no') {
       setShowDirectInput(false);
       setNormalizedMedication(null);
@@ -174,14 +232,19 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   };
 
   const chooseDays = (days: number) => {
-    setForm((current) => ({ ...current, medicationDays: days, customDays: String(days) }));
+    const nextForm = { ...form, medicationDays: days, customDays: String(days) };
+    setForm(nextForm);
     setShowDatePicker(false);
+    void runInterview('medication_days', `${days}일`, nextForm);
   };
 
   const acceptVisitSuggestion = () => {
     if (!form.medicationDays) return;
-    setForm((current) => ({ ...current, nextVisitAt: prefillNextVisitDate(form.medicationDays ?? 1) }));
+    const nextVisitAt = prefillNextVisitDate(form.medicationDays ?? 1);
+    const nextForm = { ...form, nextVisitAt };
+    setForm(nextForm);
     setShowDatePicker(false);
+    void runInterview('next_visit', nextVisitAt, nextForm);
   };
 
   const save = async () => {
@@ -239,11 +302,12 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
           { label: '바뀌었어요', icon: '💊', value: 'changed' },
           { label: '잘 모르겠어요', icon: '?', value: 'unknown' },
         ].map((option) => (
-          <button key={option.label} type="button" style={optionStyle(form.medicationChange === option.value)} onClick={() => setForm((current) => ({ ...current, medicationChange: option.value as MedicationChangeAnswer }))}>
+          <button key={option.label} type="button" style={optionStyle(form.medicationChange === option.value)} onClick={() => chooseMedicationChange(option.value as Exclude<MedicationChangeAnswer, null>)}>
             <span style={iconPillStyle}>{option.icon}</span>{option.label}
           </button>
         ))}
       </QuestionCard>
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
       <p style={safeNoteStyle}>ⓘ 선택에 따라 다음 질문이 달라져요</p>
       <button type="button" disabled={!form.medicationChange} onClick={() => setStep(form.medicationChange === 'changed' ? 'new_med' : 'days')} style={ctaStyle(!form.medicationChange)}>다음</button>
     </Shell>
@@ -258,6 +322,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
           ))}
         </div>
       </QuestionCard>
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
 
       {form.newMedicationIntent === 'yes' && (
         <section style={panelStyle}>
@@ -271,7 +336,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
           />
           <div style={listStyle}>
             {filteredMedications.map((medication) => (
-              <button key={medication.id} type="button" style={rowStyle(form.addedMedicationIds.includes(medication.id))} onClick={() => setMedicationId(medication.id)}>
+              <button key={medication.id} type="button" style={rowStyle(form.addedMedicationIds.includes(medication.id))} onClick={() => chooseMedicationFromList(medication)}>
                 <span style={iconPillStyle}>💊</span>
                 <span><strong>{medication.brand_name_ko}</strong><small>{medication.brand_name_en}</small></span>
               </button>
@@ -293,7 +358,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
           )}
           {normalizing ? <p style={safeNoteStyle}>이름 보정은 뒤에서 처리 중이에요</p> : null}
           {normalizedMedication ? (
-            <button type="button" style={rowStyle(form.addedMedicationIds.includes(normalizedMedication.id))} onClick={() => setMedicationId(normalizedMedication.id)}>
+            <button type="button" style={rowStyle(form.addedMedicationIds.includes(normalizedMedication.id))} onClick={() => { setMedicationId(normalizedMedication.id); void runInterview('add_medication', normalizedMedication.brand_name_ko); }}>
               <span style={iconPillStyle}>✦</span><span><small>정규화된 약 후보</small><strong>{normalizedMedication.brand_name_ko}</strong></span>
             </button>
           ) : null}
@@ -327,6 +392,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
           />
         ) : null}
       </QuestionCard>
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
 
       {form.medicationDays ? (
         <section style={suggestionCardStyle} aria-label="다음 방문일 제안">
@@ -337,7 +403,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
             <button type="button" style={{ ...chipStyle(true), flex: 1 }} onClick={acceptVisitSuggestion}>네, 표시할게요</button>
             <button type="button" style={{ ...chipStyle(false), flex: 1 }} onClick={() => setShowDatePicker(true)}>날짜 수정</button>
           </div>
-          {showDatePicker ? <input aria-label="다음 방문일 수정" type="date" value={form.nextVisitAt} onChange={(event) => setForm((current) => ({ ...current, nextVisitAt: event.target.value }))} style={inputStyle} /> : null}
+          {showDatePicker ? <input aria-label="다음 방문일 수정" type="date" value={form.nextVisitAt} onChange={(event) => { const nextForm = { ...form, nextVisitAt: event.target.value }; setForm(nextForm); void runInterview('next_visit', event.target.value, nextForm); }} style={inputStyle} /> : null}
           <p style={previewRowStyle}>📅 다음 방문: {nextVisitPreview}</p>
         </section>
       ) : null}
@@ -361,9 +427,10 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
         />
         <span style={counterStyle}>{form.memo.length}/300</span>
       </label>
-      <DraftPanel medicationNames={selectedMedicationNames} nextVisit={nextVisitPreview} memo={form.memo} />
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
+      <DraftPanel medicationNames={selectedMedicationNames} nextVisit={nextVisitPreview} memo={form.memo} aiDraft={aiDraft} />
       <p style={warningStyle}>⚠ 불명확한 시간은 저장 전에 다시 확인해요</p>
-      <button type="button" onClick={() => setStep('confirm')} style={ctaStyle()}>저장 전 확인</button>
+      <button type="button" onClick={() => { void runInterview('memo', form.memo || '메모 없음'); setStep('confirm'); }} style={ctaStyle()}>저장 전 확인</button>
       <p style={safeNoteStyle}>🔒 언제든 수정할 수 있어요</p>
     </Shell>
   );
@@ -388,6 +455,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
     <Shell>
       <h1 style={titleStyle}>저장 전 확인해주세요</h1>
       <p style={subtitleStyle}>아래 내용을 확인한 후 저장하면 오늘 일정에 즉시 반영돼요.</p>
+      <DraftPanel medicationNames={selectedMedicationNames} nextVisit={nextVisitPreview} memo={form.memo} aiDraft={aiDraft} />
       <SummaryCard icon="📅" label="추가된 일정" value={selectedSchedulePreview.length ? selectedSchedulePreview.join(', ') : '추가된 약 없음'} onClick={() => setStep('new_med')} />
       <SummaryCard icon="🕐" label="다음 방문" value={nextVisitPreview} onClick={() => setStep('days')} />
       <SummaryCard icon="📄" label="메모" value={form.memo || '없음'} onClick={() => setStep('memo')} />
@@ -425,13 +493,26 @@ function QuestionCard({ icon, title, lead, children }: { icon?: string; title: s
   );
 }
 
-function DraftPanel({ medicationNames, nextVisit, memo }: { medicationNames: string[]; nextVisit: string; memo: string }) {
+function DraftPanel({ medicationNames, nextVisit, memo, aiDraft }: { medicationNames: string[]; nextVisit: string; memo: string; aiDraft: Partial<ClinicUpdate> }) {
   return (
     <section style={panelStyle} aria-label="정리된 내용">
       <h2 style={{ ...sectionTitleStyle, color: '#C4614A' }}>정리된 내용</h2>
       <p>• 새 약: {medicationNames.length ? medicationNames.join(', ') : '없음'}</p>
       <p>• 다음 방문: {nextVisit}</p>
-      <p>• 메모: {memo || '없음'}</p>
+      <p>• 메모: {memo || aiDraft.memo || '없음'}</p>
+      <p>• AI draft: {summarizeAiDraft(aiDraft)}</p>
+      <small style={{ color: '#9B8E86', fontWeight: 800 }}>requiresUserConfirmation: true · 저장은 최종 확인 후에만 진행돼요</small>
+    </section>
+  );
+}
+
+function AiInterviewPanel({ question, chips, loading, error }: { question: string; chips: string[]; loading: boolean; error: string | null }) {
+  return (
+    <section style={aiPanelStyle} aria-label="Clinic Guide AI 질문">
+      <strong style={{ color: '#C4614A' }}>AI 질문</strong>
+      <p style={{ margin: '8px 0', color: '#2A1F1A', fontWeight: 800 }}>{loading ? '다음 질문을 정리하고 있어요...' : question}</p>
+      {chips.length ? <div style={chipRowStyle}>{chips.slice(0, 4).map((chip) => <span key={chip} style={aiChipStyle}>{chip}</span>)}</div> : null}
+      {error ? <p style={safeNoteStyle}>{error}</p> : null}
     </section>
   );
 }
@@ -444,6 +525,45 @@ function SummaryCard({ icon, label, value, onClick }: { icon: string; label: str
       <span style={{ marginLeft: 'auto' }}>›</span>
     </button>
   );
+}
+
+function clinicGuideContextFromForm(form: FormState): Partial<ClinicUpdate> {
+  return {
+    same_medication: form.medicationChange === 'same' ? true : form.medicationChange === 'changed' ? false : null,
+    added_medication_ids: form.addedMedicationIds.filter((id) => !id.startsWith(DIRECT_PREFIX)),
+    medication_days: form.medicationDays,
+    next_visit_at: form.nextVisitAt ? new Date(form.nextVisitAt).toISOString() : null,
+    trigger_plan: normalizeTriggerPlanForContext(form.triggerPlan),
+    memo: form.memo || null,
+  };
+}
+
+function normalizeTriggerPlanForContext(value: string): ClinicUpdate['trigger_plan'] {
+  if (value === 'today' || value === 'tomorrow' || value === 'not_yet' || value === 'unknown') return value;
+  return null;
+}
+
+function medicationChangeLabel(answer: Exclude<MedicationChangeAnswer, null>) {
+  if (answer === 'same') return '그대로예요';
+  if (answer === 'changed') return '바뀌었어요';
+  return '잘 모르겠어요';
+}
+
+function summarizeAiDraft(draft: Partial<ClinicUpdate>) {
+  const parts = [
+    draft.same_medication === true ? '같은 약 유지' : draft.same_medication === false ? '약 변경 가능성' : null,
+    draft.medication_days ? `${draft.medication_days}일치` : null,
+    draft.next_visit_at ? '다음 방문 후보 있음' : null,
+    draft.trigger_plan ? `트리거: ${triggerPlanLabel(draft.trigger_plan)}` : null,
+  ].filter((part): part is string => Boolean(part));
+  return parts.length ? parts.join(' · ') : '응답 대기 중';
+}
+
+function triggerPlanLabel(value: NonNullable<ClinicUpdate['trigger_plan']>) {
+  if (value === 'today') return '오늘';
+  if (value === 'tomorrow') return '내일';
+  if (value === 'not_yet') return '아직 미정';
+  return '잘 모름';
 }
 
 function normalizeSearch(value: string) {
@@ -515,10 +635,12 @@ const landingCardStyle: CSSProperties = { display: 'grid', gap: 14, justifyItems
 const hospitalIconStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 58, height: 58, borderRadius: 999, background: '#FCE9E3', color: '#C4614A', fontSize: 28, margin: '0 auto 8px' };
 const questionCardStyle: CSSProperties = { padding: 20, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 28px rgba(82,57,45,0.08)' };
 const panelStyle: CSSProperties = { marginTop: 16, padding: 16, border: '1px solid #F0E1D6', borderRadius: 18, background: 'rgba(255,255,255,0.78)' };
+const aiPanelStyle: CSSProperties = { marginTop: 14, padding: 14, border: '1px solid #F4D4C8', borderRadius: 18, background: '#FFF8F5' };
 const suggestionCardStyle: CSSProperties = { ...panelStyle, textAlign: 'center', animation: 'slideIn 220ms ease both' };
 const optionStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 58, marginTop: 10, padding: '12px 16px', borderRadius: 16, border: `2px solid ${active ? '#C4614A' : '#F0E1D6'}`, background: active ? '#FFF0EB' : '#fff', color: active ? '#C4614A' : '#2A1F1A', fontSize: 16, fontWeight: 900, fontFamily: 'inherit', cursor: 'pointer' });
 const chipRowStyle: CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' };
 const chipStyle = (active: boolean): CSSProperties => ({ padding: '12px 22px', borderRadius: 14, border: `1.5px solid ${active ? '#C4614A' : '#E8D8CE'}`, background: active ? '#D5634D' : '#fff', color: active ? '#fff' : '#2A1F1A', fontWeight: 900, fontFamily: 'inherit', cursor: 'pointer' });
+const aiChipStyle: CSSProperties = { padding: '8px 12px', borderRadius: 999, background: '#FFF0EB', color: '#C4614A', fontSize: 12, fontWeight: 900 };
 const iconPillStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 999, background: '#FCE9E3', color: '#C4614A', flex: '0 0 auto' };
 const inputStyle: CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 14, border: '1.5px solid #E8D8CE', background: '#fff', fontSize: 16, fontFamily: 'inherit' };
 const textareaStyle: CSSProperties = { ...inputStyle, minHeight: 150, resize: 'none', lineHeight: 1.55 };
