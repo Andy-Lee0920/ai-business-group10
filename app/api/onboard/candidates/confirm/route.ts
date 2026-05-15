@@ -13,7 +13,8 @@ type ScheduleCandidateRow = {
   dose: string | null;
   unit: string | null;
 };
-type ConfirmBody = { confirmedIds?: unknown; rejectedIds?: unknown };
+type CandidateEdit = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null };
+type ConfirmBody = { confirmedIds?: unknown; rejectedIds?: unknown; candidateEdits?: unknown };
 interface ScheduleCandidatesTable {
   select(columns: string): {
     in(column: 'id', values: string[]): {
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as ConfirmBody;
   const confirmedIds = normalizeIds(body.confirmedIds);
   const rejectedIds = normalizeIds(body.rejectedIds);
+  const candidateEdits = normalizeCandidateEdits(body.candidateEdits);
   const requestedIds = unique([...confirmedIds, ...rejectedIds]);
   if (requestedIds.length === 0) return NextResponse.json({ savedCount: 0, items: [] });
 
@@ -55,7 +57,8 @@ export async function POST(request: NextRequest) {
   if (selectError) return NextResponse.json({ error: maskTechnicalError(selectError.message) }, { status: 500 });
   if ((ownedCandidates ?? []).length !== requestedIds.length) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
-  const candidateById = new Map((ownedCandidates ?? []).map((candidate) => [candidate.id, candidate]));
+  const editById = new Map(candidateEdits.map((edit) => [edit.id, edit]));
+  const candidateById = new Map((ownedCandidates ?? []).map((candidate) => [candidate.id, { ...candidate, ...editById.get(candidate.id) }]));
   const rows = confirmedIds
     .map((id) => candidateById.get(id))
     .filter((candidate): candidate is ScheduleCandidateRow => Boolean(candidate))
@@ -91,6 +94,42 @@ export async function POST(request: NextRequest) {
 function normalizeIds(value: unknown) {
   if (!Array.isArray(value)) return [];
   return unique(value.filter((id): id is string => typeof id === 'string' && id.trim().length > 0).map((id) => id.trim()));
+}
+
+function normalizeCandidateEdits(value: unknown): CandidateEdit[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizeCandidateEdit).filter((edit): edit is CandidateEdit => edit !== null);
+}
+
+function normalizeCandidateEdit(value: unknown): CandidateEdit | null {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return null;
+  const candidate = value as Record<string, unknown>;
+  const id = typeof candidate.id === 'string' ? candidate.id.trim() : '';
+  const type = normalizeScheduleType(candidate.type);
+  const title = typeof candidate.title === 'string' ? candidate.title.trim() : '';
+  if (!id || !type || !title) return null;
+  return {
+    id,
+    type,
+    title,
+    scheduled_at: normalizeNullableIso(candidate.scheduled_at),
+    dose: normalizeNullableText(candidate.dose),
+    unit: normalizeNullableText(candidate.unit),
+  };
+}
+
+function normalizeScheduleType(value: unknown): ScheduleType | null {
+  return value === 'injection' || value === 'medication' || value === 'clinic' ? value : null;
+}
+
+function normalizeNullableText(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function normalizeNullableIso(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function unique(values: string[]) {

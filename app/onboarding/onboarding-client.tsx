@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { CtaButton, Notice, SelectionChip, StatusBadge } from '../../src/components/ui';
 import styles from './onboarding.module.css';
 
@@ -10,6 +10,10 @@ type TreatmentRole = 'patient' | 'partner';
 type TreatmentExperience = 'first' | 'experienced' | 'returning';
 type AddMethodStep = Extract<OnboardingStep, 'photo_processing' | 'text_paste' | 'direct_entry'>;
 type DirectEntryType = 'injection' | 'medication' | 'clinic';
+type PhotoPhase = 'idle' | 'uploading' | 'uploaded' | 'analyzing' | 'ready' | 'not_found';
+type ReviewCandidate = { id: string; type: DirectEntryType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null; decision: 'confirmed' | 'rejected' };
+type SavedScheduleItem = { id: string; type: DirectEntryType; title: string; scheduled_at: string; dose: string | null; unit: string | null };
+type ApiCandidate = { id?: unknown; type?: unknown; title?: unknown; scheduled_at?: unknown; dose?: unknown; unit?: unknown };
 type NavigationDirection = 'next' | 'back';
 
 type StepDefinition = { id: OnboardingStep; label: string };
@@ -74,6 +78,13 @@ export function OnboardingClient() {
   const [directDose, setDirectDose] = useState('');
   const [directUnit, setDirectUnit] = useState('');
   const [savingDirectEntry, setSavingDirectEntry] = useState(false);
+  const [photoPhase, setPhotoPhase] = useState<PhotoPhase>('idle');
+  const [photoMessage, setPhotoMessage] = useState('사진을 선택하면 업로드 후 내용을 분석합니다.');
+  const [reviewCandidates, setReviewCandidates] = useState<ReviewCandidate[]>([]);
+  const [savedReviewItems, setSavedReviewItems] = useState<SavedScheduleItem[]>([]);
+  const [savingCandidates, setSavingCandidates] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const progressStep = useMemo(() => {
@@ -161,6 +172,93 @@ export function OnboardingClient() {
     }
   }
 
+
+  async function processPhotoFile(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    setPhotoPhase('uploading');
+    setPhotoMessage('사진을 업로드하고 있어요.');
+
+    try {
+      const formData = new FormData();
+      formData.set('file', file);
+      const uploadResponse = await fetch('/api/onboard/photo-upload', { method: 'POST', body: formData });
+      if (!uploadResponse.ok) throw new Error('upload_failed');
+      const uploadPayload = await uploadResponse.json() as { path?: string };
+      if (!uploadPayload.path) throw new Error('upload_failed');
+
+      setPhotoPhase('uploaded');
+      setPhotoMessage('업로드 완료');
+      await wait(350);
+
+      setPhotoPhase('analyzing');
+      setPhotoMessage('내용 분석 중');
+      const analyzeResponse = await fetch('/api/onboard/photo-analyze', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ imagePath: uploadPayload.path }),
+      });
+      if (!analyzeResponse.ok) throw new Error('analyze_failed');
+      const analyzePayload = await analyzeResponse.json() as { candidates?: ApiCandidate[] };
+      const candidates = normalizeReviewCandidates(analyzePayload.candidates);
+
+      if (candidates.length === 0) {
+        handlePhotoNotFound();
+        return;
+      }
+
+      setSavedReviewItems([]);
+      setReviewCandidates(candidates);
+      setPhotoPhase('ready');
+      setPhotoMessage('일정 후보 준비');
+      await wait(350);
+      goToStep('candidate_review');
+    } catch {
+      handlePhotoNotFound();
+    }
+  }
+
+  function handlePhotoNotFound() {
+    setPhotoPhase('not_found');
+    setPhotoMessage('사진에서 일정을 찾지 못했어요');
+    window.setTimeout(() => goToStep('direct_entry'), 900);
+  }
+
+  function updateCandidate(id: string, patch: Partial<ReviewCandidate>) {
+    setReviewCandidates((current) => current.map((candidate) => (candidate.id === id ? { ...candidate, ...patch } : candidate)));
+  }
+
+  async function confirmCandidates() {
+    const confirmedIds = reviewCandidates.filter((candidate) => candidate.decision === 'confirmed').map((candidate) => candidate.id);
+    const rejectedIds = reviewCandidates.filter((candidate) => candidate.decision === 'rejected').map((candidate) => candidate.id);
+    if (confirmedIds.length === 0) {
+      setError('확인할 일정을 하나 이상 선택해 주세요.');
+      return;
+    }
+
+    setSavingCandidates(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/onboard/candidates/confirm', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          confirmedIds,
+          rejectedIds,
+          candidateEdits: reviewCandidates.map(({ id, type, title, scheduled_at, dose, unit }) => ({ id, type, title, scheduled_at, dose, unit })),
+        }),
+      });
+      if (!response.ok) throw new Error('confirm_failed');
+      const payload = await response.json() as { items?: unknown };
+      setSavedReviewItems(normalizeSavedScheduleItems(payload.items));
+      goToStep('sharing');
+    } catch {
+      setError('일정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setSavingCandidates(false);
+    }
+  }
+
   return (
     <div className={styles.onboardingFlow} aria-label="처음 설정 인터뷰">
       <div className={styles.interviewProgress} aria-label={progressLabel}>
@@ -236,11 +334,32 @@ export function OnboardingClient() {
       ) : null}
 
       {activeStep === 'photo_processing' ? (
-        <PlaceholderStep
-          body="사진 처리와 OCR 저장은 이번 이슈 범위 밖입니다. 아직 사진이나 민감정보를 저장하지 않습니다."
-          onBack={goBack}
-          title="사진으로 남기기는 곧 이어집니다"
-        />
+        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="photo-processing-title">
+          <StatusBadge state={photoPhase === 'not_found' ? 'attention' : photoPhase === 'ready' ? 'done' : 'shared'}>사진 추가</StatusBadge>
+          <h2 className={styles.sectionTitle} id="photo-processing-title">사진으로 안내를 남겨주세요</h2>
+          <p className={styles.questionLead}>기본 iOS 사진 선택만 사용합니다. 분석 결과는 후보로만 보여드리고, 확인 전에는 일정으로 저장하지 않아요.</p>
+
+          <input ref={cameraInputRef} className={styles.hiddenFileInput} type="file" accept="image/*" capture="environment" onChange={(event) => processPhotoFile(event.currentTarget.files?.[0])} />
+          <input ref={galleryInputRef} className={styles.hiddenFileInput} type="file" accept="image/*" onChange={(event) => processPhotoFile(event.currentTarget.files?.[0])} />
+
+          <div className={styles.photoPickerActions}>
+            <CtaButton onClick={() => cameraInputRef.current?.click()} type="button">사진 찍기</CtaButton>
+            <CtaButton onClick={() => galleryInputRef.current?.click()} variant="secondary" type="button">사진 선택</CtaButton>
+          </div>
+
+          <ol className={styles.processingSteps} aria-label="사진 처리 상태">
+            <li data-active={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'}>업로드 완료</li>
+            <li data-active={photoPhase === 'analyzing' || photoPhase === 'ready'}>내용 분석 중</li>
+            <li data-active={photoPhase === 'ready'}>일정 후보 준비</li>
+          </ol>
+
+          <Notice tone={photoPhase === 'not_found' ? 'coral' : 'sage'}>{photoMessage}</Notice>
+          {photoPhase === 'not_found' ? <CtaButton onClick={() => setPhotoPhase('idle')} variant="secondary" type="button">다시 찍기</CtaButton> : null}
+          <div className={styles.slideActions}>
+            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
+            <CtaButton onClick={() => goToStep('direct_entry')} variant="ghost" type="button">직접 적기</CtaButton>
+          </div>
+        </section>
       ) : null}
 
       {activeStep === 'text_paste' ? (
@@ -249,6 +368,62 @@ export function OnboardingClient() {
           onBack={goBack}
           title="문자로 붙여넣기는 곧 이어집니다"
         />
+      ) : null}
+
+      {activeStep === 'candidate_review' ? (
+        reviewCandidates.length ? (
+          <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="candidate-review-title">
+            <StatusBadge state="attention">확인 필요</StatusBadge>
+            <h2 className={styles.sectionTitle} id="candidate-review-title">일정을 확인해 주세요</h2>
+            <p className={styles.questionLead}>필요하면 바로 고치고, 확인한 일정만 저장합니다.</p>
+            <div className={styles.candidateList}>
+              {reviewCandidates.map((candidate) => (
+                <article key={candidate.id} className={styles.candidateCard} data-decision={candidate.decision}>
+                  <div className={styles.candidateSummary} aria-label={`${candidate.title} 요약`}>
+                    <span>{formatCandidateType(candidate.type)}</span>
+                    <strong>{candidate.title || '제목을 입력해 주세요'}</strong>
+                    <small>{formatCandidateDateTime(candidate.scheduled_at)} · {formatCandidateDose(candidate.dose, candidate.unit)}</small>
+                  </div>
+                  <div className={styles.candidateHeader}>
+                    <select aria-label="종류" value={candidate.type} onChange={(event) => updateCandidate(candidate.id, { type: event.target.value as DirectEntryType })}>
+                      <option value="injection">주사</option>
+                      <option value="medication">약 복용</option>
+                      <option value="clinic">병원 방문</option>
+                    </select>
+                    <div className={styles.candidateDecisionActions}>
+                      <button aria-label={`${candidate.title} 확인`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'confirmed' })}>✓</button>
+                      <button aria-label={`${candidate.title} 거절`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'rejected' })}>✕</button>
+                    </div>
+                  </div>
+                  <label className={styles.directField}>
+                    <span>제목</span>
+                    <input value={candidate.title} onChange={(event) => updateCandidate(candidate.id, { title: event.target.value })} />
+                  </label>
+                  <label className={styles.directField}>
+                    <span>시간</span>
+                    <input type="datetime-local" value={toDateTimeLocal(candidate.scheduled_at)} onChange={(event) => updateCandidate(candidate.id, { scheduled_at: fromDateTimeLocal(event.target.value) })} />
+                  </label>
+                  <div className={styles.directFieldRow}>
+                    <label className={styles.directField}>
+                      <span>용량</span>
+                      <input value={candidate.dose ?? ''} onChange={(event) => updateCandidate(candidate.id, { dose: event.target.value || null })} />
+                    </label>
+                    <label className={styles.directField}>
+                      <span>단위</span>
+                      <input value={candidate.unit ?? ''} onChange={(event) => updateCandidate(candidate.id, { unit: event.target.value || null })} />
+                    </label>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className={styles.slideActions}>
+              <CtaButton onClick={() => goToStep('add_method')} variant="secondary" type="button">이전</CtaButton>
+              <CtaButton disabled={savingCandidates || reviewCandidates.every((candidate) => candidate.decision === 'rejected')} onClick={confirmCandidates} type="button">{savingCandidates ? '저장 중' : '일정 확인하기'}</CtaButton>
+            </div>
+          </section>
+        ) : (
+          <PlaceholderStep body="확인할 후보가 아직 없습니다. 사진이나 문자를 다시 추가해 주세요." onBack={() => goToStep('add_method')} title="후보가 없어요" />
+        )
       ) : null}
 
       {activeStep === 'direct_entry' ? (
@@ -307,7 +482,7 @@ export function OnboardingClient() {
 
       {activeStep === 'sharing' ? (
         <PlaceholderStep
-          body="공유 설정은 이후 단계에서 사용자 확인 후 저장됩니다."
+          body={savedReviewItems.length ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.` : '공유 설정은 이후 단계에서 사용자 확인 후 저장됩니다.'}
           onBack={() => goToStep('add_method')}
           title="공유 설정은 다음 단계에서 준비됩니다"
         />
@@ -326,6 +501,87 @@ export function OnboardingClient() {
       {error ? <Notice tone="coral">{error}</Notice> : null}
     </div>
   );
+}
+
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function normalizeReviewCandidates(value: unknown): ReviewCandidate[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((candidate, index) => normalizeReviewCandidate(candidate, index)).filter((candidate): candidate is ReviewCandidate => candidate !== null);
+}
+
+function normalizeReviewCandidate(value: unknown, index: number): ReviewCandidate | null {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return null;
+  const candidate = value as ApiCandidate;
+  const type = candidate.type === 'injection' || candidate.type === 'medication' || candidate.type === 'clinic' ? candidate.type : null;
+  const title = typeof candidate.title === 'string' ? candidate.title.trim() : '';
+  if (!type || !title) return null;
+  return {
+    id: typeof candidate.id === 'string' && candidate.id ? candidate.id : `candidate-${index + 1}`,
+    type,
+    title,
+    scheduled_at: typeof candidate.scheduled_at === 'string' ? candidate.scheduled_at : null,
+    dose: typeof candidate.dose === 'string' && candidate.dose.trim() ? candidate.dose.trim() : null,
+    unit: typeof candidate.unit === 'string' && candidate.unit.trim() ? candidate.unit.trim() : null,
+    decision: 'confirmed',
+  };
+}
+
+function normalizeSavedScheduleItems(value: unknown): SavedScheduleItem[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item): SavedScheduleItem | null => {
+      if (!item || Array.isArray(item) || typeof item !== 'object') return null;
+      const row = item as Record<string, unknown>;
+      const type = row.type === 'injection' || row.type === 'medication' || row.type === 'clinic' ? row.type : null;
+      const title = typeof row.title === 'string' ? row.title.trim() : '';
+      const scheduledAt = typeof row.scheduled_at === 'string' ? row.scheduled_at : '';
+      if (!type || !title || !scheduledAt) return null;
+      return {
+        id: typeof row.id === 'string' ? row.id : title,
+        type,
+        title,
+        scheduled_at: scheduledAt,
+        dose: typeof row.dose === 'string' && row.dose.trim() ? row.dose.trim() : null,
+        unit: typeof row.unit === 'string' && row.unit.trim() ? row.unit.trim() : null,
+      };
+    })
+    .filter((item): item is SavedScheduleItem => item !== null);
+}
+
+function toDateTimeLocal(value: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function fromDateTimeLocal(value: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function formatCandidateType(type: DirectEntryType) {
+  if (type === 'injection') return '주사';
+  if (type === 'medication') return '약 복용';
+  return '병원 방문';
+}
+
+function formatCandidateDateTime(value: string | null) {
+  if (!value) return '시간 확인 필요';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '시간 확인 필요';
+  return new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+}
+
+function formatCandidateDose(dose: string | null, unit: string | null) {
+  if (!dose && !unit) return '용량 없음';
+  return `${dose ?? ''}${dose && unit ? ' ' : ''}${unit ?? ''}`.trim();
 }
 
 function PlaceholderStep({ body, onBack, title }: { body: string; onBack: () => void; title: string }) {
