@@ -9,6 +9,8 @@ import { partnerStateCopy } from '../../src/features/partner/partner-state';
 const moreScreen = readFileSync('src/features/more/more-screen.tsx', 'utf8');
 const morePage = readFileSync('app/(authed)/more/page.tsx', 'utf8');
 const partnerView = readFileSync('src/features/partner/partner-view.tsx', 'utf8');
+const partnerPage = readFileSync('app/(authed)/partner/page.tsx', 'utf8');
+const partnerTokenPage = readFileSync('app/partner/[token]/page.tsx', 'utf8');
 
 describe('More and partner read-only state contract', () => {
   it('keeps More to six SLC helper menu items plus invite, notification, logout', () => {
@@ -26,6 +28,29 @@ describe('More and partner read-only state contract', () => {
     expect(moreScreen).toContain('공유와 설정 관리');
     expect(moreScreen).not.toContain('>더보기<');
     expect(morePage).toContain("redirect('/partner')");
+  });
+
+  it('uses the required SLC illustration assets for partner and More surfaces', () => {
+    const directImageTag = ['<', 'img'].join('');
+    expect(`${moreScreen}
+${partnerView}
+${partnerPage}
+${partnerTokenPage}`).not.toContain(directImageTag);
+
+    expect(moreScreen).toContain('SLCIllustration');
+    expect(moreScreen).toContain('slcAssets.partner.syncOverview');
+    expect(moreScreen).toContain('slcAssets.partner.invite');
+    expect(moreScreen).toContain('slcAssets.partner.connectedSuccess');
+
+    expect(partnerView).toContain('SLCIllustration');
+    expect(partnerView).toContain('slcAssets.partner.readonly');
+
+    expect(partnerPage).toContain('SLCIllustration');
+    expect(partnerPage).toContain('slcAssets.partner.connectedSuccess');
+
+    expect(partnerTokenPage).toContain('SLCIllustration');
+    expect(partnerTokenPage).toContain('slcAssets.partner.readonly');
+    expect(partnerTokenPage).toContain('오늘 일정만 확인할 수 있어요');
   });
 
   it('has explicit partner state copy and no edit CTA in partner projection', () => {
@@ -81,6 +106,7 @@ describe('More and partner read-only state contract', () => {
       },
     }));
 
+    expect(markup).toContain('파트너가 읽기 전용으로 일정을 확인하는 일러스트');
     expect(markup).toContain('메노푸어 주사 완료했어요');
     expect(markup).toContain('다음은');
     expect(markup).toContain('병원 방문 예정이에요');

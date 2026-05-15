@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ActionCard } from '../../components/action-card';
 import { ConfirmSheet } from '../../components/confirm-sheet';
 import { SLCIllustration } from '../../components/slc-illustration';
+import { slcAssets } from '../../design/slc-assets';
 import type { ClinicUpdate, InjectionSite, PartnerLink, ScheduleItem } from '../../types/slc.types';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
@@ -192,6 +193,7 @@ function DayTabs({ selectedDay, onSelect }: { selectedDay: DayOffset; onSelect: 
 function EmptyState({ selectedDay }: { selectedDay: DayOffset }) {
   return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+      <SLCIllustration asset={slcAssets.empty.cycle} size="empty" style={{ opacity: 0.86, marginBottom: 12 }} />
       <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>{DAY_LABELS[selectedDay]}은 비어 있어요</p>
       <p style={{ color: '#B5A89E', fontSize: 13, lineHeight: 1.5, margin: 0 }}>{SLC_SAFE_COPY.noSchedule}</p>
       <Link href="/add" style={emptyLinkStyle}>추가하기</Link>
@@ -251,10 +253,13 @@ function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
   });
 
   return (
-    <div data-testid="clinic-follow-up-prompt" style={{ padding: '16px 18px', background: '#FFF8F5', borderRadius: 20, border: '1.5px solid #F4D4C8' }}>
-      <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 800, margin: '0 0 6px' }}>{timeStr} 병원</p>
-      <p style={{ fontSize: 18, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>바뀐 게 있나요?</p>
-      <Link href="/clinic-update" style={{ fontSize: 14, color: 'var(--slc-coral)', fontWeight: 900, textDecoration: 'none' }}>업데이트</Link>
+    <div data-testid="clinic-follow-up-prompt" style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 12, alignItems: 'center', padding: '16px 18px', background: '#FFF8F5', borderRadius: 20, border: '1.5px solid #F4D4C8', overflow: 'hidden' }}>
+      <div>
+        <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 800, margin: '0 0 6px' }}>{timeStr} 병원</p>
+        <p style={{ fontSize: 18, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>바뀐 게 있나요?</p>
+        <Link href="/clinic-update" style={{ fontSize: 14, color: 'var(--slc-coral)', fontWeight: 900, textDecoration: 'none' }}>업데이트</Link>
+      </div>
+      <SLCIllustration asset={slcAssets.clinic.updateBanner} size="banner" style={{ width: 92, height: 68, maxHeight: 68, justifySelf: 'end', opacity: 0.9 }} />
     </div>
   );
 }

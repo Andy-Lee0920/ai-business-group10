@@ -93,6 +93,20 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).not.toContain('업데이트하기');
   });
 
+  it('renders the clinic update prompt banner without changing follow-up visibility', () => {
+    vi.setSystemTime(new Date('2026-05-14T10:05:00.000Z'));
+
+    const markup = render([
+      item({ id: 'clinic-1', type: 'clinic', title: '차병원 방문', scheduled_at: '2026-05-14T09:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-testid="clinic-follow-up-prompt"');
+    expect(markup).toContain('clinic-update-banner.png');
+    expect(markup).toContain('alt=""');
+    expect(markup).toContain('바뀐 게 있나요?');
+    expect(markup).toContain('href="/clinic-update"');
+  });
+
   it('renders safe empty-home copy and partner approval actions', () => {
     const markup = renderToStaticMarkup(React.createElement(TodayScreen, {
       initialItems: [],
@@ -108,9 +122,21 @@ describe('SLC home screen vertical slices', () => {
       },
     }));
 
+    expect(markup).toContain('아직 사이클 기록이 없습니다');
     expect(markup).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
     expect(markup).toContain('승인하기');
     expect(markup).toContain('나중에');
+  });
+
+  it('hides the cycle empty illustration when today has schedule data', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'scheduled-item', type: 'injection', title: '고날에프 주사', scheduled_at: '2026-05-14T09:10:00.000Z' }),
+    ]);
+
+    expect(markup).not.toContain('아직 사이클 기록이 없습니다');
+    expect(markup).toContain('고날에프 주사');
   });
 });
 

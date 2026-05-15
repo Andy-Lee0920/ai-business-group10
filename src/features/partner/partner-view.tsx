@@ -1,5 +1,7 @@
 import type { ScheduleItem, CompletionRecord, ClinicUpdate } from '../../types/slc.types';
 import { completedLabel } from '../../types/slc.types';
+import { SLCIllustration } from '../../components/slc-illustration';
+import { slcAssets } from '../../design/slc-assets';
 import { partnerStateCopy } from './partner-state';
 
 interface Props {
@@ -17,9 +19,14 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
 
   return (
     <div style={{ padding: '60px 24px 24px' }}>
-      <p style={{ fontSize: 13, color: '#B5A89E', marginBottom: 4 }}>파트너 뷰 · 읽기 전용</p>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 8 }}>{stateCopy.title}</h1>
-      <p style={{ fontSize: 14, color: 'var(--slc-muted)', lineHeight: 1.55, margin: '0 0 24px' }}>{stateCopy.description}</p>
+      <header style={{ display: 'grid', gridTemplateColumns: '1fr 96px', gap: 14, alignItems: 'center', marginBottom: 24 }}>
+        <div>
+          <p style={{ fontSize: 13, color: '#B5A89E', marginBottom: 4 }}>파트너 뷰 · 읽기 전용</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 8 }}>{stateCopy.title}</h1>
+          <p style={{ fontSize: 14, color: 'var(--slc-muted)', lineHeight: 1.55, margin: 0 }}>{stateCopy.description}</p>
+        </div>
+        <SLCIllustration asset={slcAssets.partner.readonly} size="icon" priority style={{ width: 84, justifySelf: 'end' }} />
+      </header>
 
       {latestClinicUpdate && (
         <div style={{ background: '#FFF8F5', borderRadius: 16, padding: '14px 18px', border: '1.5px solid #F4D4C8', marginBottom: 20 }}>

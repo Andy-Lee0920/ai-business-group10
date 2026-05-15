@@ -16,6 +16,8 @@ import {
 } from './onboarding-flow';
 import { RoleButton, backButtonStyle, checkStyle, ctaStyle, errorStyle, inputStyle, leadStyle, onboardingTokens, screenStyle, titleStyle } from './onboarding-ui';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
+import { SLCIllustration } from '../../components/slc-illustration';
+import { slcAssets } from '../../design/slc-assets';
 import type { Medication } from '../../types/slc.types';
 
 type MedicationNormalizeResponse = {
@@ -28,9 +30,6 @@ interface Props {
 }
 
 const todayDate = () => new Date().toISOString().slice(0, 10);
-const FEVIO_LOGO_SRC = '/assets/onboarding/fevio-logo.svg';
-const ROLE_PATIENT_IMAGE_SRC = '/assets/onboarding/role-patient.png';
-const ROLE_PARTNER_IMAGE_SRC = '/assets/onboarding/role-partner.png';
 
 export function OnboardingScreen({ inviteCode }: Props) {
   const router = useRouter();
@@ -151,7 +150,8 @@ export function OnboardingScreen({ inviteCode }: Props) {
   if (step === 'brand_intro') return (
     <div style={screenStyle}>
       <div style={{ flex: 1, display: 'grid', alignContent: 'center', paddingBottom: 64 }}>
-        <img src={FEVIO_LOGO_SRC} alt="Fevio" width={220} height={69} style={{ width: 220, height: 'auto', margin: '0 auto 52px', display: 'block' }} />
+        <p style={{ margin: '0 auto 18px', color: onboardingTokens.primary, fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em' }}>Fevio</p>
+        <SLCIllustration asset={slcAssets.onboarding.coupleHero} size="hero" priority style={{ marginBottom: 22 }} />
         <h1 style={{ ...titleStyle, textAlign: 'center', fontSize: 28, letterSpacing: '-0.04em', lineHeight: 1.18, marginBottom: 14 }}><span>오늘 필요한 것만</span><br /><span>보여드릴게요</span></h1>
         <p style={{ ...leadStyle, textAlign: 'center', maxWidth: 300, margin: '0 auto', wordBreak: 'keep-all' }}>병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.</p>
       </div>
@@ -168,8 +168,20 @@ export function OnboardingScreen({ inviteCode }: Props) {
         <h1 style={titleStyle}>누구로 시작할까요?</h1>
         <p style={leadStyle}>필요한 화면만 먼저 보여드릴게요.</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }} data-testid="role-split-cards">
-          <RoleButton active={role === 'patient'} imageSrc={ROLE_PATIENT_IMAGE_SRC} imageAlt="치료자" title="치료자" description="오늘 일정 · 완료 기록" onClick={() => selectRole('patient')} />
-          <RoleButton active={role === 'partner'} imageSrc={ROLE_PARTNER_IMAGE_SRC} imageAlt="파트너" title="파트너" description="공유 일정 · 읽기 전용" onClick={() => selectRole('partner')} />
+          <RoleButton
+            active={role === 'patient'}
+            illustration={<SLCIllustration asset={slcAssets.onboarding.patientRole} size="card" style={{ width: 'min(86%, 116px)', margin: '0 auto' }} />}
+            title="치료자"
+            description="오늘 일정 · 완료 기록"
+            onClick={() => selectRole('patient')}
+          />
+          <RoleButton
+            active={role === 'partner'}
+            illustration={<SLCIllustration asset={slcAssets.onboarding.partnerRole} size="card" style={{ width: 'min(86%, 116px)', margin: '0 auto' }} />}
+            title="파트너"
+            description="공유 일정 · 읽기 전용"
+            onClick={() => selectRole('partner')}
+          />
         </div>
       </div>
       {stepDots(step)}
@@ -208,6 +220,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
         <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>첫 일정 등록</p>
         <h1 style={titleStyle}>처음 확인할 일정을 하나만 남겨주세요</h1>
         <p style={leadStyle}>{usesMedicationFields ? '약 이름 찾기는 선택 사항입니다. 확인 전에는 저장하지 않습니다.' : '방문 일정은 약품 검색 없이 날짜와 시간만 먼저 확인합니다.'}</p>
+        <SLCIllustration asset={usesMedicationFields ? slcAssets.empty.medication : slcAssets.onboarding.scheduleHero} size="empty" style={{ marginBottom: 18 }} />
         <div role="group" aria-label="첫 일정 종류" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
           {FIRST_SCHEDULE_CHIPS.map((chip) => (
             <button key={chip.id} type="button" onClick={() => setChipId(chip.id)} style={{ minHeight: 78, borderRadius: 16, border: `1.5px solid ${chipId === chip.id ? onboardingTokens.primary : onboardingTokens.border}`, background: chipId === chip.id ? onboardingTokens.activeBg : '#fff', color: onboardingTokens.textMain, fontWeight: 800 }}>
@@ -255,6 +268,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
         <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>저장 전 확인</p>
         <h1 style={titleStyle}>이 일정으로 Home을 시작할게요</h1>
         <p style={leadStyle}>아래 내용은 사용자가 확인한 일정으로만 저장됩니다.</p>
+        <SLCIllustration asset={slcAssets.onboarding.scheduleHero} size="card" style={{ marginBottom: 18 }} />
         <section aria-label="첫 일정 확인" style={{ padding: 18, borderRadius: 20, background: '#fff', border: `1px solid ${onboardingTokens.border}`, display: 'grid', gap: 10 }}>
           <strong style={{ fontSize: 19 }}>{firstScheduleDraft?.title}</strong>
           <span>{firstScheduleDraft?.type === 'clinic' ? '병원 방문' : firstScheduleDraft?.type === 'injection' ? '주사' : '약 복용'}</span>

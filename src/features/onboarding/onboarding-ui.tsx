@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export const onboardingTokens = {
   primary: 'var(--slc-coral)',
@@ -14,15 +14,13 @@ export const onboardingTokens = {
 
 type RoleButtonProps = {
   active: boolean;
-  imageSrc?: string;
-  imageAlt?: string;
-  icon?: string;
+  illustration?: ReactNode;
   title: string;
   description: string;
   onClick: () => void;
 };
 
-export function RoleButton({ active, imageSrc, imageAlt, icon, title, description, onClick }: RoleButtonProps) {
+export function RoleButton({ active, illustration, title, description, onClick }: RoleButtonProps) {
   return (
     <button type="button" onClick={onClick} style={{
       display: 'grid', justifyItems: 'center', width: '100%', minHeight: 224, padding: '18px 14px 20px',
@@ -31,11 +29,7 @@ export function RoleButton({ active, imageSrc, imageAlt, icon, title, descriptio
       borderRadius: 22, marginBottom: 0, cursor: 'pointer', textAlign: 'center', fontFamily: 'inherit',
       boxShadow: active ? '0 18px 34px rgba(196, 97, 74, 0.14)' : '0 10px 24px rgba(42, 31, 26, 0.04)',
     }}>
-      {imageSrc ? (
-        <img src={imageSrc} alt={imageAlt ?? ''} width={104} height={118} style={{ width: '100%', maxWidth: 104, height: 118, objectFit: 'contain', marginBottom: 12 }} />
-      ) : icon ? (
-        <span style={{ display: 'inline-grid', placeItems: 'center', width: 52, height: 52, marginBottom: 14, borderRadius: onboardingTokens.radiusPill, background: '#FCE9E3', color: onboardingTokens.primary, fontWeight: 900 }}>{icon}</span>
-      ) : null}
+      {illustration ? <span style={{ display: 'block', width: '100%', marginBottom: 12 }}>{illustration}</span> : null}
       <span style={{ display: 'block', fontSize: 21, fontWeight: 900, color: active ? onboardingTokens.primary : onboardingTokens.textMain, marginBottom: 6 }}>{title}</span>
       <span style={{ display: 'block', fontSize: 13, color: onboardingTokens.textMuted, lineHeight: 1.45, wordBreak: 'keep-all' }}>{description}</span>
     </button>

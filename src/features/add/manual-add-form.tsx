@@ -12,6 +12,8 @@ import {
   type ManualAddScheduleMode,
 } from '../../domain/slc-manual-add';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
+import { SLCIllustration } from '../../components/slc-illustration';
+import { slcAssets } from '../../design/slc-assets';
 
 type AddMedication = Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'aliases' | 'category' | 'route' | 'default_unit' | 'default_cta'>;
 
@@ -181,6 +183,7 @@ export function ManualAddForm({ medications }: Props) {
     fontSize: 14, color: 'var(--slc-muted)', display: 'block', marginBottom: 8, marginTop: 16,
   };
   const selectedMedication = form.selectedCategory ? categoryHint(form.selectedCategory) : null;
+  const showSearchEmpty = config.showMedicationSelect && searchTerm.trim().length > 0 && matchingMedications.length === 0;
 
   return (
     <div style={{ padding: '60px 24px 24px' }}>
@@ -216,6 +219,13 @@ export function ManualAddForm({ medications }: Props) {
             onChange={(event) => setSearchTerm(event.target.value)}
           />
           <div style={{ display: 'grid', gap: 8, maxHeight: 230, overflowY: 'auto', paddingRight: 2 }}>
+            {showSearchEmpty ? (
+              <div style={{ padding: '16px 12px', textAlign: 'center', color: 'var(--slc-muted)', border: '1px dashed var(--slc-border)', borderRadius: 18, background: '#fff' }}>
+                <SLCIllustration asset={slcAssets.empty.search} size="empty" style={{ width: 'min(48%, 132px)', marginBottom: 10 }} />
+                <p style={{ margin: '0 0 4px', fontWeight: 800, color: 'var(--slc-text)' }}>검색 결과가 없어요</p>
+                <p style={{ margin: 0, fontSize: 12 }}>직접 입력으로 계속 추가할 수 있어요.</p>
+              </div>
+            ) : null}
             {matchingMedications.map((medication) => {
               const selected = form.medicationId === medication.id;
               const hint = categoryHint(medication.category);
