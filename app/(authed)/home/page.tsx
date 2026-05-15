@@ -4,7 +4,7 @@ import { isPresentationMode } from '../../../src/config';
 import { TodayScreen } from '../../../src/features/today/today-screen';
 import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
-import { SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
+import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import type { ClinicUpdate, PartnerLink, ScheduleItem } from '../../../src/types/slc.types';
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +26,7 @@ export default async function HomePage() {
     .maybeSingle();
   const cookieStore = await cookies();
   const fallbackRole = cookieStore.get(SLC_ROLE_COOKIE)?.value;
+  const firstScheduleSkipped = cookieStore.get(SLC_FIRST_SCHEDULE_SKIPPED_COOKIE)?.value === '1';
 
   if ((isMissingSlcTable(profileError) ? fallbackRole : profile?.role) === 'partner') redirect('/partner');
 
@@ -55,6 +56,7 @@ export default async function HomePage() {
       userId={user.id}
       pendingPartnerRequest={pendingPartnerRequest}
       initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
+      firstScheduleSkipped={firstScheduleSkipped}
     />
   );
 }

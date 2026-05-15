@@ -128,6 +128,19 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('나중에');
   });
 
+  it('shows the first-schedule medication empty illustration after the user skips onboarding schedule', () => {
+    const markup = renderToStaticMarkup(React.createElement(TodayScreen, {
+      initialItems: [],
+      initialClinicUpdates: [],
+      userId: 'patient-1',
+      firstScheduleSkipped: true,
+    }));
+
+    expect(markup).toContain('등록된 약 일정이 없습니다');
+    expect(markup).not.toContain('아직 사이클 기록이 없습니다');
+    expect(markup).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
+  });
+
   it('hides the cycle empty illustration when today has schedule data', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 

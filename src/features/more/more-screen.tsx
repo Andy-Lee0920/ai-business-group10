@@ -76,7 +76,10 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
           <div style={{ margin: '0 14px 12px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
             <PartnerCardHeader asset={slcAssets.partner.connectedSuccess} title="연결된 파트너" muted />
             <p style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 12px' }}>{partnerDisplayName(existingLink)}</p>
-            <button onClick={() => sendPartnerAction(existingLink.id, 'revoke')} style={pillButtonStyle('muted')}>연결 해제</button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <a href="/home" style={{ ...pillButtonStyle('primary'), display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>확인</a>
+              <button onClick={() => sendPartnerAction(existingLink.id, 'revoke')} style={pillButtonStyle('muted')}>연결 해제</button>
+            </div>
           </div>
         )}
 

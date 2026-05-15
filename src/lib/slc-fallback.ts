@@ -3,6 +3,7 @@ import { getPresentationSeedItems } from './seed-helpers';
 
 export const SLC_ROLE_COOKIE = 'fevio_slc_role_v1';
 export const SLC_CONSENT_COOKIE = 'fevio_slc_consent_v1';
+export const SLC_FIRST_SCHEDULE_SKIPPED_COOKIE = 'fevio_first_schedule_skipped_v1';
 
 export type SlcRole = 'patient' | 'partner';
 

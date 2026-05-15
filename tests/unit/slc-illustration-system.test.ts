@@ -4,10 +4,12 @@ import { slcAssets } from '../../src/design/slc-assets';
 
 describe('Fevio SLC illustration system', () => {
   it('keeps canonical asset taxonomy with alt/decorative policy', () => {
+    expect(slcAssets.onboarding.coupleHero.alt).toBe('함께 태블릿을 보는 커플 일러스트');
     expect(slcAssets.onboarding.patientRole.alt).toContain('기록자');
     expect(slcAssets.partner.invite.alt).toBe('파트너 초대 일러스트');
     expect(slcAssets.home.injection.decorative).toBe(true);
     expect(slcAssets.empty.records.alt).toBe('기록이 없습니다');
+    expect(slcAssets.empty.medication.alt).toBe('등록된 약 일정이 없습니다');
   });
 
   it('maps every canonical asset to an existing public file', () => {
@@ -22,7 +24,8 @@ describe('Fevio SLC illustration system', () => {
   it('renders through the SLCIllustration primitive with next image and decorative handling', () => {
     const source = readFileSync('src/components/slc-illustration.tsx', 'utf8');
     expect(source).toContain("import Image from 'next/image'");
-    expect(source).toContain("alt={decorative ? '' : asset.alt}");
+    expect(source).toContain('decorativeOverride');
+    expect(source).toContain("alt={decorative ? '' : (asset.alt ?? '')}");
     expect(source).toContain('aria-hidden={decorative ? true : undefined}');
   });
 });

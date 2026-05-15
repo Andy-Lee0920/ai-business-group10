@@ -8,17 +8,18 @@ interface SLCIllustrationProps {
   asset: SLCAsset;
   size?: SLCIllustrationSize;
   priority?: boolean;
+  decorative?: boolean;
   style?: CSSProperties;
 }
 
-export function SLCIllustration({ asset, size = 'card', priority = false, style }: SLCIllustrationProps) {
-  const decorative = asset.decorative === true;
+export function SLCIllustration({ asset, size = 'card', priority = false, decorative: decorativeOverride, style }: SLCIllustrationProps) {
+  const decorative = decorativeOverride ?? asset.decorative === true;
   return (
     <Image
       src={asset.src}
       width={asset.width}
       height={asset.height}
-      alt={decorative ? '' : asset.alt}
+      alt={decorative ? '' : (asset.alt ?? '')}
       aria-hidden={decorative ? true : undefined}
       priority={priority}
       style={{ ...sizeStyle(size), ...style }}

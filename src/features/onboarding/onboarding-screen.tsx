@@ -154,6 +154,10 @@ export function OnboardingScreen({ inviteCode }: Props) {
         <SLCIllustration asset={slcAssets.onboarding.coupleHero} size="hero" priority style={{ marginBottom: 22 }} />
         <h1 style={{ ...titleStyle, textAlign: 'center', fontSize: 28, letterSpacing: '-0.04em', lineHeight: 1.18, marginBottom: 14 }}><span>오늘 필요한 것만</span><br /><span>보여드릴게요</span></h1>
         <p style={{ ...leadStyle, textAlign: 'center', maxWidth: 300, margin: '0 auto', wordBreak: 'keep-all' }}>병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.</p>
+        <section aria-label="Fevio 기능 설명" style={{ display: 'grid', gridTemplateColumns: '1fr 82px', gap: 14, alignItems: 'center', margin: '28px auto 0', maxWidth: 320, padding: 14, border: `1px solid ${onboardingTokens.border}`, borderRadius: 18, background: '#fff' }}>
+          <p style={{ margin: 0, color: onboardingTokens.textMuted, fontSize: 13, lineHeight: 1.5, wordBreak: 'keep-all' }}>확인한 주사·복용·병원 일정을 오늘 화면에 차분히 정리합니다.</p>
+          <SLCIllustration asset={slcAssets.onboarding.scheduleHero} size="icon" decorative style={{ width: 72, justifySelf: 'end' }} />
+        </section>
       </div>
       {stepDots(step)}
       <button type="button" onClick={() => go('role_selection')} style={ctaStyle(false)}>시작하기</button>

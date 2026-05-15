@@ -41,6 +41,8 @@ ${partnerTokenPage}`).not.toContain(directImageTag);
     expect(moreScreen).toContain('slcAssets.partner.syncOverview');
     expect(moreScreen).toContain('slcAssets.partner.invite');
     expect(moreScreen).toContain('slcAssets.partner.connectedSuccess');
+    expect(moreScreen).toContain('href="/home"');
+    expect(moreScreen).toContain('>확인</a>');
 
     expect(partnerView).toContain('SLCIllustration');
     expect(partnerView).toContain('slcAssets.partner.readonly');
