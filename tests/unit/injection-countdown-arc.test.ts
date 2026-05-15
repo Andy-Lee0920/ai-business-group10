@@ -5,10 +5,9 @@ import { InjectionCountdownArc } from '../../src/components/injection-countdown-
 
 describe('InjectionCountdownArc', () => {
   it.each([
-    { remainingSeconds: 3600, ratio: '1.00', offsetRatio: 0 },
-    { remainingSeconds: 1800, ratio: '0.50', offsetRatio: 0.5 },
-    { remainingSeconds: 0, ratio: '0.00', offsetRatio: 1 },
-  ])('renders the $ratio drain state', ({ remainingSeconds, ratio, offsetRatio }) => {
+    { remainingSeconds: 3600, ratio: '1.00', visibleRatio: 1 },
+    { remainingSeconds: 1800, ratio: '0.50', visibleRatio: 0.5 },
+  ])('renders the $ratio drain state without blur', ({ remainingSeconds, ratio, visibleRatio }) => {
     const markup = renderToStaticMarkup(React.createElement(InjectionCountdownArc, {
       totalSeconds: 3600,
       remainingSeconds,
@@ -19,10 +18,26 @@ describe('InjectionCountdownArc', () => {
     expect(markup).toContain(`data-progress="${ratio}"`);
     expect(markup).toContain('stroke="var(--slc-border)"');
     expect(markup).toContain('stroke="var(--slc-coral)"');
-    expect(markup).toContain('filter:drop-shadow(0 0 12px var(--slc-coral))');
+    expect(markup).not.toContain('drop-shadow');
 
-    const dashArray = Number(markup.match(/stroke-dasharray="([^"]+)"/u)?.[1]);
-    const dashOffset = Number(markup.match(/stroke-dashoffset="([^"]+)"/u)?.[1]);
-    expect(dashOffset).toBeCloseTo(dashArray * offsetRatio, 6);
+    const [visibleLength, circumference] = markup
+      .match(/stroke-dasharray="([^"]+)"/u)?.[1]
+      .split(' ')
+      .map(Number) ?? [];
+    expect(visibleLength).toBeCloseTo(circumference * visibleRatio, 6);
+    expect(markup).toContain('stroke-dashoffset="0"');
+  });
+
+  it('renders an empty arc at zero seconds', () => {
+    const markup = renderToStaticMarkup(React.createElement(InjectionCountdownArc, {
+      totalSeconds: 3600,
+      remainingSeconds: 0,
+      size: 240,
+    }));
+
+    expect(markup).toContain('data-testid="injection-countdown-arc"');
+    expect(markup).not.toContain('data-testid="injection-countdown-arc-fill"');
+    expect(markup).not.toContain('stroke="var(--slc-coral)"');
+    expect(markup).not.toContain('drop-shadow');
   });
 });
