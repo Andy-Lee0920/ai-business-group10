@@ -28,10 +28,9 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
   const completedStr = completedLabel(item.type);
   const title = formatTitle(item);
   const urgent = emphasis === 'primary';
-  const accentStyle: CSSProperties = status === 'missed' ? { borderLeft: '3px solid var(--slc-coral)' } : {};
 
   return (
-    <div data-card-emphasis={emphasis} style={{ ...cardStyle(emphasis, compact), ...accentStyle }}>
+    <div data-card-emphasis={emphasis} style={cardStyle(emphasis, compact)}>
       {showCountdown && isDueSoon && !isCompleted && (
         <div style={{ position: 'absolute', top: urgent ? 20 : 16, right: urgent ? 20 : 16 }}>
           <CountdownRing scheduledAt={item.scheduled_at} size={urgent ? 64 : 56} />
