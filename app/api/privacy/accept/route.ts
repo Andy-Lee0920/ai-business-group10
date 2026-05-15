@@ -21,6 +21,18 @@ function redirectWithPrivacyCookie(request: NextRequest, nextPath = '/onboarding
   return response;
 }
 
+async function acceptPrivacyGateInDbIfAuthenticated() {
+  try {
+    const supabase = await createCookieBackedSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.rpc('accept_privacy_gate', { p_version: PRIVACY_GATE_VERSION });
+    }
+  } catch {
+    // Non-fatal: demo and pre-auth users have no session; cookie path is sufficient.
+  }
+}
+
 async function readNextPath(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -34,7 +46,10 @@ async function readNextPath(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const acceptsHtml = request.headers.get('accept')?.includes('text/html') ?? false;
 
-  if (acceptsHtml) return redirectWithPrivacyCookie(request, await readNextPath(request));
+  if (acceptsHtml) {
+    await acceptPrivacyGateInDbIfAuthenticated();
+    return redirectWithPrivacyCookie(request, await readNextPath(request));
+  }
 
   if (isPresentationRequest(request)) {
     return NextResponse.json({

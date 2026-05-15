@@ -15,6 +15,11 @@ vi.mock('../../src/lib/couple-bootstrap-admin', () => ({
 
 describe('/api/privacy/accept', () => {
   it('accepts the pre-auth privacy gate from an HTML form and redirects to the safe next path', async () => {
+    createCookieBackedSupabaseClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+      rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
+    });
+
     const { POST } = await import('../../app/api/privacy/accept/route');
     const formData = new FormData();
     formData.set('next', '/auth/sign-in');
@@ -30,7 +35,31 @@ describe('/api/privacy/accept', () => {
     expect(response.status).toBe(303);
     expect(response.headers.get('location')).toBe('https://project-oznp0.vercel.app/auth/sign-in');
     expect(response.headers.getSetCookie().join('\n')).toContain('fevio_privacy_gate_v1=accepted');
-    expect(createCookieBackedSupabaseClient).not.toHaveBeenCalled();
+  });
+
+  it('accepts the post-auth privacy gate from an HTML form and writes to the DB', async () => {
+    const mockRpc = vi.fn().mockResolvedValue({ data: null, error: null });
+    createCookieBackedSupabaseClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null }) },
+      rpc: mockRpc,
+    });
+
+    const { POST } = await import('../../app/api/privacy/accept/route');
+    const formData = new FormData();
+    formData.set('next', '/onboarding');
+
+    const response = await POST(
+      new NextRequest('https://project-oznp0.vercel.app/api/privacy/accept', {
+        method: 'POST',
+        headers: { accept: 'text/html', origin: 'https://project-oznp0.vercel.app' },
+        body: formData,
+      }),
+    );
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get('location')).toBe('https://project-oznp0.vercel.app/onboarding');
+    expect(response.headers.getSetCookie().join('\n')).toContain('fevio_privacy_gate_v1=accepted');
+    expect(mockRpc).toHaveBeenCalledWith('accept_privacy_gate', expect.objectContaining({ p_version: expect.any(String) }));
   });
 
   it('falls back to onboarding for unsafe or recursive next paths', async () => {
