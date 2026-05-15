@@ -16,6 +16,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
   const [inviteCode, setInviteCode] = useState<string | null>(existingLink?.invite_code ?? null);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const generateLink = async () => {
     setGenerating(true);
@@ -39,6 +40,24 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       body: JSON.stringify({ linkId, action }),
     });
     window.location.reload();
+  };
+
+  const resetAllInformation = async () => {
+    const confirmed = window.confirm('일정, 기록, 파트너 공유, 온보딩 정보를 삭제하고 처음부터 다시 시작할까요? 로그인과 개인정보 보호 확인은 유지됩니다.');
+    if (!confirmed) return;
+
+    setResetting(true);
+    try {
+      const res = await fetch('/api/account/reset', { method: 'POST' });
+      const data = await res.json().catch(() => ({})) as { redirectTo?: string; error?: string };
+      if (!res.ok) {
+        window.alert(data.error ?? '정보를 지우지 못했어요. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      window.location.assign(data.redirectTo ?? '/onboarding');
+    } finally {
+      setResetting(false);
+    }
   };
 
   return (
@@ -116,6 +135,14 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       </SettingsSection>
 
       <SettingsSection title="계정">
+        <SettingsRow
+          icon="🧹"
+          label="모든 정보 지우기"
+          detail={resetting ? '지우는 중' : '온보딩 다시'}
+          danger
+          disabled={resetting}
+          onClick={resetAllInformation}
+        />
         <SettingsRow href="/auth/reset" icon="↩" label="로그아웃" danger />
       </SettingsSection>
     </div>
