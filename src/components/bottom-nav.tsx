@@ -133,10 +133,9 @@ function NavIcon({ name }: { name: NavIconName }) {
   if (name === 'care') {
     return (
       <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3.75v2.1M12 18.15v2.1M5.85 12H3.75M20.25 12h-2.1" />
-        <path d="m7.65 7.65-1.5-1.5M17.85 17.85l-1.5-1.5M16.35 7.65l1.5-1.5M6.15 17.85l1.5-1.5" />
-        <circle cx="12" cy="12" r="4.35" />
-        <path d="m10.25 12.05 1.12 1.12 2.38-2.54" />
+        <path d="M4.75 11.25 12 5l7.25 6.25" />
+        <path d="M6.75 10.2v7.55A1.75 1.75 0 0 0 8.5 19.5h7a1.75 1.75 0 0 0 1.75-1.75V10.2" />
+        <path d="M10 19.5v-4.75a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.75" />
       </svg>
     );
   }

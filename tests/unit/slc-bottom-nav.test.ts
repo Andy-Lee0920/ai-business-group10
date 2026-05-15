@@ -54,4 +54,10 @@ describe('SLC bottom navigation', () => {
     expect(source).toContain("background: 'var(--slc-surface)'");
     expect(source).toContain("borderTopLeftRadius: 16");
   });
+
+  it('uses a house outline for the home tab icon instead of the previous sun motif', () => {
+    expect(source).toContain('<path d="M4.75 11.25 12 5l7.25 6.25" />');
+    expect(source).toContain('<path d="M6.75 10.2v7.55A1.75 1.75 0 0 0 8.5 19.5h7a1.75 1.75 0 0 0 1.75-1.75V10.2" />');
+    expect(source).not.toContain('<circle cx="12" cy="12" r="4.35" />');
+  });
 });
