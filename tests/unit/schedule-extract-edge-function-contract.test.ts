@@ -49,6 +49,7 @@ describe('schedule-extract Edge Function image contract', () => {
     const code = source();
 
     expect(code).toContain('type ScheduleExtractResponse = { candidates: ScheduleCandidate[] }');
+    expect(code).toContain("type ScheduleType = 'injection' | 'medication' | 'clinic'");
     expect(code).toContain('type ScheduleCandidate = {');
     expect(code).toContain('scheduled_at: string | null');
     expect(code).toContain('dose: string | null');
@@ -57,6 +58,19 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('if (!openRouterApiKey) return []');
     expect(code).toContain('if (!response?.ok) return []');
     expect(code).toContain('if (!isObjectWithCandidates(parsed)) return []');
+  });
+
+
+  it('normalizes LLM type aliases into the app schedule type contract', () => {
+    const code = source();
+
+    expect(code).toContain('function normalizeScheduleType');
+    expect(code).toContain("return 'clinic'");
+    expect(code).toContain("text === 'visit'");
+    expect(code).toContain("text.includes('내원')");
+    expect(code).toContain("text.includes('주사')");
+    expect(code).toContain("text.includes('약')");
+    expect(code).toContain('{"type":"injection"|"medication"|"clinic"');
   });
 
   it('explicitly forbids medical judgment and does not contain committed secrets', () => {

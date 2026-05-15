@@ -7,8 +7,10 @@ type ScheduleExtractRequest =
   | { mode: 'image'; imagePath: string; patientId: string; signedUrl?: string }
   | { mode: 'text'; rawText: string; patientId: string };
 
+type ScheduleType = 'injection' | 'medication' | 'clinic';
+
 type ScheduleCandidate = {
-  type: string;
+  type: ScheduleType;
   title: string;
   scheduled_at: string | null;
   dose: string | null;
@@ -144,7 +146,7 @@ async function extractCandidatesFromImageWithOpenRouter(imageUrl: string): Promi
       messages: [
         {
           role: 'system',
-          content: '의료 판단 금지, 일정 후보만 추출. IVF 환자의 병원 안내 이미지에서 사용자가 확인할 일정 후보만 JSON으로 추출한다. 진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다. Return JSON only: {"candidates":[{"type":string,"title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
+          content: '의료 판단 금지, 일정 후보만 추출. IVF 환자의 병원 안내 이미지에서 사용자가 확인할 일정 후보만 JSON으로 추출한다. 진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다. Return JSON only: {"candidates":[{"type":"injection"|"medication"|"clinic","title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
         },
         {
           role: 'user',
@@ -184,7 +186,7 @@ async function extractCandidatesFromTextWithOpenRouter(rawText: string): Promise
       messages: [
         {
           role: 'system',
-          content: '의료 판단 금지, 일정 후보만 추출. IVF 환자의 문자/카카오 병원 안내에서 사용자가 확인할 일정 후보만 JSON으로 추출한다. 진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다. Return JSON only: {"candidates":[{"type":string,"title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
+          content: '의료 판단 금지, 일정 후보만 추출. IVF 환자의 문자/카카오 병원 안내에서 사용자가 확인할 일정 후보만 JSON으로 추출한다. 진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다. Return JSON only: {"candidates":[{"type":"injection"|"medication"|"clinic","title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
         },
         {
           role: 'user',
@@ -232,7 +234,7 @@ function isObjectWithCandidates(value: unknown): value is { candidates: unknown[
 }
 
 function normalizeCandidate(value: unknown): ScheduleCandidate | null {
-  const type = normalizeText(readProperty(value, 'type'));
+  const type = normalizeScheduleType(readProperty(value, 'type'));
   const title = normalizeText(readProperty(value, 'title'));
   if (!type || !title) return null;
 
@@ -248,6 +250,15 @@ function normalizeCandidate(value: unknown): ScheduleCandidate | null {
 function readProperty(value: unknown, key: keyof ScheduleCandidate): unknown {
   if (typeof value !== 'object' || value === null || !(key in value)) return undefined;
   return value[key as keyof typeof value];
+}
+
+function normalizeScheduleType(value: unknown): ScheduleType | null {
+  const text = normalizeText(value)?.toLocaleLowerCase('ko-KR').replace(/[\s_-]/gu, '');
+  if (!text) return null;
+  if (text === 'injection' || text.includes('주사')) return 'injection';
+  if (text === 'medication' || text === 'medicine' || text === 'pill' || text.includes('복용') || text.includes('약')) return 'medication';
+  if (text === 'clinic' || text === 'visit' || text === 'appointment' || text === 'hospital' || text.includes('병원') || text.includes('방문') || text.includes('내원') || text.includes('검사')) return 'clinic';
+  return null;
 }
 
 function normalizeText(value: unknown): string | null {
