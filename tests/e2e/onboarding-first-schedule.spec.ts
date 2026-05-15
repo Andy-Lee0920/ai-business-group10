@@ -48,12 +48,6 @@ test('onboarding first schedule is saved only after user confirmation', async ({
   await page.getByRole('button', { name: /치료자/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
 
-  await page.getByLabel(/개인정보 수집·이용/).check();
-  await page.getByLabel(/민감정보 처리/).check();
-  await page.getByLabel(/의료 판단을 하지 않음/).check();
-  await page.getByLabel(/AI\/입력 보조는 자동 저장하지 않음/).check();
-  await page.getByRole('button', { name: '첫 일정 입력하기' }).click();
-
   await expect(page.getByRole('heading', { name: '처음 확인할 일정을 하나만 남겨주세요' })).toBeVisible();
   await expect.poll(() => onboardingRequests.length).toBe(0);
 
@@ -100,12 +94,6 @@ test('clinic visit onboarding keeps medication-only fields hidden', async ({ con
   await page.getByRole('button', { name: '시작하기' }).click();
   await page.getByRole('button', { name: /치료자/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
-
-  await page.getByLabel(/개인정보 수집·이용/).check();
-  await page.getByLabel(/민감정보 처리/).check();
-  await page.getByLabel(/의료 판단을 하지 않음/).check();
-  await page.getByLabel(/AI\/입력 보조는 자동 저장하지 않음/).check();
-  await page.getByRole('button', { name: '첫 일정 입력하기' }).click();
 
   await page.getByRole('button', { name: /병원 방문/ }).click();
 
