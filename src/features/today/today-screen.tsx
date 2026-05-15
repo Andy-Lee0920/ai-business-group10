@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Bell, BellOff } from 'lucide-react';
 import { ActionCard } from '../../components/action-card';
@@ -16,6 +16,7 @@ import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
 import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
 import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-date';
 import { isInInjectionCountdownWindow, secondsUntilInjection } from '../adaptive-home/injection-timing';
+import styles from './today-screen.module.css';
 
 interface TodayScreenProps {
   initialItems: ScheduleItem[];
@@ -45,6 +46,8 @@ export function TodayScreen({
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderPreferenceLoaded, setReminderPreferenceLoaded] = useState(false);
+  const [sheetLiftActive, setSheetLiftActive] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -70,6 +73,16 @@ export function TodayScreen({
   useEffect(() => {
     const id = setInterval(() => setItems((prev) => [...prev]), 1_000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const frame = rootRef.current?.closest<HTMLElement>('.fevio-authed-main');
+    const targets: Array<Window | Element> = frame ? [window, frame] : [window];
+    const update = () => setSheetLiftActive((rootRef.current?.getBoundingClientRect().top ?? 0) < -36);
+
+    update();
+    targets.forEach((target) => target.addEventListener('scroll', update, { passive: true }));
+    return () => targets.forEach((target) => target.removeEventListener('scroll', update));
   }, []);
 
   const visibleItems = useMemo(
@@ -107,7 +120,7 @@ export function TodayScreen({
   }, [activeItem]);
 
   return (
-    <div style={{ position: 'relative', background: 'var(--slc-bg)', minHeight: '100dvh' }}>
+    <div ref={rootRef} style={{ position: 'relative', background: 'var(--slc-bg)', minHeight: '100dvh' }}>
       <div
         style={{
           position: 'sticky',
@@ -124,6 +137,7 @@ export function TodayScreen({
       </div>
 
       <div
+        className={styles.actionSheet}
         style={{
           position: 'relative',
           zIndex: 1,
@@ -134,7 +148,13 @@ export function TodayScreen({
           minHeight: 'calc(34dvh + 22px)',
         }}
       >
-        <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
+        <div className={[
+          heroStory.kind === 'countdown' ? styles.liftedSheetHeader : styles.sheetHeader,
+          sheetLiftActive ? styles.liftedSheetHeaderActive : '',
+        ].filter(Boolean).join(' ')}>
+          {heroStory.kind === 'countdown' && <CountdownSheetLift item={heroStory.item} />}
+          <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
+        </div>
         <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
           {!hasSelectedDaySchedule ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
@@ -344,6 +364,25 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
         <button type="button" onClick={() => onCta(item)} style={heroCtaStyle}>{ctaLabel(item.type)}</button>
       </div>
     </section>
+  );
+}
+
+function CountdownSheetLift({ item }: { item: ScheduleItem }) {
+  const remaining = secondsUntilInjection(item.scheduled_at);
+
+  return (
+    <div
+      aria-label="상단 메뉴와 함께 올라오는 주사 카운트다운"
+      className={styles.countdownSheetLift}
+      data-testid="countdown-sheet-lift"
+    >
+      <div className={styles.countdownSheetArc} data-testid="countdown-sheet-mini-arc">
+        <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} size={108} />
+      </div>
+      <strong suppressHydrationWarning className={styles.countdownSheetTime}>
+        {formatRemainingClock(remaining)}
+      </strong>
+    </div>
   );
 }
 

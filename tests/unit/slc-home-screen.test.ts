@@ -138,6 +138,9 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-testid="injection-countdown-hero"');
     expect(markup).toContain('data-testid="injection-countdown-arc"');
+    expect(markup).toContain('data-testid="countdown-sheet-lift"');
+    expect(markup).toContain('data-testid="countdown-sheet-mini-arc"');
+    expect(markup).toContain('상단 메뉴와 함께 올라오는 주사 카운트다운');
     expect(markup).toContain('주사 준비');
     expect(markup).toContain('남은 시간');
     expect(markup).toContain('45:00');
