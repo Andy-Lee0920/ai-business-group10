@@ -138,37 +138,14 @@ Use the product design deck as visual direction, not as production UI assets.
 
 Translate it into reusable tokens and components:
 
-- warm cream background and surfaces (not sage green);
-- terracotta/coral primary accent (`--slc-coral #C4614A`);
-- soft salmon surface (`--slc-surface #FCEEE8`);
-- lavender accent for partner-only UI elements only;
+- sage primary color;
+- lavender accent;
+- warm neutral surfaces;
+- coral warning states;
 - soft cards;
 - large touch targets;
 - clear status badges;
 - Korean-first readability.
-
-### Color token rule
-
-The visual palette is unified around `--slc-*` CSS variables. This matches the onboarding screens already in production and must extend to all authenticated screens (home, records, more).
-
-**Allowed:**
-
-| Role | Variable | Value |
-|---|---|---|
-| Page background | `var(--slc-bg)` | `#FAF7F4` |
-| Card / surface | `var(--slc-surface)` | `#FCEEE8` |
-| Primary accent, CTA, active icons | `var(--slc-coral)` | `#C4614A` |
-| Light accent fill | `var(--slc-coral-light)` | `#FFF0EB` |
-| Border / divider | `var(--slc-border)` | `#F0EDE8` |
-| Body text | `var(--slc-text)` | `#2A1F1A` |
-| Muted / secondary text | `var(--slc-muted)` | `#9B8E86` |
-
-**Forbidden in product UI:**
-
-- `--fevio-sage` / `#6F8F6E` — sage green is not a product color
-- `--fevio-lavender` / `#B9AED6` — lavender is reserved for partner-only UI only, never patient-facing primary actions
-
-If a component uses `--fevio-sage` or hardcodes a green hex, treat it as a defect and replace with the appropriate `--slc-*` token.
 
 Avoid generic SaaS UI. The interface should reduce panic, clarify ownership, and make the next safe action obvious.
 
