@@ -423,6 +423,7 @@ function splitScheduleInstructionSegments(rawText: string) {
 function isScheduleInstructionSegment(segment: string) {
   if (/^(?:환자\s*정보|투약\s*안내|다음\s*방문\s*안내|공유\s*안내|메모|End of document)/iu.test(segment)) return false;
   if (/최종\s*주사\s*여부|병원\s*안내를\s*다시\s*확인|공유해\s*주세요/iu.test(segment)) return false;
+  if (/^방문\s*목적\s*[:：]/iu.test(segment)) return false;
   if (/안내문?$/u.test(segment) && !/(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment)) return false;
   return /(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment);
 }
