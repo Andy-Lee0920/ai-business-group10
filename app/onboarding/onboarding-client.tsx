@@ -364,6 +364,16 @@ export function OnboardingClient() {
                 <span>시작하기</span><span aria-hidden="true">›</span>
               </CtaButton>
             </BottomDock>
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+              className={styles.brandIntroVideo}
+              src="/assets/onboarding/intro-bg.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-hidden="true"
+            />
           </section>
         ) : null}
 

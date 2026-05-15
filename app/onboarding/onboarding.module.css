@@ -329,6 +329,8 @@
 }
 
 .bottomDock {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 24px;
   width: 100%;
