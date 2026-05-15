@@ -136,6 +136,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('다음 주사');
     expect(markup).toContain('data-testid="countdown-info-block"');
     expect(markup).toContain('min-height:52px');
+    expect(markup).toContain('background:var(--slc-coral-gradient)');
   });
 
   it('uses a compact hero card for an incomplete schedule outside the countdown window', () => {

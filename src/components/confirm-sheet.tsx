@@ -96,7 +96,7 @@ const touchZoneStyle: CSSProperties = {
 };
 
 const ctaButtonStyle: CSSProperties = {
-  background: 'var(--slc-coral)', color: '#fff', border: 'none', borderRadius: 999,
+  background: 'var(--slc-coral-gradient)', color: '#fff', border: 'none', borderRadius: 999,
   padding: '14px 0', fontSize: 16, fontWeight: 800, cursor: 'pointer',
   width: '100%', fontFamily: 'inherit',
 };

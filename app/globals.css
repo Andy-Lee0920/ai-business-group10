@@ -1,9 +1,10 @@
  :root {
   --slc-bg: #FAF7F2;
   --slc-surface: #FFFDFC;
-  --slc-coral: #C95F4B;
-  --slc-coral-light: #F4DCD5;
-  --slc-coral-dark: #A94E3F;
+  --slc-coral: #D95F4C;
+  --slc-coral-light: #FFF1EB;
+  --slc-coral-dark: #B94F3D;
+  --slc-coral-gradient: linear-gradient(135deg, #F47D63 0%, #D95F4C 100%);
   --slc-border: #E9DED6;
   --slc-text: #2F2926;
   --slc-muted: #8A7F78;

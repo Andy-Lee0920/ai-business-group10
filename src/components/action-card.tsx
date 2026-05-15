@@ -96,7 +96,7 @@ function cardStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties {
       minHeight: 202,
       background: 'var(--slc-card)',
       border: '1.5px solid #E8A898',
-      boxShadow: '0 10px 30px rgba(196, 97, 74, 0.11)',
+      boxShadow: '0 10px 30px rgba(216, 98, 77, 0.13)',
     };
   }
 
@@ -151,7 +151,7 @@ function ctaButtonStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties
   if (emphasis === 'primary') {
     return {
       marginTop: 14,
-      background: 'var(--slc-coral)',
+      background: 'var(--slc-coral-gradient)',
       color: '#fff',
       border: 'none',
       borderRadius: 999,
@@ -168,7 +168,7 @@ function ctaButtonStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties
 
   return {
     marginTop: compact ? 8 : 12,
-    background: 'var(--slc-coral)',
+    background: 'var(--slc-coral-gradient)',
     color: '#fff',
     border: 'none',
     borderRadius: 999,

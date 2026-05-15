@@ -36,13 +36,15 @@ describe('Fevio design tokens and UI primitive class contracts', () => {
 
   it('provides mobile-first primitive style contracts for Session B surfaces', () => {
     expect(fevioTokens.color).toMatchObject({
-      slcCoral: '#C95F4B',
+      slcCoral: '#D95F4C',
       slcBg: '#FAF7F2',
       slcText: '#2F2926',
     });
+    expect(fevioTokens.color.slcCoralGradient).toBe('linear-gradient(135deg, #F47D63 0%, #D95F4C 100%)');
     expect(fevioPrimitiveStyles.screenShell().maxWidth).toBe('var(--fevio-mobile-frame-max)');
     expect(fevioPrimitiveStyles.screenShell().padding).toBe('var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)');
     expect(fevioPrimitiveStyles.primaryCta(false).minHeight).toBe(52);
+    expect(fevioPrimitiveStyles.primaryCta(false).background).toBe('var(--slc-coral-gradient)');
     expect(fevioPrimitiveStyles.choiceCard(true).border).toContain('var(--slc-coral)');
     expect(fevioPrimitiveStyles.settingsRow().minHeight).toBe(56);
   });

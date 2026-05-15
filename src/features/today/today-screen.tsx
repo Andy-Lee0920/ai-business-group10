@@ -400,7 +400,7 @@ const heroCtaStyle = {
   minHeight: 52,
   border: 'none',
   borderRadius: 999,
-  background: 'var(--slc-coral)',
+  background: 'var(--slc-coral-gradient)',
   color: '#fff',
   fontSize: 15,
   fontWeight: 900,
@@ -562,7 +562,7 @@ function reminderToggleDotStyle(enabled: boolean) {
 }
 
 const emptyLinkStyle = {
-  display: 'inline-block', marginTop: 16, padding: '12px 24px', background: 'var(--slc-coral)', color: 'var(--slc-bg)',
+  display: 'inline-block', marginTop: 16, padding: '12px 24px', background: 'var(--slc-coral-gradient)', color: 'var(--slc-bg)',
   borderRadius: 999, textDecoration: 'none', fontSize: 14, fontWeight: 800,
 } as const;
 

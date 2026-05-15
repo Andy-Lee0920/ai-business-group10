@@ -32,7 +32,7 @@
 - Tradeoffs: prefer deterministic summaries over rich detail if space is constrained; use warmth through spacing and surfaces, not extra copy.
 
 ## Visual language
-- Color: warm neutral background, coral only for CTA/attention, success green for completed states.
+- Color: warm neutral background, onboarding CTA orange (`#F47D63 → #D95F4C`) for primary actions/attention, success green for completed states.
 - Typography: Korean-first, high-weight short headings, muted explanatory copy.
 - Spacing/layout rhythm: iPhone Safari frame uses shared `--fevio-page-*` and `--fevio-bottom-nav-*` tokens; no per-screen bottom padding guesses.
 - Shape/radius/elevation: soft rounded cards, low-density shadows, no hard enterprise field grids unless actively editing.
@@ -72,7 +72,7 @@
 
 ## Implementation constraints
 - Framework/styling system: Next.js App Router, React inline styles plus CSS modules/global tokens.
-- Design-token constraints: use `--fevio-page-gutter`, `--fevio-page-top`, `--fevio-bottom-nav-height`, `--fevio-page-bottom`, and `--fevio-mobile-frame-max` for mobile frame alignment.
+- Design-token constraints: use `--slc-coral-gradient` for primary CTA surfaces; use `--slc-coral` for compact active states/text/borders; use `--fevio-page-gutter`, `--fevio-page-top`, `--fevio-bottom-nav-height`, `--fevio-page-bottom`, and `--fevio-mobile-frame-max` for mobile frame alignment.
 - Performance constraints: no new visual dependency for shell layout.
 - Compatibility constraints: Safari dynamic viewport (`100dvh`) and `env(safe-area-inset-*)` are required.
 - Test/screenshot expectations: unit contract for shared frame tokens and desktop phone chrome continuity; Playwright smoke verifies no horizontal overflow on 390px and desktop iPhone frame width.

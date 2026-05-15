@@ -20,7 +20,7 @@ export const SLC_FORBIDDEN_VISIBLE_COPY = [
 
 export const SLC_CTA_STATE_CONTRACT = {
   active: {
-    background: '#C95F4B',
+    background: '#D95F4C',
     opacity: 1,
   },
   disabled: {
