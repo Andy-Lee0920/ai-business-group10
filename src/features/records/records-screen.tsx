@@ -227,7 +227,7 @@ function RecordCard({ record }: { record: RecordsViewRecord }) {
           {record.statusLabel}
         </span>
         {record.kind === 'schedule' ? (
-          <Link href={`/schedule/${record.id}/edit`} aria-label={`${record.title} 수정`} style={{ color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900, textDecoration: 'none' }}>수정</Link>
+          <Link href={`/schedule/${record.id}/edit`} aria-label={`${record.title} 수정`} style={{ color: 'var(--slc-coral)', fontSize: 22, lineHeight: 1, fontWeight: 900, textDecoration: 'none' }}>›</Link>
         ) : null}
       </span>
     </article>

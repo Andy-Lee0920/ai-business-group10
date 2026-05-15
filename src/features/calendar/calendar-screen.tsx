@@ -58,8 +58,9 @@ export function CalendarScreen({ items, initialDate }: CalendarScreenProps) {
       <section aria-label="선택 날짜 케어 타임라인" style={{ padding: '0 16px' }}>
         <h2 style={sectionHeadingStyle}>{formatSelectedDate(selectedDateKey)}</h2>
         {selectedItems.length ? (
-          <div data-testid="calendar-care-timeline" style={{ display: 'grid', gap: 8 }}>
-            {selectedItems.map((item) => <TimelineCard key={item.id} item={item} />)}
+          <div data-testid="calendar-care-timeline" style={timelineContainerStyle}>
+            <div aria-hidden="true" style={timelineLineStyle} />
+            {selectedItems.map((item) => <TimelineRow key={item.id} item={item} />)}
           </div>
         ) : (
           <p style={emptyStateStyle}>이 날은 예정된 케어가 없습니다</p>
@@ -69,16 +70,19 @@ export function CalendarScreen({ items, initialDate }: CalendarScreenProps) {
   );
 }
 
-function TimelineCard({ item }: { item: ScheduleItem }) {
+function TimelineRow({ item }: { item: ScheduleItem }) {
   return (
-    <article style={timelineCardStyle}>
-      <span style={timeStyle}>{formatTime(item.scheduled_at)}</span>
-      <span style={{ minWidth: 0 }}>
-        <strong style={titleStyle}>{formatTitle(item)}</strong>
-        <small style={metaStyle}>{typeLabel(item.type)} · {statusLabel(item.status)}</small>
-      </span>
-      <Link href={`/schedule/${item.id}/edit`} aria-label={`${formatTitle(item)} 수정`} style={editLinkStyle}>수정</Link>
-    </article>
+    <div style={timelineRowStyle}>
+      <div style={timelineDotStyle(item.status)} />
+      <Link href={`/schedule/${item.id}/edit`} aria-label={`${formatTitle(item)} 수정`} style={timelineLinkStyle}>
+        <span style={timeStyle}>{formatTime(item.scheduled_at)}</span>
+        <span style={{ minWidth: 0 }}>
+          <strong style={titleStyle}>{formatTitle(item)}</strong>
+          <small style={metaStyle}>{typeLabel(item.type)} · {statusLabel(item.status)}</small>
+        </span>
+        <span aria-hidden="true" style={chevronStyle}>›</span>
+      </Link>
+    </div>
   );
 }
 
@@ -212,17 +216,49 @@ const emptyStateStyle = {
   backdropFilter: 'blur(14px)',
 } as const;
 
-const timelineCardStyle = {
-  minHeight: 66,
+const timelineContainerStyle = {
+  position: 'relative',
+  paddingLeft: 28,
+} as const;
+
+const timelineLineStyle = {
+  position: 'absolute',
+  left: 10,
+  top: 8,
+  bottom: 8,
+  width: 2,
+  background: 'var(--slc-border)',
+} as const;
+
+const timelineRowStyle = {
+  position: 'relative',
+  marginBottom: 10,
+} as const;
+
+function timelineDotStyle(status: ScheduleItem['status']) {
+  return {
+    position: 'absolute',
+    left: -23,
+    top: 20,
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    background: status === 'completed' ? 'var(--slc-success)' : 'var(--slc-coral)',
+    border: '2px solid var(--slc-bg)',
+    zIndex: 1,
+  } as const;
+}
+
+const timelineLinkStyle = {
   display: 'grid',
-  gridTemplateColumns: '58px 1fr auto',
+  gridTemplateColumns: '54px 1fr auto',
   alignItems: 'center',
   gap: 12,
   padding: '12px 14px',
   borderRadius: 18,
   background: 'rgba(255, 255, 255, 0.88)',
   border: '1px solid var(--slc-border)',
-  backdropFilter: 'blur(14px)',
+  textDecoration: 'none',
 } as const;
 
 const timeStyle = {
@@ -249,9 +285,8 @@ const metaStyle = {
   marginTop: 3,
 } as const;
 
-const editLinkStyle = {
+const chevronStyle = {
   color: 'var(--slc-coral)',
-  fontSize: 12,
-  fontWeight: 900,
-  textDecoration: 'none',
+  fontSize: 22,
+  lineHeight: 1,
 } as const;

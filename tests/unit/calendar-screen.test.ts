@@ -34,6 +34,10 @@ describe('CalendarScreen', () => {
     expect(markup).toContain('data-testid="calendar-care-timeline"');
     expect(markup).toContain('Menopur');
     expect(markup).toContain('병원 방문');
+    expect(markup).toContain('href="/schedule/injection-1/edit"');
+    expect(markup).toContain('›');
+    expect(markup).toContain('padding-left:28px');
+    expect(markup).toContain('left:10px');
     expect(markup).toContain('var(--slc-coral)');
   });
 
