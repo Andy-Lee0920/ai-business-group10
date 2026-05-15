@@ -20,13 +20,20 @@ export interface ClinicGuideResponse {
   question: string;
   chips?: string[];
   draft: Partial<ClinicUpdate>;
+  warnings?: string[];
+  fallbackReason?: string;
   requiresUserConfirmation: true;
 }
 
 export interface ClinicGuideMedicationNormalizeRequest {
+  mode?: 'normalizeMedication';
   userInput: string;
   patientId: string;
 }
+
+export type ClinicGuideEdgeRequest =
+  | (ClinicGuideMedicationNormalizeRequest & { mode?: 'normalizeMedication' })
+  | (ClinicGuideRequest & { mode: 'interview' });
 
 export interface ClinicGuideMedicationNormalizeResponse {
   matched: Medication | null;

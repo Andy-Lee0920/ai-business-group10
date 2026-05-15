@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type {
   ClinicGuideMedicationNormalizeRequest,
   ClinicGuideMedicationNormalizeResponse,
+  ClinicGuideEdgeRequest,
   ClinicGuideRequest,
   ClinicGuideResponse,
   ClinicGuideStep,
@@ -35,16 +36,20 @@ describe('ClinicGuide shared type contract', () => {
       question: string;
       chips?: string[];
       draft: Partial<ClinicUpdate>;
+      warnings?: string[];
+      fallbackReason?: string;
       requiresUserConfirmation: true;
     }>();
     expectTypeOf<ClinicGuideResponse['requiresUserConfirmation']>().toEqualTypeOf<true>();
   });
 
   it('shares the medication normalization proxy contract without exposing secret inputs', () => {
-    expectTypeOf<ClinicGuideMedicationNormalizeRequest>().toEqualTypeOf<{
+    expectTypeOf<ClinicGuideMedicationNormalizeRequest>().toMatchTypeOf<{
+      mode?: 'normalizeMedication';
       userInput: string;
       patientId: string;
     }>();
+    expectTypeOf<ClinicGuideEdgeRequest>().toMatchTypeOf<ClinicGuideMedicationNormalizeRequest | (ClinicGuideRequest & { mode: 'interview' })>();
     expectTypeOf<ClinicGuideMedicationNormalizeResponse>().toMatchTypeOf<{
       matched: Medication | null;
       source: 'aliases' | 'llm' | 'none';
