@@ -5,7 +5,10 @@ type UserResponse = { data: { user: { id: string } | null }; error: { message: s
 type InsertCall = { table: string; values: unknown };
 
 const userResponses = vi.hoisted((): UserResponse[] => []);
+const isPresentationRequest = vi.hoisted(() => vi.fn(() => false));
 const insertCalls = vi.hoisted((): InsertCall[] => []);
+
+vi.mock('../../src/config', () => ({ isPresentationRequest }));
 
 vi.mock('../../src/lib/server-supabase', () => ({
   createCookieBackedSupabaseClient: async () => ({
@@ -41,6 +44,7 @@ describe('/api/schedule/add', () => {
   beforeEach(() => {
     userResponses.length = 0;
     insertCalls.length = 0;
+    isPresentationRequest.mockReturnValue(false);
   });
 
   it('keeps the existing single schedule insert contract', async () => {
@@ -67,6 +71,31 @@ describe('/api/schedule/add', () => {
         source: 'manual',
       },
     });
+  });
+
+
+
+  it('lets presentation onboarding save direct entry without a signed-in Supabase user', async () => {
+    userResponses.push({ data: { user: null }, error: null });
+    isPresentationRequest.mockReturnValue(true);
+    const { POST } = await import('../../app/api/schedule/add/route');
+
+    const response = await POST(new NextRequest('https://project-oznp0.vercel.app/api/schedule/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie: 'fevio_privacy_gate_v1=accepted' },
+      body: JSON.stringify({
+        type: 'injection',
+        title: '고날에프',
+        dose: '150',
+        unit: 'IU',
+        scheduledAt: '2026-05-15T12:00:00.000Z',
+      }),
+    }));
+    const payload = await response.json() as { item: { id: string; patient_id: string; title: string; source: string } };
+
+    expect(response.status).toBe(200);
+    expect(payload.item).toMatchObject({ id: expect.stringContaining('presentation-manual-'), patient_id: 'presentation', title: '고날에프', source: 'manual' });
+    expect(insertCalls).toHaveLength(0);
   });
 
   it('bulk inserts one schedule item per KST day for range repeat', async () => {

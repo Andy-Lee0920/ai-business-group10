@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { isPresentationRequest } from '../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 import { isMissingSlcTable } from '../../../../src/lib/slc-fallback';
 import type { ScheduleType } from '../../../../src/types/slc.types';
@@ -59,6 +60,46 @@ function rangeDates(startDate: string, endDate: string): string[] | null {
   return Array.from({ length: diffDays }, (_, index) => dateOnlyFromUtc(new Date(start.getTime() + index * ONE_DAY_MS)));
 }
 
+
+
+function createPresentationSchedule(body: ScheduleAddBody) {
+  if (isRangeRequest(body)) {
+    if (!body.startDate || !body.endDate || !body.dailyTime || !isTimeOnly(body.dailyTime)) {
+      return NextResponse.json({ error: '기간과 시간을 다시 확인해 주세요.' }, { status: 400 });
+    }
+    const dates = rangeDates(body.startDate, body.endDate);
+    if (dates === null) return NextResponse.json({ error: '기간과 시간을 다시 확인해 주세요.' }, { status: 400 });
+    if (dates.length === 0) return NextResponse.json({ error: '기간 반복은 최대 30일까지 저장할 수 있어요.' }, { status: 400 });
+    return NextResponse.json({
+      items: dates.map((date, index) => ({
+        id: `presentation-manual-${Date.now()}-${index}`,
+        status: 'upcoming',
+        created_at: new Date().toISOString(),
+        ...baseRow(body, 'presentation', kstDateTimeToIso(date, body.dailyTime)),
+      })),
+      presentation: true,
+    });
+  }
+
+  if (!body.scheduledAt) return NextResponse.json({ error: '일정 시간을 다시 확인해 주세요.' }, { status: 400 });
+  return NextResponse.json({
+    item: {
+      id: `presentation-manual-${Date.now()}`,
+      status: 'upcoming',
+      created_at: new Date().toISOString(),
+      ...baseRow(body, 'presentation', body.scheduledAt),
+    },
+    presentation: true,
+  });
+}
+
+function hasPrivacyGateCookie(cookieHeader: string | null) {
+  return cookieHeader?.split(';').some((part) => {
+    const trimmed = part.trim();
+    return trimmed === 'fevio_privacy_gate_v1=accepted' || trimmed === 'fevio_privacy_accepted=1';
+  }) ?? false;
+}
+
 function baseRow(body: ScheduleAddBody, userId: string, scheduledAt: string): ScheduleInsertRow {
   return {
     patient_id: userId,
@@ -79,9 +120,14 @@ function isRangeRequest(body: ScheduleAddBody): body is ScheduleAddBody & { star
 export async function POST(request: NextRequest) {
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-
   const body = await request.json() as ScheduleAddBody;
+
+  if (!user) {
+    if (!isPresentationRequest(request) || !hasPrivacyGateCookie(request.headers.get('cookie'))) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+    return createPresentationSchedule(body);
+  }
 
   if (isRangeRequest(body)) {
     if (!body.startDate || !body.endDate || !body.dailyTime || !isTimeOnly(body.dailyTime)) {
