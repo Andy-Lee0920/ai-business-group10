@@ -63,8 +63,8 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).toContain('min-height:340px');
     expect(markup).toContain('object-fit:cover');
-    expect(markup).toContain('opacity:0.7');
-    expect(markup).toContain('linear-gradient(to bottom, rgba(47,41,38,0.18) 0%, transparent 35%, var(--slc-bg) 100%)');
+    expect(markup).toContain('opacity:0.22');
+    expect(markup).toContain('linear-gradient(180deg, rgba(250,247,242,0.94) 0%, rgba(250,247,242,0.78) 44%, var(--slc-bg) 100%)');
     expect(markup).toContain('home-injection-bg-v2.png');
     expect(markup).not.toContain('data-testid="home-focus-hero"');
     expect(markup.indexOf('data-testid="home-hero-zone"')).toBeLessThan(markup.indexOf('aria-label="일정 날짜"'));
@@ -81,6 +81,8 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-testid="injection-countdown-hero"');
+    expect(markup).toContain('천천히 준비하면 돼요');
+    expect(markup).toContain('background:rgba(255,253,252,0.94)');
     expect(markup).toContain('width:100%;min-height:52px');
     expect(markup).toContain('Menopur 150 IU');
     expect(markup).toContain('다음 주사');
@@ -110,6 +112,7 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-testid="injection-countdown-hero"');
     expect(markup).toContain('data-testid="injection-countdown-arc"');
+    expect(markup).toContain('주사 준비');
     expect(markup).toContain('남은 시간');
     expect(markup).toContain('45:00');
     expect(markup).toContain('다음 주사');

@@ -16,7 +16,7 @@ describe('InjectionCountdownArc', () => {
 
     expect(markup).toContain('data-testid="injection-countdown-arc"');
     expect(markup).toContain(`data-progress="${ratio}"`);
-    expect(markup).toContain('stroke="var(--slc-border)"');
+    expect(markup).toContain('stroke="rgba(201,95,75,0.14)"');
     expect(markup).toContain('stroke="var(--slc-coral)"');
     expect(markup).not.toContain('drop-shadow');
 
@@ -38,6 +38,7 @@ describe('InjectionCountdownArc', () => {
     expect(markup).toContain('data-testid="injection-countdown-arc"');
     expect(markup).not.toContain('data-testid="injection-countdown-arc-fill"');
     expect(markup).not.toContain('stroke="var(--slc-coral)"');
+    expect(markup).not.toContain('rgba(201,95,75,0.14)');
     expect(markup).not.toContain('drop-shadow');
   });
 });

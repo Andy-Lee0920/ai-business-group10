@@ -19,12 +19,12 @@ interface AmbientStoryBackgroundProps {
 const INTENSITY_STYLE = {
   hero: {
     minHeight: 340,
-    imageOpacity: 0.7,
+    imageOpacity: 0.22,
     imageInset: 0,
     imageWidth: '100%',
     imageHeight: '100%',
     imageObjectFit: 'cover',
-    gradient: 'linear-gradient(to bottom, rgba(47,41,38,0.18) 0%, transparent 35%, var(--slc-bg) 100%)',
+    gradient: 'linear-gradient(180deg, rgba(250,247,242,0.94) 0%, rgba(250,247,242,0.78) 44%, var(--slc-bg) 100%)',
   },
   section: {
     minHeight: undefined,
