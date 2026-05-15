@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 type User = { id: string } | null;
+const isPresentationRequest = vi.hoisted(() => vi.fn(() => false));
 type Candidate = { id: string; patient_id: string; type: 'injection' | 'medication' | 'clinic'; title: string; scheduled_at: string | null; dose: string | null; unit: string | null };
 
 const state = vi.hoisted(() => ({
@@ -10,6 +11,8 @@ const state = vi.hoisted(() => ({
   insertedRows: [] as Array<Record<string, unknown>>,
   updates: [] as Array<{ table: string; values: unknown; ids: string[]; patientId: string }>,
 }));
+
+vi.mock('../../src/config', () => ({ isPresentationRequest }));
 
 vi.mock('../../src/lib/server-supabase', () => ({
   createCookieBackedSupabaseClient: async () => ({
@@ -60,6 +63,7 @@ describe('/api/onboard/candidates/confirm', () => {
     state.ownedCandidates = [];
     state.insertedRows = [];
     state.updates = [];
+    isPresentationRequest.mockReturnValue(false);
   });
 
   it('returns 401 without auth', async () => {
@@ -77,6 +81,36 @@ describe('/api/onboard/candidates/confirm', () => {
 
     expect(response.status).toBe(403);
     expect(state.insertedRows).toHaveLength(0);
+  });
+
+
+
+  it('lets presentation onboarding confirm extracted candidates without a signed-in Supabase user', async () => {
+    state.user = null;
+    isPresentationRequest.mockReturnValue(true);
+    const { POST } = await import('../../app/api/onboard/candidates/confirm/route');
+
+    const response = await POST(new NextRequest('https://project-oznp0.vercel.app/api/onboard/candidates/confirm', {
+      method: 'POST',
+      headers: { cookie: 'fevio_privacy_gate_v1=accepted' },
+      body: JSON.stringify({
+        confirmedIds: ['presentation-1'],
+        rejectedIds: ['presentation-2'],
+        candidateEdits: [
+          { id: 'presentation-1', type: 'injection', title: '고날에프', scheduled_at: '2026-05-15T12:00:00.000Z', dose: '150', unit: 'IU' },
+          { id: 'presentation-2', type: 'clinic', title: '병원 방문', scheduled_at: null, dose: null, unit: null },
+        ],
+      }),
+    }));
+    const payload = await response.json() as { savedCount: number; items: Array<{ id: string; patient_id: string; title: string; source: string }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.savedCount).toBe(1);
+    expect(payload.items).toEqual([
+      expect.objectContaining({ id: 'presentation-item-presentation-1', patient_id: 'presentation', title: '고날에프', source: 'capture' }),
+    ]);
+    expect(state.insertedRows).toHaveLength(0);
+    expect(state.updates).toHaveLength(0);
   });
 
   it('copies confirmed candidates into schedule_items with source capture and marks rejected rows', async () => {
