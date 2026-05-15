@@ -3,11 +3,9 @@ declare const Deno: {
   serve(handler: (request: Request) => Response | Promise<Response>): void;
 };
 
-type ScheduleExtractRequest = {
-  mode: 'image';
-  imagePath: string;
-  patientId: string;
-};
+type ScheduleExtractRequest =
+  | { mode: 'image'; imagePath: string; patientId: string; signedUrl?: string }
+  | { mode: 'text'; rawText: string; patientId: string };
 
 type ScheduleCandidate = {
   type: string;
@@ -23,7 +21,8 @@ type OpenRouterChoice = { message?: { content?: string } };
 type OpenRouterResponse = { choices?: OpenRouterChoice[] };
 type StorageSignedUrlResponse = { signedURL?: string; signedUrl?: string; error?: string; message?: string };
 
-const OPENROUTER_MODEL = 'anthropic/claude-3-haiku-vision';
+const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku-vision';
+const OPENROUTER_TEXT_MODEL = 'anthropic/claude-3-haiku';
 const CLINIC_PHOTOS_BUCKET = 'clinic-photos';
 const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 5;
 
@@ -37,16 +36,24 @@ Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
-  const body = await request.json().catch(() => ({})) as Partial<ScheduleExtractRequest>;
+  const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+
+  if (body.mode === 'text') {
+    const extractRequest = normalizeTextRequest(body);
+    if (!extractRequest) return json({ error: 'invalid_text_request' }, 400);
+    const candidates = await extractCandidatesFromTextWithOpenRouter(extractRequest.rawText);
+    return json({ candidates });
+  }
+
   if (body.mode !== 'image') return json({ error: 'unsupported_mode' }, 400);
 
   const extractRequest = normalizeImageRequest(body);
   if (!extractRequest) return json({ error: 'invalid_image_request' }, 400);
 
-  const signedUrl = await createStorageSignedUrl(extractRequest.imagePath);
+  const signedUrl = extractRequest.signedUrl ?? await createStorageSignedUrl(extractRequest.imagePath);
   if (!signedUrl) return json({ candidates: [] });
 
-  const candidates = await extractCandidatesWithOpenRouter(signedUrl);
+  const candidates = await extractCandidatesFromImageWithOpenRouter(signedUrl);
   return json({ candidates });
 });
 
@@ -57,11 +64,19 @@ function json(payload: ScheduleExtractResponse | ErrorResponse, status = 200) {
   });
 }
 
-function normalizeImageRequest(body: Partial<ScheduleExtractRequest>): ScheduleExtractRequest | null {
+function normalizeImageRequest(body: Record<string, unknown>): Extract<ScheduleExtractRequest, { mode: 'image' }> | null {
   const imagePath = typeof body.imagePath === 'string' ? body.imagePath.trim() : '';
   const patientId = typeof body.patientId === 'string' ? body.patientId.trim() : '';
+  const signedUrl = typeof body.signedUrl === 'string' && body.signedUrl.startsWith('http') ? body.signedUrl.trim() : undefined;
   if (!imagePath || !patientId) return null;
-  return { mode: 'image', imagePath, patientId };
+  return { mode: 'image', imagePath, patientId, signedUrl };
+}
+
+function normalizeTextRequest(body: Record<string, unknown>): Extract<ScheduleExtractRequest, { mode: 'text' }> | null {
+  const rawText = typeof body.rawText === 'string' ? body.rawText.trim() : '';
+  const patientId = typeof body.patientId === 'string' ? body.patientId.trim() : '';
+  if (!rawText || !patientId) return null;
+  return { mode: 'text', rawText, patientId };
 }
 
 async function createStorageSignedUrl(imagePath: string): Promise<string | null> {
@@ -114,7 +129,7 @@ function parseStoragePath(imagePath: string): { bucket: string; objectPath: stri
   return objectPath ? { bucket, objectPath } : null;
 }
 
-async function extractCandidatesWithOpenRouter(imageUrl: string): Promise<ScheduleCandidate[]> {
+async function extractCandidatesFromImageWithOpenRouter(imageUrl: string): Promise<ScheduleCandidate[]> {
   const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
   if (!openRouterApiKey) return [];
 
@@ -125,7 +140,7 @@ async function extractCandidatesWithOpenRouter(imageUrl: string): Promise<Schedu
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: OPENROUTER_MODEL,
+      model: OPENROUTER_VISION_MODEL,
       messages: [
         {
           role: 'system',
@@ -142,6 +157,41 @@ async function extractCandidatesWithOpenRouter(imageUrl: string): Promise<Schedu
             },
             { type: 'image_url', image_url: { url: imageUrl } },
           ],
+        },
+      ],
+      temperature: 0,
+    }),
+  }).catch(() => null);
+  if (!response?.ok) return [];
+
+  const data = await response.json().catch(() => null) as OpenRouterResponse | null;
+  const content = data?.choices?.[0]?.message?.content ?? '';
+  return parseCandidates(content);
+}
+
+async function extractCandidatesFromTextWithOpenRouter(rawText: string): Promise<ScheduleCandidate[]> {
+  const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+  if (!openRouterApiKey) return [];
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${openRouterApiKey}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: OPENROUTER_TEXT_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: '의료 판단 금지, 일정 후보만 추출. IVF 환자의 문자/카카오 병원 안내에서 사용자가 확인할 일정 후보만 JSON으로 추출한다. 진단, 용량 판단, 치료 단계 판단, 복약/주사 권고를 하지 않는다. Return JSON only: {"candidates":[{"type":string,"title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
+        },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            instruction: '텍스트에 명시된 날짜/시간/약/검사/방문 일정 후보만 추출하세요. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
+            rawText,
+          }),
         },
       ],
       temperature: 0,

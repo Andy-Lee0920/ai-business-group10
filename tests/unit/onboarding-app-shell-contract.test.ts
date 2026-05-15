@@ -37,8 +37,10 @@ describe('app onboarding shell contract', () => {
     }
   });
 
-  it('uses safe placeholders instead of saving sensitive data for later steps', () => {
-    expect(onboardingClient).toContain('민감정보를 저장하지 않습니다');
+  it('keeps direct entry confirmation-first and avoids photo/text sensitive inputs in unfinished steps', () => {
+    expect(onboardingClient).toContain('이 일정 기억하기');
+    expect(onboardingClient).toContain("fetch('/api/schedule/add'");
+    expect(onboardingClient).toContain('홈 미리보기');
     expect(onboardingClient).not.toContain("fetch('/api/onboarding/complete'");
     expect(onboardingClient).not.toContain('type="file"');
     expect(onboardingClient).not.toContain('<textarea');

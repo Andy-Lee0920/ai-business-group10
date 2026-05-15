@@ -36,3 +36,35 @@ test('partner role exits to invite guidance without saving sensitive data', asyn
   await expect(page.locator('input[type="file"]')).toHaveCount(0);
   await expect(page.locator('textarea')).toHaveCount(0);
 });
+
+
+test('direct entry path previews and saves the remembered schedule before sharing', async ({ context, page }) => {
+  await acceptPrivacyForOnboarding(context);
+  await page.route('**/api/schedule/add', async (route) => {
+    const body = route.request().postDataJSON() as { title: string; type: string; scheduledAt: string };
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ item: { id: 'schedule-1', status: 'upcoming', source: 'manual', ...body } }),
+    });
+  });
+
+  await page.goto('/onboarding');
+  await page.getByRole('button', { name: '시작하기' }).click();
+  await page.getByRole('button', { name: /치료자 내 병원 안내/ }).click();
+  await page.getByRole('button', { name: /처음/ }).click();
+  await page.getByRole('button', { name: '다음' }).click();
+  await page.getByRole('button', { name: /직접 적기/ }).click();
+
+  await expect(page.getByRole('heading', { name: '기억나는 일정만 적어주세요' })).toBeVisible();
+  await page.getByLabel('일정 이름').fill('고날에프 주사');
+  await page.getByLabel('시간').fill('21:00');
+  await page.getByLabel('용량').fill('150');
+  await page.getByLabel('단위').fill('IU');
+
+  await expect(page.getByLabel('홈 미리보기')).toContainText('고날에프 주사');
+  await expect(page.getByLabel('홈 미리보기')).toContainText('21:00');
+  await page.getByRole('button', { name: '이 일정 기억하기' }).click();
+
+  await expect(page.getByRole('heading', { name: '공유 설정은 다음 단계에서 준비됩니다' })).toBeVisible();
+});
