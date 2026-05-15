@@ -18,20 +18,6 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
     redirect(nextPath);
   }
 
-  async function acceptPrivacy(formData: FormData) {
-    'use server';
-    const cookieStore = await cookies();
-    cookieStore.set(PRIVACY_GATE_COOKIE, 'accepted', {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 365,
-    });
-    const requestedNext = formData.get('next');
-    redirect(safeNextPath(typeof requestedNext === 'string' ? requestedNext : undefined));
-  }
-
   return (
     <main
       className="app-shell"
@@ -104,7 +90,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
           </PrivacyInfoRow>
         </div>
 
-        <form action={acceptPrivacy} style={{ marginTop: 28 }}>
+        <form action="/api/privacy/accept" method="post" style={{ marginTop: 28 }}>
           <input type="hidden" name="next" value={nextPath} />
           <button
             type="submit"
