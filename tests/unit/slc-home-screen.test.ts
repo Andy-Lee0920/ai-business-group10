@@ -50,6 +50,24 @@ describe('SLC home screen vertical slices', () => {
     expect(markup.indexOf('병원 일정이 다가오고 있어요')).toBeLessThan(markup.indexOf('듀파스톤'));
   });
 
+
+
+  it('visually promotes the current CTA card over the next schedule preview', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'injection-now', type: 'injection', title: 'Menopur', dose: '150', unit: 'IU', scheduled_at: '2026-05-14T09:10:00.000Z' }),
+      item({ id: 'injection-next', type: 'injection', title: 'Cetrotide', dose: '0.25', unit: 'mg', scheduled_at: '2026-05-14T19:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-card-emphasis="primary"');
+    expect(markup).toContain('data-card-emphasis="secondary"');
+    expect(markup).toContain('지금 주사 시간이에요');
+    expect(markup).toContain('background:linear-gradient(135deg, #EF7A5D 0%, #C94C35 100%)');
+    expect(markup).toContain('background:#FFFBF8');
+    expect(markup.indexOf('data-card-emphasis="primary"')).toBeLessThan(markup.indexOf('data-card-emphasis="secondary"'));
+  });
+
   it('does not render post-clinic prompt after a relevant clinic update exists', () => {
     vi.setSystemTime(new Date('2026-05-14T10:30:00.000Z'));
 
