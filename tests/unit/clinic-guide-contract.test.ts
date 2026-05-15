@@ -3,6 +3,7 @@ import type {
   ClinicGuideMedicationNormalizeRequest,
   ClinicGuideMedicationNormalizeResponse,
   ClinicGuideEdgeRequest,
+  ClinicGuideAnswer,
   ClinicGuideRequest,
   ClinicGuideResponse,
   ClinicGuideStep,
@@ -30,6 +31,11 @@ describe('ClinicGuide shared type contract', () => {
       step: ClinicGuideStep;
       context: Partial<ClinicUpdate>;
       userInput: string;
+      answerHistory: readonly ClinicGuideAnswer[];
+    }>();
+    expectTypeOf<ClinicGuideAnswer>().toEqualTypeOf<{
+      step: ClinicGuideStep;
+      answer: string;
     }>();
     expectTypeOf<ClinicGuideResponse>().toMatchTypeOf<{
       nextStep: ClinicGuideStep | null;

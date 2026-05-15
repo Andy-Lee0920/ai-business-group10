@@ -78,7 +78,6 @@ export function PresentationHomeDemo() {
                 <TodayScreen
                   initialItems={scenario.items}
                   userId={`presentation-${scenario.id}`}
-                  pendingPartnerRequest={null}
                   initialClinicUpdates={[]}
                   firstScheduleSkipped={scenario.firstScheduleSkipped}
                 />

@@ -4,25 +4,25 @@ import { describe, expect, it } from 'vitest';
 const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('SLC partner approval flow', () => {
-  it('surfaces requested partner links on the home screen with identity-aware props', () => {
+  it('keeps requested partner link approval out of the home surface', () => {
     const homePage = read('app/(authed)/home/page.tsx');
     const todayScreen = read('src/features/today/today-screen.tsx');
 
-    expect(homePage).toContain(".from('partner_links')");
-    expect(homePage).toContain(".eq('status', 'requested')");
-    expect(homePage).toContain('pendingPartnerRequest={pendingPartnerRequest}');
-    expect(todayScreen).toContain('pendingPartnerRequest?: PartnerLink | null');
-    expect(todayScreen).toContain('data-testid="pending-partner-request-card"');
-    expect(todayScreen).toContain('파트너 연결 요청이 있어요');
+    expect(homePage).not.toContain(".from('partner_links')");
+    expect(homePage).not.toContain(".eq('status', 'requested')");
+    expect(homePage).not.toContain('pendingPartnerRequest');
+    expect(todayScreen).not.toContain('pendingPartnerRequest');
+    expect(todayScreen).not.toContain('data-testid="pending-partner-request-card"');
+    expect(todayScreen).not.toContain('파트너 연결 요청이 있어요');
   });
 
   it('hydrates partner display names before rendering approval surfaces', () => {
-    const morePage = read('app/(authed)/more/page.tsx');
+    const settingsPage = read('app/(authed)/settings/page.tsx');
     const moreScreen = read('src/features/more/more-screen.tsx');
     const identityMigration = read('supabase/migrations/202605140001_slc_partner_profile_identity.sql');
 
-    expect(morePage).toContain('partner_profile:user_profiles!partner_id(display_name)');
-    expect(morePage).toContain('partner_profile');
+    expect(settingsPage).toContain('partner_profile:user_profiles!partner_id(display_name)');
+    expect(settingsPage).toContain('partner_profile');
     expect(moreScreen).toContain('partnerDisplayName');
     expect(moreScreen).toContain("link.partner_profile?.display_name?.trim() || '파트너'");
     expect(identityMigration).toContain('partner_links_partner_profile_fkey');

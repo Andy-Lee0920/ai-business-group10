@@ -5,7 +5,7 @@ import { PresentationHomeDemo } from '../../../src/features/today/presentation-h
 import { TodayScreen } from '../../../src/features/today/today-screen';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
-import type { ClinicUpdate, PartnerLink, ScheduleItem } from '../../../src/types/slc.types';
+import type { ClinicUpdate, ScheduleItem } from '../../../src/types/slc.types';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,7 @@ export default async function HomePage() {
 
   if ((isMissingSlcTable(profileError) ? fallbackRole : profile?.role) === 'partner') redirect('/partner');
 
-  const [itemsRes, clinicUpdatesRes, pendingPartnerRequest] = await Promise.all([
+  const [itemsRes, clinicUpdatesRes] = await Promise.all([
     supabase
       .from('schedule_items')
       .select('*')
@@ -45,38 +45,19 @@ export default async function HomePage() {
       .eq('patient_id', user.id)
       .gte('created_at', dayStart(0).toISOString())
       .order('created_at', { ascending: false }),
-    getPendingPartnerRequest(supabase, user.id),
   ]);
 
   if (itemsRes.error) {
-    return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} pendingPartnerRequest={pendingPartnerRequest} initialClinicUpdates={[]} />;
+    return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} initialClinicUpdates={[]} />;
   }
   return (
     <TodayScreen
       initialItems={(itemsRes.data ?? []) as ScheduleItem[]}
       userId={user.id}
-      pendingPartnerRequest={pendingPartnerRequest}
       initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
       firstScheduleSkipped={firstScheduleSkipped}
     />
   );
-}
-
-async function getPendingPartnerRequest(
-  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
-  patientId: string,
-): Promise<PartnerLink | null> {
-  const { data: request, error } = await supabase
-    .from('partner_links')
-    .select('*, partner_profile:user_profiles!partner_id(display_name)')
-    .eq('patient_id', patientId)
-    .eq('status', 'requested')
-    .order('requested_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) return null;
-  return request as PartnerLink | null;
 }
 
 function dayStart(offset: number) {

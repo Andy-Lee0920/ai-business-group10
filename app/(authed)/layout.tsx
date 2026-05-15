@@ -38,13 +38,17 @@ export default async function AuthedLayout({ children }: { children: React.React
     : [{ data: null, error: null }, { data: null, error: null }, { data: null, error: null }];
   const cookieStore = await cookies();
   const fallbackRole = normalizeRole(cookieStore.get(SLC_ROLE_COOKIE)?.value);
+  const completedOnboardingRole = normalizeRoleContext(cookieStore.get('fevio_onboarding_role_context')?.value);
   const persistedRole = normalizeRole(consentResult.data?.role) ?? normalizeRole(profileResult.data?.role);
+  const recoveredConsent = !persistedRole && !consentResult.error && user && supabase && completedOnboardingRole
+    ? await recoverConsentFromCompletedOnboarding(supabase, user, completedOnboardingRole)
+    : null;
   const hasExistingCareData = Boolean(existingScheduleResult.data) && !existingScheduleResult.error;
   const effectiveConsent = presentationMode && !user
     ? { role: fallbackRole ?? 'patient' }
-    : persistedRole
+    : recoveredConsent ?? (persistedRole
       ? { role: persistedRole }
-      : (isMissingSlcTable(consentResult.error) || isMissingSlcTable(profileResult.error)) && fallbackRole ? { role: fallbackRole } : null;
+      : (isMissingSlcTable(consentResult.error) || isMissingSlcTable(profileResult.error)) && fallbackRole ? { role: fallbackRole } : null);
 
   const redirectTo = computeConsentRedirect(effectiveConsent, hasExistingCareData);
   if (redirectTo) redirect(redirectTo);
@@ -59,4 +63,41 @@ export default async function AuthedLayout({ children }: { children: React.React
 
 function normalizeRole(value: string | undefined): SlcRole | null {
   return value === 'patient' || value === 'partner' ? value : null;
+}
+
+
+function normalizeRoleContext(value: string | undefined): SlcRole | null {
+  if (value === 'partner') return 'partner';
+  if (value === 'patient' || value === 'together' || value === 'primary_solo' || value === 'primary_with_partner') return 'patient';
+  return null;
+}
+
+async function recoverConsentFromCompletedOnboarding(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  user: { id: string; user_metadata?: { full_name?: unknown } },
+  role: SlcRole,
+) {
+  const now = new Date().toISOString();
+  const displayName = typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null;
+  const profile = await supabase
+    .from('user_profiles')
+    .upsert({ id: user.id, role, display_name: displayName, updated_at: now });
+  if (profile.error && !isMissingSlcTable(profile.error)) return null;
+
+  const consent = await supabase
+    .from('user_consents')
+    .upsert({
+      user_id: user.id,
+      role,
+      consent_version: 'slc-v1',
+      privacy_boundary_accepted_at: now,
+      sensitive_data_accepted_at: now,
+      medical_disclaimer_accepted_at: now,
+      input_assist_disclaimer_accepted_at: now,
+      partner_sharing_accepted_at: role === 'partner' ? now : null,
+      consent_source: 'onboarding',
+    });
+  if (consent.error && !isMissingSlcTable(consent.error)) return null;
+
+  return { role };
 }

@@ -1,9 +1,11 @@
 const PROTECTED_APP_PREFIXES = [
   '/home',
+  '/calendar',
   '/onboarding',
   '/records',
   '/clinic-update',
   '/more',
+  '/settings',
   '/add',
   '/schedule',
   '/medication',
