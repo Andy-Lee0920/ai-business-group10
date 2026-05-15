@@ -1,8 +1,8 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
-import type { ClinicUpdate, Medication } from '../../types/slc.types';
+import type { ClinicUpdate, Medication, ScheduleItem, ScheduleType } from '../../types/slc.types';
 import type { ClinicGuideMedicationNormalizeResponse, ClinicGuideResponse, ClinicGuideStep } from '../../types/clinic-guide.types';
 import { resolveMedicationNames } from '../../domain/clinic-guide-medication-normalizer';
 import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../domain/slc-clinic-update';
@@ -11,16 +11,21 @@ import { slcAssets } from '../../design/slc-assets';
 
 type MedicationOption = Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'aliases' | 'default_unit' | 'default_cta'>;
 
-type Step = 'entry' | 'same_med' | 'new_med' | 'days' | 'memo' | 'confirm' | 'success';
+type Step = 'entry' | 'photo_processing' | 'text_paste' | 'diff_review' | 'manual_entry' | 'same_med' | 'new_med' | 'days' | 'memo' | 'confirm' | 'success';
 type MedicationChangeAnswer = 'same' | 'changed' | 'unknown' | null;
 type NewMedicationIntent = 'yes' | 'no' | null;
 type SavedScheduleItem = { title: string; scheduledAt: string; unit: string | null };
 type ClinicUpdateSaveScheduleItem = { title: string; scheduledAt?: string; scheduled_at?: string; unit: string | null };
 type ClinicUpdateSaveResponse = { ok?: boolean; scheduleItems?: ClinicUpdateSaveScheduleItem[] };
+type PhotoPhase = 'idle' | 'uploading' | 'uploaded' | 'analyzing' | 'ready' | 'not_found';
+type ExtractedCandidate = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null; decision: 'confirmed' | 'rejected' };
+type ApiCandidate = { id?: unknown; type?: unknown; title?: unknown; scheduled_at?: unknown; dose?: unknown; unit?: unknown };
+type CurrentScheduleItem = Pick<ScheduleItem, 'id' | 'type' | 'title' | 'scheduled_at' | 'dose' | 'unit' | 'status'>;
 
 interface Props {
   medications: MedicationOption[];
   partnerConnected?: boolean;
+  currentItems?: CurrentScheduleItem[];
 }
 
 interface FormState {
@@ -40,7 +45,7 @@ const DIRECT_PREFIX = 'direct:';
 const INTERVIEW_PROGRESS_TOTAL = 4;
 const INTERVIEW_PROGRESS_LABELS = ['1/4', '2/4', '3/4', '4/4'] as const;
 
-export function ClinicUpdateForm({ medications, partnerConnected = false }: Props) {
+export function ClinicUpdateForm({ medications, partnerConnected = false, currentItems = [] }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('entry');
   const [saving, setSaving] = useState(false);
@@ -54,6 +59,14 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   const [aiChips, setAiChips] = useState<string[]>(['그대로예요', '바뀌었어요', '잘 모르겠어요']);
   const [aiDraft, setAiDraft] = useState<Partial<ClinicUpdate>>({});
   const [aiError, setAiError] = useState<string | null>(null);
+  const [photoPhase, setPhotoPhase] = useState<PhotoPhase>('idle');
+  const [captureMessage, setCaptureMessage] = useState('병원 안내를 사진이나 문자로 가져올 수 있어요.');
+  const [textPasteValue, setTextPasteValue] = useState('');
+  const [analyzingText, setAnalyzingText] = useState(false);
+  const [extractedCandidates, setExtractedCandidates] = useState<ExtractedCandidate[]>([]);
+  const [applyingCandidates, setApplyingCandidates] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState<FormState>({
     medicationChange: null,
     addedMedicationIds: [],
@@ -249,6 +262,127 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
     void runInterview('next_visit', nextVisitAt, nextForm);
   };
 
+  const startManualEntry = () => {
+    setCaptureMessage('직접 수정으로 계속할게요.');
+    setStep('manual_entry');
+  };
+
+  const handleCaptureNotFound = () => {
+    setPhotoPhase('not_found');
+    setCaptureMessage('찾지 못했어요');
+    window.setTimeout(startManualEntry, 900);
+  };
+
+  const processPhotoFile = async (file: File | undefined) => {
+    if (!file) return;
+    setPhotoPhase('uploading');
+    setCaptureMessage('사진을 업로드하고 있어요.');
+    setAiError(null);
+
+    try {
+      const formData = new FormData();
+      formData.set('file', file);
+      const uploadResponse = await fetch('/api/onboard/photo-upload', { method: 'POST', body: formData });
+      if (!uploadResponse.ok) throw new Error('upload_failed');
+      const uploadPayload = await uploadResponse.json() as { path?: string };
+      if (!uploadPayload.path) throw new Error('upload_failed');
+
+      setPhotoPhase('uploaded');
+      setCaptureMessage('업로드 완료');
+      await wait(350);
+
+      setPhotoPhase('analyzing');
+      setCaptureMessage('분석 중');
+      const analyzeResponse = await fetch('/api/onboard/photo-analyze', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ imagePath: uploadPayload.path }),
+      });
+      if (!analyzeResponse.ok) throw new Error('analyze_failed');
+      const analyzePayload = await analyzeResponse.json() as { candidates?: ApiCandidate[] };
+      const candidates = normalizeExtractedCandidates(analyzePayload.candidates);
+      if (!candidates.length) {
+        handleCaptureNotFound();
+        return;
+      }
+
+      setExtractedCandidates(candidates);
+      setPhotoPhase('ready');
+      setCaptureMessage('후보 준비');
+      await wait(350);
+      setStep('diff_review');
+    } catch {
+      handleCaptureNotFound();
+    }
+  };
+
+  const analyzePastedText = async () => {
+    const rawText = textPasteValue.trim();
+    if (!rawText) {
+      setCaptureMessage('병원 안내 문자를 붙여넣어 주세요.');
+      return;
+    }
+
+    setAnalyzingText(true);
+    setCaptureMessage('분석 중');
+    setAiError(null);
+    try {
+      const response = await fetch('/api/onboard/text-analyze', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ rawText }),
+      });
+      if (!response.ok) throw new Error('text_analyze_failed');
+      const payload = await response.json() as { candidates?: ApiCandidate[] };
+      const candidates = normalizeExtractedCandidates(payload.candidates);
+      if (!candidates.length) {
+        handleCaptureNotFound();
+        return;
+      }
+
+      setExtractedCandidates(candidates);
+      setCaptureMessage('후보 준비');
+      setStep('diff_review');
+    } catch {
+      handleCaptureNotFound();
+    } finally {
+      setAnalyzingText(false);
+    }
+  };
+
+  const updateExtractedCandidate = (id: string, patch: Partial<ExtractedCandidate>) => {
+    setExtractedCandidates((current) => current.map((candidate) => (candidate.id === id ? { ...candidate, ...patch } : candidate)));
+  };
+
+  const applyExtractedCandidates = async () => {
+    const confirmedIds = extractedCandidates.filter((candidate) => candidate.decision === 'confirmed').map((candidate) => candidate.id);
+    const rejectedIds = extractedCandidates.filter((candidate) => candidate.decision === 'rejected').map((candidate) => candidate.id);
+    if (!confirmedIds.length) {
+      setAiError('반영할 후보를 하나 이상 선택해 주세요.');
+      return;
+    }
+
+    setApplyingCandidates(true);
+    setAiError(null);
+    try {
+      const response = await fetch('/api/onboard/candidates/confirm', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          confirmedIds,
+          rejectedIds,
+          candidateEdits: extractedCandidates.map(({ id, type, title, scheduled_at, dose, unit }) => ({ id, type, title, scheduled_at, dose, unit })),
+        }),
+      });
+      if (!response.ok) throw new Error('confirm_failed');
+      router.push('/home');
+    } catch {
+      setAiError('변경사항을 적용하지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setApplyingCandidates(false);
+    }
+  };
+
   const save = async () => {
     setSaving(true);
     const selectedMedications = medicationOptions
@@ -282,18 +416,151 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
 
   if (step === 'entry') return (
     <Shell>
-      <div style={{ flex: 1, display: 'grid', alignContent: 'center', gap: 22 }}>
-        <SLCIllustration asset={slcAssets.clinic.updateBanner} size="banner" priority style={entryBannerStyle} />
-        <h1 style={heroTitleStyle}>오늘 병원 업데이트</h1>
-        <p style={subtitleStyle}>몇 가지만 확인하면 오늘 일정에 반영할 수 있어요.</p>
-        <div style={landingCardStyle} aria-label="병원 업데이트 안내">
-          <SLCIllustration asset={slcAssets.clinic.visitClipboard} size="card" style={landingIllustrationStyle} />
-          <strong style={{ fontSize: 20 }}>오늘 병원<br />업데이트가 필요해요</strong>
+      <div style={{ flex: 1, display: 'grid', alignContent: 'center', gap: 18 }}>
+        <SLCIllustration asset={slcAssets.clinic.visitClipboard} size="banner" priority style={entryBannerStyle} />
+        <h1 style={heroTitleStyle}>병원 안내를<br />오늘 일정으로 바꿀게요</h1>
+        <p style={subtitleStyle}>사진, 문자, 직접 수정 중 편한 방법으로 시작하세요.</p>
+        <div style={methodGridStyle} aria-label="병원 업데이트 방법">
+          <button type="button" style={methodCardStyle} onClick={() => setStep('photo_processing')}>
+            <span style={iconPillStyle}>📷</span>
+            <span style={{ display: 'grid', gap: 4 }}>
+              <strong>사진으로 업데이트</strong>
+              <small>처방전·안내문을 찍고 후보만 확인해요.</small>
+            </span>
+          </button>
+          <button type="button" style={methodCardStyle} onClick={() => setStep('text_paste')}>
+            <span style={iconPillStyle}>✉️</span>
+            <span style={{ display: 'grid', gap: 4 }}>
+              <strong>문자로 업데이트</strong>
+              <small>문자·카톡 안내를 붙여넣고 비교해요.</small>
+            </span>
+          </button>
+          <button type="button" style={methodCardStyle} onClick={startManualEntry}>
+            <span style={iconPillStyle}>✏️</span>
+            <span style={{ display: 'grid', gap: 4 }}>
+              <strong>직접 수정</strong>
+              <small>찾지 못했거나 직접 확인하고 싶을 때 사용해요.</small>
+            </span>
+          </button>
         </div>
-        <p style={safeNoteStyle}>ⓘ 챗봇이 아니라 질문 카드로 진행돼요</p>
+        <p style={safeNoteStyle}>ⓘ 의료 판단 없이 사용자가 확인한 일정만 저장해요</p>
       </div>
-      <button type="button" onClick={() => setStep('same_med')} style={ctaStyle()}>시작하기</button>
       <button type="button" onClick={() => router.push('/home')} style={textButtonStyle}>나중에 할게요</button>
+    </Shell>
+  );
+
+  if (step === 'photo_processing') return (
+    <Shell>
+      <input ref={cameraInputRef} aria-label="사진 촬영" type="file" accept="image/*" capture="environment" hidden onChange={(event) => { void processPhotoFile(event.target.files?.[0]); event.currentTarget.value = ''; }} />
+      <input ref={galleryInputRef} aria-label="사진 선택" type="file" accept="image/*" hidden onChange={(event) => { void processPhotoFile(event.target.files?.[0]); event.currentTarget.value = ''; }} />
+      <section style={questionCardStyle} aria-label="사진으로 업데이트">
+        <SLCIllustration asset={slcAssets.clinic.visitClipboard} size="card" style={landingIllustrationStyle} />
+        <h1 style={titleStyle}>사진으로 업데이트</h1>
+        <p style={subtitleStyle}>병원 안내 사진을 올리면 일정 후보만 추려서 보여드려요.</p>
+        <p style={statusLineStyle}>{captureMessage}</p>
+        <div style={progressStepsStyle} aria-label="처리 중 상태">
+          {['업로드 완료', '분석 중', '후보 준비'].map((label) => <span key={label} style={progressPillStyle(captureMessage === label)}>{label}</span>)}
+        </div>
+        <div style={chipRowStyle}>
+          <button type="button" style={{ ...chipStyle(false), flex: 1 }} onClick={() => cameraInputRef.current?.click()}>사진 찍기</button>
+          <button type="button" style={{ ...chipStyle(false), flex: 1 }} onClick={() => galleryInputRef.current?.click()}>앨범에서 선택</button>
+        </div>
+      </section>
+      {photoPhase === 'not_found' ? <p style={warningStyle}>찾지 못했어요. 직접 수정으로 이어갈게요.</p> : null}
+      <button type="button" onClick={() => setStep('entry')} style={textButtonStyle}>다른 방법 선택</button>
+    </Shell>
+  );
+
+  if (step === 'text_paste') return (
+    <Shell>
+      <section style={questionCardStyle} aria-label="문자로 업데이트">
+        <h1 style={titleStyle}>문자로 업데이트</h1>
+        <p style={subtitleStyle}>병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.</p>
+        <label style={{ position: 'relative', display: 'block' }}>
+          <textarea
+            aria-label="병원 안내 문자"
+            value={textPasteValue}
+            maxLength={1000}
+            onChange={(event) => setTextPasteValue(event.target.value)}
+            placeholder="예: 오늘 19:00 벰폴라 150 IU, 5월 17일 오전 내원"
+            rows={7}
+            style={textareaStyle}
+          />
+          <span style={counterStyle}>{textPasteValue.length}/1000</span>
+        </label>
+        <p style={statusLineStyle}>{captureMessage}</p>
+        <button type="button" onClick={analyzePastedText} disabled={analyzingText} style={ctaStyle(analyzingText)}>{analyzingText ? '분석 중...' : '후보 확인하기'}</button>
+      </section>
+      <button type="button" onClick={startManualEntry} style={textButtonStyle}>직접 수정으로 바꾸기</button>
+    </Shell>
+  );
+
+  if (step === 'manual_entry') return (
+    <Shell>
+      <section style={questionCardStyle} aria-label="직접 수정 fallback">
+        <SLCIllustration asset={slcAssets.clinic.fallback} size="card" style={landingIllustrationStyle} />
+        <h1 style={titleStyle}>직접 수정할게요</h1>
+        <p style={subtitleStyle}>사진이나 문자에서 찾지 못한 내용은 질문 카드로 직접 확인할 수 있어요.</p>
+        <button type="button" onClick={() => setStep('same_med')} style={ctaStyle()}>직접 입력 form 열기</button>
+      </section>
+      <button type="button" onClick={() => setStep('entry')} style={textButtonStyle}>다른 방법 선택</button>
+    </Shell>
+  );
+
+  if (step === 'diff_review') return (
+    <Shell>
+      <section style={questionCardStyle} aria-label="변경사항 diff 확인">
+        <SLCIllustration asset={slcAssets.clinic.diff} size="card" style={diffHeroStyle} />
+        <h1 style={titleStyle}>변경사항을 확인해주세요</h1>
+        <p style={subtitleStyle}>현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.</p>
+        <div style={diffGridStyle}>
+          <section style={diffColumnStyle} aria-label="현재 일정">
+            <h2 style={sectionTitleStyle}>현재 일정</h2>
+            {currentItems.length ? currentItems.slice(0, 4).map((item) => (
+              <div key={item.id} style={currentItemStyle}>
+                <span style={timeChipStyle}>{formatTime(item.scheduled_at)}</span>
+                <strong>{item.title}</strong>
+                <small>{formatCandidateType(item.type)} · {formatCandidateDose(item.dose, item.unit)}</small>
+              </div>
+            )) : <p style={emptyListStyle}>현재 일정이 없어요.</p>}
+          </section>
+          <section style={diffColumnStyle} aria-label="새 후보">
+            <h2 style={sectionTitleStyle}>새 후보</h2>
+            {extractedCandidates.map((candidate) => (
+              <article key={candidate.id} style={candidateCardStyle(candidate.decision === 'confirmed')}>
+                <div style={chipRowStyle}>
+                  <button type="button" style={chipStyle(candidate.decision === 'confirmed')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'confirmed' })}>반영</button>
+                  <button type="button" style={chipStyle(candidate.decision === 'rejected')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'rejected' })}>제외</button>
+                </div>
+                <label style={fieldLabelStyle}>종류
+                  <select aria-label={`${candidate.title} 종류`} value={candidate.type} onChange={(event) => updateExtractedCandidate(candidate.id, { type: event.target.value as ScheduleType })} style={inputStyle}>
+                    <option value="injection">주사</option>
+                    <option value="medication">약 복용</option>
+                    <option value="clinic">병원 방문</option>
+                  </select>
+                </label>
+                <label style={fieldLabelStyle}>제목
+                  <input aria-label={`${candidate.title} 제목`} value={candidate.title} onChange={(event) => updateExtractedCandidate(candidate.id, { title: event.target.value })} style={inputStyle} />
+                </label>
+                <label style={fieldLabelStyle}>시간
+                  <input aria-label={`${candidate.title} 시간`} type="datetime-local" value={toDateTimeLocal(candidate.scheduled_at)} onChange={(event) => updateExtractedCandidate(candidate.id, { scheduled_at: fromDateTimeLocal(event.target.value) })} style={inputStyle} />
+                </label>
+                <div style={twoColumnStyle}>
+                  <label style={fieldLabelStyle}>용량
+                    <input aria-label={`${candidate.title} 용량`} value={candidate.dose ?? ''} onChange={(event) => updateExtractedCandidate(candidate.id, { dose: event.target.value || null })} style={inputStyle} />
+                  </label>
+                  <label style={fieldLabelStyle}>단위
+                    <input aria-label={`${candidate.title} 단위`} value={candidate.unit ?? ''} onChange={(event) => updateExtractedCandidate(candidate.id, { unit: event.target.value || null })} style={inputStyle} />
+                  </label>
+                </div>
+              </article>
+            ))}
+          </section>
+        </div>
+        {aiError ? <p style={warningStyle}>{aiError}</p> : null}
+        <button type="button" onClick={applyExtractedCandidates} disabled={applyingCandidates} style={ctaStyle(applyingCandidates)}>{applyingCandidates ? '적용 중...' : '변경사항 적용'}</button>
+      </section>
+      <button type="button" onClick={startManualEntry} style={textButtonStyle}>직접 수정으로 바꾸기</button>
     </Shell>
   );
 
@@ -472,6 +739,57 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   );
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function normalizeExtractedCandidates(value: unknown): ExtractedCandidate[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((candidate, index) => normalizeExtractedCandidate(candidate, index)).filter((candidate): candidate is ExtractedCandidate => candidate !== null);
+}
+
+function normalizeExtractedCandidate(value: unknown, index: number): ExtractedCandidate | null {
+  if (!value || Array.isArray(value) || typeof value !== 'object') return null;
+  const candidate = value as ApiCandidate;
+  const type = candidate.type === 'injection' || candidate.type === 'medication' || candidate.type === 'clinic' ? candidate.type : null;
+  const title = typeof candidate.title === 'string' ? candidate.title.trim() : '';
+  if (!type || !title) return null;
+  return {
+    id: typeof candidate.id === 'string' && candidate.id ? candidate.id : `candidate-${index + 1}`,
+    type,
+    title,
+    scheduled_at: typeof candidate.scheduled_at === 'string' ? candidate.scheduled_at : null,
+    dose: typeof candidate.dose === 'string' && candidate.dose.trim() ? candidate.dose.trim() : null,
+    unit: typeof candidate.unit === 'string' && candidate.unit.trim() ? candidate.unit.trim() : null,
+    decision: 'confirmed',
+  };
+}
+
+function toDateTimeLocal(value: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function fromDateTimeLocal(value: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function formatCandidateType(type: ScheduleType) {
+  if (type === 'injection') return '주사';
+  if (type === 'medication') return '약 복용';
+  return '병원 방문';
+}
+
+function formatCandidateDose(dose: string | null, unit: string | null) {
+  if (!dose && !unit) return '용량 없음';
+  return `${dose ?? ''}${dose && unit ? ' ' : ''}${unit ?? ''}`.trim();
+}
+
 function GuideHeader({ current, total }: { current: number; total: number }) {
   const label = INTERVIEW_PROGRESS_LABELS[current - 1] ?? `${current}/${total}`;
   return (
@@ -641,6 +959,18 @@ const sectionTitleStyle: CSSProperties = { margin: '0 0 8px', fontSize: 16, font
 const subtitleStyle: CSSProperties = { margin: '0 0 18px', textAlign: 'center', fontSize: 15, color: '#74675F', lineHeight: 1.55 };
 const badgeStyle: CSSProperties = { justifySelf: 'center', width: 'fit-content', padding: '8px 14px', borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', fontSize: 14, fontWeight: 900 };
 const landingCardStyle: CSSProperties = { display: 'grid', gap: 14, justifyItems: 'center', padding: 28, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.82)', boxShadow: '0 18px 40px rgba(82,57,45,0.10)', textAlign: 'center' };
+const methodGridStyle: CSSProperties = { display: 'grid', gap: 12 };
+const methodCardStyle: CSSProperties = { display: 'grid', gridTemplateColumns: '44px 1fr', gap: '4px 12px', alignItems: 'center', width: '100%', padding: '16px 18px', borderRadius: 20, border: '1.5px solid #F0E1D6', background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 28px rgba(82,57,45,0.08)', color: 'var(--slc-text)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' };
+const statusLineStyle: CSSProperties = { margin: '12px 0', padding: '12px 14px', borderRadius: 14, background: '#FFF8F5', border: '1px solid #F4D4C8', color: 'var(--slc-coral)', fontSize: 14, fontWeight: 900, textAlign: 'center' };
+const progressStepsStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, margin: '12px 0 16px' };
+const progressPillStyle = (active: boolean): CSSProperties => ({ padding: '8px 6px', borderRadius: 999, background: active ? '#D5634D' : '#F7F0E9', color: active ? '#fff' : '#74675F', fontSize: 12, fontWeight: 900, textAlign: 'center' });
+const diffHeroStyle: CSSProperties = { width: 'min(58%, 160px)', margin: '0 auto 12px', opacity: 0.9 };
+const diffGridStyle: CSSProperties = { display: 'grid', gap: 12, marginTop: 12 };
+const diffColumnStyle: CSSProperties = { display: 'grid', gap: 10, padding: 12, borderRadius: 18, background: '#FFFCFA', border: '1px solid #F0E1D6' };
+const currentItemStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 10px', alignItems: 'center', padding: '12px 10px', borderRadius: 14, background: '#fff', border: '1px solid #EFE4DC' };
+const candidateCardStyle = (active: boolean): CSSProperties => ({ display: 'grid', gap: 10, padding: 12, borderRadius: 16, background: active ? '#FFF8F5' : '#fff', border: `1.5px solid ${active ? 'var(--slc-coral)' : '#EFE4DC'}` });
+const fieldLabelStyle: CSSProperties = { display: 'grid', gap: 6, color: '#74675F', fontSize: 12, fontWeight: 900 };
+const twoColumnStyle: CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 };
 const entryBannerStyle: CSSProperties = { maxHeight: 132, opacity: 0.92, boxShadow: '0 16px 30px rgba(82,57,45,0.08)' };
 const landingIllustrationStyle: CSSProperties = { width: 'min(48%, 142px)', marginBottom: 2 };
 const fallbackIllustrationStyle: CSSProperties = { width: 86, margin: '0 auto 8px', opacity: 0.86 };
