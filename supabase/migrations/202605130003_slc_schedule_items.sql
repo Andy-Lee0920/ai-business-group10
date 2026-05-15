@@ -8,7 +8,7 @@ create table if not exists schedule_items (
   unit text,
   scheduled_at timestamptz not null,
   status text not null default 'upcoming' check (status in ('upcoming','due_soon','due','completed','missed')),
-  source text not null check (source in ('seed','manual','clinic_update')),
+  source text not null check (source in ('seed','manual','clinic_update','onboarding_interview')),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

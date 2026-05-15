@@ -60,6 +60,15 @@ describe('SLC Supabase migrations', () => {
     expect(userConsents).toContain('create table if not exists user_consents');
     expect(userConsents).toContain('alter table user_consents enable row level security');
     expect(userConsents).toContain('drop policy if exists "own_consent" on user_consents');
+    for (const columnName of [
+      'privacy_boundary_accepted_at',
+      'sensitive_data_accepted_at',
+      'medical_disclaimer_accepted_at',
+      'input_assist_disclaimer_accepted_at',
+      'consent_source',
+    ]) {
+      expect(userConsents).toContain(columnName);
+    }
   });
 
   it('defines every table needed for the SLC today execution loop', () => {
@@ -76,6 +85,12 @@ describe('SLC Supabase migrations', () => {
     ]) {
       expect(migrationText).toContain(`create table if not exists ${tableName}`);
     }
+  });
+
+  it('allows first schedule onboarding to be distinguished from seed/manual/clinic update rows', () => {
+    const scheduleItems = readMigration('202605130003_slc_schedule_items.sql');
+
+    expect(scheduleItems).toContain("'onboarding_interview'");
   });
 
   it('seeds Clinic Guide aliases for the required 10 IVF medications', () => {

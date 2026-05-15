@@ -26,6 +26,6 @@ describe('SLC user-safe copy contract', () => {
     expect(route).toContain('maskTechnicalError(profileError.message)');
     expect(route).toContain('maskTechnicalError(consentError.message)');
     expect(route).toContain('maskTechnicalError(updateError.message)');
-    expect(route).toContain('maskTechnicalError(seedError.message)');
+    expect(route).toContain('maskTechnicalError(scheduleError.message)');
   });
 });
