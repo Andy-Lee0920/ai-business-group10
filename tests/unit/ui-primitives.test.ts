@@ -36,9 +36,9 @@ describe('Fevio design tokens and UI primitive class contracts', () => {
 
   it('provides mobile-first primitive style contracts for Session B surfaces', () => {
     expect(fevioTokens.color).toMatchObject({
-      slcCoral: '#C4614A',
-      slcBg: '#FAF7F4',
-      slcText: '#2A1F1A',
+      slcCoral: '#C95F4B',
+      slcBg: '#FAF7F2',
+      slcText: '#2F2926',
     });
     expect(fevioPrimitiveStyles.screenShell().maxWidth).toBe(430);
     expect(fevioPrimitiveStyles.primaryCta(false).minHeight).toBe(52);

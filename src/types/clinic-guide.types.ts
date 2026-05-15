@@ -22,6 +22,7 @@ export interface ClinicGuideAnswer {
 }
 
 export interface ClinicGuideResponse {
+  source: 'ai' | 'fallback';
   nextStep: ClinicGuideStep | null;
   question: string;
   chips?: string[];

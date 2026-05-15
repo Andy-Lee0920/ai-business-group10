@@ -64,7 +64,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('min-height:340px');
     expect(markup).toContain('object-fit:cover');
     expect(markup).toContain('opacity:0.7');
-    expect(markup).toContain('linear-gradient(to bottom, transparent 40%, var(--slc-bg) 100%)');
+    expect(markup).toContain('linear-gradient(to bottom, rgba(47,41,38,0.18) 0%, transparent 35%, var(--slc-bg) 100%)');
     expect(markup).toContain('home-injection-bg-v2.png');
     expect(markup).not.toContain('data-testid="home-focus-hero"');
     expect(markup.indexOf('data-testid="home-hero-zone"')).toBeLessThan(markup.indexOf('aria-label="일정 날짜"'));
@@ -111,7 +111,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('data-testid="injection-countdown-hero"');
     expect(markup).toContain('data-testid="injection-countdown-arc"');
     expect(markup).toContain('남은 시간');
-    expect(markup).toContain('00:45');
+    expect(markup).toContain('45:00');
     expect(markup).toContain('다음 주사');
     expect(markup).toContain('data-testid="countdown-info-block"');
     expect(markup).toContain('min-height:52px');

@@ -38,6 +38,7 @@ describe('ClinicGuide shared type contract', () => {
       answer: string;
     }>();
     expectTypeOf<ClinicGuideResponse>().toMatchTypeOf<{
+      source: 'ai' | 'fallback';
       nextStep: ClinicGuideStep | null;
       question: string;
       chips?: string[];
@@ -47,6 +48,7 @@ describe('ClinicGuide shared type contract', () => {
       requiresUserConfirmation: true;
     }>();
     expectTypeOf<ClinicGuideResponse['requiresUserConfirmation']>().toEqualTypeOf<true>();
+    expectTypeOf<ClinicGuideResponse['source']>().toEqualTypeOf<'ai' | 'fallback'>();
   });
 
   it('shares the medication normalization proxy contract without exposing secret inputs', () => {

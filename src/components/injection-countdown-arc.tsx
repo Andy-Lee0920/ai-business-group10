@@ -1,6 +1,6 @@
 interface InjectionCountdownArcProps {
-  readonly totalMinutes: number;
-  readonly remainingMinutes: number;
+  readonly totalSeconds: number;
+  readonly remainingSeconds: number;
   readonly size?: number;
 }
 
@@ -8,16 +8,16 @@ const STROKE_WIDTH = 12;
 const PADDING = 18;
 
 export function InjectionCountdownArc({
-  totalMinutes,
-  remainingMinutes,
+  totalSeconds,
+  remainingSeconds,
   size = 240,
 }: InjectionCountdownArcProps) {
   const radius = size / 2 - STROKE_WIDTH / 2;
   const center = size / 2;
   const height = size / 2 + PADDING;
   const circumference = Math.PI * radius;
-  const progress = Math.max(0, Math.min(1, 1 - remainingMinutes / totalMinutes));
-  const dashOffset = circumference * (1 - progress);
+  const ratio = Math.max(0, Math.min(1, totalSeconds > 0 ? remainingSeconds / totalSeconds : 0));
+  const dashOffset = circumference * (1 - ratio);
   const arcPath = [
     `M ${STROKE_WIDTH / 2} ${center}`,
     `A ${radius} ${radius} 0 0 1 ${size - STROKE_WIDTH / 2} ${center}`,
@@ -25,7 +25,7 @@ export function InjectionCountdownArc({
 
   return (
     <svg
-      aria-label={`주사까지 남은 시간 ${remainingMinutes}분`}
+      aria-label={`주사까지 남은 시간 ${remainingSeconds}초`}
       data-testid="injection-countdown-arc"
       height={height}
       role="img"
@@ -41,7 +41,7 @@ export function InjectionCountdownArc({
       />
       <path
         d={arcPath}
-        data-progress={progress.toFixed(2)}
+        data-progress={ratio.toFixed(2)}
         data-testid="injection-countdown-arc-fill"
         fill="none"
         stroke="var(--slc-coral)"
@@ -49,7 +49,7 @@ export function InjectionCountdownArc({
         strokeDashoffset={dashOffset}
         strokeLinecap="round"
         strokeWidth={STROKE_WIDTH}
-        style={{ filter: 'drop-shadow(0 0 10px var(--slc-coral))' }}
+        style={{ filter: 'drop-shadow(0 0 12px var(--slc-coral))' }}
       />
     </svg>
   );

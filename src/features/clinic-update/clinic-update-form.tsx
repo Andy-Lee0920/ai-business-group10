@@ -59,7 +59,7 @@ const MODE_COPY = {
     textAriaLabel: '일정 안내 문자',
     textTitle: '문자로 일정 추가',
     textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
-    diffTitle: '기존 일정과 충돌하는 항목이 있습니다',
+    diffTitle: '겹치는 일정이 있어요',
     diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
     applyLabel: '일정 적용',
   },
@@ -74,7 +74,7 @@ const MODE_COPY = {
     textAriaLabel: '병원 안내 문자',
     textTitle: '문자로 업데이트',
     textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
-    diffTitle: '기존 카드와 달라진 항목입니다',
+    diffTitle: '겹치는 일정이 있어요',
     diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
     applyLabel: '변경사항 적용',
   },
@@ -199,7 +199,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
       return;
     }
     const payload = await response.json().catch(() => null) as ClinicGuideResponse | null;
-    if (!payload?.requiresUserConfirmation || payload.fallbackReason) {
+    if (!payload?.requiresUserConfirmation || payload.source !== 'ai') {
       if (payload?.draft) setAiDraft(payload.draft);
       setAiAvailable(false);
       setAiLoading(false);
@@ -568,8 +568,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
             {extractedCandidates.map((candidate) => (
               <article key={candidate.id} style={candidateCardStyle(candidate.decision === 'confirmed')}>
                 <div style={chipRowStyle}>
-                  <button type="button" style={chipStyle(candidate.decision === 'confirmed')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'confirmed' })}>반영</button>
-                  <button type="button" style={chipStyle(candidate.decision === 'rejected')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'rejected' })}>제외</button>
+                  <button type="button" style={chipStyle(candidate.decision === 'confirmed')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'confirmed' })}>새 일정으로 교체</button>
+                  <button type="button" style={chipStyle(candidate.decision === 'rejected')} onClick={() => updateExtractedCandidate(candidate.id, { decision: 'rejected' })}>기존 일정 유지</button>
                 </div>
                 <label style={fieldLabelStyle}>종류
                   <select aria-label={`${candidate.title} 종류`} value={candidate.type} onChange={(event) => updateExtractedCandidate(candidate.id, { type: event.target.value as ScheduleType })} style={inputStyle}>
@@ -605,18 +605,21 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
 
   if (step === 'same_med') return (
     <Shell header={<GuideHeader current={1} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
-      <QuestionCard icon="❔" title="같은 약을 계속 사용하나요?" lead="병원에서 오늘 들은 내용만 떠올려도 괜찮아요.">
-        {[
-          { label: '그대로', icon: '✓', value: 'same' },
-          { label: '바뀌었어요', icon: '💊', value: 'changed' },
-          { label: '잘 모르겠어요', icon: '?', value: 'unknown' },
-        ].map((option) => (
-          <button key={option.label} type="button" style={optionStyle(form.medicationChange === option.value)} onClick={() => chooseMedicationChange(option.value as Exclude<MedicationChangeAnswer, null>)}>
-            <span style={iconPillStyle}>{option.icon}</span>{option.label}
-          </button>
-        ))}
-      </QuestionCard>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      {aiAvailable ? (
+        <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      ) : (
+        <QuestionCard icon="❔" title="같은 약을 계속 사용하나요?" lead="병원에서 오늘 들은 내용만 떠올려도 괜찮아요.">
+          {[
+            { label: '그대로', icon: '✓', value: 'same' },
+            { label: '바뀌었어요', icon: '💊', value: 'changed' },
+            { label: '잘 모르겠어요', icon: '?', value: 'unknown' },
+          ].map((option) => (
+            <button key={option.label} type="button" style={optionStyle(form.medicationChange === option.value)} onClick={() => chooseMedicationChange(option.value as Exclude<MedicationChangeAnswer, null>)}>
+              <span style={iconPillStyle}>{option.icon}</span>{option.label}
+            </button>
+          ))}
+        </QuestionCard>
+      )}
       <p style={safeNoteStyle}>ⓘ 선택에 따라 다음 질문이 달라져요</p>
       <button type="button" disabled={!form.medicationChange} onClick={() => setStep(form.medicationChange === 'changed' ? 'new_med' : 'days')} style={ctaStyle(!form.medicationChange)}>다음</button>
     </Shell>
@@ -624,14 +627,17 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
 
   if (step === 'new_med') return (
     <Shell header={<GuideHeader current={2} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
-      <QuestionCard title="새로 받은 약이 있나요?" lead="목록에서 찾거나, 없으면 직접 입력할 수 있어요.">
-        <div style={chipRowStyle}>
-          {(['yes', 'no'] as const).map((intent) => (
-            <button key={intent} type="button" style={chipStyle(form.newMedicationIntent === intent)} onClick={() => setNewMedicationIntent(intent)}>{intent === 'yes' ? '네' : '아니요'}</button>
-          ))}
-        </div>
-      </QuestionCard>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      {aiAvailable ? (
+        <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      ) : (
+        <QuestionCard title="새로 받은 약이 있나요?" lead="목록에서 찾거나, 없으면 직접 입력할 수 있어요.">
+          <div style={chipRowStyle}>
+            {(['yes', 'no'] as const).map((intent) => (
+              <button key={intent} type="button" style={chipStyle(form.newMedicationIntent === intent)} onClick={() => setNewMedicationIntent(intent)}>{intent === 'yes' ? '네' : '아니요'}</button>
+            ))}
+          </div>
+        </QuestionCard>
+      )}
 
       {form.newMedicationIntent === 'yes' && (
         <section style={panelStyle}>
@@ -684,28 +690,31 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
 
   if (step === 'days') return (
     <Shell header={<GuideHeader current={3} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
-      <QuestionCard icon="💊" title="며칠치 처방받았나요?" lead="선택하면 다음 방문일 제안만 먼저 만들어요.">
-        <div style={chipRowStyle}>
-          {[1, 2, 3].map((days) => <button key={days} type="button" style={chipStyle(form.medicationDays === days)} onClick={() => chooseDays(days)}>{days}일</button>)}
-          <button type="button" style={chipStyle(showDatePicker && ![1, 2, 3].includes(form.medicationDays ?? 0))} onClick={() => { setShowDatePicker(true); setForm((current) => ({ ...current, medicationDays: null })); }}>직접 입력</button>
-        </div>
-        {showDatePicker && !form.medicationDays ? (
-          <input
-            aria-label="처방 일수 직접 입력"
-            type="number"
-            min="1"
-            max="30"
-            value={form.customDays}
-            onChange={(event) => {
-              const value = Number.parseInt(event.target.value, 10);
-              setForm((current) => ({ ...current, customDays: event.target.value, medicationDays: Number.isFinite(value) && value > 0 ? value : null }));
-            }}
-            placeholder="일 수 입력"
-            style={inputStyle}
-          />
-        ) : null}
-      </QuestionCard>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      {aiAvailable ? (
+        <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      ) : (
+        <QuestionCard icon="💊" title="며칠치 처방받았나요?" lead="선택하면 다음 방문일 제안만 먼저 만들어요.">
+          <div style={chipRowStyle}>
+            {[1, 2, 3].map((days) => <button key={days} type="button" style={chipStyle(form.medicationDays === days)} onClick={() => chooseDays(days)}>{days}일</button>)}
+            <button type="button" style={chipStyle(showDatePicker && ![1, 2, 3].includes(form.medicationDays ?? 0))} onClick={() => { setShowDatePicker(true); setForm((current) => ({ ...current, medicationDays: null })); }}>직접 입력</button>
+          </div>
+          {showDatePicker && !form.medicationDays ? (
+            <input
+              aria-label="처방 일수 직접 입력"
+              type="number"
+              min="1"
+              max="30"
+              value={form.customDays}
+              onChange={(event) => {
+                const value = Number.parseInt(event.target.value, 10);
+                setForm((current) => ({ ...current, customDays: event.target.value, medicationDays: Number.isFinite(value) && value > 0 ? value : null }));
+              }}
+              placeholder="일 수 입력"
+              style={inputStyle}
+            />
+          ) : null}
+        </QuestionCard>
+      )}
 
       {form.medicationDays ? (
         <section style={suggestionCardStyle} aria-label="다음 방문일 제안">
@@ -727,20 +736,25 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
 
   if (step === 'memo') return (
     <Shell header={<GuideHeader current={4} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
-      <h1 style={titleStyle}>추가로 남길 내용이 있나요?</h1>
-      <p style={subtitleStyle}>필요한 경우에만 메모를 남겨주세요.</p>
-      <label style={{ position: 'relative', display: 'block' }}>
-        <textarea
-          value={form.memo}
-          maxLength={300}
-          onChange={(event) => setForm((current) => ({ ...current, memo: event.target.value }))}
-          placeholder="트리거는 내일 오후 예정이라고 들었어요"
-          rows={5}
-          style={textareaStyle}
-        />
-        <span style={counterStyle}>{form.memo.length}/300</span>
-      </label>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      {aiAvailable ? (
+        <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
+      ) : (
+        <>
+          <h1 style={titleStyle}>추가로 남길 내용이 있나요?</h1>
+          <p style={subtitleStyle}>필요한 경우에만 메모를 남겨주세요.</p>
+          <label style={{ position: 'relative', display: 'block' }}>
+            <textarea
+              value={form.memo}
+              maxLength={300}
+              onChange={(event) => setForm((current) => ({ ...current, memo: event.target.value }))}
+              placeholder="트리거는 내일 오후 예정이라고 들었어요"
+              rows={5}
+              style={textareaStyle}
+            />
+            <span style={counterStyle}>{form.memo.length}/300</span>
+          </label>
+        </>
+      )}
       <DraftPanel medicationNames={selectedMedicationNames} nextVisit={nextVisitPreview} memo={form.memo} aiDraft={aiDraft} />
       <p style={warningStyle}>⚠ 불명확한 시간은 저장 전에 다시 확인해요</p>
       <button type="button" onClick={() => { void runInterview('memo', form.memo || '메모 없음'); setStep('confirm'); }} style={ctaStyle()}>저장 전 확인</button>

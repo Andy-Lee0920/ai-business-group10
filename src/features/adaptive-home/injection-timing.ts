@@ -1,11 +1,13 @@
+export function secondsUntilInjection(scheduledAt: string): number {
+  return Math.max(0, Math.round((new Date(scheduledAt).getTime() - Date.now()) / 1_000));
+}
+
 export function isInInjectionCountdownWindow(scheduledAt: string | null): boolean {
   if (!scheduledAt) return false;
-  const now = Date.now();
-  const scheduled = new Date(scheduledAt).getTime();
-  const windowStart = scheduled - 60 * 60 * 1000;
-  return now >= windowStart && now < scheduled;
+  const secs = secondsUntilInjection(scheduledAt);
+  return secs > 0 && secs <= 3600;
 }
 
 export function minutesUntilInjection(scheduledAt: string): number {
-  return Math.max(0, Math.round((new Date(scheduledAt).getTime() - Date.now()) / 60_000));
+  return Math.ceil(secondsUntilInjection(scheduledAt) / 60);
 }

@@ -24,7 +24,7 @@ const INTENSITY_STYLE = {
     imageWidth: '100%',
     imageHeight: '100%',
     imageObjectFit: 'cover',
-    gradient: 'linear-gradient(to bottom, transparent 40%, var(--slc-bg) 100%)',
+    gradient: 'linear-gradient(to bottom, rgba(47,41,38,0.18) 0%, transparent 35%, var(--slc-bg) 100%)',
   },
   section: {
     minHeight: undefined,

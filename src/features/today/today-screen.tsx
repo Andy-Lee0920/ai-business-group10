@@ -14,7 +14,7 @@ import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
 import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
 import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-date';
-import { isInInjectionCountdownWindow, minutesUntilInjection } from '../adaptive-home/injection-timing';
+import { isInInjectionCountdownWindow, secondsUntilInjection } from '../adaptive-home/injection-timing';
 
 interface TodayScreenProps {
   initialItems: ScheduleItem[];
@@ -43,7 +43,7 @@ export function TodayScreen({
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
 
   useEffect(() => {
-    const id = setInterval(() => setItems((prev) => [...prev]), 30_000);
+    const id = setInterval(() => setItems((prev) => [...prev]), 1_000);
     return () => clearInterval(id);
   }, []);
 
@@ -254,7 +254,7 @@ function CompactHeroCard({
 }
 
 function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: ScheduleItem; nextInjection: ScheduleItem | null; onCta: (item: ScheduleItem) => void }) {
-  const remaining = minutesUntilInjection(item.scheduled_at);
+  const remaining = secondsUntilInjection(item.scheduled_at);
   return (
     <section
       aria-label="주사 카운트다운"
@@ -266,7 +266,7 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
         paddingTop: 8,
       }}
     >
-      <InjectionCountdownArc totalMinutes={60} remainingMinutes={remaining} />
+      <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} />
       <div style={{ textAlign: 'center', marginTop: -42 }}>
         <p style={{ margin: '0 0 4px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 800 }}>남은 시간</p>
         <strong style={{ color: 'var(--slc-text)', fontSize: 34, lineHeight: 1, letterSpacing: '-0.04em' }}>
@@ -400,7 +400,7 @@ function ScheduleFlowRow({ item, statusLabel }: { item: ScheduleItem; statusLabe
         <strong style={{ display: 'block', color: 'var(--slc-text)', fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatScheduleRowTitle(item)}</strong>
         <small style={{ display: 'block', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 700, marginTop: 3 }}>{scheduleTypeLabel(item.type)}</small>
       </span>
-      <span style={{ padding: '5px 10px', borderRadius: 999, background: statusLabel === '완료' ? 'var(--slc-coral-light)' : 'var(--slc-border)', color: statusLabel === '완료' ? 'var(--slc-coral)' : 'var(--slc-muted)', fontSize: 11, fontWeight: 900 }}>{statusLabel}</span>
+      <span style={{ padding: '5px 10px', borderRadius: 999, background: statusLabel === '완료' ? '#EEF5EF' : 'var(--slc-border)', color: statusLabel === '완료' ? 'var(--slc-success)' : 'var(--slc-muted)', fontSize: 11, fontWeight: 900 }}>{statusLabel}</span>
       <Link href={`/schedule/${item.id}/edit`} aria-label={`${formatScheduleRowTitle(item)} 수정`} style={{ color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900, textDecoration: 'none' }}>수정</Link>
     </div>
   );
@@ -420,11 +420,11 @@ function formatScheduleTime(scheduledAt: string) {
   return formatKstTime(scheduledAt);
 }
 
-function formatRemainingClock(minutes: number) {
-  const clamped = Math.max(0, minutes);
-  const hours = Math.floor(clamped / 60);
-  const mins = clamped % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+function formatRemainingClock(totalSeconds: number) {
+  const clamped = Math.max(0, totalSeconds);
+  const mins = Math.floor(clamped / 60);
+  const secs = clamped % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 function scheduleTypeLabel(type: ScheduleItem['type']) {
