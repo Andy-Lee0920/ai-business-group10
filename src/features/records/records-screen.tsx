@@ -95,8 +95,8 @@ function formatTime(iso: string) {
 
 function filterChipStyle(active: boolean) {
   return {
-    minHeight: 36,
-    padding: '8px 15px', borderRadius: 999,
+    minHeight: 44,
+    padding: '10px 15px', borderRadius: 999,
     background: active ? '#C4614A' : '#F0EDE8',
     color: active ? '#fff' : '#9B8E86',
     border: 'none', fontSize: 13, fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit',

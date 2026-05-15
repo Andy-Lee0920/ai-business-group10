@@ -650,7 +650,20 @@ const rowStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignIt
 const summaryCardStyle: CSSProperties = { ...rowStyle(false), marginBottom: 10, minHeight: 76 };
 const emptyListStyle: CSSProperties = { margin: '4px 0', padding: '12px 14px', borderRadius: 14, background: '#FFFCFA', border: '1px dashed #F0EDE8', color: '#9B8E86', fontSize: 13, fontWeight: 800 };
 const ctaStyle = (disabled = false): CSSProperties => ({ marginTop: 18, width: '100%', minHeight: 52, border: 'none', borderRadius: 16, padding: '16px 0', background: 'linear-gradient(180deg, #D86C57, #C95842)', color: '#fff', fontSize: 17, fontWeight: 900, fontFamily: 'inherit', cursor: disabled ? 'default' : 'pointer', boxShadow: '0 12px 24px rgba(196,97,74,0.20)', opacity: disabled ? 0.55 : 1 });
-const textButtonStyle: CSSProperties = { marginTop: 14, border: 0, background: 'transparent', color: '#74675F', fontSize: 14, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 4 };
+const textButtonStyle: CSSProperties = {
+  minHeight: 44,
+  marginTop: 14,
+  padding: '10px 16px',
+  border: 0,
+  background: 'transparent',
+  color: '#74675F',
+  fontSize: 14,
+  fontWeight: 800,
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+  textDecoration: 'underline',
+  textUnderlineOffset: 4,
+};
 const safeNoteStyle: CSSProperties = { margin: '12px 0 0', textAlign: 'center', color: '#74675F', fontSize: 13, fontWeight: 700 };
 const warningStyle: CSSProperties = { margin: '14px 0 0', padding: '12px 14px', borderRadius: 14, background: '#FFF3EA', color: '#6B5E55', fontSize: 13, fontWeight: 800 };
 const previewRowStyle: CSSProperties = { margin: '12px 0 0', padding: '12px 14px', borderRadius: 14, border: '1px solid #EFE4DC', background: '#FFFaf6', color: '#5B504A', fontWeight: 800 };

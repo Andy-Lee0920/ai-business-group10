@@ -139,8 +139,8 @@ function PartnerRequestCard({ request, onApprove, onReject }: { request: Partner
       <p style={{ fontSize: 16, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 6px' }}>파트너 연결 요청이 있어요</p>
       <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>{displayName} 님이 일정 읽기 권한을 요청했어요.</p>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button type="button" onClick={onApprove} style={{ padding: '9px 16px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>승인하기</button>
-        <button type="button" onClick={onReject} style={{ padding: '9px 16px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>나중에</button>
+        <button type="button" onClick={onApprove} style={{ minHeight: 44, padding: '10px 16px', background: '#C4614A', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>승인하기</button>
+        <button type="button" onClick={onReject} style={{ minHeight: 44, padding: '10px 16px', background: '#F0EDE8', color: '#9B8E86', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>나중에</button>
       </div>
     </div>
   );
@@ -250,7 +250,7 @@ function isOnDay(iso: string, offset: DayOffset) {
 }
 
 const addButtonStyle = {
-  width: 40, height: 40, borderRadius: '50%', background: 'var(--slc-coral-light)', border: '1.5px solid #F4D4C8',
+  width: 44, height: 44, borderRadius: '50%', background: 'var(--slc-coral-light)', border: '1.5px solid #F4D4C8',
   display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--slc-coral)', fontSize: 22,
   textDecoration: 'none', fontWeight: 500,
 } as const;
@@ -262,7 +262,7 @@ const emptyLinkStyle = {
 
 function tabStyle(active: boolean) {
   return {
-    padding: '8px 16px', borderRadius: 999, background: active ? 'var(--slc-coral)' : 'var(--slc-border)',
+    minHeight: 44, padding: '10px 16px', borderRadius: 999, background: active ? 'var(--slc-coral)' : 'var(--slc-border)',
     color: active ? '#fff' : 'var(--slc-muted)', border: 'none', fontSize: 13, fontWeight: 800,
     cursor: 'pointer', fontFamily: 'inherit',
   } as const;
