@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
-import { CtaButton, Notice, SelectionChip, StatusBadge } from '../../src/components/ui';
+import { type ReactNode, useMemo, useRef, useState } from 'react';
+import { CtaButton, Notice, SelectionChip } from '../../src/components/ui';
 import styles from './onboarding.module.css';
 
 export type OnboardingStep = 'brand_intro' | 'role_select' | 'add_method' | 'photo_processing' | 'text_paste' | 'candidate_review' | 'direct_entry' | 'sharing' | 'complete';
@@ -39,16 +39,11 @@ const VISIBLE_PROGRESS_STEPS: readonly StepDefinition[] = [
   { id: 'complete', label: '완료' },
 ] as const;
 
-const EXPERIENCE_OPTIONS: Array<{ value: TreatmentExperience; label: string; helper: string }> = [
-  { value: 'first', label: '처음', helper: '처음이라면 설명을 조금 더 자세히 보여드려요.' },
-  { value: 'experienced', label: '해본 적 있음', helper: '익숙한 흐름은 핵심 확인 위주로 정리해요.' },
-  { value: 'returning', label: '다시 준비 중', helper: '이전 경험과 이번 안내를 구분해 시작해요.' },
-];
 
 const ADD_METHODS: Array<{ step: AddMethodStep; label: string; helper: string }> = [
-  { step: 'photo_processing', label: '사진으로 남기기', helper: '처방전이나 병원 메모를 사진으로 보관해요.' },
-  { step: 'text_paste', label: '문자로 붙여넣기', helper: '문자·카톡 안내를 붙여넣고 확인해요.' },
-  { step: 'direct_entry', label: '직접 적기', helper: '기억나는 일정이나 할 일을 직접 남겨요.' },
+  { step: 'photo_processing', label: '사진으로 남기기', helper: '처방지나 안내문을 찍어주세요' },
+  { step: 'text_paste', label: '문자로 붙여넣기', helper: '카톡·문자 내용을 붙여넣어요' },
+  { step: 'direct_entry', label: '직접 적기', helper: '이름, 시간, 용량만 간단히 적어요' },
 ];
 
 export function enterOnboardingStep(step: OnboardingStep): OnboardingStep {
@@ -72,6 +67,7 @@ export function OnboardingClient() {
   const [activeStep, setActiveStep] = useState<OnboardingStep>('brand_intro');
   const [selectedRole, setSelectedRole] = useState<TreatmentRole | null>(null);
   const [treatmentExperience, setTreatmentExperience] = useState<TreatmentExperience | null>(null);
+  const [addMethodIntroSeen, setAddMethodIntroSeen] = useState(false);
   const [directType, setDirectType] = useState<DirectEntryType>('injection');
   const [directTitle, setDirectTitle] = useState('');
   const [directDate, setDirectDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -100,7 +96,6 @@ export function OnboardingClient() {
   }, [activeStep]);
 
   const activeIndex = VISIBLE_PROGRESS_STEPS.findIndex((step) => step.id === progressStep);
-  const progress = Math.round(((activeIndex + 1) / VISIBLE_PROGRESS_STEPS.length) * 100);
   const progressLabel = `처음 설정 ${activeIndex + 1}/${VISIBLE_PROGRESS_STEPS.length}`;
 
   function goToStep(step: OnboardingStep) {
@@ -109,12 +104,24 @@ export function OnboardingClient() {
   }
 
   function goBack() {
+    if (activeStep === 'add_method' && addMethodIntroSeen) {
+      setAddMethodIntroSeen(false);
+      return;
+    }
+
     if (activeStep === 'add_method') {
       goToStep('role_select');
       return;
     }
 
-    if (activeStep === 'photo_processing' || activeStep === 'text_paste' || activeStep === 'direct_entry') {
+    if (activeStep === 'photo_processing' || activeStep === 'text_paste' || activeStep === 'direct_entry' || activeStep === 'candidate_review') {
+      setAddMethodIntroSeen(true);
+      goToStep('add_method');
+      return;
+    }
+
+    if (activeStep === 'sharing') {
+      setAddMethodIntroSeen(true);
       goToStep('add_method');
       return;
     }
@@ -124,21 +131,29 @@ export function OnboardingClient() {
 
   function selectPatientRole() {
     setSelectedRole('patient');
+    setTreatmentExperience('first');
     setError(null);
   }
 
   function selectPartnerRole() {
     setSelectedRole('partner');
     setTreatmentExperience(null);
-    goToStep('complete');
+    setError(null);
   }
 
-  function continueAfterExperience() {
-    if (!treatmentExperience) {
-      setError('치료 경험을 하나 선택해 주세요.');
+  function continueAfterRole() {
+    if (!selectedRole) {
+      setError('시작할 역할을 선택해 주세요.');
       return;
     }
 
+    if (selectedRole === 'partner') {
+      goToStep('complete');
+      return;
+    }
+
+    setTreatmentExperience((current) => current ?? 'first');
+    setAddMethodIntroSeen(false);
     goToStep('add_method');
   }
 
@@ -333,286 +348,316 @@ export function OnboardingClient() {
   }
 
   return (
-    <div className={styles.onboardingFlow} aria-label="처음 설정 인터뷰">
-      <div className={styles.interviewProgress} aria-label={progressLabel}>
-        <span>{activeIndex + 1}/{VISIBLE_PROGRESS_STEPS.length}</span>
-        <div className={styles.progressTrack} aria-hidden="true"><i style={{ width: `${progress}%` }} /></div>
-        <small>{VISIBLE_PROGRESS_STEPS[activeIndex]?.label}</small>
-      </div>
-
-      {activeStep === 'brand_intro' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide} ${styles.brandIntroStep}`} aria-labelledby="brand-intro-title">
-          <div className={styles.logoMark} aria-label="Fevio logo"><img alt="" aria-hidden="true" src="/assets/onboarding/fevio-logo.svg" />Fevio</div>
-          <h1 className={styles.brandIntroTitle} id="brand-intro-title">오늘 필요한 것만 보여드릴게요</h1>
-          <p className={styles.questionLead}>병원 안내를 사용자가 확인한 할 일로 바꾸고, 지금 필요한 화면만 먼저 보여드려요.</p>
-          <CtaButton onClick={() => goToStep('role_select')} type="button">시작하기</CtaButton>
-        </section>
-      ) : null}
-
-      {activeStep === 'role_select' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="role-select-title">
-          <StatusBadge state="shared">역할 선택</StatusBadge>
-          <h2 className={styles.sectionTitle} id="role-select-title">누구로 시작할까요?</h2>
-          <p className={styles.questionLead}>치료자는 병원 안내를 추가하고, 파트너는 초대 링크 안내를 확인합니다.</p>
-          <div className={styles.choiceGrid} role="group" aria-label="역할 선택">
-            <SelectionChip className={styles.choiceChip} onClick={selectPatientRole} selected={selectedRole === 'patient'} tone="sage">
-              <span>치료자</span>
-              <small>내 병원 안내를 추가하고 오늘 필요한 할 일을 확인해요.</small>
-            </SelectionChip>
-            <SelectionChip className={styles.choiceChip} onClick={selectPartnerRole} selected={selectedRole === 'partner'} tone="lavender">
-              <span>파트너</span>
-              <small>치료자가 보낸 초대 링크로 들어오면 오늘 도울 일을 볼 수 있어요.</small>
-            </SelectionChip>
-          </div>
-
-          {selectedRole === 'patient' ? (
-            <div className={styles.subStepPanel} aria-labelledby="experience-title">
-              <h3 id="experience-title">치료 경험을 알려주세요</h3>
-              <p>처음 / 해본 적 있음 / 다시 준비 중 중 하나를 고르면 설명 밀도를 맞춥니다.</p>
-              <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="치료 경험 선택">
-                {EXPERIENCE_OPTIONS.map((option) => (
-                  <SelectionChip key={option.value} className={styles.choiceChip} onClick={() => setTreatmentExperience(option.value)} selected={treatmentExperience === option.value} tone="sage">
-                    <span>{option.label}</span>
-                    <small>{option.helper}</small>
-                  </SelectionChip>
-                ))}
-              </div>
-              <div className={styles.slideActions}>
-                <CtaButton onClick={() => goToStep('brand_intro')} variant="secondary" type="button">이전</CtaButton>
-                <CtaButton disabled={!treatmentExperience} onClick={continueAfterExperience} type="button">다음</CtaButton>
-              </div>
+    <main className={`app-shell ${styles.onboardingShell}`}>
+      <div className={styles.onboardingFlow} aria-label="처음 설정 인터뷰" aria-description={progressLabel}>
+        {activeStep === 'brand_intro' ? (
+          <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="brand-intro-title">
+            <div className={styles.brandStack}>
+              <img className={styles.brandLogo} alt="Fevio" src="/assets/onboarding/fevio-logo.svg" />
+              <h1 className={styles.brandIntroTitle} id="brand-intro-title">오늘 필요한 것만 보여드릴게요</h1>
+              <p className={styles.questionLead}>병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.</p>
             </div>
-          ) : null}
-        </section>
-      ) : null}
+            <BottomDock activeIndex={activeIndex}>
+              <CtaButton className={styles.primaryCta} onClick={() => goToStep('role_select')} type="button">
+                <span>시작하기</span><span aria-hidden="true">›</span>
+              </CtaButton>
+            </BottomDock>
+          </section>
+        ) : null}
 
-      {activeStep === 'add_method' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="add-method-title">
-          <StatusBadge state="shared">안내 추가</StatusBadge>
-          <h2 className={styles.sectionTitle} id="add-method-title">어떻게 추가할까요?</h2>
-          <p className={styles.questionLead}>아직 저장하지 않습니다. 다음 화면에서 사용자가 확인한 내용만 안전하게 이어갑니다.</p>
-          <div className={styles.choiceGrid} role="group" aria-label="안내 추가 방식 선택">
-            {ADD_METHODS.map((method) => (
-              <SelectionChip key={method.step} className={styles.choiceChip} onClick={() => goToStep(method.step)} selected={false} tone={method.step === 'photo_processing' ? 'coral' : 'sage'}>
-                <span>{method.label}</span>
-                <small>{method.helper}</small>
+        {activeStep === 'role_select' ? (
+          <section className={styles.screen} aria-labelledby="role-select-title">
+            <BackButton onClick={goBack} />
+            <div className={styles.stepHeader}>
+              <h2 className={styles.sectionTitle} id="role-select-title">누구로 시작할까요?</h2>
+              <p className={styles.questionLead}>필요한 화면만 먼저 보여드릴게요.</p>
+            </div>
+            <div className={styles.roleGrid} role="group" aria-label="역할 선택">
+              <SelectionChip className={styles.roleCard} onClick={selectPatientRole} selected={selectedRole === 'patient'} tone="sage">
+                <span className={styles.roleImageWrap}><img alt="" src="/assets/onboarding/role-patient.png" /></span>
+                <strong>치료자</strong>
+                <small>오늘 일정 · 완료 기록</small>
               </SelectionChip>
-            ))}
-          </div>
-          <div className={styles.slideActions}>
-            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
-            <CtaButton onClick={() => goToStep('sharing')} type="button">나중에 하기</CtaButton>
-          </div>
-        </section>
-      ) : null}
+              <SelectionChip className={styles.roleCard} onClick={selectPartnerRole} selected={selectedRole === 'partner'} tone="lavender">
+                <span className={styles.roleImageWrap}><img alt="" src="/assets/onboarding/role-partner.png" /></span>
+                <strong>파트너</strong>
+                <small>공유 일정 · 읽기 전용</small>
+              </SelectionChip>
+            </div>
+            <BottomDock activeIndex={activeIndex}>
+              <CtaButton className={styles.primaryCta} disabled={!selectedRole} onClick={continueAfterRole} type="button">
+                <span>다음</span><span aria-hidden="true">›</span>
+              </CtaButton>
+            </BottomDock>
+          </section>
+        ) : null}
 
-      {activeStep === 'photo_processing' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="photo-processing-title">
-          <StatusBadge state={photoPhase === 'not_found' ? 'attention' : photoPhase === 'ready' ? 'done' : 'shared'}>사진 추가</StatusBadge>
-          <h2 className={styles.sectionTitle} id="photo-processing-title">사진으로 안내를 남겨주세요</h2>
-          <p className={styles.questionLead}>기본 iOS 사진 선택만 사용합니다. 분석 결과는 후보로만 보여드리고, 확인 전에는 일정으로 저장하지 않아요.</p>
+        {activeStep === 'add_method' && !addMethodIntroSeen ? (
+          <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="first-add-title">
+            <BackButton onClick={goBack} />
+            <HeroGlyph kind="calendar" />
+            <div className={styles.heroCopy}>
+              <h2 className={styles.sectionTitle} id="first-add-title">오늘 기억할 것<br />하나만 남겨주세요</h2>
+              <p className={styles.questionLead}>병원 안내를 그대로 옮겨주시면 오늘 일정으로 만들어드릴게요.</p>
+            </div>
+            <BottomDock activeIndex={activeIndex}>
+              <CtaButton className={styles.primaryCta} onClick={() => setAddMethodIntroSeen(true)} type="button">
+                <span>추가하기</span><span aria-hidden="true">›</span>
+              </CtaButton>
+            </BottomDock>
+          </section>
+        ) : null}
 
-          <input ref={cameraInputRef} className={styles.hiddenFileInput} type="file" accept="image/*" capture="environment" onChange={(event) => processPhotoFile(event.currentTarget.files?.[0])} />
-          <input ref={galleryInputRef} className={styles.hiddenFileInput} type="file" accept="image/*" onChange={(event) => processPhotoFile(event.currentTarget.files?.[0])} />
-
-          <div className={styles.photoPickerActions}>
-            <CtaButton onClick={() => cameraInputRef.current?.click()} type="button">사진 찍기</CtaButton>
-            <CtaButton onClick={() => galleryInputRef.current?.click()} variant="secondary" type="button">사진 선택</CtaButton>
-          </div>
-
-          <ol className={styles.processingSteps} aria-label="사진 처리 상태">
-            <li data-active={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'}>업로드 완료</li>
-            <li data-active={photoPhase === 'analyzing' || photoPhase === 'ready'}>내용 분석 중</li>
-            <li data-active={photoPhase === 'ready'}>일정 후보 준비</li>
-          </ol>
-
-          <Notice tone={photoPhase === 'not_found' ? 'coral' : 'sage'}>{photoMessage}</Notice>
-          {photoPhase === 'not_found' ? <CtaButton onClick={() => setPhotoPhase('idle')} variant="secondary" type="button">다시 찍기</CtaButton> : null}
-          <div className={styles.slideActions}>
-            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
-            <CtaButton onClick={() => goToStep('direct_entry')} variant="ghost" type="button">직접 적기</CtaButton>
-          </div>
-        </section>
-      ) : null}
-
-      {activeStep === 'text_paste' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="text-paste-title">
-          <StatusBadge state={textMessage === '일정을 찾지 못했어요' ? 'attention' : analyzingText ? 'shared' : 'idle'}>문자 추가</StatusBadge>
-          <h2 className={styles.sectionTitle} id="text-paste-title">병원 안내를 붙여넣어 주세요</h2>
-          <p className={styles.questionLead}>문자·카톡 내용을 후보로만 바꿉니다. 확인 전에는 일정으로 저장하지 않아요.</p>
-          <label className={styles.pasteField}>
-            <span>병원 안내문</span>
-            <textarea maxLength={1000} value={textPasteValue} onChange={(event) => setTextPasteValue(event.target.value)} placeholder="예: 오늘 밤 9시 고날에프 150 IU 주사" />
-            <small>{textPasteValue.length}/1000</small>
-          </label>
-          {textMessage ? <Notice tone={textMessage === '일정을 찾지 못했어요' ? 'coral' : 'sage'}>{textMessage}</Notice> : null}
-          {textMessage === '일정을 찾지 못했어요' ? <CtaButton onClick={() => goToStep('direct_entry')} variant="secondary" type="button">직접 입력으로 바꾸기</CtaButton> : null}
-          <div className={styles.slideActions}>
-            <CtaButton onClick={goBack} variant="secondary" type="button">이전</CtaButton>
-            <CtaButton disabled={!textPasteValue.trim() || analyzingText} onClick={analyzePastedText} type="button">{analyzingText ? '분석 중' : '분석하기'}</CtaButton>
-          </div>
-        </section>
-      ) : null}
-
-      {activeStep === 'candidate_review' ? (
-        reviewCandidates.length ? (
-          <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="candidate-review-title">
-            <StatusBadge state="attention">확인 필요</StatusBadge>
-            <h2 className={styles.sectionTitle} id="candidate-review-title">일정을 확인해 주세요</h2>
-            <p className={styles.questionLead}>필요하면 바로 고치고, 확인한 일정만 저장합니다.</p>
-            <div className={styles.candidateList}>
-              {reviewCandidates.map((candidate) => (
-                <article key={candidate.id} className={styles.candidateCard} data-decision={candidate.decision}>
-                  <div className={styles.candidateSummary} aria-label={`${candidate.title} 요약`}>
-                    <span>{formatCandidateType(candidate.type)}</span>
-                    <strong>{candidate.title || '제목을 입력해 주세요'}</strong>
-                    <small>{formatCandidateDateTime(candidate.scheduled_at)} · {formatCandidateDose(candidate.dose, candidate.unit)}</small>
-                  </div>
-                  <div className={styles.candidateHeader}>
-                    <select aria-label="종류" value={candidate.type} onChange={(event) => updateCandidate(candidate.id, { type: event.target.value as DirectEntryType })}>
-                      <option value="injection">주사</option>
-                      <option value="medication">약 복용</option>
-                      <option value="clinic">병원 방문</option>
-                    </select>
-                    <div className={styles.candidateDecisionActions}>
-                      <button aria-label={`${candidate.title} 확인`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'confirmed' })}>✓</button>
-                      <button aria-label={`${candidate.title} 거절`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'rejected' })}>✕</button>
-                    </div>
-                  </div>
-                  <label className={styles.directField}>
-                    <span>제목</span>
-                    <input value={candidate.title} onChange={(event) => updateCandidate(candidate.id, { title: event.target.value })} />
-                  </label>
-                  <label className={styles.directField}>
-                    <span>시간</span>
-                    <input type="datetime-local" value={toDateTimeLocal(candidate.scheduled_at)} onChange={(event) => updateCandidate(candidate.id, { scheduled_at: fromDateTimeLocal(event.target.value) })} />
-                  </label>
-                  <div className={styles.directFieldRow}>
-                    <label className={styles.directField}>
-                      <span>용량</span>
-                      <input value={candidate.dose ?? ''} onChange={(event) => updateCandidate(candidate.id, { dose: event.target.value || null })} />
-                    </label>
-                    <label className={styles.directField}>
-                      <span>단위</span>
-                      <input value={candidate.unit ?? ''} onChange={(event) => updateCandidate(candidate.id, { unit: event.target.value || null })} />
-                    </label>
-                  </div>
-                </article>
+        {activeStep === 'add_method' && addMethodIntroSeen ? (
+          <section className={styles.screen} aria-labelledby="add-method-title">
+            <BackButton onClick={goBack} />
+            <div className={styles.stepHeader}>
+              <h2 className={styles.sectionTitle} id="add-method-title">어떻게 추가할까요?</h2>
+            </div>
+            <div className={styles.methodGrid} role="group" aria-label="안내 추가 방식 선택">
+              {ADD_METHODS.map((method) => (
+                <SelectionChip key={method.step} className={styles.methodCard} onClick={() => goToStep(method.step)} selected={false} tone={method.step === 'photo_processing' ? 'coral' : 'sage'}>
+                  <MethodIcon step={method.step} />
+                  <span><strong>{method.label}</strong><small>{method.helper}</small></span>
+                  <i aria-hidden="true">›</i>
+                </SelectionChip>
               ))}
             </div>
-            <div className={styles.slideActions}>
-              <CtaButton onClick={() => goToStep('add_method')} variant="secondary" type="button">이전</CtaButton>
-              <CtaButton disabled={savingCandidates || reviewCandidates.every((candidate) => candidate.decision === 'rejected')} onClick={confirmCandidates} type="button">{savingCandidates ? '저장 중' : '일정 확인하기'}</CtaButton>
-            </div>
+            <BottomDock activeIndex={activeIndex} />
           </section>
-        ) : (
-          <PlaceholderStep body="확인할 후보가 아직 없습니다. 사진이나 문자를 다시 추가해 주세요." onBack={() => goToStep('add_method')} title="후보가 없어요" />
-        )
-      ) : null}
+        ) : null}
 
-      {activeStep === 'direct_entry' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="direct-entry-title">
-          <StatusBadge state="shared">직접 입력</StatusBadge>
-          <h2 className={styles.sectionTitle} id="direct-entry-title">기억나는 일정만 적어주세요</h2>
-          <p className={styles.questionLead}>확인한 내용만 저장합니다. 나중에 홈에서 다시 추가할 수도 있어요.</p>
+        {activeStep === 'photo_processing' ? (
+          <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="photo-processing-title">
+            <BackButton onClick={goBack} />
+            <HeroGlyph kind="document" done={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'} />
+            <div className={styles.heroCopy}>
+              <h2 className={styles.sectionTitle} id="photo-processing-title">{photoPhase === 'idle' ? '사진으로 남겨주세요' : '사진을 받았어요'}</h2>
+              <p className={styles.questionLead}>{photoPhase === 'idle' ? '처방지나 안내문을 찍어주시면 일정 후보로만 정리해요.' : '일정 후보를 정리하고 있어요.'}</p>
+            </div>
 
-          <div className={`${styles.choiceGrid} ${styles.compactGrid}`} role="group" aria-label="일정 종류 선택">
-            {(['injection', 'medication', 'clinic'] as const).map((type) => (
-              <SelectionChip key={type} className={styles.choiceChip} onClick={() => setDirectType(type)} selected={directType === type} tone={type === 'clinic' ? 'lavender' : 'sage'}>
-                <span>{type === 'injection' ? '주사' : type === 'medication' ? '약 복용' : '병원 방문'}</span>
-              </SelectionChip>
-            ))}
-          </div>
+            <input ref={cameraInputRef} className={styles.hiddenFileInput} type="file" accept="image/*" capture="environment" onChange={(event) => processPhotoFile(event.currentTarget.files?.[0])} />
+            <input ref={galleryInputRef} className={styles.hiddenFileInput} type="file" accept="image/*" onChange={(event) => processPhotoFile(event.currentTarget.files?.[0])} />
 
-          <div className={styles.profileGrid}>
-            <label className={styles.directField}>
-              <span>일정 이름</span>
-              <input value={directTitle} onChange={(event) => setDirectTitle(event.target.value)} placeholder="예: 고날에프 주사" />
+            {photoPhase === 'idle' ? (
+              <div className={styles.photoPickerActions}>
+                <CtaButton className={styles.primaryCta} onClick={() => cameraInputRef.current?.click()} type="button">사진 찍기</CtaButton>
+                <CtaButton className={styles.softCta} onClick={() => galleryInputRef.current?.click()} type="button">사진 선택</CtaButton>
+              </div>
+            ) : null}
+
+            <ol className={styles.processingSteps} aria-label="사진 처리 상태">
+              <li data-active={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'}>업로드 완료</li>
+              <li data-active={photoPhase === 'analyzing' || photoPhase === 'ready'}>내용 분석 중</li>
+              <li data-active={photoPhase === 'ready'}>일정 후보 준비</li>
+            </ol>
+
+            {photoPhase === 'not_found' ? <Notice className={styles.notice} tone="coral">사진에서 일정을 찾지 못했어요</Notice> : null}
+            {photoPhase === 'not_found' ? <CtaButton className={styles.softCta} onClick={() => setPhotoPhase('idle')} type="button">다시 찍기</CtaButton> : null}
+            <BottomDock activeIndex={activeIndex} />
+          </section>
+        ) : null}
+
+        {activeStep === 'text_paste' ? (
+          <section className={styles.screen} aria-labelledby="text-paste-title">
+            <BackButton onClick={goBack} />
+            <div className={styles.stepHeader}>
+              <h2 className={styles.sectionTitle} id="text-paste-title">병원 안내를 붙여넣어 주세요</h2>
+              <p className={styles.questionLead}>확인 전에는 일정으로 저장하지 않아요.</p>
+            </div>
+            <label className={styles.pasteField}>
+              <span>병원 안내문</span>
+              <textarea maxLength={1000} value={textPasteValue} onChange={(event) => setTextPasteValue(event.target.value)} placeholder="예: 오늘 밤 9시 고날에프 150 IU 주사" />
+              <small>{textPasteValue.length}/1000</small>
             </label>
-            <div className={styles.directFieldRow}>
-              <label className={styles.directField}>
-                <span>날짜</span>
-                <input type="date" value={directDate} onChange={(event) => setDirectDate(event.target.value)} />
-              </label>
-              <label className={styles.directField}>
-                <span>시간</span>
-                <input type="time" value={directTime} onChange={(event) => setDirectTime(event.target.value)} />
-              </label>
-            </div>
-            <div className={styles.directFieldRow}>
-              <label className={styles.directField}>
-                <span>용량</span>
-                <input inputMode="decimal" value={directDose} onChange={(event) => setDirectDose(event.target.value)} placeholder="150" />
-              </label>
-              <label className={styles.directField}>
-                <span>단위</span>
-                <input value={directUnit} onChange={(event) => setDirectUnit(event.target.value)} placeholder="IU" />
-              </label>
-            </div>
-          </div>
-
-          <div className={styles.homePreviewCard} aria-label="홈 미리보기">
-            <small>홈 미리보기</small>
-            <strong>{directTitle.trim() || '일정 이름이 여기에 보여요'}</strong>
-            <span>{directDate || '날짜'} · {directTime || '시간'} · {directType === 'injection' ? '주사' : directType === 'medication' ? '약 복용' : '병원 방문'}{directDose.trim() ? ` · ${directDose.trim()}${directUnit.trim() ? ` ${directUnit.trim()}` : ''}` : ''}</span>
-          </div>
-
-          <div className={styles.slideActions}>
-            <CtaButton onClick={() => goToStep('sharing')} variant="secondary" type="button">나중에 홈에서 추가</CtaButton>
-            <CtaButton disabled={!directTitle.trim() || savingDirectEntry} onClick={rememberDirectEntry} type="button">{savingDirectEntry ? '저장 중' : '이 일정 기억하기'}</CtaButton>
-          </div>
-        </section>
-      ) : null}
-
-      {activeStep === 'sharing' ? (
-        <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="sharing-title">
-          <StatusBadge state="shared">공유 설정</StatusBadge>
-          <h2 className={styles.sectionTitle} id="sharing-title">어떻게 시작할까요?</h2>
-          <p className={styles.questionLead}>{savedReviewItems.length ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.` : '오늘 일정은 나중에 홈에서도 추가할 수 있어요.'}</p>
-          <div className={styles.choiceGrid} role="group" aria-label="파트너 공유 선택">
-            <SelectionChip className={styles.choiceChip} onClick={() => setSharingChoice('solo')} selected={sharingChoice === 'solo'} tone="sage">
-              <span>나 혼자 시작할게요</span>
-              <small>먼저 내 홈에서 오늘 할 일만 확인해요.</small>
-            </SelectionChip>
-            <SelectionChip className={styles.choiceChip} onClick={() => setSharingChoice('partner')} selected={sharingChoice === 'partner'} tone="lavender">
-              <span>파트너와 함께 쓸게요</span>
-              <small>완료 후 초대 링크를 준비할 수 있게 표시해요.</small>
-            </SelectionChip>
-          </div>
-          <div className={styles.slideActions}>
-            <CtaButton onClick={() => goToStep('add_method')} variant="secondary" type="button">이전</CtaButton>
-            <CtaButton disabled={!sharingChoice} onClick={() => sharingChoice ? continueSharing(sharingChoice) : undefined} type="button">다음</CtaButton>
-          </div>
-        </section>
-      ) : null}
-
-      {activeStep === 'complete' ? (
-        selectedRole === 'partner' ? (
-          <section className={`${styles.choiceSection} ${styles.interviewSlide} ${styles.partnerExitStep}`} aria-labelledby="complete-title">
-            <StatusBadge state="done">안내 완료</StatusBadge>
-            <h2 className={styles.sectionTitle} id="complete-title">파트너는 초대 링크로 들어와 주세요</h2>
-            <p className={styles.questionLead}>치료자가 Fevio에서 초대 링크를 보내면, 파트너 화면에서 오늘 도울 일만 확인할 수 있어요.</p>
-            <Notice tone="sage">지금은 파트너 계정 없이 링크 안내만 보여드리고 온보딩을 종료합니다.</Notice>
-            <CtaButton onClick={() => window.location.assign('/')} type="button">처음 화면으로 가기</CtaButton>
+            {textMessage ? <Notice className={styles.notice} tone={textMessage === '일정을 찾지 못했어요' ? 'coral' : 'sage'}>{textMessage}</Notice> : null}
+            {textMessage === '일정을 찾지 못했어요' ? <CtaButton className={styles.softCta} onClick={() => goToStep('direct_entry')} type="button">직접 입력으로 바꾸기</CtaButton> : null}
+            <BottomDock activeIndex={activeIndex}>
+              <CtaButton className={styles.primaryCta} disabled={!textPasteValue.trim() || analyzingText} onClick={analyzePastedText} type="button">{analyzingText ? '분석 중' : '분석하기'}</CtaButton>
+            </BottomDock>
           </section>
-        ) : (
-          <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="complete-title">
-            <StatusBadge state="done">준비 완료</StatusBadge>
-            <h2 className={styles.sectionTitle} id="complete-title">거의 다 왔어요!</h2>
-            <p className={styles.questionLead}>저장한 일정은 홈에서 오늘 할 일로 보여드릴게요.</p>
-            <div className={styles.homePreviewCard} aria-label="일정 후보 요약">
-              <small>일정 후보 요약</small>
-              <strong>{savedReviewItems[0]?.title ?? '저장된 일정 없이 시작'}</strong>
-              <span>{savedReviewItems[0] ? `${formatCandidateType(savedReviewItems[0].type)} · ${formatCandidateDateTime(savedReviewItems[0].scheduled_at)} · ${formatCandidateDose(savedReviewItems[0].dose, savedReviewItems[0].unit)}` : '홈에서 직접 추가할 수 있어요.'}</span>
-            </div>
-            {sharingChoice === 'partner' ? <Notice tone="sage">파트너 초대 링크를 준비하도록 저장합니다.</Notice> : null}
-            <CtaButton disabled={completingOnboarding} onClick={completeOnboarding} type="button">{completingOnboarding ? '완료 중' : '시작하기'}</CtaButton>
-          </section>
-        )
-      ) : null}
+        ) : null}
 
-      {error ? <Notice tone="coral">{error}</Notice> : null}
-    </div>
+        {activeStep === 'candidate_review' ? (
+          reviewCandidates.length ? (
+            <section className={styles.screen} aria-labelledby="candidate-review-title">
+              <BackButton onClick={goBack} />
+              <div className={styles.stepHeader}>
+                <p className={styles.kicker}>확인 필요</p>
+                <h2 className={styles.sectionTitle} id="candidate-review-title">일정을 확인해 주세요</h2>
+                <p className={styles.questionLead}>확인한 일정만 저장합니다.</p>
+              </div>
+              <div className={styles.candidateList}>
+                {reviewCandidates.map((candidate) => (
+                  <article key={candidate.id} className={styles.candidateCard} data-decision={candidate.decision}>
+                    <div className={styles.candidateSummary} aria-label={`${candidate.title} 요약`}>
+                      <span>{formatCandidateType(candidate.type)}</span>
+                      <strong>{candidate.title || '제목을 입력해 주세요'}</strong>
+                      <small>{formatCandidateDateTime(candidate.scheduled_at)} · {formatCandidateDose(candidate.dose, candidate.unit)}</small>
+                    </div>
+                    <div className={styles.candidateHeader}>
+                      <select aria-label="종류" value={candidate.type} onChange={(event) => updateCandidate(candidate.id, { type: event.target.value as DirectEntryType })}>
+                        <option value="injection">주사</option>
+                        <option value="medication">약 복용</option>
+                        <option value="clinic">병원 방문</option>
+                      </select>
+                      <div className={styles.candidateDecisionActions}>
+                        <button aria-label={`${candidate.title} 확인`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'confirmed' })}>✓</button>
+                        <button aria-label={`${candidate.title} 거절`} type="button" onClick={() => updateCandidate(candidate.id, { decision: 'rejected' })}>✕</button>
+                      </div>
+                    </div>
+                    <label className={styles.directField}>
+                      <span>제목</span>
+                      <input value={candidate.title} onChange={(event) => updateCandidate(candidate.id, { title: event.target.value })} />
+                    </label>
+                    <label className={styles.directField}>
+                      <span>시간</span>
+                      <input type="datetime-local" value={toDateTimeLocal(candidate.scheduled_at)} onChange={(event) => updateCandidate(candidate.id, { scheduled_at: fromDateTimeLocal(event.target.value) })} />
+                    </label>
+                    <div className={styles.directFieldRow}>
+                      <label className={styles.directField}>
+                        <span>용량</span>
+                        <input value={candidate.dose ?? ''} onChange={(event) => updateCandidate(candidate.id, { dose: event.target.value || null })} />
+                      </label>
+                      <label className={styles.directField}>
+                        <span>단위</span>
+                        <input value={candidate.unit ?? ''} onChange={(event) => updateCandidate(candidate.id, { unit: event.target.value || null })} />
+                      </label>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <BottomDock activeIndex={activeIndex}>
+                <CtaButton className={styles.primaryCta} disabled={savingCandidates || reviewCandidates.every((candidate) => candidate.decision === 'rejected')} onClick={confirmCandidates} type="button">{savingCandidates ? '저장 중' : '일정 확인하기'}</CtaButton>
+              </BottomDock>
+            </section>
+          ) : (
+            <PlaceholderStep body="확인할 후보가 아직 없습니다. 사진이나 문자를 다시 추가해 주세요." onBack={() => goToStep('add_method')} title="후보가 없어요" />
+          )
+        ) : null}
+
+        {activeStep === 'direct_entry' ? (
+          <section className={styles.screen} aria-labelledby="direct-entry-title">
+            <BackButton onClick={goBack} />
+            <div className={styles.stepHeader}>
+              <h2 className={styles.sectionTitle} id="direct-entry-title">기억나는 일정만 적어주세요</h2>
+              <p className={styles.questionLead}>확인한 내용만 저장합니다.</p>
+            </div>
+
+            <div className={styles.segmentGrid} role="group" aria-label="일정 종류 선택">
+              {(['injection', 'medication', 'clinic'] as const).map((type) => (
+                <SelectionChip key={type} className={styles.segmentChip} onClick={() => setDirectType(type)} selected={directType === type} tone={type === 'clinic' ? 'lavender' : 'sage'}>
+                  <span>{type === 'injection' ? '주사' : type === 'medication' ? '약 복용' : '병원 방문'}</span>
+                </SelectionChip>
+              ))}
+            </div>
+
+            <div className={styles.profileGrid}>
+              <label className={styles.directField}>
+                <span>일정 이름</span>
+                <input value={directTitle} onChange={(event) => setDirectTitle(event.target.value)} placeholder="예: 고날에프 주사" />
+              </label>
+              <div className={styles.directFieldRow}>
+                <label className={styles.directField}>
+                  <span>날짜</span>
+                  <input type="date" value={directDate} onChange={(event) => setDirectDate(event.target.value)} />
+                </label>
+                <label className={styles.directField}>
+                  <span>시간</span>
+                  <input type="time" value={directTime} onChange={(event) => setDirectTime(event.target.value)} />
+                </label>
+              </div>
+              <div className={styles.directFieldRow}>
+                <label className={styles.directField}>
+                  <span>용량</span>
+                  <input inputMode="decimal" value={directDose} onChange={(event) => setDirectDose(event.target.value)} placeholder="150" />
+                </label>
+                <label className={styles.directField}>
+                  <span>단위</span>
+                  <input value={directUnit} onChange={(event) => setDirectUnit(event.target.value)} placeholder="IU" />
+                </label>
+              </div>
+            </div>
+
+            <div className={styles.homePreviewCard} aria-label="홈 미리보기">
+              <small>홈 미리보기</small>
+              <strong>{directTitle.trim() || '일정 이름이 여기에 보여요'}</strong>
+              <span>{directDate || '날짜'} · {directTime || '시간'} · {directType === 'injection' ? '주사' : directType === 'medication' ? '약 복용' : '병원 방문'}{directDose.trim() ? ` · ${directDose.trim()}${directUnit.trim() ? ` ${directUnit.trim()}` : ''}` : ''}</span>
+            </div>
+
+            <BottomDock activeIndex={activeIndex}>
+              <CtaButton className={styles.primaryCta} disabled={!directTitle.trim() || savingDirectEntry} onClick={rememberDirectEntry} type="button">{savingDirectEntry ? '저장 중' : '이 일정 기억하기'}</CtaButton>
+            </BottomDock>
+          </section>
+        ) : null}
+
+        {activeStep === 'sharing' ? (
+          <section className={styles.screen} aria-labelledby="sharing-title">
+            <BackButton onClick={goBack} />
+            <div className={styles.stepHeader}>
+              <h2 className={styles.sectionTitle} id="sharing-title">어떻게 시작할까요?</h2>
+              <p className={styles.questionLead}>{savedReviewItems.length ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.` : '오늘 일정은 나중에 홈에서도 추가할 수 있어요.'}</p>
+            </div>
+            <div className={styles.methodGrid} role="group" aria-label="파트너 공유 선택">
+              <SelectionChip className={styles.methodCard} onClick={() => setSharingChoice('solo')} selected={sharingChoice === 'solo'} tone="sage">
+                <MethodIcon step="direct_entry" />
+                <span><strong>나 혼자 시작할게요</strong><small>먼저 내 홈에서 오늘 할 일만 확인해요.</small></span>
+                <i aria-hidden="true">›</i>
+              </SelectionChip>
+              <SelectionChip className={styles.methodCard} onClick={() => setSharingChoice('partner')} selected={sharingChoice === 'partner'} tone="lavender">
+                <MethodIcon step="text_paste" />
+                <span><strong>파트너와 함께 쓸게요</strong><small>완료 후 초대 링크를 준비해요.</small></span>
+                <i aria-hidden="true">›</i>
+              </SelectionChip>
+            </div>
+            <BottomDock activeIndex={activeIndex}>
+              <CtaButton className={styles.primaryCta} disabled={!sharingChoice} onClick={() => sharingChoice ? continueSharing(sharingChoice) : undefined} type="button">
+                <span>다음</span><span aria-hidden="true">›</span>
+              </CtaButton>
+            </BottomDock>
+          </section>
+        ) : null}
+
+        {activeStep === 'complete' ? (
+          selectedRole === 'partner' ? (
+            <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="complete-title">
+              <BackButton onClick={goBack} />
+              <HeroGlyph kind="document" done />
+              <div className={styles.heroCopy}>
+                <h2 className={styles.sectionTitle} id="complete-title">파트너는 초대 링크로 들어와 주세요</h2>
+                <p className={styles.questionLead}>치료자가 보낸 링크에서 오늘 도울 일만 확인할 수 있어요.</p>
+              </div>
+              <Notice className={styles.notice} tone="sage">파트너 계정 없이 링크 안내만 보여드리고 온보딩을 종료합니다.</Notice>
+              <BottomDock activeIndex={activeIndex}>
+                <CtaButton className={styles.primaryCta} onClick={() => window.location.assign('/')} type="button">처음 화면으로 가기</CtaButton>
+              </BottomDock>
+            </section>
+          ) : (
+            <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="complete-title">
+              <BackButton onClick={goBack} />
+              <HeroGlyph kind="document" done />
+              <div className={styles.heroCopy}>
+                <h2 className={styles.sectionTitle} id="complete-title">거의 다 왔어요!</h2>
+                <p className={styles.questionLead}>일정 후보를 확인하고 오늘 홈에서 만나보세요.</p>
+              </div>
+              <div className={styles.homePreviewCard} aria-label="일정 후보 요약">
+                <small>일정 후보 요약</small>
+                <strong>{savedReviewItems[0]?.title ?? '저장된 일정 없이 시작'}</strong>
+                <span>{savedReviewItems[0] ? `${formatCandidateType(savedReviewItems[0].type)} · ${formatCandidateDateTime(savedReviewItems[0].scheduled_at)} · ${formatCandidateDose(savedReviewItems[0].dose, savedReviewItems[0].unit)}` : '홈에서 직접 추가할 수 있어요.'}</span>
+              </div>
+              {sharingChoice === 'partner' ? <Notice className={styles.notice} tone="sage">파트너 초대 링크를 준비하도록 저장합니다.</Notice> : null}
+              <BottomDock activeIndex={activeIndex}>
+                <CtaButton className={styles.primaryCta} disabled={completingOnboarding} onClick={completeOnboarding} type="button">
+                  <span>{completingOnboarding ? '완료 중' : '시작하기'}</span><span aria-hidden="true">›</span>
+                </CtaButton>
+              </BottomDock>
+            </section>
+          )
+        ) : null}
+
+        {error ? <Notice className={styles.floatingError} tone="coral">{error}</Notice> : null}
+      </div>
+    </main>
   );
 }
 
@@ -699,14 +744,85 @@ function formatCandidateDose(dose: string | null, unit: string | null) {
 
 function PlaceholderStep({ body, onBack, title }: { body: string; onBack: () => void; title: string }) {
   return (
-    <section className={`${styles.choiceSection} ${styles.interviewSlide}`} aria-labelledby="placeholder-title">
-      <StatusBadge state="idle">준비 중</StatusBadge>
-      <h2 className={styles.sectionTitle} id="placeholder-title">{title}</h2>
-      <p className={styles.questionLead}>{body}</p>
-      <div className={styles.slideActions}>
-        <CtaButton onClick={onBack} variant="secondary" type="button">이전</CtaButton>
-        <CtaButton disabled type="button">확인 후 계속</CtaButton>
+    <section className={styles.screen} aria-labelledby="placeholder-title">
+      <BackButton onClick={onBack} />
+      <div className={styles.stepHeader}>
+        <p className={styles.kicker}>준비 중</p>
+        <h2 className={styles.sectionTitle} id="placeholder-title">{title}</h2>
+        <p className={styles.questionLead}>{body}</p>
       </div>
+      <BottomDock activeIndex={2}>
+        <CtaButton className={styles.primaryCta} disabled type="button">확인 후 계속</CtaButton>
+      </BottomDock>
     </section>
+  );
+}
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button aria-label="이전" className={styles.backButton} onClick={onClick} type="button">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="m15 5-7 7 7 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
+
+function BottomDock({ activeIndex, children }: { activeIndex: number; children?: ReactNode }) {
+  return (
+    <div className={styles.bottomDock}>
+      <ProgressDots activeIndex={activeIndex} />
+      {children}
+    </div>
+  );
+}
+
+function ProgressDots({ activeIndex }: { activeIndex: number }) {
+  return (
+    <div className={styles.progressDots} aria-hidden="true">
+      {VISIBLE_PROGRESS_STEPS.map((step, index) => <span key={step.id} data-active={index === activeIndex} />)}
+    </div>
+  );
+}
+
+function HeroGlyph({ kind, done = false }: { kind: 'calendar' | 'document'; done?: boolean }) {
+  return (
+    <span className={styles.heroGlyph} data-kind={kind} aria-hidden="true">
+      {kind === 'calendar' ? (
+        <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
+          <rect x="12" y="16" width="40" height="40" rx="10" fill="#FFF7F2" />
+          <path d="M22 13v9M42 13v9M19 30h26M25 39h2M33 39h2M41 39h2M25 47h2M33 47h2M41 47h2" stroke="#D8624D" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="51" cy="48" r="15" fill="url(#calendarGradient)" />
+          <path d="M51 41v14M44 48h14" stroke="white" strokeWidth="3.4" strokeLinecap="round" />
+          <defs><linearGradient id="calendarGradient" x1="40" y1="35" x2="62" y2="61" gradientUnits="userSpaceOnUse"><stop stopColor="#F58A70"/><stop offset="1" stopColor="#D35C48"/></linearGradient></defs>
+        </svg>
+      ) : (
+        <svg width="82" height="82" viewBox="0 0 82 82" fill="none">
+          <circle cx="41" cy="41" r="38" fill="#FFF7F2" />
+          <rect x="27" y="20" width="30" height="38" rx="7" fill="white" />
+          <path d="M35 32h14M35 41h14M35 50h9" stroke="#E2BBAE" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="58" cy="56" r="15" fill="url(#documentGradient)" />
+          <path d="m52 55 4 4 8-9" stroke="white" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
+          {done ? <circle cx="24" cy="25" r="2" fill="#EFD6CA" /> : null}
+          <defs><linearGradient id="documentGradient" x1="47" y1="43" x2="69" y2="69" gradientUnits="userSpaceOnUse"><stop stopColor="#F58A70"/><stop offset="1" stopColor="#D35C48"/></linearGradient></defs>
+        </svg>
+      )}
+    </span>
+  );
+}
+
+function MethodIcon({ step }: { step: AddMethodStep }) {
+  const path = step === 'photo_processing'
+    ? 'M5 9.5h4l1.4-2h7.2l1.4 2h4v11H5v-11Zm9 8a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z'
+    : step === 'text_paste'
+      ? 'M7 4.5h9l5 5v14H7v-19Zm9 0v5h5M10.5 14h7M10.5 18h7'
+      : 'M6 19.5 18.8 6.7a3 3 0 0 1 4.2 4.2L10.2 23.7 5 25l1-5.5Z';
+
+  return (
+    <span className={styles.methodIcon} aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d={path} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
   );
 }

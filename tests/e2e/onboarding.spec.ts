@@ -7,12 +7,12 @@ async function acceptPrivacyForOnboarding(context: BrowserContext) {
 async function goToAddMethod(page: Page) {
   await page.goto('/onboarding');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /치료자 내 병원 안내/ }).click();
-  await page.getByRole('button', { name: /처음/ }).click();
+  await page.getByRole('button', { name: /치료자/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
+  await page.getByRole('button', { name: '추가하기' }).click();
 }
 
-test('onboarding shell renders brand intro, patient experience sub-step, and add-method cards', async ({ context, page }) => {
+test('onboarding shell renders premium brand intro, role cards, first-add prompt, and add-method cards', async ({ context, page }) => {
   await acceptPrivacyForOnboarding(context);
   await page.goto('/onboarding');
 
@@ -21,10 +21,10 @@ test('onboarding shell renders brand intro, patient experience sub-step, and add
 
   await page.getByRole('button', { name: '시작하기' }).click();
   await expect(page.getByRole('heading', { name: '누구로 시작할까요?' })).toBeVisible();
-  await page.getByRole('button', { name: /치료자 내 병원 안내/ }).click();
-  await expect(page.getByRole('heading', { name: '치료 경험을 알려주세요' })).toBeVisible();
-  await page.getByRole('button', { name: /처음/ }).click();
+  await page.getByRole('button', { name: /치료자/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
+  await expect(page.getByRole('heading', { name: /오늘 기억할 것/ })).toBeVisible();
+  await page.getByRole('button', { name: '추가하기' }).click();
 
   await expect(page.getByRole('heading', { name: '어떻게 추가할까요?' })).toBeVisible();
   await expect(page.getByRole('button', { name: /사진으로 남기기/ })).toBeVisible();
@@ -37,7 +37,8 @@ test('partner role exits to invite guidance without saving sensitive data', asyn
   await page.goto('/onboarding');
 
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /파트너 치료자가 보낸/ }).click();
+  await page.getByRole('button', { name: /파트너/ }).click();
+  await page.getByRole('button', { name: '다음' }).click();
 
   await expect(page.getByRole('heading', { name: '파트너는 초대 링크로 들어와 주세요' })).toBeVisible();
   await expect(page.getByText('파트너 계정 없이 링크 안내만 보여드리고 온보딩을 종료합니다.')).toBeVisible();
