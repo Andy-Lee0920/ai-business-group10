@@ -28,6 +28,9 @@ interface Props {
 }
 
 const todayDate = () => new Date().toISOString().slice(0, 10);
+const FEVIO_LOGO_SRC = '/assets/onboarding/fevio-logo.svg';
+const ROLE_PATIENT_IMAGE_SRC = '/assets/onboarding/role-patient.png';
+const ROLE_PARTNER_IMAGE_SRC = '/assets/onboarding/role-partner.png';
 
 export function OnboardingScreen({ inviteCode }: Props) {
   const router = useRouter();
@@ -147,19 +150,10 @@ export function OnboardingScreen({ inviteCode }: Props) {
 
   if (step === 'brand_intro') return (
     <div style={screenStyle}>
-      <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>Fevio</p>
-        <div aria-hidden style={{ display: 'grid', placeItems: 'center', width: 132, height: 132, borderRadius: onboardingTokens.radiusPill, margin: '0 auto 28px', background: 'radial-gradient(circle, #FCE1D8, #FFF7EF 70%)', fontSize: 64 }}>🌿♡</div>
-        <h1 style={{ ...titleStyle, textAlign: 'center', fontFamily: 'Georgia, serif', fontSize: 36 }}>Fevio</h1>
-        <p style={{ ...leadStyle, textAlign: 'center', fontSize: 18, color: onboardingTokens.textMain }}>오늘의 주사와 약을 조용히 챙겨드릴게요</p>
-        <p style={{ ...leadStyle, textAlign: 'center' }}>병원 안내를 사용자가 확인한 일정으로 바꿔서 첫 화면에 보여드립니다.</p>
-        <div style={{ marginTop: 28, display: 'grid', gap: 10 }}>
-          {['역할 선택', '동의 후 일정 저장', 'Home에서 오늘 일정 확인'].map((label) => (
-            <div key={label} style={{ minHeight: 44, padding: '14px 16px', borderRadius: onboardingTokens.radiusCard, background: '#fff', border: `1.5px solid ${onboardingTokens.border}`, color: '#6B5E55', fontWeight: 700 }}>
-              {label}
-            </div>
-          ))}
-        </div>
+      <div style={{ flex: 1, display: 'grid', alignContent: 'center', paddingBottom: 64 }}>
+        <img src={FEVIO_LOGO_SRC} alt="Fevio" width={220} height={69} style={{ width: 220, height: 'auto', margin: '0 auto 52px', display: 'block' }} />
+        <h1 style={{ ...titleStyle, textAlign: 'center', fontSize: 28, letterSpacing: '-0.04em', lineHeight: 1.18, marginBottom: 14 }}><span>오늘 필요한 것만</span><br /><span>보여드릴게요</span></h1>
+        <p style={{ ...leadStyle, textAlign: 'center', maxWidth: 300, margin: '0 auto', wordBreak: 'keep-all' }}>병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.</p>
       </div>
       {stepDots(step)}
       <button type="button" onClick={() => go('role_selection')} style={ctaStyle(false)}>시작하기</button>
@@ -171,11 +165,11 @@ export function OnboardingScreen({ inviteCode }: Props) {
       <button type="button" onClick={() => go('brand_intro')} style={backButtonStyle}>← 처음으로</button>
       <div style={{ flex: 1 }}>
         <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>역할 선택</p>
-        <h1 style={titleStyle}>어떤 역할로 시작하시나요?</h1>
-        <p style={leadStyle}>역할에 따라 오늘 보이는 화면과 공유 범위가 달라집니다.</p>
+        <h1 style={titleStyle}>누구로 시작할까요?</h1>
+        <p style={leadStyle}>필요한 화면만 먼저 보여드릴게요.</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }} data-testid="role-split-cards">
-          <RoleButton active={role === 'patient'} icon="♡" title="기록자" description="병원 안내를 직접 확인하고 저장합니다." onClick={() => selectRole('patient')} />
-          <RoleButton active={role === 'partner'} icon="👥" title="파트너" description="초대 코드로 읽기 전용 화면을 봅니다." onClick={() => selectRole('partner')} />
+          <RoleButton active={role === 'patient'} imageSrc={ROLE_PATIENT_IMAGE_SRC} imageAlt="치료자" title="치료자" description="오늘 일정 · 완료 기록" onClick={() => selectRole('patient')} />
+          <RoleButton active={role === 'partner'} imageSrc={ROLE_PARTNER_IMAGE_SRC} imageAlt="파트너" title="파트너" description="공유 일정 · 읽기 전용" onClick={() => selectRole('partner')} />
         </div>
       </div>
       {stepDots(step)}
