@@ -30,7 +30,7 @@ test('onboarding first schedule is saved only after user confirmation', async ({
 
   await page.goto('/onboarding');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /나는 기록자예요/ }).click();
+  await page.getByRole('button', { name: /기록자/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
 
   await page.getByLabel(/개인정보 수집·이용/).check();
@@ -50,7 +50,7 @@ test('onboarding first schedule is saved only after user confirmation', async ({
   await page.getByRole('button', { name: '확인 단계로' }).click();
 
   await expect(page.getByRole('heading', { name: '이 일정으로 Home을 시작할게요' })).toBeVisible();
-  await expect(page.getByText('source: onboarding_interview · requiresUserConfirmation: true')).toBeVisible();
+  await expect(page.getByText('확인 후 저장 · 입력 보조 자동 저장 없음')).toBeVisible();
   await expect.poll(() => onboardingRequests.length).toBe(0);
 
   await page.getByRole('button', { name: '확인하고 저장' }).click();
@@ -73,4 +73,36 @@ test('onboarding first schedule is saved only after user confirmation', async ({
       inputAssist: { source: 'aliases', requiresUserConfirmation: true },
     },
   });
+});
+
+
+test('clinic visit onboarding keeps medication-only fields hidden', async ({ context, page }) => {
+  await context.addCookies([
+    { name: 'fevio_privacy_gate_v1', value: 'accepted', domain: '127.0.0.1', path: '/', sameSite: 'Lax' },
+  ]);
+
+  await page.goto('/onboarding');
+  await page.getByRole('button', { name: '시작하기' }).click();
+  await page.getByRole('button', { name: /기록자/ }).click();
+  await page.getByRole('button', { name: '다음' }).click();
+
+  await page.getByLabel(/개인정보 수집·이용/).check();
+  await page.getByLabel(/민감정보 처리/).check();
+  await page.getByLabel(/의료 판단을 하지 않음/).check();
+  await page.getByLabel(/AI\/입력 보조는 자동 저장하지 않음/).check();
+  await page.getByRole('button', { name: '첫 일정 입력하기' }).click();
+
+  await page.getByRole('button', { name: /병원 방문/ }).click();
+
+  await expect(page.getByText('방문 일정은 약품 검색 없이 날짜와 시간만 먼저 확인합니다.')).toBeVisible();
+  await expect(page.getByText('방문 일정 이름')).toBeVisible();
+  await expect(page.getByLabel('약품 검색')).toHaveCount(0);
+  await expect(page.getByLabel('용량')).toHaveCount(0);
+  await expect(page.getByLabel('단위')).toHaveCount(0);
+
+  await page.getByLabel('일정 이름').fill('병원 방문');
+  await page.getByRole('button', { name: '확인 단계로' }).click();
+  await expect(page.getByRole('heading', { name: '이 일정으로 Home을 시작할게요' })).toBeVisible();
+  await expect(page.getByText('병원 방문')).toHaveCount(2);
+  await expect(page.getByText('확인 후 저장 · 입력 보조 자동 저장 없음')).toBeVisible();
 });

@@ -93,6 +93,21 @@ describe('SLC Supabase migrations', () => {
     expect(scheduleItems).toContain("'onboarding_interview'");
   });
 
+  it('adds a forward remote repair migration for Session A onboarding columns and source constraints', () => {
+    const repair = readMigration('202605150001_onboarding_remote_schema.sql');
+
+    for (const expected of [
+      'alter table public.user_consents',
+      'add column if not exists privacy_boundary_accepted_at',
+      'add column if not exists input_assist_disclaimer_accepted_at',
+      'consent_source in',
+      "'onboarding_interview'",
+      'alter table public.schedule_items',
+    ]) {
+      expect(repair).toContain(expected);
+    }
+  });
+
   it('seeds Clinic Guide aliases for the required 10 IVF medications', () => {
     const aliases = readMigration('202605140002_slc_clinic_guide_medication_aliases.sql');
 

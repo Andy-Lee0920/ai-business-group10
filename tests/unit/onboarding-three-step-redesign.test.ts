@@ -11,8 +11,9 @@ describe('Session A onboarding redesign contract', () => {
       '병원 안내를 사용자가 확인한 일정으로 바꿔서 첫 화면에 보여드립니다.',
       '🌿♡',
       'stepDots',
-      '나는 기록자예요',
-      '나는 파트너예요',
+      'role-split-cards',
+      '기록자',
+      '파트너',
       '개인정보 수집·이용에 동의합니다.',
       '민감정보 처리에 동의합니다.',
       'Fevio는 의료 판단을 하지 않음을 이해했습니다.',
@@ -20,11 +21,13 @@ describe('Session A onboarding redesign contract', () => {
       '초대 코드 입력',
       '첫 일정 입력하기',
       '약품 검색',
-      '직접 입력 row 사용하기',
+      '방문 일정은 약품 검색 없이 날짜와 시간만 먼저 확인합니다.',
+      '방문 일정 이름',
+      '직접 입력하기',
       '선택적 메모',
       '나중에 할게요',
       '확인하고 저장',
-      'source: onboarding_interview · requiresUserConfirmation: true',
+      '확인 후 저장 · 입력 보조 자동 저장 없음',
     ]) {
       expect(screen + flow).toContain(copy);
     }

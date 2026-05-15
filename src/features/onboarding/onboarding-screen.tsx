@@ -52,16 +52,17 @@ export function OnboardingScreen({ inviteCode }: Props) {
   const allAccepted = hasRequiredConsentChecks(consentChecks);
   const partnerCodeMissing = role === 'partner' && !inputCode.trim();
   const scheduledAt = useMemo(() => toKstIso(date, time), [date, time]);
+  const usesMedicationFields = chipId !== 'clinic';
   const firstScheduleDraft = useMemo<FirstScheduleDraft | null>(() => buildFirstScheduleDraft({
     chipId,
-    title: title || matchedMedication?.brand_name_ko || medicationQuery,
+    title: title || (usesMedicationFields ? matchedMedication?.brand_name_ko || medicationQuery : ''),
     scheduledAt,
-    dose,
-    unit,
+    dose: usesMedicationFields ? dose : null,
+    unit: usesMedicationFields ? unit : null,
     optionalMemo,
-    matchedMedication,
-    assistSource,
-  }), [assistSource, chipId, date, dose, matchedMedication, medicationQuery, optionalMemo, scheduledAt, time, title, unit]);
+    matchedMedication: usesMedicationFields ? matchedMedication : null,
+    assistSource: usesMedicationFields ? assistSource : 'none',
+  }), [assistSource, chipId, date, dose, matchedMedication, medicationQuery, optionalMemo, scheduledAt, time, title, unit, usesMedicationFields]);
 
   const selectRole = (nextRole: OnboardingRole) => {
     setRole(nextRole);
@@ -172,8 +173,10 @@ export function OnboardingScreen({ inviteCode }: Props) {
         <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>역할 선택</p>
         <h1 style={titleStyle}>어떤 역할로 시작하시나요?</h1>
         <p style={leadStyle}>역할에 따라 오늘 보이는 화면과 공유 범위가 달라집니다.</p>
-        <RoleButton active={role === 'patient'} icon="♡" title="나는 기록자예요" description="병원 안내를 직접 확인하고 오늘 일정으로 저장합니다." onClick={() => selectRole('patient')} />
-        <RoleButton active={role === 'partner'} icon="👥" title="나는 파트너예요" description="초대 코드로 연결하고 읽기 전용 도움 화면을 봅니다." onClick={() => selectRole('partner')} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }} data-testid="role-split-cards">
+          <RoleButton active={role === 'patient'} icon="♡" title="기록자" description="병원 안내를 직접 확인하고 저장합니다." onClick={() => selectRole('patient')} />
+          <RoleButton active={role === 'partner'} icon="👥" title="파트너" description="초대 코드로 읽기 전용 화면을 봅니다." onClick={() => selectRole('partner')} />
+        </div>
       </div>
       {stepDots(step)}
       <button type="button" onClick={proceedFromRole} disabled={!role} style={ctaStyle(!role)}>다음</button>
@@ -216,7 +219,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
       <div style={{ flex: 1 }}>
         <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>첫 일정 등록</p>
         <h1 style={titleStyle}>처음 확인할 일정을 하나만 남겨주세요</h1>
-        <p style={leadStyle}>AI/입력 보조는 약 이름을 찾는 데만 쓰고, 확인 전에는 저장하지 않습니다.</p>
+        <p style={leadStyle}>{usesMedicationFields ? '약 이름 찾기는 선택 사항입니다. 확인 전에는 저장하지 않습니다.' : '방문 일정은 약품 검색 없이 날짜와 시간만 먼저 확인합니다.'}</p>
         <div role="group" aria-label="첫 일정 종류" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 18 }}>
           {FIRST_SCHEDULE_CHIPS.map((chip) => (
             <button key={chip.id} type="button" onClick={() => setChipId(chip.id)} style={{ minHeight: 78, borderRadius: 16, border: `1.5px solid ${chipId === chip.id ? onboardingTokens.primary : onboardingTokens.border}`, background: chipId === chip.id ? onboardingTokens.activeBg : '#fff', color: onboardingTokens.textMain, fontWeight: 800 }}>
@@ -224,24 +227,30 @@ export function OnboardingScreen({ inviteCode }: Props) {
             </button>
           ))}
         </div>
-        <label style={{ display: 'block' }}>
-          <span style={labelStyle}>약품 검색</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input aria-label="약품 검색" type="search" placeholder="예: 고날, 세트로, 오비드렐" value={medicationQuery} onChange={(event) => setMedicationQuery(event.target.value)} style={inputStyle} />
-            <button type="button" onClick={normalizeMedication} disabled={normalizing || !medicationQuery.trim()} style={{ ...smallButtonStyle, opacity: normalizing || !medicationQuery.trim() ? 0.5 : 1 }}>{normalizing ? '검색 중' : '검색'}</button>
-          </div>
-        </label>
-        {matchedMedication ? <p style={assistNoticeStyle}>입력 보조가 `{matchedMedication.brand_name_ko}`를 찾았어요. 저장 전 직접 확인해 주세요.</p> : null}
-        <button type="button" onClick={() => { setMatchedMedication(null); setAssistSource('none'); if (!title.trim()) setTitle(medicationQuery); }} style={{ ...smallButtonStyle, width: '100%', marginBottom: 14 }}>직접 입력 row 사용하기</button>
-        <label style={{ display: 'block' }}><span style={labelStyle}>일정 이름</span><input aria-label="일정 이름" placeholder="예: 고날에프 주사" value={title} onChange={(event) => setTitle(event.target.value)} style={inputStyle} /></label>
+        {usesMedicationFields ? (
+          <>
+            <label style={{ display: 'block' }}>
+              <span style={labelStyle}>약품 검색</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input aria-label="약품 검색" type="search" placeholder="예: 고날, 세트로, 오비드렐" value={medicationQuery} onChange={(event) => setMedicationQuery(event.target.value)} style={inputStyle} />
+                <button type="button" onClick={normalizeMedication} disabled={normalizing || !medicationQuery.trim()} style={{ ...smallButtonStyle, opacity: normalizing || !medicationQuery.trim() ? 0.5 : 1 }}>{normalizing ? '검색 중' : '검색'}</button>
+              </div>
+            </label>
+            {matchedMedication ? <p style={assistNoticeStyle}>입력 보조가 `{matchedMedication.brand_name_ko}`를 찾았어요. 저장 전 직접 확인해 주세요.</p> : null}
+            <button type="button" onClick={() => { setMatchedMedication(null); setAssistSource('none'); if (!title.trim()) setTitle(medicationQuery); }} style={{ ...smallButtonStyle, width: '100%', marginBottom: 14 }}>직접 입력하기</button>
+          </>
+        ) : null}
+        <label style={{ display: 'block' }}><span style={labelStyle}>{usesMedicationFields ? '일정 이름' : '방문 일정 이름'}</span><input aria-label="일정 이름" placeholder={usesMedicationFields ? '예: 고날에프 주사' : '예: 병원 방문 / 채혈 검사'} value={title} onChange={(event) => setTitle(event.target.value)} style={inputStyle} /></label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <label><span style={labelStyle}>날짜</span><input aria-label="날짜" type="date" value={date} onChange={(event) => setDate(event.target.value)} style={inputStyle} /></label>
           <label><span style={labelStyle}>시간</span><input aria-label="시간" type="time" value={time} onChange={(event) => setTime(event.target.value)} style={inputStyle} /></label>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <label><span style={labelStyle}>용량 선택 입력</span><input aria-label="용량" placeholder="150" value={dose} onChange={(event) => setDose(event.target.value)} style={inputStyle} /></label>
-          <label><span style={labelStyle}>단위 선택 입력</span><input aria-label="단위" placeholder="IU" value={unit} onChange={(event) => setUnit(event.target.value)} style={inputStyle} /></label>
-        </div>
+        {usesMedicationFields ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <label><span style={labelStyle}>용량 선택 입력</span><input aria-label="용량" placeholder="150" value={dose} onChange={(event) => setDose(event.target.value)} style={inputStyle} /></label>
+            <label><span style={labelStyle}>단위 선택 입력</span><input aria-label="단위" placeholder="IU" value={unit} onChange={(event) => setUnit(event.target.value)} style={inputStyle} /></label>
+          </div>
+        ) : null}
         <label style={{ display: 'block' }}><span style={labelStyle}>선택적 메모</span><textarea aria-label="선택적 메모" placeholder="병원 안내를 그대로 적어두세요. 자동 저장이나 판단에는 쓰지 않습니다." value={optionalMemo} onChange={(event) => setOptionalMemo(event.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} /></label>
       </div>
       {stepDots(step)}
@@ -264,7 +273,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
           <span>{date} {time}</span>
           {firstScheduleDraft?.dose ? <span>{firstScheduleDraft.dose} {firstScheduleDraft.unit ?? ''}</span> : null}
           {firstScheduleDraft?.optionalMemo ? <small>{firstScheduleDraft.optionalMemo}</small> : null}
-          <small>source: onboarding_interview · requiresUserConfirmation: true</small>
+          <small>확인 후 저장 · 입력 보조 자동 저장 없음</small>
         </section>
       </div>
       {stepDots(step)}
