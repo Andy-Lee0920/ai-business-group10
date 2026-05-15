@@ -60,6 +60,24 @@ describe('app onboarding shell contract', () => {
     expect(onboardingStyles).not.toContain('onboardingShellAddIntro');
   });
 
+
+  it('keeps onboarding photo and method screens in the warm frosted coral reference tone', () => {
+    for (const token of [
+      '--onboarding-cream: #fff8f2',
+      '--onboarding-coral: #e76551',
+      '--onboarding-coral-bright: #f37661',
+      '--onboarding-surface: rgba(255, 252, 248, 0.86)',
+      'backdrop-filter: blur(18px)',
+      'var(--onboarding-shadow)',
+      'linear-gradient(180deg, var(--onboarding-coral-bright) 0%, var(--onboarding-coral)',
+      'var(--onboarding-coral-soft)',
+    ]) {
+      expect(onboardingStyles).toContain(token);
+    }
+    expect(onboardingStyles).not.toContain('#f47d63');
+    expect(onboardingStyles).not.toContain('#d95f4c');
+  });
+
   it('keeps direct entry confirmation-first and preview-driven', () => {
     expect(onboardingClient).toContain('이 일정 기억하기');
     expect(onboardingClient).toContain("fetch('/api/schedule/add'");
