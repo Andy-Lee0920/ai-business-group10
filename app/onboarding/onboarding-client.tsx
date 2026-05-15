@@ -349,8 +349,10 @@ export function OnboardingClient() {
     }
   }
 
+  const addIntroAsBackground = activeStep === 'add_method' && !addMethodIntroSeen;
+
   return (
-    <main className={`app-shell ${styles.onboardingShell}`}>
+    <main className={`app-shell ${styles.onboardingShell} ${addIntroAsBackground ? styles.onboardingShellAddIntro : ''}`}>
       <div className={styles.onboardingFlow} aria-label="처음 설정 인터뷰" aria-description={progressLabel}>
         {activeStep === 'brand_intro' ? (
           <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="brand-intro-title">

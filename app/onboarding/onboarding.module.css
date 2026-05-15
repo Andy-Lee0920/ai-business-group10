@@ -10,6 +10,21 @@
   color: var(--slc-text, #2a211d);
 }
 
+.onboardingShellAddIntro {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 253, 251, 0.26) 0%,
+      rgba(255, 253, 251, 0.34) 38%,
+      rgba(250, 247, 242, 0.78) 70%,
+      var(--slc-bg, #faf7f2) 100%
+    ),
+    url('/assets/slc/clinic-visit-clipboard.png') center -36px / min(150%, 640px) auto no-repeat,
+    radial-gradient(circle at 22% 6%, rgba(255, 236, 224, 0.62), transparent 34%),
+    linear-gradient(180deg, #fffdfb 0%, #faf4ef 100%);
+  background-blend-mode: normal, multiply, normal, normal;
+}
+
 .onboardingFlow {
   position: relative;
   display: flex;
@@ -212,17 +227,6 @@
 }
 
 .addMethodIntroScreen {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 253, 251, 0.34) 0%,
-      rgba(255, 253, 251, 0.5) 34%,
-      rgba(250, 247, 242, 0.86) 66%,
-      var(--slc-bg, #faf7f2) 100%
-    ),
-    url('/assets/slc/clinic-visit-clipboard.png') center -28px / min(148%, 620px) auto no-repeat,
-    var(--slc-bg, #faf7f2);
-  background-blend-mode: normal, soft-light, normal;
   isolation: isolate;
   justify-content: flex-start;
 }
