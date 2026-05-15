@@ -17,9 +17,18 @@ Fevio는 하나의 IVF care cycle state를 환자와 파트너의 역할에 맞�
 | Lane | URL | 목적 | 상태 |
 |---|---|---|---|
 | Real SLC | <https://project-oznp0.vercel.app> | 실제 Auth/Supabase/RLS/Capture/Confirm/Partner 검증 | production app mode |
-| Presentation demo | <https://ai-business-group10.vercel.app/demo?mode=stage&stage=2> | 7-stage IVF state-driven Generative UI 데모 | backendless presentation mode |
+| Scenario testbed | <https://ai-business-group10.vercel.app/home> | 로그인 없이 Home · Calendar · Records · More 상태를 한 번에 확인 | backendless presentation mode |
+| 7-stage demo | <https://ai-business-group10.vercel.app/demo?mode=stage&stage=2> | 7-stage IVF state-driven Generative UI 데모 | backendless presentation mode |
 
-`project-oznp0`는 실제 제품 검증 레인입니다. `/demo`는 presentation host에서만 열리며, real lane에서는 backend-first 제품 흐름을 보호하기 위해 demo route가 열리지 않는 것이 정상입니다.
+`project-oznp0`는 실제 제품 검증 레인입니다. 비로그인 `/home` 접근은 `/auth/sign-in`으로 이동해야 하며, 정상 진입 순서는 `privacy → Google 로그인 → onboarding → home`입니다.
+
+`ai-business-group10`는 서버리스한 presentation/testbed 레인입니다. Google 로그인 없이 다음 화면을 직접 열어 최근 Fevio 변경 상태를 확인합니다.
+
+- [`/home`](https://ai-business-group10.vercel.app/home) — 지금/놓침/병원/비어 있음 Home 시나리오 갤러리
+- [`/calendar`](https://ai-business-group10.vercel.app/calendar) — 일정 후보 캘린더/타임라인 데모
+- [`/records`](https://ai-business-group10.vercel.app/records) — 완료·놓침·병원 업데이트 기록 데모
+- [`/more`](https://ai-business-group10.vercel.app/more) — 파트너 공유·관리 상태 데모
+- [`/demo?mode=stage&stage=2`](https://ai-business-group10.vercel.app/demo?mode=stage&stage=2) — IVF 7-stage dual-panel demo
 
 ---
 
@@ -29,10 +38,13 @@ Fevio가 해결하는 문제는 “정보 부족”이 아니라 **병원 지시
 
 ```text
 Privacy Gate
-→ Clinic memo capture
-→ Manual split review
-→ User confirmation
-→ Confirmed care action cards
+→ Google Auth
+→ Onboarding role and first clinic instruction
+→ Clinic memo/photo/text capture
+→ LLM-assisted candidate extraction
+→ Missing-field / manual review
+→ User confirmation only
+→ Confirmed schedule_items / care action cards
 → Care context / care state
 → Role-aware home surface
 → Partner-safe projection
@@ -87,13 +99,83 @@ IVF_STAGE
 
 | 영역 | 구현 상태 | 주요 파일 |
 |---|---|---|
-| Privacy/Auth boundary | 개인정보·의료 경계 후 민감 데이터 입력 | `app/privacy`, `app/auth/*`, `middleware.ts` |
+| Privacy/Auth boundary | 개인정보 경계 → Google 로그인 → 온보딩 진입 | `app/privacy`, `app/auth/*`, `middleware.ts` |
+| Onboarding extraction | 사진/문자/직접 입력 → 후보 일정 → 사용자 확인 저장 | `app/onboarding`, `app/api/onboard/*`, `supabase/functions/schedule-extract` |
+| Candidate persistence | `schedule_candidates` draft → confirmed `schedule_items` | `supabase/migrations/*schedule_candidates*`, `app/api/onboard/candidates/confirm` |
 | Capture / Confirm | 병원 메모 → split candidate → confirmed card | `app/capture`, `app/split-review`, `app/api/capture`, `app/api/confirm` |
-| Adaptive Home | care context에 따른 홈 surface | `app/(authed)/home`, `src/features/adaptive-home/*` |
+| SLC Today Home | 오늘 일정·놓침·병원 방문에 따른 홈 surface | `app/(authed)/home`, `src/features/today/*`, `src/domain/slc-home-focus.ts` |
+| Records / More | 완료 기록, 병원 업데이트, 파트너 공유 관리 | `app/(authed)/records`, `app/(authed)/more` |
 | Partner View | raw note 없이 partner-visible action만 projection | `app/partner/[token]`, `src/domain/partner-role-projection.ts` |
 | 2WW / Result Protection | 대기 운영 체계와 음성 결과 보호 surface | `src/domain/two-week-wait.ts`, `src/domain/result-protection.ts` |
+| Scenario testbed | 로그인 없는 Home/Calendar/Records/More fixture surface | `src/features/presentation/*`, `src/features/today/presentation-home-demo.tsx` |
 | Demo | 7-stage state-driven interactive prototype | `app/demo/*` |
 | Presentation fixtures | demo/presentation cards 단일 정본 | `src/features/adaptive-home/presentation-scenarios.ts` |
+
+---
+
+## 최근 이슈 기반 구현 맵
+
+이 README는 2026-05-15 기준 GitHub 이슈 상태를 반영합니다. 이슈 종료는 자동 테스트만으로 하지 않고, Fevio의 URL-action-result 기준과 배포 smoke를 함께 확인합니다.
+
+### 최근 Green: 온보딩 입력 → 일정 후보 → 확인 저장
+
+| Issue | 상태 | 의미 |
+|---|---|---|
+| [#312](https://github.com/Andy-Lee0920/ai-business-group10/issues/312) | Closed | `schedule_candidates` draft 테이블과 `schedule_items.source='capture'` 기반 마련 |
+| [#313](https://github.com/Andy-Lee0920/ai-business-group10/issues/313) | Closed | private `clinic-photos` storage와 photo upload API |
+| [#314](https://github.com/Andy-Lee0920/ai-business-group10/issues/314) | Closed | `schedule-extract` image mode Edge Function |
+| [#316](https://github.com/Andy-Lee0920/ai-business-group10/issues/316) | Closed | text paste → LLM extract → draft candidate API |
+| [#317](https://github.com/Andy-Lee0920/ai-business-group10/issues/317) | Closed | confirmed candidate만 `schedule_items`로 확정 저장 |
+| [#318](https://github.com/Andy-Lee0920/ai-business-group10/issues/318) | Closed | 직접 입력 fallback form |
+| [#319](https://github.com/Andy-Lee0920/ai-business-group10/issues/319) | Closed | photo analyze API → Edge Function → draft insert |
+| [#320](https://github.com/Andy-Lee0920/ai-business-group10/issues/320) | Closed | photo processing 진행 UI와 direct_entry 전환 |
+| [#321](https://github.com/Andy-Lee0920/ai-business-group10/issues/321) | Closed | 후보 카드 인라인 편집·확인·거절 |
+| [#322](https://github.com/Andy-Lee0920/ai-business-group10/issues/322) | Closed | 문자 붙여넣기 분석 → candidate review |
+| [#323](https://github.com/Andy-Lee0920/ai-business-group10/issues/323) | Closed | sharing/complete 스텝과 `/home` 진입 |
+| [#330](https://github.com/Andy-Lee0920/ai-business-group10/issues/330) · [#331](https://github.com/Andy-Lee0920/ai-business-group10/issues/331) · [#332](https://github.com/Andy-Lee0920/ai-business-group10/issues/332) | Closed | schedule/storage/Edge Function 배포 검증 Red→Green |
+
+완성된 온보딩 저장 원칙:
+
+```text
+raw hospital instruction
+→ parsed schedule intent / draft candidates
+→ user edits or fills missing fields
+→ user confirms
+→ confirmed schedule_items only
+→ home renders executable cards
+```
+
+### 진행 중 Epic: Home storyline / care-state hero
+
+| Issue | 상태 | 구현 방향 |
+|---|---|---|
+| [#341](https://github.com/Andy-Lee0920/ai-business-group10/issues/341) | Open Epic | 홈을 정적 카드 그리드가 아니라 4상태 스토리라인으로 재편 |
+| [#342](https://github.com/Andy-Lee0920/ai-business-group10/issues/342) | Open | 60분 윈도우 기반 SVG `InjectionCountdownArc` |
+| [#343](https://github.com/Andy-Lee0920/ai-business-group10/issues/343) | Open | 서버 컴포넌트 기준 주사/진료일/진료후/기본 hero 스위처 |
+| [#344](https://github.com/Andy-Lee0920/ai-business-group10/issues/344) | Open | 진료 후 `병원 다녀오셨나요?` 플로팅 배너 |
+| [#347](https://github.com/Andy-Lee0920/ai-business-group10/issues/347) | Open | 주사 1시간 전·15분 전 알림 Edge Function |
+
+Home 상태 우선순위:
+
+```text
+Injection countdown
+→ clinic day
+→ post-clinic follow-up
+→ quiet default
+```
+
+### 다음 IA / Navigation 묶음
+
+| Issue | 상태 | 구현 방향 |
+|---|---|---|
+| [#352](https://github.com/Andy-Lee0920/ai-business-group10/issues/352) | Open | BottomNav 3탭 → 홈/캘린더/+/기록/설정 5탭 |
+| [#353](https://github.com/Andy-Lee0920/ai-business-group10/issues/353) | Open | `/add`와 `/clinic-update`가 같은 입력 파이프라인 공유 (`mode='schedule' | 'memo'`) |
+| [#354](https://github.com/Andy-Lee0920/ai-business-group10/issues/354) | Open | `+` 바텀시트: 일정 추가 / 병원 메모 선택 |
+| [#355](https://github.com/Andy-Lee0920/ai-business-group10/issues/355) | Open | `/calendar` 월 뷰 → 날짜별 care card timeline |
+| [#356](https://github.com/Andy-Lee0920/ai-business-group10/issues/356) | Open | `/records` 영수증 단건 입력과 누적 합산 |
+| [#357](https://github.com/Andy-Lee0920/ai-business-group10/issues/357) | Open | `/more` → `/settings` 이관, 파트너 연결 통합 |
+
+현재 presentation testbed는 위 IA 전환의 시각/상태 검증을 위해 `/home`, `/calendar`, `/records`, `/more`를 로그인 없이 제공합니다. 실제 제품 레인에서는 같은 경로가 Auth/RLS 보호를 유지해야 합니다.
 
 ---
 
@@ -102,8 +184,8 @@ IVF_STAGE
 - Raw clinic text는 partner view에 노출하지 않는다.
 - Partner token은 server-controlled validation을 통과해야 한다.
 - `display_safety_level`은 UI 우선순위이지 의학적 판단이 아니다.
-- LLM 기능은 P0 실행 경로에 없다. 수동 workflow가 먼저 동작해야 한다.
-- ClinicDay는 LLM 대화가 아니라 **대기실 자기 복기 세션**과 진료 후 지시 입력을 중심으로 둔다.
+- LLM은 비정형 병원 안내/사진/문자를 일정 후보로 바꾸는 보조 도구다. 후보는 draft이며, 사용자가 확인하기 전에는 실행 일정으로 저장하지 않는다.
+- ClinicDay는 LLM 판단이 아니라 **대기실 자기 복기 세션**과 진료 후 지시 입력을 중심으로 둔다.
 - 2WW는 정보 과잉이 아니라 D+n anchor, 판단 보류 UX, partner emotional support mode를 우선한다.
 
 ---
@@ -123,6 +205,10 @@ Presentation mode local smoke:
 ```bash
 FEVIO_PRESENTATION_MODE=1 npm run build
 FEVIO_PRESENTATION_MODE=1 npx next start -p 3010
+curl -I 'http://localhost:3010/home'
+curl -I 'http://localhost:3010/calendar'
+curl -I 'http://localhost:3010/records'
+curl -I 'http://localhost:3010/more'
 curl -I 'http://localhost:3010/demo?mode=stage&stage=2'
 ```
 
@@ -140,6 +226,8 @@ npm run build
 
 Demo/UI 변경 시 추가로 확인할 것:
 
+- `project-oznp0.vercel.app/home`은 비로그인 상태에서 `/auth/sign-in`으로 보호된다.
+- `ai-business-group10.vercel.app/home`, `/calendar`, `/records`, `/more`는 Google 로그인 없이 200으로 열린다.
 - `/demo?mode=stage&stage=1..7` deep link가 stage와 일치한다.
 - phone 내부에 내부 component/type name이 노출되지 않는다.
 - 한글 세로 줄바꿈이 없다.
