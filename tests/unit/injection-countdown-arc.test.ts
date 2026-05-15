@@ -19,6 +19,7 @@ describe('InjectionCountdownArc', () => {
     expect(markup).toContain(`data-progress="${progress}"`);
     expect(markup).toContain('stroke="var(--slc-border)"');
     expect(markup).toContain('stroke="var(--slc-coral)"');
+    expect(markup).toContain('filter:drop-shadow(0 0 10px var(--slc-coral))');
 
     const dashArray = Number(markup.match(/stroke-dasharray="([^"]+)"/u)?.[1]);
     const dashOffset = Number(markup.match(/stroke-dashoffset="([^"]+)"/u)?.[1]);

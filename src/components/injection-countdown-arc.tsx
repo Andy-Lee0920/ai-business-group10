@@ -49,6 +49,7 @@ export function InjectionCountdownArc({
         strokeDashoffset={dashOffset}
         strokeLinecap="round"
         strokeWidth={STROKE_WIDTH}
+        style={{ filter: 'drop-shadow(0 0 10px var(--slc-coral))' }}
       />
     </svg>
   );

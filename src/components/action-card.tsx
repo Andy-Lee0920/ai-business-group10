@@ -155,11 +155,13 @@ function ctaButtonStyle(emphasis: CardEmphasis, compact: boolean): CSSProperties
       color: '#fff',
       border: 'none',
       borderRadius: 999,
+      minHeight: 52,
+      width: '100%',
       padding: '13px 28px',
       fontSize: 15,
       fontWeight: 900,
       cursor: 'pointer',
-      alignSelf: 'flex-start',
+      alignSelf: 'stretch',
       fontFamily: 'inherit',
     };
   }

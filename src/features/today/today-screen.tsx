@@ -8,6 +8,7 @@ import { PostClinicBanner } from '../../components/post-clinic-banner';
 import { SLCIllustration } from '../../components/slc-illustration';
 import { slcAssets } from '../../design/slc-assets';
 import type { ClinicUpdate, InjectionSite, ScheduleItem } from '../../types/slc.types';
+import { ctaLabel } from '../../types/slc.types';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
 import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
@@ -21,6 +22,11 @@ interface TodayScreenProps {
 }
 
 type DayOffset = 0 | 1 | 2;
+type HeroStory =
+  | { kind: 'countdown'; item: ScheduleItem; nextInjection: ScheduleItem | null; focus: HomeFocus }
+  | { kind: 'today_pending'; item: ScheduleItem; focus: HomeFocus }
+  | { kind: 'tomorrow'; item: ScheduleItem; focus: HomeFocus }
+  | { kind: 'quiet'; focus: HomeFocus };
 
 const DAY_LABELS = ['오늘', '내일', '모레'] as const;
 
@@ -51,14 +57,9 @@ export function TodayScreen({
     () => selectedDay === 0 ? resolveClinicFollowUpPrompt(visibleItems, initialClinicUpdates) : null,
     [selectedDay, visibleItems, initialClinicUpdates],
   );
-  const completed = visibleItems.filter((item) => item.status === 'completed');
   const cardItems = clinicFollowUpItem ? pending.filter((item) => item.id !== clinicFollowUpItem.id) : pending;
   const mainItem = cardItems[0];
   const nextItem = cardItems[1];
-  const nextInjection = useMemo(
-    () => resolveNextInjection(homeFocus.primaryItem, items),
-    [homeFocus.primaryItem, items],
-  );
   const postClinicBannerState = useMemo(() => resolvePostClinicBannerState(items), [items]);
 
   const handleComplete = useCallback(async (site?: InjectionSite) => {
@@ -76,15 +77,14 @@ export function TodayScreen({
   return (
     <div style={{ minHeight: '100dvh', padding: '0 0 112px', background: 'var(--slc-bg)' }}>
       <Header />
-      <HeroZone focus={homeFocus} nextInjection={nextInjection} />
+      <HeroZone focus={homeFocus} items={items} onCta={setActiveItem} />
       <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
       <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
-        {pending.length === 0 && visibleItems.length === 0 ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
+        {pending.length === 0 ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
           <>
             {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
             {nextItem && <NextItem item={nextItem} />}
-            {completed.length > 0 && <CompletedList items={completed} />}
           </>
         )}
       </section>
@@ -119,10 +119,17 @@ function resolveNextInjection(primaryItem: ScheduleItem | null, items: ScheduleI
     .sort((left, right) => new Date(left.scheduled_at).getTime() - new Date(right.scheduled_at).getTime())[0] ?? null;
 }
 
-function HeroZone({ focus, nextInjection }: { focus: HomeFocus; nextInjection: ScheduleItem | null }) {
-  const asset = resolveHomeVisualAsset(focus.kind);
-  const inWindow = focus.primaryItem?.type === 'injection'
-    && isInInjectionCountdownWindow(focus.primaryItem.scheduled_at);
+function HeroZone({
+  focus,
+  items,
+  onCta,
+}: {
+  focus: HomeFocus;
+  items: ScheduleItem[];
+  onCta: (item: ScheduleItem) => void;
+}) {
+  const story = resolveHeroStory(items, focus);
+  const asset = resolveHomeVisualAsset(story.focus.kind);
 
   return (
     <section
@@ -143,7 +150,7 @@ function HeroZone({ focus, nextInjection }: { focus: HomeFocus; nextInjection: S
           maxHeight: 'none',
           borderRadius: 0,
           objectFit: 'cover',
-          opacity: 0.82,
+          opacity: 0.7,
         }}
       />
       <div
@@ -151,21 +158,59 @@ function HeroZone({ focus, nextInjection }: { focus: HomeFocus; nextInjection: S
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to bottom, transparent 30%, var(--slc-bg) 100%)',
+          background: 'linear-gradient(to bottom, transparent 40%, var(--slc-bg) 100%)',
         }}
       />
       <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px 28px' }}>
-        {inWindow
-          ? <InjectionCountdownFocus item={focus.primaryItem!} nextInjection={nextInjection} />
-          : <QuietHeroContent focus={focus} />}
+        {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
+        {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
+        {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
+        {story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
       </div>
     </section>
   );
 }
 
-function QuietHeroContent({ focus }: { focus: HomeFocus }) {
+function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus): HeroStory {
+  const pending = items
+    .filter((item) => item.status !== 'completed')
+    .slice()
+    .sort((left, right) => new Date(left.scheduled_at).getTime() - new Date(right.scheduled_at).getTime());
+  const countdown = pending.find((item) => item.type === 'injection' && isInInjectionCountdownWindow(item.scheduled_at));
+  if (countdown) {
+    return {
+      kind: 'countdown',
+      item: countdown,
+      nextInjection: resolveNextInjection(countdown, items),
+      focus: { ...focus, kind: 'medication_due', primaryItem: countdown },
+    };
+  }
+
+  const todayPending = pending.find((item) => isOnDay(item.scheduled_at, 0));
+  if (todayPending) return { kind: 'today_pending', item: todayPending, focus: { ...focus, primaryItem: todayPending } };
+
+  const hasCompletedToday = items.some((item) => item.status === 'completed' && isOnDay(item.scheduled_at, 0));
+  const tomorrowPending = pending.find((item) => isOnDay(item.scheduled_at, 1));
+  if (hasCompletedToday && tomorrowPending) {
+    return {
+      kind: 'tomorrow',
+      item: tomorrowPending,
+      focus: {
+        kind: 'clinic_tomorrow',
+        badgeLabel: '내일',
+        heading: '내일 병원이에요',
+        description: `${formatScheduleTime(tomorrowPending.scheduled_at)} · 다음 일정만 미리 확인해요.`,
+        primaryItem: tomorrowPending,
+      },
+    };
+  }
+
+  return { kind: 'quiet', focus };
+}
+
+function QuietHeroContent({ focus, paddingTop = 60 }: { focus: HomeFocus; paddingTop?: number }) {
   return (
-    <div style={{ paddingTop: 60 }}>
+    <div style={{ paddingTop }}>
       <p
         style={{
           fontSize: 26,
@@ -185,7 +230,29 @@ function QuietHeroContent({ focus }: { focus: HomeFocus }) {
   );
 }
 
-function InjectionCountdownFocus({ item, nextInjection }: { item: ScheduleItem; nextInjection: ScheduleItem | null }) {
+function CompactHeroCard({
+  focus,
+  item,
+  onCta,
+  eyebrow = '오늘 할 일',
+}: {
+  focus: HomeFocus;
+  item: ScheduleItem;
+  onCta: (item: ScheduleItem) => void;
+  eyebrow?: string;
+}) {
+  return (
+    <div data-testid="home-hero-compact-card" style={{ display: 'grid', gap: 16, paddingTop: 42 }}>
+      <div>
+        <p style={{ margin: '0 0 8px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>{eyebrow}</p>
+        <QuietHeroContent focus={focus} paddingTop={0} />
+      </div>
+      <ActionCard item={item} onCta={onCta} compact showCountdown={false} />
+    </div>
+  );
+}
+
+function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: ScheduleItem; nextInjection: ScheduleItem | null; onCta: (item: ScheduleItem) => void }) {
   const remaining = minutesUntilInjection(item.scheduled_at);
   return (
     <section
@@ -205,16 +272,35 @@ function InjectionCountdownFocus({ item, nextInjection }: { item: ScheduleItem; 
           {formatRemainingClock(remaining)}
         </strong>
       </div>
-      <div style={{ width: '100%', display: 'grid', gap: 8, marginTop: 8 }}>
-        <CountdownInfoRow label="주사 시간" value={formatScheduleTime(item.scheduled_at)} href={`/schedule/${item.id}/edit`} />
-        <CountdownInfoRow label="약물명" value={formatScheduleTitle(item)} href={`/schedule/${item.id}/edit`} />
-        <CountdownInfoRow
-          label="다음 주사"
-          value={nextInjection ? `${formatScheduleTime(nextInjection.scheduled_at)} ${formatScheduleTitle(nextInjection)}` : '미정'}
-          href={nextInjection ? `/schedule/${nextInjection.id}/edit` : '/add'}
-        />
-      </div>
+      <CountdownInfoBlock item={item} nextInjection={nextInjection} />
+      <button type="button" onClick={() => onCta(item)} style={heroCtaStyle}>{ctaLabel(item.type)}</button>
     </section>
+  );
+}
+
+function CountdownInfoBlock({ item, nextInjection }: { item: ScheduleItem; nextInjection: ScheduleItem | null }) {
+  return (
+    <div
+      data-testid="countdown-info-block"
+      style={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 20,
+        background: 'var(--slc-surface)',
+        border: '1px solid var(--slc-border)',
+        overflow: 'hidden',
+        marginTop: 8,
+      }}
+    >
+      <CountdownInfoRow label="주사 시간" value={formatScheduleTime(item.scheduled_at)} href={`/schedule/${item.id}/edit`} />
+      <CountdownInfoRow label="약물명" value={formatScheduleTitle(item)} href={`/schedule/${item.id}/edit`} />
+      <CountdownInfoRow
+        label="다음 주사"
+        value={nextInjection ? `${formatScheduleTime(nextInjection.scheduled_at)} ${formatScheduleTitle(nextInjection)}` : '미정'}
+        href={nextInjection ? `/schedule/${nextInjection.id}/edit` : '/add'}
+      />
+    </div>
   );
 }
 
@@ -230,10 +316,9 @@ function CountdownInfoRow({ label, value, href }: { label: string; value: string
         alignItems: 'center',
         gap: 10,
         padding: '11px 14px',
-        borderRadius: 16,
-        background: 'var(--slc-surface)',
-        border: '1px solid var(--slc-border)',
         color: 'var(--slc-text)',
+        borderBottom: label === '다음 주사' ? 'none' : '1px solid var(--slc-border)',
+        textDecoration: 'none',
       }}
     >
       <span style={{ color: 'var(--slc-muted)', fontSize: 12, fontWeight: 800 }}>{label}</span>
@@ -244,6 +329,20 @@ function CountdownInfoRow({ label, value, href }: { label: string; value: string
     </Link>
   );
 }
+
+const heroCtaStyle = {
+  width: '100%',
+  minHeight: 52,
+  border: 'none',
+  borderRadius: 999,
+  background: 'var(--slc-coral)',
+  color: '#fff',
+  fontSize: 15,
+  fontWeight: 900,
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+  marginTop: 2,
+} as const;
 
 function Header() {
   const today = new Date();
@@ -287,17 +386,6 @@ function NextItem({ item }: { item: ScheduleItem }) {
     <section aria-label="다음 일정">
       <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 800, padding: '4px 8px', margin: '0 0 6px' }}>다음</p>
       <ScheduleFlowRow item={item} statusLabel="예정" />
-    </section>
-  );
-}
-
-function CompletedList({ items }: { items: ScheduleItem[] }) {
-  return (
-    <section aria-label="최근 완료">
-      <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 800, padding: '4px 8px', margin: '0 0 6px' }}>최근 완료</p>
-      <div style={{ display: 'grid', gap: 8 }}>
-        {items.map((item) => <ScheduleFlowRow key={item.id} item={item} statusLabel="완료" />)}
-      </div>
     </section>
   );
 }

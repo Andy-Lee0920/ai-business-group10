@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     step,
     context: normalizeContext(body.context),
     userInput,
+    answerHistory: normalizeAnswerHistory(body.answerHistory),
   };
 
   let config: ReturnType<typeof requireSupabasePublicConfig>;
@@ -53,6 +54,20 @@ export async function POST(request: NextRequest) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function normalizeAnswerHistory(value: unknown): ClinicGuideRequest['answerHistory'] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (typeof item !== 'object' || item === null || Array.isArray(item)) return null;
+      const record = item as Record<string, unknown>;
+      const step = isClinicGuideStep(record.step) ? record.step : null;
+      const answer = typeof record.answer === 'string' ? record.answer.trim() : '';
+      return step && answer ? { step, answer } : null;
+    })
+    .filter((item): item is ClinicGuideRequest['answerHistory'][number] => item !== null)
+    .slice(-8);
 }
 
 function normalizeContext(value: unknown): Partial<ClinicUpdate> {

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 import type { ClinicUpdate, Medication, ScheduleItem, ScheduleType } from '../../types/slc.types';
-import type { ClinicGuideMedicationNormalizeResponse, ClinicGuideResponse, ClinicGuideStep } from '../../types/clinic-guide.types';
+import type { ClinicGuideAnswer, ClinicGuideMedicationNormalizeResponse, ClinicGuideResponse, ClinicGuideStep } from '../../types/clinic-guide.types';
 import { resolveMedicationNames } from '../../domain/clinic-guide-medication-normalizer';
 import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../domain/slc-clinic-update';
 import { SLCIllustration } from '../../components/slc-illustration';
@@ -95,6 +95,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   const [aiChips, setAiChips] = useState<string[]>(['그대로예요', '바뀌었어요', '잘 모르겠어요']);
   const [aiDraft, setAiDraft] = useState<Partial<ClinicUpdate>>({});
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiAvailable, setAiAvailable] = useState(false);
+  const [aiAnswers, setAiAnswers] = useState<ClinicGuideAnswer[]>([]);
   const [photoPhase, setPhotoPhase] = useState<PhotoPhase>('idle');
   const [captureMessage, setCaptureMessage] = useState('병원 안내를 사진이나 문자로 가져올 수 있어요.');
   const [textPasteValue, setTextPasteValue] = useState('');
@@ -177,6 +179,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   const runInterview = async (clinicStep: ClinicGuideStep, userInput: string, formSnapshot = form) => {
     const trimmed = userInput.trim();
     if (!trimmed) return;
+    const answerHistory = [...aiAnswers, { step: clinicStep, answer: trimmed }].slice(-8);
+    setAiAnswers(answerHistory);
     setAiLoading(true);
     setAiError(null);
     const response = await fetch('/api/clinic-guide/interview', {
@@ -186,23 +190,26 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
         step: clinicStep,
         userInput: trimmed,
         context: clinicGuideContextFromForm(formSnapshot),
+        answerHistory,
       }),
     }).catch(() => null);
     if (!response?.ok) {
-      setAiError('AI 정리가 잠시 불안정해요. 기본 질문으로 계속 진행할게요.');
+      setAiAvailable(false);
       setAiLoading(false);
       return;
     }
     const payload = await response.json().catch(() => null) as ClinicGuideResponse | null;
-    if (!payload?.requiresUserConfirmation) {
-      setAiError('AI 정리가 잠시 불안정해요. 기본 질문으로 계속 진행할게요.');
+    if (!payload?.requiresUserConfirmation || payload.fallbackReason) {
+      if (payload?.draft) setAiDraft(payload.draft);
+      setAiAvailable(false);
       setAiLoading(false);
       return;
     }
     setAiQuestion(payload.question);
     setAiChips(payload.chips ?? []);
     setAiDraft(payload.draft);
-    setAiError(payload.fallbackReason ? 'AI 정리가 잠시 불안정해요. 기본 질문으로 계속 진행할게요.' : null);
+    setAiAvailable(true);
+    setAiError(null);
     setAiLoading(false);
   };
 
@@ -601,7 +608,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   );
 
   if (step === 'same_med') return (
-    <Shell header={<GuideHeader current={1} total={INTERVIEW_PROGRESS_TOTAL} />}>
+    <Shell header={<GuideHeader current={1} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
       <QuestionCard icon="❔" title="같은 약을 계속 사용하나요?" lead="병원에서 오늘 들은 내용만 떠올려도 괜찮아요.">
         {[
           { label: '그대로', icon: '✓', value: 'same' },
@@ -613,14 +620,14 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
           </button>
         ))}
       </QuestionCard>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
       <p style={safeNoteStyle}>ⓘ 선택에 따라 다음 질문이 달라져요</p>
       <button type="button" disabled={!form.medicationChange} onClick={() => setStep(form.medicationChange === 'changed' ? 'new_med' : 'days')} style={ctaStyle(!form.medicationChange)}>다음</button>
     </Shell>
   );
 
   if (step === 'new_med') return (
-    <Shell header={<GuideHeader current={2} total={INTERVIEW_PROGRESS_TOTAL} />}>
+    <Shell header={<GuideHeader current={2} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
       <QuestionCard title="새로 받은 약이 있나요?" lead="목록에서 찾거나, 없으면 직접 입력할 수 있어요.">
         <div style={chipRowStyle}>
           {(['yes', 'no'] as const).map((intent) => (
@@ -628,7 +635,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
           ))}
         </div>
       </QuestionCard>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
 
       {form.newMedicationIntent === 'yes' && (
         <section style={panelStyle}>
@@ -681,7 +688,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   );
 
   if (step === 'days') return (
-    <Shell header={<GuideHeader current={3} total={INTERVIEW_PROGRESS_TOTAL} />}>
+    <Shell header={<GuideHeader current={3} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
       <QuestionCard icon="💊" title="며칠치 처방받았나요?" lead="선택하면 다음 방문일 제안만 먼저 만들어요.">
         <div style={chipRowStyle}>
           {[1, 2, 3].map((days) => <button key={days} type="button" style={chipStyle(form.medicationDays === days)} onClick={() => chooseDays(days)}>{days}일</button>)}
@@ -703,7 +710,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
           />
         ) : null}
       </QuestionCard>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
 
       {form.medicationDays ? (
         <section style={suggestionCardStyle} aria-label="다음 방문일 제안">
@@ -724,7 +731,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   );
 
   if (step === 'memo') return (
-    <Shell header={<GuideHeader current={4} total={INTERVIEW_PROGRESS_TOTAL} />}>
+    <Shell header={<GuideHeader current={4} total={INTERVIEW_PROGRESS_TOTAL} aiAvailable={aiAvailable} />}>
       <h1 style={titleStyle}>추가로 남길 내용이 있나요?</h1>
       <p style={subtitleStyle}>필요한 경우에만 메모를 남겨주세요.</p>
       <label style={{ position: 'relative', display: 'block' }}>
@@ -738,7 +745,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
         />
         <span style={counterStyle}>{form.memo.length}/300</span>
       </label>
-      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} />
+      <AiInterviewPanel question={aiQuestion} chips={aiChips} loading={aiLoading} error={aiError} available={aiAvailable} />
       <DraftPanel medicationNames={selectedMedicationNames} nextVisit={nextVisitPreview} memo={form.memo} aiDraft={aiDraft} />
       <p style={warningStyle}>⚠ 불명확한 시간은 저장 전에 다시 확인해요</p>
       <button type="button" onClick={() => { void runInterview('memo', form.memo || '메모 없음'); setStep('confirm'); }} style={ctaStyle()}>저장 전 확인</button>
@@ -826,12 +833,12 @@ function formatCandidateDose(dose: string | null, unit: string | null) {
   return `${dose ?? ''}${dose && unit ? ' ' : ''}${unit ?? ''}`.trim();
 }
 
-function GuideHeader({ current, total }: { current: number; total: number }) {
+function GuideHeader({ current, total, aiAvailable }: { current: number; total: number; aiAvailable: boolean }) {
   const label = INTERVIEW_PROGRESS_LABELS[current - 1] ?? `${current}/${total}`;
   return (
     <header style={{ display: 'grid', gap: 12, justifyItems: 'center', marginBottom: 18 }}>
       <strong style={{ fontFamily: 'Georgia, serif', fontSize: 34, fontWeight: 500 }}>Fevio</strong>
-      <span style={badgeStyle}>✦ Clinic Guide AI</span>
+      {aiAvailable ? <span style={badgeStyle}>✦ Clinic Guide AI</span> : null}
       <span style={{ color: 'var(--slc-coral)', fontWeight: 900 }}>{label}</span>
       <div role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={current} style={progressTrackStyle}>
         <i style={{ ...progressFillStyle, width: `${(current / total) * 100}%` }} />
@@ -869,7 +876,8 @@ function DraftPanel({ medicationNames, nextVisit, memo, aiDraft }: { medicationN
   );
 }
 
-function AiInterviewPanel({ question, chips, loading, error }: { question: string; chips: string[]; loading: boolean; error: string | null }) {
+function AiInterviewPanel({ question, chips, loading, error, available }: { question: string; chips: string[]; loading: boolean; error: string | null; available: boolean }) {
+  if (!available) return null;
   return (
     <section style={aiPanelStyle} aria-label="Clinic Guide AI 질문">
       <strong style={{ color: 'var(--slc-coral)' }}>AI 질문</strong>

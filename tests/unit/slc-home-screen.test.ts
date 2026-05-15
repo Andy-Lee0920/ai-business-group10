@@ -63,6 +63,8 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).toContain('min-height:340px');
     expect(markup).toContain('object-fit:cover');
+    expect(markup).toContain('opacity:0.7');
+    expect(markup).toContain('linear-gradient(to bottom, transparent 40%, var(--slc-bg) 100%)');
     expect(markup).toContain('home-injection-bg-v2.png');
     expect(markup).not.toContain('data-testid="home-focus-hero"');
     expect(markup.indexOf('data-testid="home-hero-zone"')).toBeLessThan(markup.indexOf('aria-label="일정 날짜"'));
@@ -112,6 +114,35 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('남은 시간');
     expect(markup).toContain('00:45');
     expect(markup).toContain('다음 주사');
+    expect(markup).toContain('data-testid="countdown-info-block"');
+    expect(markup).toContain('min-height:52px');
+  });
+
+  it('uses a compact hero card for an incomplete schedule outside the countdown window', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-testid="home-hero-compact-card"');
+    expect(markup).toContain('오늘 할 일');
+    expect(markup).toContain('듀파스톤');
+  });
+
+  it('shows tomorrow card after today is completed and removes recent-completed home section', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = render([
+      item({ id: 'done-today', type: 'injection', title: '오늘 완료 주사', status: 'completed', scheduled_at: '2026-05-14T09:00:00.000Z' }),
+      item({ id: 'tomorrow-clinic', type: 'clinic', title: '내일 병원', scheduled_at: '2026-05-15T09:00:00.000Z' }),
+    ]);
+
+    expect(markup).toContain('data-testid="home-hero-compact-card"');
+    expect(markup).toContain('내일 일정');
+    expect(markup).toContain('내일 병원');
+    expect(markup).not.toContain('최근 완료');
+    expect(markup).not.toContain('aria-label="최근 완료"');
   });
 
   it('does not render post-clinic prompt after a relevant clinic update exists', () => {
