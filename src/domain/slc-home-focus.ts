@@ -1,7 +1,8 @@
+import { slcAssets, type SLCAsset } from '../design/slc-assets';
 import type { ScheduleItem, ScheduleStatus } from '../types/slc.types';
 
 export type ScheduleBadgeTone = 'coral' | 'amber' | 'default' | 'completed';
-export type HomeFocusKind = 'clinic_soon' | 'clinic_tomorrow' | 'medication_due' | 'medication_upcoming' | 'empty';
+export type HomeFocusKind = 'clinic_soon' | 'clinic_tomorrow' | 'medication_due' | 'medication_upcoming' | 'missed' | 'empty';
 
 export interface SchedulePresentation {
   status: ScheduleStatus;
@@ -11,8 +12,8 @@ export interface SchedulePresentation {
 
 export interface HomeFocus {
   kind: HomeFocusKind;
-  badgeLabel: '병원 일정' | '내일 병원' | '투약 예정' | '다음 투약' | '일정 없음';
-  heading: '병원 일정이 다가오고 있어요' | '내일 병원 가는 날이에요' | '투약 예정이 있어요' | '다음 투약이 예정되어 있어요' | '등록된 일정이 없어요';
+  badgeLabel: '병원 일정' | '내일 병원' | '투약 예정' | '다음 투약' | '확인 필요' | '일정 없음';
+  heading: '병원 일정이 다가오고 있어요' | '내일 병원 가는 날이에요' | '투약 예정이 있어요' | '다음 투약이 예정되어 있어요' | '놓친 일정이 있어요' | '등록된 일정이 없어요';
   description: string;
   primaryItem: ScheduleItem | null;
 }
@@ -39,6 +40,17 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     .filter((item) => item.status !== 'completed')
     .slice()
     .sort((left, right) => new Date(left.scheduled_at).getTime() - new Date(right.scheduled_at).getTime());
+
+  const missed = pending.find((item) => isSameLocalDate(new Date(item.scheduled_at), now) && (item.status === 'missed' || statusFromDiff(minutesUntil(item.scheduled_at, now)) === 'missed'));
+  if (missed) {
+    return {
+      kind: 'missed',
+      badgeLabel: '확인 필요',
+      heading: '놓친 일정이 있어요',
+      description: formatFocusTime(missed, '지나간 일정은 완료 여부만 차분히 확인해요.'),
+      primaryItem: missed,
+    };
+  }
 
   const clinicSoon = pending.find((item) => {
     const diffMin = minutesUntil(item.scheduled_at, now);
@@ -148,4 +160,20 @@ function formatFocusTime(item: ScheduleItem, suffix: string) {
     hour: '2-digit', minute: '2-digit', hour12: false,
   });
   return `${time} · ${suffix}`;
+}
+
+
+export function resolveHomeVisualAsset(kind: HomeFocusKind): SLCAsset {
+  switch (kind) {
+    case 'clinic_soon':
+    case 'clinic_tomorrow':
+      return slcAssets.home.clinic;
+    case 'medication_due':
+    case 'medication_upcoming':
+      return slcAssets.home.injection;
+    case 'missed':
+      return slcAssets.home.missedRecovery;
+    case 'empty':
+      return slcAssets.home.waiting;
+  }
 }

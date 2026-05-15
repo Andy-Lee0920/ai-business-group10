@@ -93,8 +93,8 @@ export function TodayScreen({
         {pending.length === 0 && visibleItems.length === 0 ? <EmptyState selectedDay={selectedDay} /> : (
           <>
             {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
-            {nextItem && <NextItem item={nextItem} onCta={setActiveItem} />}
-            {completed.map((item) => <ActionCard key={item.id} item={item} onCta={() => undefined} compact />)}
+            {nextItem && <NextItem item={nextItem} />}
+            {completed.length > 0 && <CompletedList items={completed} />}
           </>
         )}
       </section>
@@ -180,13 +180,50 @@ function EmptyState({ selectedDay }: { selectedDay: DayOffset }) {
   );
 }
 
-function NextItem({ item, onCta }: { item: ScheduleItem; onCta: (item: ScheduleItem) => void }) {
+function NextItem({ item }: { item: ScheduleItem }) {
   return (
-    <div>
-      <p style={{ fontSize: 12, color: '#C4A898', fontWeight: 700, padding: '4px 8px', margin: '0 0 8px' }}>다음 일정</p>
-      <ActionCard item={item} onCta={onCta} compact />
+    <section aria-label="다음 일정">
+      <p style={{ fontSize: 12, color: '#C4A898', fontWeight: 800, padding: '4px 8px', margin: '0 0 6px' }}>다음</p>
+      <ScheduleFlowRow item={item} statusLabel="예정" />
+    </section>
+  );
+}
+
+function CompletedList({ items }: { items: ScheduleItem[] }) {
+  return (
+    <section aria-label="최근 완료">
+      <p style={{ fontSize: 12, color: '#C4A898', fontWeight: 800, padding: '4px 8px', margin: '0 0 6px' }}>최근 완료</p>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {items.map((item) => <ScheduleFlowRow key={item.id} item={item} statusLabel="완료" />)}
+      </div>
+    </section>
+  );
+}
+
+function ScheduleFlowRow({ item, statusLabel }: { item: ScheduleItem; statusLabel: '예정' | '완료' }) {
+  const timeStr = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return (
+    <div data-card-emphasis="secondary" data-home-flow-row={item.type} style={{ minHeight: 62, display: 'grid', gridTemplateColumns: '54px 1fr auto', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 18, background: '#FFFBF8', border: '1px solid rgba(240, 237, 232, 0.95)' }}>
+      <span style={{ color: '#2A1F1A', fontSize: 14, fontWeight: 900 }}>{timeStr}</span>
+      <span style={{ minWidth: 0 }}>
+        <strong style={{ display: 'block', color: '#2A1F1A', fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatScheduleRowTitle(item)}</strong>
+        <small style={{ display: 'block', color: '#9B8E86', fontSize: 12, fontWeight: 700, marginTop: 3 }}>{scheduleTypeLabel(item.type)}</small>
+      </span>
+      <span style={{ padding: '5px 10px', borderRadius: 999, background: statusLabel === '완료' ? '#FFF0EB' : '#F0EDE8', color: statusLabel === '완료' ? '#C4614A' : '#9B8E86', fontSize: 11, fontWeight: 900 }}>{statusLabel}</span>
     </div>
   );
+}
+
+function formatScheduleRowTitle(item: ScheduleItem) {
+  const suffix = item.dose && item.unit ? `${item.dose} ${item.unit}` : '';
+  if (!suffix || item.title.includes(suffix)) return item.title;
+  return `${item.title} ${suffix}`;
+}
+
+function scheduleTypeLabel(type: ScheduleItem['type']) {
+  if (type === 'clinic') return '병원 방문';
+  if (type === 'medication') return '복용';
+  return '주사';
 }
 
 function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {

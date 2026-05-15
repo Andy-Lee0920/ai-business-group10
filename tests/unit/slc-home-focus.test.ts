@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScheduleItem } from '../../src/types/slc.types';
-import { getHomePendingItems, getSchedulePresentation, resolveHomeFocus } from '../../src/domain/slc-home-focus';
+import { getHomePendingItems, getSchedulePresentation, resolveHomeFocus, resolveHomeVisualAsset } from '../../src/domain/slc-home-focus';
 
 const baseItem = (overrides: Partial<ScheduleItem>): ScheduleItem => ({
   id: 'item-1',
@@ -19,6 +19,23 @@ const baseItem = (overrides: Partial<ScheduleItem>): ScheduleItem => ({
 
 describe('SLC home focus', () => {
   const now = new Date('2026-05-14T09:00:00.000Z');
+
+
+
+  it('returns missed focus before upcoming schedules when today has a missed item', () => {
+    const items = [
+      baseItem({ id: 'late-injection', type: 'injection', title: 'Menopur', status: 'missed', scheduled_at: '2026-05-14T08:00:00.000Z' }),
+      baseItem({ id: 'clinic-soon', type: 'clinic', title: '병원 방문', scheduled_at: '2026-05-14T09:45:00.000Z' }),
+    ];
+
+    expect(resolveHomeFocus(items, now)).toMatchObject({
+      kind: 'missed',
+      badgeLabel: '확인 필요',
+      heading: '놓친 일정이 있어요',
+      primaryItem: { id: 'late-injection' },
+    });
+    expect(resolveHomeVisualAsset('missed').src).toBe('/assets/slc/home-waiting-bg.png');
+  });
 
   it('prioritizes a clinic schedule within 60 minutes over medication cards', () => {
     const items = [

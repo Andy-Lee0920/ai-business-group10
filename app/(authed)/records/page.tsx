@@ -14,7 +14,7 @@ export default async function RecordsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const [itemsRes, completionsRes, clinicRes] = await Promise.all([
     supabase.from('schedule_items').select('*').eq('patient_id', user.id)
       .gte('scheduled_at', since).order('scheduled_at', { ascending: false }),
