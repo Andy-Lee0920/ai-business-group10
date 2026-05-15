@@ -9,9 +9,9 @@ import {
 } from '../../src/features/onboarding/onboarding-flow';
 
 describe('Session A onboarding flow contract', () => {
-  it('moves through brand intro, role, consent, first schedule, confirm, and home without legacy onboarding states', () => {
+  it('moves through brand intro, role, first schedule, confirm, and home without a duplicate patient consent stop', () => {
     expect(nextOnboardingStep('brand_intro')).toBe('role_selection');
-    expect(nextOnboardingStep('role_selection', 'patient')).toBe('patient_consent');
+    expect(nextOnboardingStep('role_selection', 'patient')).toBe('first_schedule_interview');
     expect(nextOnboardingStep('patient_consent', 'patient')).toBe('first_schedule_interview');
     expect(nextOnboardingStep('first_schedule_interview', 'patient')).toBe('first_schedule_confirm');
     expect(nextOnboardingStep('first_schedule_confirm', 'patient')).toBe('home');

@@ -3,11 +3,11 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  buildAcceptedConsentChecks,
   buildFirstScheduleDraft,
   FIRST_SCHEDULE_CHIPS,
   hasRequiredConsentChecks,
   nextOnboardingStep,
-  ONBOARDING_CONSENT_CHECKS,
   type ConsentCheckState,
   type FirstScheduleChipId,
   type FirstScheduleDraft,
@@ -37,7 +37,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
   const [step, setStep] = useState<OnboardingStep>('brand_intro');
   const [role, setRole] = useState<OnboardingRole | null>(inviteCode ? 'partner' : null);
   const [inputCode, setInputCode] = useState(inviteCode ?? '');
-  const [consentChecks, setConsentChecks] = useState<ConsentCheckState>({});
+  const [consentChecks, setConsentChecks] = useState<ConsentCheckState>(() => buildAcceptedConsentChecks());
   const [chipId, setChipId] = useState<FirstScheduleChipId>('injection');
   const [title, setTitle] = useState('');
   const [dose, setDose] = useState('');
@@ -69,7 +69,7 @@ export function OnboardingScreen({ inviteCode }: Props) {
 
   const selectRole = (nextRole: OnboardingRole) => {
     setRole(nextRole);
-    setConsentChecks({});
+    setConsentChecks(buildAcceptedConsentChecks());
     setError(null);
   };
 
@@ -177,39 +177,33 @@ export function OnboardingScreen({ inviteCode }: Props) {
     </div>
   );
 
-  if (step === 'patient_consent' || step === 'partner_consent') return (
+  if (step === 'partner_consent') return (
     <div style={screenStyle}>
       <button type="button" onClick={() => go('role_selection')} style={backButtonStyle}>← 역할 선택</button>
       <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>동의 확인</p>
-        <h1 style={titleStyle}>Fevio 민감정보 동의</h1>
-        <p style={leadStyle}>아래 4가지를 직접 확인해야 병원 안내와 일정이 저장됩니다.</p>
-        {role === 'partner' && (
-          <label style={{ display: 'block', marginTop: 18 }}>
-            <span style={{ display: 'block', marginBottom: 8, color: onboardingTokens.textMuted, fontSize: 14 }}>초대 코드 입력</span>
-            <input aria-label="초대 코드" placeholder="치료자가 공유한 초대 코드" value={inputCode} onChange={(event) => setInputCode(event.target.value)} style={inputStyle} />
-          </label>
-        )}
-        <section aria-label="Fevio 민감정보 동의" style={{ marginTop: 22, display: 'grid', gap: 10 }}>
-          {ONBOARDING_CONSENT_CHECKS.map((item) => (
-            <label key={item.key} style={checkStyle}>
-              <input type="checkbox" checked={consentChecks[item.key] === true} onChange={(event) => setConsentChecks((prev) => ({ ...prev, [item.key]: event.target.checked }))} style={{ width: 18, height: 18, accentColor: onboardingTokens.primary, flex: '0 0 auto' }} />
-              <span><strong style={{ display: 'block', color: onboardingTokens.textMain }}>{item.label}</strong>{item.detail}</span>
-            </label>
-          ))}
+        <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>공유 연결</p>
+        <h1 style={titleStyle}>공유 코드만 확인할게요</h1>
+        <p style={leadStyle}>개인정보 저장 범위는 시작 전에 확인했어요. 파트너는 공유된 일정만 읽을 수 있습니다.</p>
+        <label style={{ display: 'block', marginTop: 18 }}>
+          <span style={{ display: 'block', marginBottom: 8, color: onboardingTokens.textMuted, fontSize: 14 }}>초대 코드 입력</span>
+          <input aria-label="초대 코드" placeholder="치료자가 공유한 초대 코드" value={inputCode} onChange={(event) => setInputCode(event.target.value)} style={inputStyle} />
+        </label>
+        <section aria-label="저장 범위 확인 완료" style={{ ...checkStyle, marginTop: 18, alignItems: 'center' }}>
+          <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 999, display: 'grid', placeItems: 'center', background: onboardingTokens.activeBg, color: onboardingTokens.primary, fontWeight: 900 }}>✓</span>
+          <span><strong style={{ display: 'block', color: onboardingTokens.textMain }}>저장 범위 확인됨</strong>병원 안내 원문 없이 파트너용 읽기 화면만 연결합니다.</span>
         </section>
       </div>
       {stepDots(step)}
       {error && <p style={errorStyle}>{error}</p>}
       <button type="button" onClick={proceedFromConsent} disabled={!role || !allAccepted || partnerCodeMissing || saving} style={ctaStyle(!role || !allAccepted || partnerCodeMissing || saving)}>
-        {saving ? '저장 중...' : role === 'partner' ? '동의하고 연결하기' : '첫 일정 입력하기'}
+        {saving ? '저장 중...' : '연결하기'}
       </button>
     </div>
   );
 
   if (step === 'first_schedule_interview') return (
     <div style={screenStyle}>
-      <button type="button" onClick={() => go('patient_consent')} style={backButtonStyle}>← 동의 확인</button>
+      <button type="button" onClick={() => go('role_selection')} style={backButtonStyle}>← 역할 선택</button>
       <div style={{ flex: 1 }}>
         <p style={{ margin: '0 0 8px', color: onboardingTokens.primary, fontSize: 13, fontWeight: 800 }}>첫 일정 등록</p>
         <h1 style={titleStyle}>처음 확인할 일정을 하나만 남겨주세요</h1>
@@ -282,7 +276,9 @@ const smallButtonStyle = { minHeight: 48, padding: '0 14px', borderRadius: 14, b
 const assistNoticeStyle = { margin: '0 0 12px', padding: '10px 12px', borderRadius: 14, background: '#F3F8F2', color: '#617B5A', fontSize: 13, lineHeight: 1.4 };
 
 function stepDots(activeStep: OnboardingStep) {
-  const steps: OnboardingStep[] = ['brand_intro', 'role_selection', 'patient_consent', 'first_schedule_interview', 'first_schedule_confirm'];
+  const steps: OnboardingStep[] = activeStep === 'partner_consent'
+    ? ['brand_intro', 'role_selection', 'partner_consent', 'home']
+    : ['brand_intro', 'role_selection', 'first_schedule_interview', 'first_schedule_confirm'];
   const activeIndex = Math.max(0, steps.indexOf(activeStep));
   return (
     <div aria-label="온보딩 단계" style={{ display: 'flex', justifyContent: 'center', gap: 6, margin: '18px 0 4px' }}>

@@ -42,6 +42,15 @@ export const ONBOARDING_CONSENT_CHECKS = [
 
 export type ConsentCheckState = Partial<Record<ConsentCheckKey, boolean>>;
 
+export function buildAcceptedConsentChecks(): Record<ConsentCheckKey, true> {
+  return {
+    privacy_boundary: true,
+    sensitive_data: true,
+    clinical_boundary: true,
+    input_assist_boundary: true,
+  };
+}
+
 export type ScheduleChip = {
   id: 'injection' | 'medication' | 'clinic';
   label: string;
@@ -82,7 +91,7 @@ export function hasRequiredConsentChecks(checks: ConsentCheckState): boolean {
 
 export function nextOnboardingStep(current: OnboardingStep, role?: OnboardingRole | null): OnboardingStep {
   if (current === 'brand_intro') return 'role_selection';
-  if (current === 'role_selection') return role === 'partner' ? 'partner_consent' : 'patient_consent';
+  if (current === 'role_selection') return role === 'partner' ? 'partner_consent' : 'first_schedule_interview';
   if (current === 'patient_consent') return 'first_schedule_interview';
   if (current === 'partner_consent') return 'home';
   if (current === 'first_schedule_interview') return 'first_schedule_confirm';
