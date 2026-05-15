@@ -30,8 +30,11 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   const { groups } = buildRecordsViewModel({ items, completions, clinicUpdates, filter });
   const receiptTotal = useMemo(() => receiptItems.reduce((sum, receipt) => sum + receipt.amount, 0), [receiptItems]);
+  const cycleDay = useMemo(() => computeCycleDay(items), [items]);
 
   async function submitReceipt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,6 +58,7 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
       setReceiptItems((current) => [result.receipt as Receipt, ...current]);
       setAmount('');
       setNote('');
+      setSheetOpen(false);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : '영수증 저장에 실패했어요.');
     } finally {
@@ -63,33 +67,51 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
   }
 
   return (
-    <AmbientStoryBackground asset={slcAssets.home.missedRecovery} intensity="subtle" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) 0 var(--fevio-page-bottom)' }}>
-      <div style={{ padding: '0 24px 18px' }}>
-        <p style={{ fontSize: 13, color: '#B5A89E', fontWeight: 700, margin: '0 0 4px' }}>최근 7일</p>
-        <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: '0 0 8px', letterSpacing: '-0.05em' }}>기록</h1>
-        <p style={{ fontSize: 13, color: '#9B8E86', lineHeight: 1.45, margin: '0 0 18px' }}>완료한 일만 조용히 모아둘게요.</p>
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
-          {RECORD_FILTERS.map(({ key, label }) => (
-            <button key={key} onClick={() => setFilter(key)} style={filterChipStyle(filter === key)}>{label}</button>
-          ))}
+    <AmbientStoryBackground
+      asset={slcAssets.home.missedRecovery}
+      intensity="subtle"
+      style={{ minHeight: '100dvh', padding: '54px 0 112px' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '0 24px 18px' }}>
+        <div>
+          <p style={{ fontSize: 13, color: '#B5A89E', fontWeight: 700, margin: '0 0 4px' }}>최근 기록</p>
+          <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: 0, letterSpacing: '-0.05em' }}>기록</h1>
         </div>
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          aria-label="영수증 추가"
+          style={recordsAddButtonStyle}
+        >
+          +
+        </button>
       </div>
 
-      <ReceiptPanel
-        amount={amount}
-        category={category}
-        date={date}
-        note={note}
-        receipts={receiptItems}
-        total={receiptTotal}
-        saving={saving}
-        error={error}
-        onAmountChange={setAmount}
-        onCategoryChange={setCategory}
-        onDateChange={setDate}
-        onNoteChange={setNote}
-        onSubmit={submitReceipt}
-      />
+      {cycleDay !== null ? (
+        <div style={cycleDayHeroStyle}>
+          <p style={{ margin: '0 0 4px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시작일 기준</p>
+          <p style={{ margin: 0, color: 'var(--slc-text)', fontSize: 26, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.2 }}>
+            주사 시작 <strong style={{ color: 'var(--slc-coral)' }}>{cycleDay}일차</strong>
+          </p>
+          <p style={{ margin: '6px 0 0', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 700 }}>
+            첫 주사 일정 기준 · 오늘까지
+          </p>
+        </div>
+      ) : null}
+
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 24px 16px', scrollbarWidth: 'none' }}>
+        {RECORD_FILTERS.map(({ key, label }) => (
+          <button key={key} type="button" onClick={() => setFilter(key)} style={filterChipStyle(filter === key)}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {receiptItems.length >= 2 ? (
+        <div style={{ padding: '0 16px 16px' }}>
+          <CostLineChart receipts={receiptItems} total={receiptTotal} />
+        </div>
+      ) : null}
 
       {groups.length === 0 ? (
         <div style={{ padding: '36px 24px 60px', textAlign: 'center' }}>
@@ -110,95 +132,80 @@ export function RecordsScreen({ items, completions, clinicUpdates = [], receipts
           ))}
         </div>
       )}
+
+      <SubsidyCards />
+
+      {sheetOpen ? (
+        <div
+          aria-hidden="true"
+          onClick={() => setSheetOpen(false)}
+          style={sheetBackdropStyle}
+        />
+      ) : null}
+
+      {sheetOpen ? (
+        <div role="dialog" aria-label="영수증 입력" style={sheetPanelStyle}>
+          <div style={sheetHandleBarStyle} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--slc-coral)', fontWeight: 900, margin: '0 0 4px' }}>영수증 입력</p>
+              <h2 style={{ color: 'var(--slc-text)', fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', margin: 0 }}>
+                비용도 함께 기록해요
+              </h2>
+            </div>
+            <strong
+              data-testid="receipt-total"
+              style={{ color: receiptTotal < 0 ? 'var(--slc-coral)' : 'var(--slc-text)', fontSize: 16, fontWeight: 900 }}
+            >
+              {formatWon(receiptTotal)}
+            </strong>
+          </div>
+          <form data-testid="receipt-form" onSubmit={submitReceipt} style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <label style={fieldLabelStyle}>
+                분류
+                <select value={category} onChange={(event) => setCategory(toReceiptCategory(event.currentTarget.value))} style={fieldStyle}>
+                  {RECEIPT_CATEGORIES.map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </label>
+              <label style={fieldLabelStyle}>
+                날짜
+                <input type="date" value={date} onChange={(event) => setDate(event.currentTarget.value)} style={fieldStyle} required />
+              </label>
+            </div>
+            <label style={fieldLabelStyle}>
+              금액
+              <input
+                inputMode="numeric"
+                type="number"
+                value={amount}
+                onChange={(event) => setAmount(event.currentTarget.value)}
+                placeholder={category === '정부지원금' ? '지원금 금액' : '결제 금액'}
+                style={fieldStyle}
+                required
+              />
+            </label>
+            <label style={fieldLabelStyle}>
+              메모
+              <input
+                value={note}
+                onChange={(event) => setNote(event.currentTarget.value)}
+                placeholder="예: 초음파, 주사 처방"
+                style={fieldStyle}
+              />
+            </label>
+            {error ? <p role="alert" style={{ color: 'var(--slc-coral)', fontSize: 12, fontWeight: 800, margin: 0 }}>{error}</p> : null}
+            <button
+              type="submit"
+              disabled={saving}
+              style={sheetSubmitStyle(saving)}
+            >
+              {saving ? '저장 중' : '영수증 저장'}
+            </button>
+          </form>
+        </div>
+      ) : null}
     </AmbientStoryBackground>
-  );
-}
-
-function ReceiptPanel({
-  amount,
-  category,
-  date,
-  note,
-  receipts,
-  total,
-  saving,
-  error,
-  onAmountChange,
-  onCategoryChange,
-  onDateChange,
-  onNoteChange,
-  onSubmit,
-}: {
-  amount: string;
-  category: ReceiptCategory;
-  date: string;
-  note: string;
-  receipts: Receipt[];
-  total: number;
-  saving: boolean;
-  error: string | null;
-  onAmountChange(value: string): void;
-  onCategoryChange(value: ReceiptCategory): void;
-  onDateChange(value: string): void;
-  onNoteChange(value: string): void;
-  onSubmit(event: FormEvent<HTMLFormElement>): void;
-}) {
-  return (
-    <section aria-label="영수증 기록" style={{ padding: '0 16px 16px' }}>
-      <div style={{ background: 'rgba(252, 238, 232, 0.9)', border: '1px solid var(--slc-border)', borderRadius: 24, padding: 18, boxShadow: '0 10px 28px rgba(80, 50, 40, 0.05)', backdropFilter: 'blur(14px)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-          <div>
-            <p style={{ fontSize: 12, color: 'var(--slc-coral)', fontWeight: 900, margin: '0 0 5px' }}>영수증 입력</p>
-            <h2 style={{ color: 'var(--slc-text)', fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', margin: 0 }}>비용도 함께 기록해요</h2>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ display: 'block', color: 'var(--slc-muted)', fontSize: 11, fontWeight: 800, marginBottom: 3 }}>누적 합계</span>
-            <strong data-testid="receipt-total" style={{ color: total < 0 ? 'var(--slc-coral)' : 'var(--slc-text)', fontSize: 16, fontWeight: 900 }}>{formatWon(total)}</strong>
-          </div>
-        </div>
-
-        <form data-testid="receipt-form" onSubmit={onSubmit} style={{ display: 'grid', gap: 10 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <label style={fieldLabelStyle}>
-              분류
-              <select value={category} onChange={(event) => onCategoryChange(toReceiptCategory(event.currentTarget.value))} style={fieldStyle}>
-                {RECEIPT_CATEGORIES.map((option) => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </label>
-            <label style={fieldLabelStyle}>
-              날짜
-              <input type="date" value={date} onChange={(event) => onDateChange(event.currentTarget.value)} style={fieldStyle} required />
-            </label>
-          </div>
-          <label style={fieldLabelStyle}>
-            금액
-            <input inputMode="numeric" type="number" value={amount} onChange={(event) => onAmountChange(event.currentTarget.value)} placeholder={category === '정부지원금' ? '지원금 금액' : '결제 금액'} style={fieldStyle} required />
-          </label>
-          <label style={fieldLabelStyle}>
-            메모
-            <input value={note} onChange={(event) => onNoteChange(event.currentTarget.value)} placeholder="예: 초음파, 주사 처방" style={fieldStyle} />
-          </label>
-          {error ? <p role="alert" style={{ color: 'var(--slc-coral)', fontSize: 12, fontWeight: 800, margin: 0 }}>{error}</p> : null}
-          <button type="submit" disabled={saving} style={{ minHeight: 46, border: 0, borderRadius: 999, background: 'var(--slc-coral)', color: '#fff', fontSize: 14, fontWeight: 900, fontFamily: 'inherit', cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.72 : 1 }}>
-            {saving ? '저장 중' : '영수증 저장'}
-          </button>
-        </form>
-
-        <div data-testid="receipt-list" style={{ display: 'grid', gap: 8, marginTop: 14 }}>
-          {receipts.length === 0 ? (
-            <p style={{ color: 'var(--slc-muted)', fontSize: 12, lineHeight: 1.5, margin: 0 }}>아직 저장된 영수증이 없어요.</p>
-          ) : receipts.slice(0, 5).map((receipt) => (
-            <article key={receipt.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 10, borderTop: '1px solid var(--slc-border)', paddingTop: 10 }}>
-              <div>
-                <strong style={{ color: 'var(--slc-text)', fontSize: 13, fontWeight: 900 }}>{receipt.category}</strong>
-                <p style={{ color: 'var(--slc-muted)', fontSize: 11, margin: '3px 0 0' }}>{receipt.date}{receipt.note ? ` · ${receipt.note}` : ''}</p>
-              </div>
-              <span style={{ color: receipt.amount < 0 ? 'var(--slc-coral)' : 'var(--slc-text)', fontSize: 13, fontWeight: 900 }}>{formatWon(receipt.amount)}</span>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -315,5 +322,209 @@ function filterChipStyle(active: boolean) {
     fontWeight: 900,
     cursor: 'pointer',
     fontFamily: 'inherit',
+  } as const;
+}
+
+function computeCycleDay(items: ScheduleItem[]): number | null {
+  const first = items
+    .filter((item) => item.type === 'injection')
+    .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+  if (!first) return null;
+  const diffDays = Math.floor((Date.now() - new Date(first.scheduled_at).getTime()) / 86_400_000);
+  return diffDays < 0 ? null : diffDays + 1;
+}
+
+function CostLineChart({ receipts, total }: { receipts: Receipt[]; total: number }) {
+  const points = [...receipts]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .reduce<Array<{ date: string; cumulative: number }>>(
+      (acc, receipt) => {
+        const prev = acc[acc.length - 1]?.cumulative ?? 0;
+        return [...acc, { date: receipt.date, cumulative: prev + receipt.amount }];
+      },
+      [],
+    );
+
+  const W = 320;
+  const H = 100;
+  const PAD = { top: 12, right: 16, bottom: 24, left: 56 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+  const amounts = points.map((point) => point.cumulative);
+  const minY = Math.min(0, ...amounts);
+  const maxY = Math.max(0, ...amounts);
+  const rangeY = maxY - minY || 1;
+
+  function toX(index: number) {
+    return PAD.left + (index / Math.max(points.length - 1, 1)) * innerW;
+  }
+
+  function toY(value: number) {
+    return PAD.top + (1 - (value - minY) / rangeY) * innerH;
+  }
+
+  const polylinePoints = points.map((point, index) => `${toX(index)},${toY(point.cumulative)}`).join(' ');
+  const zeroY = toY(0);
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.88)',
+      border: '1px solid var(--slc-border)',
+      borderRadius: 22,
+      padding: '14px 16px 10px',
+      backdropFilter: 'blur(14px)',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <p style={{ margin: 0, fontSize: 12, color: 'var(--slc-muted)', fontWeight: 900 }}>사이클 누적 비용</p>
+        <strong style={{ fontSize: 15, fontWeight: 900, color: total < 0 ? 'var(--slc-coral)' : 'var(--slc-text)' }}>
+          {formatWon(total)}
+        </strong>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} aria-label="사이클 누적 비용 차트" role="img" style={{ overflow: 'visible' }}>
+        <line x1={PAD.left} y1={zeroY} x2={W - PAD.right} y2={zeroY} stroke="var(--slc-border)" strokeWidth="1" />
+        <polyline points={polylinePoints} fill="none" stroke="var(--slc-coral)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        {points.length > 0 ? (
+          <circle cx={toX(points.length - 1)} cy={toY(points[points.length - 1].cumulative)} r="4" fill="var(--slc-coral)" />
+        ) : null}
+        {maxY > 0 ? (
+          <text x={PAD.left - 4} y={PAD.top + 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">
+            {formatWonShort(maxY)}
+          </text>
+        ) : null}
+        <text x={PAD.left - 4} y={zeroY + 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">0</text>
+        {points.length > 0 ? (
+          <>
+            <text x={PAD.left} y={H - 4} textAnchor="start" fontSize="9" fill="#B5A89E" fontWeight="800">
+              {formatDateShort(points[0].date)}
+            </text>
+            <text x={W - PAD.right} y={H - 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">
+              {formatDateShort(points[points.length - 1].date)}
+            </text>
+          </>
+        ) : null}
+      </svg>
+    </div>
+  );
+}
+
+const SUBSIDY_INFO = [
+  { title: '난임 시술비 지원', desc: '최대 110만원 · 소득 무관', action: '국민행복카드로 신청' },
+  { title: '지자체 추가 지원', desc: '시·군·구별 10~50만원 추가', action: '거주지 보건소 문의' },
+  { title: '의료비 세액공제', desc: '총급여 3% 초과분 15% 공제', action: '연말정산 의료비 항목' },
+] as const;
+
+function SubsidyCards() {
+  return (
+    <section aria-label="정부 지원 안내" style={{ padding: '8px 16px 0' }}>
+      <p style={{ fontSize: 12, fontWeight: 900, color: '#B99F91', padding: '0 8px 10px', margin: 0 }}>
+        정부 지원 안내
+      </p>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {SUBSIDY_INFO.map((info) => (
+          <div
+            key={info.title}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              alignItems: 'center',
+              gap: 12,
+              padding: '14px 16px',
+              borderRadius: 18,
+              background: 'rgba(255,255,255,0.72)',
+              border: '1px solid var(--slc-border)',
+              backdropFilter: 'blur(14px)',
+            }}
+          >
+            <div>
+              <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 900, color: 'var(--slc-text)' }}>{info.title}</p>
+              <p style={{ margin: '0 0 3px', fontSize: 12, color: 'var(--slc-muted)', fontWeight: 700 }}>{info.desc}</p>
+              <p style={{ margin: 0, fontSize: 11, color: 'var(--slc-coral)', fontWeight: 900 }}>{info.action}</p>
+            </div>
+            <span aria-hidden="true" style={{ color: 'var(--slc-muted)', fontSize: 18 }}>›</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function formatWonShort(value: number) {
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(value) >= 1_000) return `${Math.round(value / 1_000)}K`;
+  return String(value);
+}
+
+function formatDateShort(dateStr: string) {
+  const [, month, day] = dateStr.split('-');
+  if (!month || !day) return dateStr;
+  return `${Number(month)}/${Number(day)}`;
+}
+
+const recordsAddButtonStyle = {
+  width: 44,
+  height: 44,
+  borderRadius: '50%',
+  background: 'var(--slc-coral-light)',
+  border: '1.5px solid var(--slc-border)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'var(--slc-coral)',
+  fontSize: 22,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+} as const;
+
+const cycleDayHeroStyle = {
+  margin: '0 16px 16px',
+  padding: '18px 20px',
+  borderRadius: 22,
+  background: 'rgba(255,255,255,0.82)',
+  border: '1px solid var(--slc-border)',
+  backdropFilter: 'blur(14px)',
+} as const;
+
+const sheetBackdropStyle = {
+  position: 'fixed' as const,
+  inset: 0,
+  zIndex: 49,
+  background: 'rgba(30,20,15,0.38)',
+  backdropFilter: 'blur(2px)',
+} as const;
+
+const sheetPanelStyle = {
+  position: 'fixed' as const,
+  bottom: 0,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: '100%',
+  maxWidth: 430,
+  zIndex: 50,
+  background: 'var(--slc-bg)',
+  borderRadius: '24px 24px 0 0',
+  padding: '12px 20px 48px',
+  boxShadow: '0 -8px 40px rgba(30,20,15,0.14)',
+} as const;
+
+const sheetHandleBarStyle = {
+  width: 36,
+  height: 4,
+  borderRadius: 999,
+  background: 'var(--slc-border)',
+  margin: '0 auto 20px',
+} as const;
+
+function sheetSubmitStyle(saving: boolean) {
+  return {
+    minHeight: 46,
+    border: 0,
+    borderRadius: 999,
+    background: 'var(--slc-coral)',
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 900,
+    fontFamily: 'inherit',
+    cursor: saving ? 'wait' : 'pointer',
+    opacity: saving ? 0.72 : 1,
   } as const;
 }

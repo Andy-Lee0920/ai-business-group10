@@ -8,6 +8,7 @@ import type { Receipt } from '../../src/types/slc.types';
 const migration = readFileSync('supabase/migrations/202605150004_receipts.sql', 'utf8');
 const apiRoute = readFileSync('app/api/receipts/route.ts', 'utf8');
 const screenSource = readFileSync('src/features/records/records-screen.tsx', 'utf8');
+const recordsPage = readFileSync('app/(authed)/records/page.tsx', 'utf8');
 
 const receipt = (overrides: Partial<Receipt> = {}): Receipt => ({
   id: 'receipt-1',
@@ -21,7 +22,7 @@ const receipt = (overrides: Partial<Receipt> = {}): Receipt => ({
 });
 
 describe('Records receipts', () => {
-  it('renders receipt input, receipt list, and running total on the records tab', () => {
+  it('keeps receipt entry in a bottom sheet and renders the running cost chart from saved receipts', () => {
     const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
       items: [],
       completions: [],
@@ -29,15 +30,34 @@ describe('Records receipts', () => {
       receipts: [receipt(), receipt({ id: 'receipt-2', amount: -10000, category: '정부지원금', note: null })],
     }));
 
-    expect(markup).toContain('영수증 입력');
-    expect(markup).toContain('data-testid="receipt-form"');
-    expect(markup).toContain('data-testid="receipt-list"');
-    expect(markup).toContain('data-testid="receipt-total"');
+    expect(markup).toContain('영수증 추가');
+    expect(markup).toContain('사이클 누적 비용');
+    expect(markup).toContain('aria-label="사이클 누적 비용 차트"');
     expect(markup).toContain('25,000원');
-    expect(markup).toContain('정부지원금');
+    expect(markup).toContain('정부 지원 안내');
+    expect(markup).toContain('난임 시술비 지원');
+    expect(markup).toContain('지자체 추가 지원');
+    expect(markup).toContain('의료비 세액공제');
     expect(markup).toContain('data-testid="ambient-story-background"');
-    expect(markup).toContain('rgba(252, 238, 232, 0.9)');
     expect(markup).toContain('backdrop-filter:blur(14px)');
+    expect(markup).not.toContain('data-testid="receipt-form"');
+    expect(markup).not.toContain('data-testid="receipt-list"');
+    expect(markup).not.toContain('rgba(252, 238, 232, 0.9)');
+  });
+
+  it('defines the receipt bottom sheet contract without the legacy inline panel', () => {
+    expect(screenSource).toContain('const [sheetOpen, setSheetOpen] = useState(false)');
+    expect(screenSource).toContain('role="dialog" aria-label="영수증 입력"');
+    expect(screenSource).toContain('data-testid="receipt-form"');
+    expect(screenSource).toContain('data-testid="receipt-total"');
+    expect(screenSource).toContain('setSheetOpen(false)');
+    expect(screenSource).not.toContain('function ReceiptPanel');
+  });
+
+
+  it('extends the records fetch window so cycle-day can find the first injection', () => {
+    expect(recordsPage).toContain('120 * 24 * 60 * 60 * 1000');
+    expect(recordsPage).not.toContain('30 * 24 * 60 * 60 * 1000');
   });
 
   it('keeps receipts under couple-scoped RLS and inserts only after privacy acceptance', () => {
