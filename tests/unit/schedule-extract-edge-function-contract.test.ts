@@ -24,8 +24,9 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain("Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')");
     expect(code).toContain('/storage/v1/object/sign/');
     expect(code).toContain('authorization: `Bearer ${serviceRoleKey}`');
+    expect(code).toContain("const DEFAULT_OPENROUTER_SCHEDULE_MODEL = 'anthropic/claude-haiku-4.5'");
+    expect(code).toContain("Deno.env.get('OPENROUTER_VISION_MODEL')");
     expect(code).toContain("model: OPENROUTER_VISION_MODEL");
-    expect(code).toContain("const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku'");
     expect(code).toContain("type: 'image_url'");
     expect(signedUrlIndex).toBeGreaterThan(-1);
     expect(openRouterIndex).toBeGreaterThan(-1);
@@ -41,7 +42,8 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain("if (body.mode === 'text')");
     expect(code).toContain('function normalizeTextRequest');
     expect(code).toContain('async function extractCandidatesFromTextWithOpenRouter');
-    expect(code).toContain("const OPENROUTER_TEXT_MODEL = 'anthropic/claude-3-haiku'");
+    expect(code).toContain("Deno.env.get('OPENROUTER_TEXT_MODEL')");
+    expect(code).toContain('model: OPENROUTER_TEXT_MODEL');
     expect(code).toContain('rawText,');
   });
 
@@ -81,6 +83,7 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('3일간 하루 두 번 => 6 candidates');
     expect(code).toContain('2일간 매일 오전 9시 => 2 candidates');
     expect(code).toContain('"본인이 정해서", "정확한 시간 확인", "확인 후 입력"');
+    expect(code).toContain('시간을 사용자가 정하라는 안내 문장 자체는 별도 candidate로 만들지 말고');
   });
 
   it('explicitly forbids medical judgment and does not contain committed secrets', () => {

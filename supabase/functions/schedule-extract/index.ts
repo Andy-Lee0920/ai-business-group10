@@ -23,8 +23,9 @@ type OpenRouterChoice = { message?: { content?: string } };
 type OpenRouterResponse = { choices?: OpenRouterChoice[] };
 type StorageSignedUrlResponse = { signedURL?: string; signedUrl?: string; error?: string; message?: string };
 
-const OPENROUTER_VISION_MODEL = 'anthropic/claude-3-haiku';
-const OPENROUTER_TEXT_MODEL = 'anthropic/claude-3-haiku';
+const DEFAULT_OPENROUTER_SCHEDULE_MODEL = 'anthropic/claude-haiku-4.5';
+const OPENROUTER_VISION_MODEL = Deno.env.get('OPENROUTER_VISION_MODEL') ?? DEFAULT_OPENROUTER_SCHEDULE_MODEL;
+const OPENROUTER_TEXT_MODEL = Deno.env.get('OPENROUTER_TEXT_MODEL') ?? DEFAULT_OPENROUTER_SCHEDULE_MODEL;
 const CLINIC_PHOTOS_BUCKET = 'clinic-photos';
 const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 5;
 const SCHEDULE_EXTRACT_SYSTEM_PROMPT = [
@@ -36,6 +37,7 @@ const SCHEDULE_EXTRACT_SYSTEM_PROMPT = [
   '예: 2026년 5월 15일 오후 9시 => 2026-05-15T21:00:00+09:00, 밤 10시 => 22:00, 오전 10시 방문 => clinic.',
   '기간과 빈도는 후보 수로 펼친다. 예: 3일간 하루 두 번 => 6 candidates, 2일간 매일 오전 9시 => 2 candidates.',
   '단, "본인이 정해서", "정확한 시간 확인", "확인 후 입력"처럼 사용자가 시간을 정해야 하는 항목은 scheduled_at:null로 둔다.',
+  '시간을 사용자가 정하라는 안내 문장 자체는 별도 candidate로 만들지 말고, 바로 앞 약명/행위 후보의 시간 미정 정보로만 반영한다.',
   'Return JSON only: {"candidates":[{"type":"injection"|"medication"|"clinic","title":string,"scheduled_at":string|null,"dose":string|null,"unit":string|null}]}',
 ].join(' ');
 

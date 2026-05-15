@@ -46,6 +46,9 @@ type ClinicGuideInterviewResponse = {
 type OpenRouterChoice = { message?: { content?: string } };
 type OpenRouterResponse = { choices?: OpenRouterChoice[] };
 
+const DEFAULT_OPENROUTER_CLINIC_GUIDE_MODEL = 'anthropic/claude-haiku-4.5';
+const OPENROUTER_CLINIC_GUIDE_MODEL = Deno.env.get('OPENROUTER_CLINIC_GUIDE_MODEL') ?? DEFAULT_OPENROUTER_CLINIC_GUIDE_MODEL;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -135,7 +138,7 @@ async function matchMedicationWithOpenRouter(userInput: string, medications: Med
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-3-haiku',
+      model: OPENROUTER_CLINIC_GUIDE_MODEL,
       messages: [
         {
           role: 'system',
@@ -165,7 +168,7 @@ async function interviewWithOpenRouter(request: InterviewRequest): Promise<Clini
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-3-haiku',
+      model: OPENROUTER_CLINIC_GUIDE_MODEL,
       messages: [
         {
           role: 'system',

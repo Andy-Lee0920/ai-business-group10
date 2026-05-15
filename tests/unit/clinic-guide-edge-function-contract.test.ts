@@ -7,6 +7,9 @@ describe('clinic-guide-ai Edge Function contract', () => {
 
     expect(source).toContain('Access-Control-Allow-Origin');
     expect(source).toContain("Deno.env.get('OPENROUTER_API_KEY')");
+    expect(source).toContain("const DEFAULT_OPENROUTER_CLINIC_GUIDE_MODEL = 'anthropic/claude-haiku-4.5'");
+    expect(source).toContain("Deno.env.get('OPENROUTER_CLINIC_GUIDE_MODEL')");
+    expect(source).toContain('model: OPENROUTER_CLINIC_GUIDE_MODEL');
     expect(source).toContain("mode: 'interview'");
     expect(source).toContain('userInput: string');
     expect(source).toContain('patientId: string');
