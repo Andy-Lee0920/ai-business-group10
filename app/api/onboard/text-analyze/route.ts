@@ -93,7 +93,7 @@ function chooseSafeTextCandidates(rawText: string, llmCandidates: ExtractedCandi
 
 const KOREA_TIME_ZONE = 'Asia/Seoul';
 const DAY_MS = 24 * 60 * 60 * 1000;
-const MAX_DETERMINISTIC_CANDIDATES = 4;
+const MAX_DETERMINISTIC_CANDIDATES = 30;
 
 const INJECTION_MEDICATION_ALIASES: Array<{ pattern: RegExp; title: string }> = [
   { pattern: /고날\s*(?:에프|f)?/iu, title: '고날에프' },
@@ -105,32 +105,50 @@ const INJECTION_MEDICATION_ALIASES: Array<{ pattern: RegExp; title: string }> = 
 ];
 
 function extractDeterministicTextCandidates(rawText: string, now = new Date()): ExtractedCandidate[] {
-  const title = findMedicationTitle(rawText);
+  const title = findScheduleTitle(rawText);
   if (!title) return [];
 
   const type = inferTextScheduleType(rawText, title);
   if (!type) return [];
 
-  const times = extractExplicitTimes(rawText).slice(0, MAX_DETERMINISTIC_CANDIDATES);
+  const durationDays = extractDurationDays(rawText);
+  const times = extractExplicitTimes(rawText);
+  const frequency = extractDailyFrequency(rawText, times.length);
+  const shouldExpandDuration = shouldExpandDurationFrequency(rawText, durationDays, frequency, times.length);
   const dose = extractDose(rawText);
   const unit = dose ? extractDoseUnit(rawText) : null;
+  const startDateKey = getStartKoreanDateKey(now, rawText);
 
   if (!times.length) {
-    return [{ type, title, scheduled_at: null, dose, unit }];
+    const candidateCount = shouldExpandDuration ? durationDays * frequency : frequency;
+    return Array.from({ length: candidateCount })
+      .slice(0, MAX_DETERMINISTIC_CANDIDATES)
+      .map((_, index) => ({
+        type,
+        title: formatExpandedTitle(title, index, frequency, candidateCount),
+        scheduled_at: null,
+        dose,
+        unit,
+      }));
   }
 
-  const dateKey = getKoreanDateKey(now, rawText.includes('내일') ? 1 : 0);
-  return times.map((time) => ({
-    type,
-    title,
-    scheduled_at: toKoreanIso(dateKey, time.hour, time.minute),
-    dose,
-    unit,
-  }));
+  const expandedDates = shouldExpandDuration ? Array.from({ length: durationDays }, (_, index) => addDaysToKoreanDateKey(startDateKey, index)) : [startDateKey];
+  return expandedDates
+    .flatMap((dateKey) => times.map((time) => ({
+      type,
+      title,
+      scheduled_at: toKoreanIso(dateKey, time.hour, time.minute),
+      dose,
+      unit,
+    })))
+    .slice(0, MAX_DETERMINISTIC_CANDIDATES);
 }
 
-function findMedicationTitle(rawText: string) {
-  return INJECTION_MEDICATION_ALIASES.find((alias) => alias.pattern.test(rawText))?.title ?? null;
+function findScheduleTitle(rawText: string) {
+  const medicationTitle = INJECTION_MEDICATION_ALIASES.find((alias) => alias.pattern.test(rawText))?.title;
+  if (medicationTitle) return medicationTitle;
+  if (/주사|맞|펜/iu.test(rawText)) return '주사';
+  return null;
 }
 
 function inferTextScheduleType(rawText: string, title: string): ScheduleType | null {
@@ -138,6 +156,47 @@ function inferTextScheduleType(rawText: string, title: string): ScheduleType | n
   if (/복용|먹|질정|정\b/iu.test(rawText) && title === '프로게스테론') return 'medication';
   if (/방문|내원|검사|초음파|채혈/iu.test(rawText)) return 'clinic';
   return null;
+}
+
+function extractDurationDays(rawText: string) {
+  const match = rawText.match(/(\d{1,2})\s*일\s*간/u);
+  const days = Number.parseInt(match?.[1] ?? '1', 10);
+  if (!Number.isInteger(days) || days < 1) return 1;
+  return Math.min(days, 14);
+}
+
+function extractDailyFrequency(rawText: string, explicitTimeCount: number) {
+  if (/하루\s*(?:두|2)\s*번|하루\s*(?:두|2)\s*회/iu.test(rawText)) return 2;
+  if (/아침/u.test(rawText) && /저녁|밤/u.test(rawText)) return 2;
+
+  const dailyMatch = rawText.match(/하루\s*(\d{1,2})\s*(?:번|회)/u);
+  if (dailyMatch) {
+    const frequency = Number.parseInt(dailyMatch[1] ?? '1', 10);
+    if (Number.isInteger(frequency) && frequency > 0) return Math.min(frequency, 6);
+  }
+
+  const onceMatch = rawText.match(/(\d{1,2})\s*회/u);
+  if (onceMatch) {
+    const frequency = Number.parseInt(onceMatch[1] ?? '1', 10);
+    if (Number.isInteger(frequency) && frequency > 0) return Math.min(frequency, 6);
+  }
+
+  if (/매일/u.test(rawText) && explicitTimeCount > 0) return explicitTimeCount;
+  return Math.max(explicitTimeCount, 1);
+}
+
+function shouldExpandDurationFrequency(rawText: string, durationDays: number, frequency: number, explicitTimeCount: number) {
+  if (durationDays <= 1) return false;
+  if (/하루\s*(?:\d{1,2}|두)\s*(?:번|회)/iu.test(rawText)) return true;
+  if (/매일/u.test(rawText)) return true;
+  return explicitTimeCount === 0 && frequency > 1 && (/아침/u.test(rawText) || /저녁|밤/u.test(rawText));
+}
+
+function formatExpandedTitle(title: string, index: number, frequency: number, candidateCount: number) {
+  if (candidateCount <= 1) return title;
+  const day = Math.floor(index / frequency) + 1;
+  const round = (index % frequency) + 1;
+  return `${title} ${day}일차 ${round}회차`;
 }
 
 function extractExplicitTimes(rawText: string): Array<{ hour: number; minute: number }> {
@@ -188,6 +247,30 @@ function getKoreanDateKey(now: Date, offsetDays: number) {
   return `${value('year')}-${value('month')}-${value('day')}`;
 }
 
+function getStartKoreanDateKey(now: Date, rawText: string) {
+  const explicitDateKey = extractExplicitKoreanDateKey(now, rawText);
+  if (explicitDateKey) return explicitDateKey;
+  return getKoreanDateKey(now, rawText.includes('내일') ? 1 : 0);
+}
+
+function extractExplicitKoreanDateKey(now: Date, rawText: string) {
+  const match = rawText.match(/(?:(\d{4})\s*년\s*)?(\d{1,2})\s*월\s*(\d{1,2})\s*일/u);
+  if (!match) return null;
+
+  const currentYear = Number.parseInt(getKoreanDateKey(now, 0).slice(0, 4), 10);
+  const year = Number.parseInt(match[1] ?? String(currentYear), 10);
+  const month = Number.parseInt(match[2] ?? '', 10);
+  const day = Number.parseInt(match[3] ?? '', 10);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function addDaysToKoreanDateKey(dateKey: string, offsetDays: number) {
+  const target = new Date(new Date(`${dateKey}T00:00:00+09:00`).getTime() + (offsetDays * DAY_MS));
+  return getKoreanDateKey(target, 0);
+}
+
 function toKoreanIso(dateKey: string, hour: number, minute: number) {
   const hh = String(hour).padStart(2, '0');
   const mm = String(minute).padStart(2, '0');
@@ -195,7 +278,7 @@ function toKoreanIso(dateKey: string, hour: number, minute: number) {
 }
 
 function extractDose(rawText: string) {
-  return rawText.match(/\b\d+(?:\.\d+)?\s*(?:IU|iu|mg|mcg|mL|ml|정)\b/u)?.[0].replace(/\s+/g, ' ').replace(/iu/u, 'IU').split(/\s+/u)[0] ?? null;
+  return rawText.match(/\b(\d+(?:\.\d+)?)\s*(?:IU|iu|mg|mcg|mL|ml|정)\b/u)?.[1] ?? null;
 }
 
 function extractDoseUnit(rawText: string) {

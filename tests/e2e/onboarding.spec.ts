@@ -7,7 +7,7 @@ async function acceptPrivacyForOnboarding(context: BrowserContext) {
 async function goToAddMethod(page: Page) {
   await page.goto('/onboarding');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /치료자/ }).click();
+  await page.getByRole('button', { name: /본인/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
   await page.getByRole('button', { name: '추가하기' }).click();
 }
@@ -16,14 +16,14 @@ test('onboarding shell renders premium brand intro, role cards, first-add prompt
   await acceptPrivacyForOnboarding(context);
   await page.goto('/onboarding');
 
-  await expect(page.getByRole('heading', { name: '오늘 필요한 것만 보여드릴게요' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /소중한 시작을/ })).toBeVisible();
   await expect(page.getByRole('button', { name: '시작하기' })).toBeVisible();
 
   await page.getByRole('button', { name: '시작하기' }).click();
-  await expect(page.getByRole('heading', { name: '누구로 시작할까요?' })).toBeVisible();
-  await page.getByRole('button', { name: /치료자/ }).click();
+  await expect(page.getByRole('heading', { name: '어떤 화면으로 시작할까요?' })).toBeVisible();
+  await page.getByRole('button', { name: /본인/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
-  await expect(page.getByRole('heading', { name: /오늘 기억할 것/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /병원 안내를/ })).toBeVisible();
   await page.getByRole('button', { name: '추가하기' }).click();
 
   await expect(page.getByRole('heading', { name: '어떻게 추가할까요?' })).toBeVisible();
@@ -138,7 +138,7 @@ test('photo processing uses native picker, shows progress, and sends edited cand
   await expect(page.getByLabel('사진 처리 상태').getByText('업로드 완료')).toBeVisible();
   await expect(page.getByLabel('사진 처리 상태').getByText('내용 분석 중')).toBeVisible();
   await expect(page.getByLabel('사진 처리 상태').getByText('일정 후보 준비')).toBeVisible();
-  await expect(page.getByRole('heading', { name: '일정을 확인해 주세요' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /저장 전,/ })).toBeVisible();
   await expect(page.getByLabel('고날에프 요약')).toContainText('주사');
   await expect(page.getByLabel('고날에프 요약')).toContainText('150 IU');
 
@@ -152,7 +152,7 @@ test('photo processing uses native picker, shows progress, and sends edited cand
   await expect(page.getByText('수정한 고날에프 일정이 홈에 반영되도록 저장됐어요.')).toBeVisible();
   await page.getByRole('button', { name: /파트너와 함께 쓸게요/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
-  await expect(page.getByRole('heading', { name: '거의 다 왔어요!' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '일정 후보를 만들었어요' })).toBeVisible();
   await expect(page.getByLabel('일정 후보 요약')).toContainText('수정한 고날에프');
   await page.getByRole('button', { name: '시작하기' }).click();
   await expect(page.getByRole('heading', { name: '오늘 일정' })).toBeVisible();
@@ -189,7 +189,7 @@ test('text paste analyzes pasted clinic text into reusable candidate review', as
   await expect(page.getByText(/\d+\/1000/)).toBeVisible();
   await page.getByRole('button', { name: '분석하기' }).click();
 
-  await expect(page.getByRole('heading', { name: '일정을 확인해 주세요' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /저장 전,/ })).toBeVisible();
   await expect(page.getByLabel('세트로타이드 요약')).toContainText('약 복용');
   await expect(page.getByLabel('세트로타이드 요약')).toContainText('0.25 mg');
 });

@@ -8,7 +8,7 @@ test('onboarding intro leads with Fevio logo and one calm action sentence', asyn
   await page.goto('/onboarding');
 
   await expect(page.getByRole('img', { name: 'Fevio' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '오늘 필요한 것만 보여드릴게요' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /소중한 시작을/ })).toBeVisible();
   await expect(page.getByText('병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.')).toBeVisible();
   for (const setupCopy of ['역할 선택', '동의 후 일정 저장', 'Home에서 오늘 일정 확인']) {
     await expect(page.getByText(setupCopy, { exact: true })).toHaveCount(0);
@@ -45,7 +45,7 @@ test('onboarding first schedule is saved only after user confirmation', async ({
 
   await page.goto('/onboarding');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /치료자/ }).click();
+  await page.getByRole('button', { name: /본인/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
 
   await expect(page.getByRole('heading', { name: '처음 확인할 일정을 하나만 남겨주세요' })).toBeVisible();
@@ -92,7 +92,7 @@ test('clinic visit onboarding keeps medication-only fields hidden', async ({ con
 
   await page.goto('/onboarding');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /치료자/ }).click();
+  await page.getByRole('button', { name: /본인/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
 
   await page.getByRole('button', { name: /병원 방문/ }).click();

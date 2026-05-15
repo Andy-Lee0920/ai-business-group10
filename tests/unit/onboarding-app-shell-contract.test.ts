@@ -20,12 +20,12 @@ describe('app onboarding shell contract', () => {
   it('renders premium brand intro, role select, first-add prompt, partner exit, and add method cards', () => {
     for (const copy of [
       'Fevio',
-      '오늘 필요한 것만 보여드릴게요',
+      '소중한 시작을,',
       '시작하기',
-      '치료자',
+      '본인',
       '파트너',
-      '오늘 기억할 것',
-      '하나만 남겨주세요',
+      '병원 안내를',
+      '그대로 옮겨주세요',
       '추가하기',
       '파트너는 초대 링크로 들어와 주세요',
       '어떻게 추가할까요?',
@@ -57,7 +57,7 @@ describe('app onboarding shell contract', () => {
 
   it('implements candidate review inline edits and confirm API payload', () => {
     expect(onboardingClient).toContain("activeStep === 'candidate_review'");
-    expect(onboardingClient).toContain('일정을 확인해 주세요');
+    expect(onboardingClient).toContain('저장 전,');
     expect(onboardingClient).toContain('formatCandidateType(candidate.type)');
     expect(onboardingClient).toContain('input type="datetime-local"');
     expect(onboardingClient).toContain('candidateEdits');
@@ -79,7 +79,7 @@ describe('app onboarding shell contract', () => {
   });
 
   it('implements sharing and complete handoff with partner invite intent and home redirect', () => {
-    for (const copy of ['나 혼자 시작할게요', '파트너와 함께 쓸게요', '거의 다 왔어요!', '일정 후보 요약']) {
+    for (const copy of ['나 혼자 시작할게요', '파트너와 함께 쓸게요', '일정 후보를 만들었어요', '일정 후보 요약']) {
       expect(onboardingClient).toContain(copy);
     }
     expect(onboardingClient).toContain("fetch('/api/onboarding/complete'");
