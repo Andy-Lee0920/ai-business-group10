@@ -22,6 +22,13 @@ describe('ManualAddForm search and range repeat contract', () => {
     expect(formSource).not.toContain('medications.map((m)');
   });
 
+  it('shows the canonical search empty-state illustration when medication search has no matches', () => {
+    expect(formSource).toContain('SLCIllustration');
+    expect(formSource).toContain('slcAssets.empty.search');
+    expect(formSource).toContain('검색 결과가 없어요');
+    expect(formSource).not.toContain('<img');
+  });
+
   it('renders a DayPicker range mode with daily time and 30-day guidance', () => {
     expect(formSource).toContain('DayPicker');
     expect(formSource).toContain('mode="range"');

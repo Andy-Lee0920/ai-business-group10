@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -42,5 +43,13 @@ describe('SLC records screen', () => {
     expect(markup).toContain('주사');
     expect(markup).toContain('오른쪽 아래');
     expect(markup).not.toContain('예정 19:00 · 완료');
+  });
+
+  it('uses the canonical records empty-state illustration asset', () => {
+    const source = readFileSync('src/features/records/records-screen.tsx', 'utf8');
+
+    expect(source).toContain('SLCIllustration');
+    expect(source).toContain('slcAssets.empty.records');
+    expect(source).not.toContain('<img');
   });
 });

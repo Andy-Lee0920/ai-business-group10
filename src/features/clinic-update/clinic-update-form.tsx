@@ -6,6 +6,8 @@ import type { ClinicUpdate, Medication } from '../../types/slc.types';
 import type { ClinicGuideMedicationNormalizeResponse, ClinicGuideResponse, ClinicGuideStep } from '../../types/clinic-guide.types';
 import { resolveMedicationNames } from '../../domain/clinic-guide-medication-normalizer';
 import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../domain/slc-clinic-update';
+import { SLCIllustration } from '../../components/slc-illustration';
+import { slcAssets } from '../../design/slc-assets';
 
 type MedicationOption = Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'aliases' | 'default_unit' | 'default_cta'>;
 
@@ -281,10 +283,11 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
   if (step === 'entry') return (
     <Shell>
       <div style={{ flex: 1, display: 'grid', alignContent: 'center', gap: 22 }}>
+        <SLCIllustration asset={slcAssets.clinic.updateBanner} size="banner" priority style={entryBannerStyle} />
         <h1 style={heroTitleStyle}>오늘 병원 업데이트</h1>
         <p style={subtitleStyle}>몇 가지만 확인하면 오늘 일정에 반영할 수 있어요.</p>
         <div style={landingCardStyle} aria-label="병원 업데이트 안내">
-          <div style={hospitalIconStyle}>🏥</div>
+          <SLCIllustration asset={slcAssets.clinic.visitClipboard} size="card" style={landingIllustrationStyle} />
           <strong style={{ fontSize: 20 }}>오늘 병원<br />업데이트가 필요해요</strong>
         </div>
         <p style={safeNoteStyle}>ⓘ 챗봇이 아니라 질문 카드로 진행돼요</p>
@@ -341,7 +344,12 @@ export function ClinicUpdateForm({ medications, partnerConnected = false }: Prop
                 <span><strong>{medication.brand_name_ko}</strong><small>{medication.brand_name_en}</small></span>
               </button>
             ))}
-            {!filteredMedications.length ? <p style={emptyListStyle}>검색 결과가 없어요. 직접 입력으로 추가할 수 있어요.</p> : null}
+            {!filteredMedications.length ? (
+              <div style={emptyFallbackStyle}>
+                <SLCIllustration asset={slcAssets.clinic.fallback} size="empty" style={fallbackIllustrationStyle} />
+                <p style={emptyListStyle}>검색 결과가 없어요. 직접 입력으로 추가할 수 있어요.</p>
+              </div>
+            ) : null}
             <button type="button" style={rowStyle(showDirectInput)} onClick={addDirectMedication}>
               <span style={iconPillStyle}>✏️</span><strong>직접 입력</strong>
             </button>
@@ -496,6 +504,7 @@ function QuestionCard({ icon, title, lead, children }: { icon?: string; title: s
 function DraftPanel({ medicationNames, nextVisit, memo, aiDraft }: { medicationNames: string[]; nextVisit: string; memo: string; aiDraft: Partial<ClinicUpdate> }) {
   return (
     <section style={panelStyle} aria-label="정리된 내용">
+      <SLCIllustration asset={slcAssets.clinic.diff} size="icon" style={draftIllustrationStyle} />
       <h2 style={{ ...sectionTitleStyle, color: 'var(--slc-coral)' }}>정리된 내용</h2>
       <p>• 새 약: {medicationNames.length ? medicationNames.join(', ') : '없음'}</p>
       <p>• 다음 방문: {nextVisit}</p>
@@ -632,6 +641,10 @@ const sectionTitleStyle: CSSProperties = { margin: '0 0 8px', fontSize: 16, font
 const subtitleStyle: CSSProperties = { margin: '0 0 18px', textAlign: 'center', fontSize: 15, color: '#74675F', lineHeight: 1.55 };
 const badgeStyle: CSSProperties = { justifySelf: 'center', width: 'fit-content', padding: '8px 14px', borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', fontSize: 14, fontWeight: 900 };
 const landingCardStyle: CSSProperties = { display: 'grid', gap: 14, justifyItems: 'center', padding: 28, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.82)', boxShadow: '0 18px 40px rgba(82,57,45,0.10)', textAlign: 'center' };
+const entryBannerStyle: CSSProperties = { maxHeight: 132, opacity: 0.92, boxShadow: '0 16px 30px rgba(82,57,45,0.08)' };
+const landingIllustrationStyle: CSSProperties = { width: 'min(48%, 142px)', marginBottom: 2 };
+const fallbackIllustrationStyle: CSSProperties = { width: 86, margin: '0 auto 8px', opacity: 0.86 };
+const draftIllustrationStyle: CSSProperties = { float: 'right', width: 58, margin: '0 0 8px 12px', opacity: 0.88 };
 const hospitalIconStyle: CSSProperties = { display: 'grid', placeItems: 'center', width: 58, height: 58, borderRadius: 999, background: '#FCE9E3', color: 'var(--slc-coral)', fontSize: 28, margin: '0 auto 8px' };
 const questionCardStyle: CSSProperties = { padding: 20, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 28px rgba(82,57,45,0.08)' };
 const panelStyle: CSSProperties = { marginTop: 16, padding: 16, border: '1px solid #F0E1D6', borderRadius: 18, background: 'rgba(255,255,255,0.78)' };
@@ -648,6 +661,7 @@ const counterStyle: CSSProperties = { position: 'absolute', right: 14, bottom: 1
 const listStyle: CSSProperties = { display: 'grid', gap: 8, marginTop: 12 };
 const rowStyle = (active: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 14px', borderRadius: 14, border: `1.5px solid ${active ? 'var(--slc-coral)' : '#EFE4DC'}`, background: active ? 'var(--slc-coral-light)' : '#fff', color: 'var(--slc-text)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' });
 const summaryCardStyle: CSSProperties = { ...rowStyle(false), marginBottom: 10, minHeight: 76 };
+const emptyFallbackStyle: CSSProperties = { display: 'grid', justifyItems: 'center', padding: '10px 0' };
 const emptyListStyle: CSSProperties = { margin: '4px 0', padding: '12px 14px', borderRadius: 14, background: '#FFFCFA', border: '1px dashed var(--slc-border)', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 800 };
 const ctaStyle = (disabled = false): CSSProperties => ({ marginTop: 18, width: '100%', minHeight: 52, border: 'none', borderRadius: 16, padding: '16px 0', background: 'linear-gradient(180deg, #D86C57, #C95842)', color: '#fff', fontSize: 17, fontWeight: 900, fontFamily: 'inherit', cursor: disabled ? 'default' : 'pointer', boxShadow: '0 12px 24px rgba(196,97,74,0.20)', opacity: disabled ? 0.55 : 1 });
 const textButtonStyle: CSSProperties = {

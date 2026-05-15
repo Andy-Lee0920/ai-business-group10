@@ -59,7 +59,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
         {pendingRequests.length > 0 && (
           <div style={{ margin: '0 14px 12px', background: '#FFF8F5', borderRadius: 16, padding: '14px 16px', border: '1px solid #F4D4C8' }}>
-            <p style={{ fontSize: 14, fontWeight: 900, color: 'var(--slc-coral)', margin: '0 0 12px' }}>파트너 연결 요청이 있어요</p>
+            <PartnerCardHeader asset={slcAssets.partner.invite} title="파트너 연결 요청이 있어요" />
             {pendingRequests.map((req) => (
               <div key={req.id} style={{ display: 'grid', gap: 10, marginBottom: 10 }}>
                 <span style={{ fontSize: 14, color: 'var(--slc-text)', fontWeight: 800 }}>{partnerDisplayName(req)}</span>
@@ -74,7 +74,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
         {existingLink?.status === 'approved' && (
           <div style={{ margin: '0 14px 12px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
-            <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 6px', fontWeight: 800 }}>연결된 파트너</p>
+            <PartnerCardHeader asset={slcAssets.partner.connectedSuccess} title="연결된 파트너" muted />
             <p style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 12px' }}>{partnerDisplayName(existingLink)}</p>
             <button onClick={() => sendPartnerAction(existingLink.id, 'revoke')} style={pillButtonStyle('muted')}>연결 해제</button>
           </div>
@@ -82,7 +82,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
 
         {inviteCode ? (
           <div style={{ margin: '0 14px 14px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
-            <p style={{ fontSize: 13, color: 'var(--slc-muted)', margin: '0 0 8px', fontWeight: 800 }}>초대 코드 · 읽기 전용 연결</p>
+            <PartnerCardHeader asset={slcAssets.partner.invite} title="초대 코드 · 읽기 전용 연결" muted />
             <p style={{ fontSize: 12, color: 'var(--slc-coral)', fontFamily: 'monospace', margin: '0 0 12px', wordBreak: 'break-all' }}>
               {typeof window !== 'undefined' ? `${window.location.origin}/invite/${inviteCode}` : `/invite/${inviteCode}`}
             </p>
@@ -90,6 +90,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
           </div>
         ) : (
           <div style={{ padding: '0 14px 14px' }}>
+            <SLCIllustration asset={slcAssets.partner.invite} size="empty" style={{ width: 104, margin: '0 auto 12px' }} />
             <button onClick={generateLink} disabled={generating} style={{ ...pillButtonStyle('primary'), width: '100%', minHeight: 46, opacity: generating ? 0.7 : 1 }}>
               {generating ? '생성 중...' : '파트너 초대 링크 만들기'}
             </button>
@@ -114,6 +115,15 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       <SettingsSection title="계정">
         <SettingsRow href="/auth/reset" icon="↩" label="로그아웃" danger />
       </SettingsSection>
+    </div>
+  );
+}
+
+function PartnerCardHeader({ asset, title, muted = false }: { asset: typeof slcAssets.partner.invite; title: string; muted?: boolean }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 46px', gap: 10, alignItems: 'center', marginBottom: 12 }}>
+      <p style={{ fontSize: muted ? 13 : 14, color: muted ? 'var(--slc-muted)' : 'var(--slc-coral)', fontWeight: 900, margin: 0 }}>{title}</p>
+      <SLCIllustration asset={asset} size="icon" style={{ width: 42, justifySelf: 'end' }} />
     </div>
   );
 }

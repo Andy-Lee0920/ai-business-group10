@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { isPresentationMode } from '../../../src/config';
 import { PartnerView } from '../../../src/features/partner/partner-view';
+import { SLCIllustration } from '../../../src/components/slc-illustration';
+import { slcAssets } from '../../../src/design/slc-assets';
 import { partnerStateCopy, type PartnerProjectionState } from '../../../src/features/partner/partner-state';
 import { hasSupabasePublicConfig } from '../../../src/lib/env';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
@@ -64,8 +66,10 @@ export default async function PartnerPage() {
 function PartnerEmptyState({ state }: { state: Exclude<PartnerProjectionState, 'linked_no_schedule' | 'linked_with_schedule'> }) {
   const copy = partnerStateCopy(state);
   const refreshHint = state === 'requested' ? ' 새로고침해서 확인해 주세요' : '';
+  const asset = state === 'requested' ? slcAssets.partner.connectedSuccess : slcAssets.partner.invite;
   return (
     <div style={{ minHeight: '100dvh', padding: '72px 24px', background: 'var(--slc-bg)', textAlign: 'center' }}>
+      <SLCIllustration asset={asset} size="empty" priority />
       <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--slc-text)', marginBottom: 8 }}>{copy.title}</p>
       <p style={{ fontSize: 14, color: 'var(--slc-muted)', lineHeight: 1.6 }}>{copy.description}{refreshHint}</p>
     </div>
