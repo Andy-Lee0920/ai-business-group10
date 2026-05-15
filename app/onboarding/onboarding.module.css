@@ -216,16 +216,20 @@
   justify-content: flex-start;
 }
 
-.addMethodIntroScreen::before {
+.addMethodIntroAmbient {
   position: absolute;
-  inset: -12px -36px 74px;
+  top: -18px;
+  right: -64px;
+  left: -64px;
+  height: min(66vh, 560px);
   z-index: 0;
   background-image: url('/assets/slc/clinic-visit-clipboard.png');
   background-repeat: no-repeat;
-  background-position: center 12px;
-  background-size: min(118%, 460px) auto;
-  content: '';
-  opacity: 0.3;
+  background-position: center top;
+  background-size: min(138%, 560px) auto;
+  filter: saturate(0.96);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.86) 38%, rgba(0, 0, 0, 0.34) 70%, transparent 100%);
+  opacity: 0.24;
   pointer-events: none;
 }
 
@@ -251,7 +255,7 @@
 }
 
 .addMethodIntroScreen .heroCopy {
-  margin-top: clamp(190px, 36vh, 280px);
+  margin-top: clamp(210px, 39vh, 304px);
 }
 
 .methodGrid {

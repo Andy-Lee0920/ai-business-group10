@@ -396,6 +396,7 @@ export function OnboardingClient() {
 
         {activeStep === 'add_method' && !addMethodIntroSeen ? (
           <section className={`${styles.screen} ${styles.centerScreen} ${styles.addMethodIntroScreen}`} aria-labelledby="first-add-title">
+            <span className={styles.addMethodIntroAmbient} aria-hidden="true" />
             <BackButton onClick={goBack} />
             <div className={styles.heroCopy}>
               <h2 className={styles.sectionTitle} id="first-add-title">병원 안내를<br />그대로 옮겨주세요</h2>
