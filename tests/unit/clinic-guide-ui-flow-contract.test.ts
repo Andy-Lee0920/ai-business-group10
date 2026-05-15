@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 const form = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');
 const page = readFileSync('app/(authed)/clinic-update/page.tsx', 'utf8');
 const addPage = readFileSync('app/(authed)/add/page.tsx', 'utf8');
+const guideTypes = readFileSync('src/types/clinic-guide.types.ts', 'utf8');
+const guideInterview = readFileSync('src/domain/clinic-guide-interview.ts', 'utf8');
 
 describe('Clinic Guide visual flow contract', () => {
   it('implements entry, guided interview header, search, draft, confirmation, and success states', () => {
@@ -38,6 +40,8 @@ describe('Clinic Guide visual flow contract', () => {
       '직접 입력 form 열기',
       '✦ Clinic Guide AI',
       'aiAvailable ? <span style={badgeStyle}>✦ Clinic Guide AI</span> : null',
+      'aiAvailable ? (',
+      "payload.source !== 'ai'",
       'if (!available) return null',
       'answerHistory',
       'progressbar',
@@ -85,6 +89,9 @@ describe('Clinic Guide visual flow contract', () => {
     expect(page).toContain("link.status === 'approved'");
     expect(page).toContain('aliases');
     expect(addPage).toContain('mode="schedule"');
+    expect(guideTypes).toContain("source: 'ai' | 'fallback'");
+    expect(guideInterview).toContain("source: 'ai'");
+    expect(guideInterview).toContain("source: 'fallback'");
     expect(addPage).toContain("from('schedule_items')");
     expect(addPage).not.toContain('ManualAddForm');
   });

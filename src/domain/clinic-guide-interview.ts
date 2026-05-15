@@ -29,6 +29,7 @@ export function buildClinicGuideFallbackResponse(request: ClinicGuideRequest, fa
   const draft = mergeDraft(request.context, inferDraft(request.step, request.userInput));
   const nextStep = resolveNextStep(request.step, request.userInput, draft);
   return {
+    source: 'fallback',
     nextStep,
     question: nextStep ? FALLBACK_QUESTIONS[nextStep] : '정리된 내용을 저장 전에 확인해 주세요.',
     chips: nextStep ? FALLBACK_CHIPS[nextStep] : ['저장 전 확인'],
@@ -48,6 +49,7 @@ export function normalizeClinicGuideResponse(payload: unknown, request: ClinicGu
   const rawNextStep = payload.nextStep;
   const nextStep = rawNextStep === null || rawNextStep === undefined ? null : isClinicGuideStep(rawNextStep) ? rawNextStep : resolveNextStep(request.step, request.userInput, draft);
   return {
+    source: 'ai',
     nextStep,
     question,
     chips: normalizeStringArray(payload.chips),
