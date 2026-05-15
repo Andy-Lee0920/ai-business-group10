@@ -810,12 +810,13 @@
   gap: 18px;
   min-height: 168px;
   padding: 22px 20px;
-  border: 1px solid rgba(216, 98, 77, 0.14);
+  border: 1px solid rgba(218, 205, 195, 0.68);
   border-radius: 26px;
-  background: linear-gradient(135deg, #fff3ef 0%, #ffe9e2 100%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 250, 247, 0.92) 100%);
   box-shadow:
-    0 18px 48px rgba(216, 98, 77, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 18px 46px rgba(93, 73, 62, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
   color: #302621;
   font: inherit;
   text-align: left;
@@ -825,7 +826,7 @@
 
 .methodHeroCard:active {
   transform: scale(0.985);
-  box-shadow: 0 8px 24px rgba(216, 98, 77, 0.10);
+  box-shadow: 0 8px 24px rgba(93, 73, 62, 0.08);
 }
 
 .methodHeroCard i {
@@ -841,7 +842,7 @@
   height: 68px;
   place-items: center;
   border-radius: 50%;
-  background: #ffded5;
+  background: rgba(216, 98, 77, 0.10);
   color: var(--slc-coral, #d8624d);
   flex-shrink: 0;
 }
@@ -868,7 +869,7 @@
   display: block;
   font-size: 0.82rem;
   font-weight: 760;
-  color: #9a8071;
+  color: #8a7d75;
   line-height: 1.3;
 }
 
