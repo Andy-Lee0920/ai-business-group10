@@ -8,18 +8,35 @@ function isMissingConfig(error: unknown) {
   return error instanceof Error && error.message.includes('Missing Supabase public config');
 }
 
-function redirectWithDemoCookie(request: NextRequest) {
-  const response = NextResponse.redirect(new URL('/onboarding', request.url), { status: 303 });
+function safeNextPath(next: string | undefined) {
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/privacy')) return '/onboarding';
+  return next;
+}
+
+function redirectWithPrivacyCookie(request: NextRequest, nextPath = '/onboarding') {
+  const redirectOrigin = request.headers.get('origin') ?? request.url;
+  const response = NextResponse.redirect(new URL(safeNextPath(nextPath), redirectOrigin), { status: 303 });
   response.cookies.set('fevio_privacy_accepted', '1', { httpOnly: true, sameSite: 'lax', path: '/' });
   response.cookies.set('fevio_privacy_gate_v1', 'accepted', { httpOnly: true, sameSite: 'lax', path: '/' });
   return response;
 }
 
+async function readNextPath(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const next = formData.get('next');
+    return typeof next === 'string' ? next : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const acceptsHtml = request.headers.get('accept')?.includes('text/html') ?? false;
 
+  if (acceptsHtml) return redirectWithPrivacyCookie(request, await readNextPath(request));
+
   if (isPresentationRequest(request)) {
-    if (acceptsHtml) return redirectWithDemoCookie(request);
     return NextResponse.json({
       accepted: {
         privacy_gate_version: PRIVACY_GATE_VERSION,
@@ -51,10 +68,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ accepted });
     }
 
-    if (acceptsHtml) return redirectWithDemoCookie(request);
     return NextResponse.json({ accepted: data?.[0] ?? null });
   } catch (error) {
-    if (isMissingConfig(error) && acceptsHtml) return redirectWithDemoCookie(request);
     if (isMissingConfig(error)) return NextResponse.json({ error: 'missing_supabase_config' }, { status: 503 });
     throw error;
   }

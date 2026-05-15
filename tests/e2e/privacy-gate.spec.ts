@@ -9,7 +9,8 @@ test('privacy gate presents one premium storage-scope confirmation before onboar
   await expect(page.getByText('이 정보는 오늘 할 일, 기록, 파트너 읽기 전용 화면을 만들기 위해 사용됩니다.')).toBeVisible();
   await expect(page.getByText('Fevio는 의료 판단을 하지 않고 병원 안내를 기록·확인하는 도구입니다.')).toBeVisible();
   await expect(page.getByText('민감정보와 의료 경계 동의')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: '확인하고 계속' })).toBeVisible();
+  const continueButton = page.getByRole('button', { name: '확인하고 계속' });
+  await expect(continueButton).toBeVisible();
 
   const metrics = await page.evaluate(() => {
     const card = document.querySelector('[data-testid="privacy-gate-card"]') as HTMLElement | null;
@@ -24,4 +25,8 @@ test('privacy gate presents one premium storage-scope confirmation before onboar
   expect(metrics.cardPadding).toBe('32px');
   expect(metrics.cardRadius).toBe('36px');
   expect(metrics.cardShadow).toContain('rgba');
+
+  await continueButton.click();
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await expect(page.getByText('시작 전에 저장 범위를 확인해 주세요')).toHaveCount(0);
 });
