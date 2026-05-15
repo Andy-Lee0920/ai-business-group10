@@ -30,6 +30,45 @@ npm run test:e2e
 
 One codebase serves both lanes. Do not fork product logic for presentation; use the explicit env flag only.
 
+
+## Production deploy drift guard
+
+The #361/#362 regression happened because Green evidence was written for branch-only work, then `project-oznp0` was later redeployed from `main` without that branch. Treat this as a blocked operating pattern.
+
+Required sequence for production-visible issue closure:
+
+```text
+PR merged into main
+→ deploy from exact origin/main commit
+→ smoke project-oznp0 live URL
+→ then write/refresh Green evidence with merged commit + deploy ID
+→ then close the issue
+```
+
+Use the guarded deploy command for the real SLC lane:
+
+```bash
+git fetch origin main
+git checkout --detach origin/main
+npm run deploy:production
+```
+
+The guard fails when:
+
+- the current commit is not exactly `origin/main`;
+- the working tree has local changes;
+- the linked Vercel project is not `fevio`;
+- `/home` or `/settings` stop redirecting unauthenticated users to `/auth/sign-in`;
+- `/privacy` stops returning `200`.
+
+Emergency override is allowed only with an issue/PR comment explaining why:
+
+```bash
+FEVIO_ALLOW_NON_MAIN_PROD_DEPLOY=1 npm run deploy:production
+```
+
+Issue comments that look like Green evidence are also checked by `.github/workflows/green-evidence-guard.yml`; if they cite a commit not included in `origin/main`, the workflow posts a warning and fails.
+
 ## Real SLC lane contract
 
 Required external configuration:

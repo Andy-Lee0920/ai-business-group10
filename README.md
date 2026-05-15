@@ -200,6 +200,17 @@ npm run typecheck
 npm run build
 ```
 
+
+Production deployment guard:
+
+```bash
+git fetch origin main
+git checkout --detach origin/main
+npm run deploy:production
+```
+
+Do not close production-visible issues from branch-only evidence. Green evidence must cite the merged `main` commit and the `project-oznp0` deploy ID after live smoke.
+
 Presentation mode local smoke:
 
 ```bash
