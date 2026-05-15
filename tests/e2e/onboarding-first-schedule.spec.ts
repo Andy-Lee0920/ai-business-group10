@@ -9,7 +9,7 @@ test('onboarding intro leads with Fevio logo and one calm action sentence', asyn
 
   await expect(page.getByRole('img', { name: 'Fevio' })).toBeVisible();
   await expect(page.getByRole('heading', { name: /소중한 시작을/ })).toBeVisible();
-  await expect(page.getByText('병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.')).toBeVisible();
+  await expect(page.getByText('병원 안내를 확인한 일정으로 바꿔 조용히 챙겨드릴게요.')).toBeVisible();
   for (const setupCopy of ['역할 선택', '동의 후 일정 저장', 'Home에서 오늘 일정 확인']) {
     await expect(page.getByText(setupCopy, { exact: true })).toHaveCount(0);
   }

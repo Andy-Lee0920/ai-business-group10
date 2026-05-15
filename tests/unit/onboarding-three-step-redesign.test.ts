@@ -21,7 +21,7 @@ describe('Session A onboarding redesign contract', () => {
       'decorative',
       '오늘 필요한 것만',
       '보여드릴게요',
-      '병원 안내를 확인한 일정으로 바꿔 조용히 챙겨둘게요.',
+      '병원 안내를 확인한 일정으로 바꿔 조용히 챙겨드릴게요.',
       'stepDots',
       'role-split-cards',
       '치료자',
