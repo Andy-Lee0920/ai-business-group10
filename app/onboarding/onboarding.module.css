@@ -14,15 +14,15 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255, 253, 251, 0.26) 0%,
-      rgba(255, 253, 251, 0.34) 38%,
-      rgba(250, 247, 242, 0.78) 70%,
+      rgba(255, 253, 251, 0.12) 0%,
+      rgba(255, 253, 251, 0.24) 38%,
+      rgba(250, 247, 242, 0.76) 72%,
       var(--slc-bg, #faf7f2) 100%
     ),
-    url('/assets/slc/clinic-visit-clipboard.png') center -36px / min(150%, 640px) auto no-repeat,
+    url('/assets/slc/home-clinic-bg-v2.png') center top / auto clamp(320px, 46vh, 430px) no-repeat,
     radial-gradient(circle at 22% 6%, rgba(255, 236, 224, 0.62), transparent 34%),
     linear-gradient(180deg, #fffdfb 0%, #faf4ef 100%);
-  background-blend-mode: normal, multiply, normal, normal;
+  background-blend-mode: normal, normal, normal, normal;
 }
 
 .onboardingFlow {
@@ -112,17 +112,19 @@
 
 .backButton {
   position: absolute;
-  top: 18px;
-  left: 4px;
-  z-index: 2;
+  top: calc(18px + env(safe-area-inset-top));
+  left: 18px;
+  z-index: 3;
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   place-items: center;
-  border: 0;
+  border: 1px solid rgba(233, 222, 214, 0.82);
   border-radius: 999px;
-  background: transparent;
-  color: #2f2824;
+  background: rgba(255, 253, 251, 0.76);
+  color: var(--slc-text, #2f2926);
+  box-shadow: 0 10px 24px rgba(75, 55, 45, 0.08);
+  backdrop-filter: blur(12px);
   cursor: pointer;
 }
 
