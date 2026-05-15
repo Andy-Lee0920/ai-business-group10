@@ -160,7 +160,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
   });
 
-  it('adds the missed accent border to the hero without duplicating the hero item in the list', () => {
+  it('keeps missed cards calm without AI-slop left accent borders or duplicating the hero item in the list', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -168,7 +168,7 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-focus-kind="missed"');
-    expect(markup).toContain('border-left:3px solid var(--slc-coral)');
+    expect(markup).not.toMatch(/border-left|borderLeft/u);
     expect(markup).toContain('확인이 필요한 주사가 있어요');
     expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
   });
@@ -232,7 +232,7 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-testid="clinic-follow-up-prompt"');
-    expect(markup).toContain('clinic-update-banner.png');
+    expect(markup).toContain('home-waiting-bg.png');
     expect(markup).toContain('alt=""');
     expect(markup).toContain('바뀐 게 있나요?');
     expect(markup).toContain('href="/clinic-update"');

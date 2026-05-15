@@ -551,7 +551,7 @@ function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
         <p style={{ fontSize: 18, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>바뀐 게 있나요?</p>
         <Link href="/clinic-update" style={{ fontSize: 14, color: 'var(--slc-coral)', fontWeight: 900, textDecoration: 'none' }}>업데이트</Link>
       </div>
-      <SLCIllustration asset={slcAssets.clinic.updateBanner} size="banner" style={{ width: 92, height: 68, maxHeight: 68, justifySelf: 'end', opacity: 0.9 }} />
+      <SLCIllustration asset={slcAssets.home.waiting} size="banner" style={{ width: 92, height: 68, maxHeight: 68, justifySelf: 'end', opacity: 0.9 }} />
     </div>
   );
 }
