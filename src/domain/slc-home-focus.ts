@@ -167,6 +167,6 @@ export function resolveHomeVisualAsset(kind: HomeFocusKind): SLCAsset {
     case 'missed':
       return slcAssets.home.missedRecovery;
     case 'empty':
-      return slcAssets.home.clinic;
+      return slcAssets.home.empty;
   }
 }

@@ -6,6 +6,8 @@ import { ctaLabel, completedLabel } from '../types/slc.types';
 import { getSchedulePresentation, type ScheduleBadgeTone } from '../domain/slc-home-focus';
 import { formatKstTime } from '../domain/kst-date';
 import { CountdownRing } from './countdown-ring';
+import { InjectionCountdownArc } from './injection-countdown-arc';
+import { secondsUntilInjection } from '../features/adaptive-home/injection-timing';
 
 interface ActionCardProps {
   item: ScheduleItem;
@@ -22,6 +24,7 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
   const isCompleted = status === 'completed';
   const isDueSoon = status === 'due_soon' || status === 'due';
   const isWithinHour = presentation.badgeTone === 'amber';
+  const isWaiting = item.type === 'injection' && secondsUntilInjection(item.scheduled_at) > 3600;
   const emphasis = cardEmphasis({ compact, isCompleted, isDueSoon, isWithinHour });
   const timeStr = formatKstTime(item.scheduled_at);
   const cta = ctaLabel(item.type);
@@ -36,8 +39,16 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
           <CountdownRing scheduledAt={item.scheduled_at} size={urgent ? 64 : 56} />
         </div>
       )}
+      {isWaiting && (
+        <div style={{ position: 'absolute', top: 14, right: 14, display: 'grid', justifyItems: 'center', gap: 2 }}>
+          <InjectionCountdownArc totalSeconds={3600} remainingSeconds={secondsUntilInjection(item.scheduled_at) % 3600} size={72} />
+          <span suppressHydrationWarning style={{ fontSize: 13, fontWeight: 900, color: 'var(--slc-text)', letterSpacing: '-0.04em', marginTop: -6 }}>
+            {formatWaitingClock(secondsUntilInjection(item.scheduled_at))}
+          </span>
+        </div>
+      )}
       <Link href={`/schedule/${item.id}/edit`} aria-label={`${title} 수정`} style={editLinkStyle}>수정</Link>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: urgent ? 7 : 6, paddingRight: urgent && showCountdown ? 78 : 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: urgent ? 7 : 6, paddingRight: (urgent && showCountdown) || isWaiting ? 90 : 0 }}>
         <span data-testid="schedule-status-badge" data-tone={presentation.badgeTone} style={badgeStyle(presentation.badgeTone, emphasis)}>
           {urgent ? urgentBadgeLabel(item) : presentation.badgeLabel}
         </span>
@@ -45,17 +56,21 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
         <span style={titleStyle(emphasis, compact)}>{title}</span>
         {isCompleted ? (
           <span style={{ fontSize: 14, color: '#B5A89E', fontWeight: 500 }}>{completedStr}</span>
-        ) : (
-          <button
-            onClick={() => onCta(item)}
-            style={ctaButtonStyle(emphasis, compact)}
-          >
+        ) : !isWaiting ? (
+          <button onClick={() => onCta(item)} style={ctaButtonStyle(emphasis, compact)}>
             {cta}
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   );
+}
+
+function formatWaitingClock(totalSeconds: number): string {
+  const clamped = Math.max(0, totalSeconds);
+  const hours = Math.floor(clamped / 3600);
+  const mins = Math.floor((clamped % 3600) / 60);
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 }
 
 const editLinkStyle: CSSProperties = {

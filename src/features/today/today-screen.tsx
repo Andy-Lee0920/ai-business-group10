@@ -29,6 +29,7 @@ interface TodayScreenProps {
 type DayOffset = 0 | 1 | 2;
 type HeroStory =
   | { kind: 'countdown'; item: ScheduleItem; nextInjection: ScheduleItem | null; focus: HomeFocus }
+  | { kind: 'overdue_backlog'; missedCount: number; todayCount: number; clinicCount: number }
   | { kind: 'today_pending'; item: ScheduleItem; focus: HomeFocus }
   | { kind: 'tomorrow'; item: ScheduleItem; focus: HomeFocus }
   | { kind: 'quiet'; focus: HomeFocus };
@@ -101,8 +102,8 @@ export function TodayScreen({
 
   const homeFocus = useMemo(() => resolveHomeFocus(visibleItems), [visibleItems]);
   const heroStory = useMemo(
-    () => resolveHeroStory(selectedDay === 0 ? items : visibleItems, homeFocus, selectedDay),
-    [items, visibleItems, homeFocus, selectedDay],
+    () => resolveHeroStory(selectedDay === 0 ? items : visibleItems, homeFocus, selectedDay, initialClinicUpdates),
+    [items, visibleItems, homeFocus, selectedDay, initialClinicUpdates],
   );
   const heroItemId = 'item' in heroStory ? heroStory.item.id : null;
   const pending = useMemo(() => getHomePendingItems(visibleItems), [visibleItems]);
@@ -150,8 +151,12 @@ export function TodayScreen({
         style={{
           position: 'relative',
           zIndex: 1,
-          background: 'var(--slc-bg)',
+          background: 'rgba(250, 247, 242, 0.96)',
+          backdropFilter: 'blur(24px) saturate(1.15)',
+          WebkitBackdropFilter: 'blur(24px) saturate(1.15)',
           borderRadius: '28px 28px 0 0',
+          borderTop: '0.5px solid rgba(255, 255, 255, 0.88)',
+          boxShadow: '0 -6px 32px rgba(75, 52, 42, 0.10), inset 0 1px 0 rgba(255,255,255,0.92)',
           marginTop: '-22px',
           padding: heroStory.kind === 'countdown' ? '20px 0 calc(112px + 48dvh)' : '20px 0 112px',
           minHeight: 'calc(34dvh + 22px)',
@@ -215,14 +220,18 @@ function HeroZone({
   story: HeroStory;
   onCta: (item: ScheduleItem) => void;
 }) {
-  const asset = resolveHomeVisualAsset(story.focus.kind);
+  const asset = story.kind === 'overdue_backlog'
+    ? slcAssets.home.missedRecovery
+    : resolveHomeVisualAsset(story.focus.kind);
+  const intensity = story.kind === 'overdue_backlog' ? 'subtle' : 'hero';
+  const focusKind = story.kind === 'overdue_backlog' ? 'overdue_backlog' : story.focus.kind;
 
   return (
     <AmbientStoryBackground
       ariaLabel="오늘의 케어 상태"
       asset={asset}
       as="section"
-      intensity="hero"
+      intensity={intensity}
       priority
       style={{
         flex: 1,
@@ -232,9 +241,10 @@ function HeroZone({
         height: '100%',
       }}
     >
-      <div data-testid="home-hero-zone" data-focus-kind={story.focus.kind} style={{ height: '100%' }}>
+      <div data-testid="home-hero-zone" data-focus-kind={focusKind} style={{ height: '100%' }}>
         <div style={{ height: '100%', padding: '8px 20px 22px' }}>
           {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
+          {story.kind === 'overdue_backlog' && <OverdueBacklogHero missedCount={story.missedCount} todayCount={story.todayCount} clinicCount={story.clinicCount} />}
           {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
           {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
           {story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
@@ -244,7 +254,7 @@ function HeroZone({
   );
 }
 
-function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus, selectedDay: DayOffset): HeroStory {
+function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus, selectedDay: DayOffset, initialClinicUpdates: ClinicUpdate[]): HeroStory {
   const pending = items
     .filter((item) => item.status !== 'completed')
     .slice()
@@ -259,6 +269,20 @@ function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus, selectedDay: 
       nextInjection: resolveNextInjection(countdown, items),
       focus: { ...focus, kind: 'medication_due', primaryItem: countdown },
     };
+  }
+
+  if (selectedDay === 0) {
+    const missedItems = pending.filter(
+      (item) => item.status === 'missed' || (
+        isOnDay(item.scheduled_at, 0) &&
+        new Date(item.scheduled_at).getTime() < Date.now() &&
+        item.status !== 'completed'
+      ),
+    );
+    if (missedItems.length > 0) {
+      const todayCount = items.filter((item) => isOnDay(item.scheduled_at, 0) && item.status !== 'completed').length;
+      return { kind: 'overdue_backlog', missedCount: missedItems.length, todayCount, clinicCount: initialClinicUpdates.length };
+    }
   }
 
   const selectedFocusItem = focus.primaryItem && isOnDay(focus.primaryItem.scheduled_at, selectedDay)
@@ -295,23 +319,61 @@ function buildTomorrowFocus(item: ScheduleItem): HomeFocus {
 }
 
 function QuietHeroContent({ focus, paddingTop = 60 }: { focus: HomeFocus; paddingTop?: number }) {
+  if (focus.kind === 'empty') {
+    return (
+      <div style={{ paddingTop }}>
+        <p style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--slc-text)', lineHeight: 1.2, margin: '0 0 8px' }}>
+          지금은 확인할 일정이 없어요
+        </p>
+        <p style={{ fontSize: 13, color: 'var(--slc-muted)', lineHeight: 1.45, margin: '0 0 20px' }}>
+          병원 안내가 바뀌었다면<br />일정을 업데이트해 주세요.
+        </p>
+        <Link href="/add" style={{ display: 'inline-block', padding: '11px 20px', borderRadius: 999, background: 'var(--slc-coral-gradient)', color: '#fff', fontSize: 14, fontWeight: 900, textDecoration: 'none' }}>
+          일정 추가
+        </Link>
+      </div>
+    );
+  }
   return (
     <div style={{ paddingTop }}>
-      <p
-        style={{
-          fontSize: 26,
-          fontWeight: 900,
-          letterSpacing: '-0.04em',
-          color: 'var(--slc-text)',
-          lineHeight: 1.2,
-          margin: '0 0 8px',
-        }}
-      >
+      <p style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--slc-text)', lineHeight: 1.2, margin: '0 0 8px' }}>
         {focus.heading}
       </p>
       <p style={{ fontSize: 13, color: 'var(--slc-muted)', lineHeight: 1.45, margin: 0 }}>
         {focus.description}
       </p>
+    </div>
+  );
+}
+
+function OverdueBacklogHero({ missedCount, todayCount, clinicCount }: { missedCount: number; todayCount: number; clinicCount: number }) {
+  return (
+    <div style={{ height: '100%', display: 'grid', alignContent: 'center', gap: 16 }}>
+      <div>
+        <p style={{ margin: '0 0 6px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>돌아오셨군요</p>
+        <h2 style={{ margin: '0 0 8px', color: 'var(--slc-text)', fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.2 }}>
+          지난 일정이 조금 쌓였어요
+        </h2>
+        <p style={{ margin: 0, color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.55 }}>
+          괜찮아요. 중요한 일정부터 빠르게 정리하고<br />오늘부터 다시 이어가면 돼요.
+        </p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        {([['미기록', missedCount], ['오늘 일정', todayCount], ['병원 안내', clinicCount]] as const).map(([label, count]) => (
+          <div key={label} style={{ borderRadius: 16, background: 'rgba(255,252,250,0.72)', border: '1px solid var(--slc-border)', padding: '10px 12px', display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--slc-muted)', fontWeight: 800 }}>{label}</span>
+            <strong style={{ fontSize: 20, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.04em' }}>{count}건</strong>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: 10 }}>
+        <Link href="/records" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 20px', borderRadius: 999, background: 'var(--slc-text)', color: 'var(--slc-bg)', fontSize: 14, fontWeight: 900, textDecoration: 'none', width: 'fit-content' }}>
+          3분만에 정리하기
+        </Link>
+        <Link href="/add" style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 700, textDecoration: 'none' }}>
+          오늘부터 다시 시작 ›
+        </Link>
+      </div>
     </div>
   );
 }
