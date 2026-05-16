@@ -122,20 +122,43 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).not.toContain('camera viewport');
   });
 
-  it('implements candidate review inline edits and confirm API payload', () => {
-    expect(onboardingClient).toContain("activeStep === 'candidate_review'");
-    expect(onboardingClient).toContain('반복 일정은');
-    expect(onboardingClient).toContain('candidateReviewSummary');
-    expect(onboardingClient).toContain('buildCandidateReviewGroups(reviewCandidates)');
-    expect(onboardingClient).toContain('expandedCandidateId');
-    expect(onboardingClient).toContain('필요한 일정만 수정');
-    expect(onboardingClient).toContain('formatCandidateType(candidate.type)');
-    expect(onboardingClient).toContain('input type="datetime-local"');
-    expect(onboardingClient).toContain('candidateEdits');
-    expect(onboardingClient).toContain('confirmedIds');
-    expect(onboardingClient).toContain('rejectedIds');
-    expect(onboardingClient).toContain("fetch('/api/onboard/candidates/confirm'");
-    expect(onboardingClient).toContain('후보가 없어요');
+  it('implements candidate review as a one-by-one card stack and confirm API payload', () => {
+    for (const token of [
+      "activeStep === 'candidate_review'",
+      'currentCard = reviewCandidates[cardIndex] ?? null',
+      'candidateProgressWrap',
+      'candidateProgressFill',
+      'candidateStackCard',
+      'candidateStackFooter',
+      "function advanceCard(decision: 'confirmed' | 'rejected')",
+      "void confirmCandidates(updated)",
+      '접종 시간을 입력해야 저장할 수 있어요.',
+      '저장할게요',
+      '건너뛰기',
+      'candidateEdits',
+      'confirmedIds',
+      'rejectedIds',
+      "fetch('/api/onboard/candidates/confirm'",
+      '후보가 없어요',
+    ]) {
+      expect(`${onboardingClient}\n${onboardingStyles}`).toContain(token);
+    }
+
+    for (const removedToken of [
+      'CandidateReviewGroup',
+      'reviewGroups',
+      'activeEditCandidate',
+      'expandedCandidateId',
+      'buildCandidateReviewGroups',
+      'formatCandidateGroupRange',
+      'confirmedCandidateCount',
+      'missingCandidate',
+      'hasMissing',
+      'candidateReviewSummary',
+      'candidatePicker',
+    ]) {
+      expect(onboardingClient).not.toContain(removedToken);
+    }
   });
 
   it('implements text paste analysis with a bounded textarea and candidate review reuse', () => {
