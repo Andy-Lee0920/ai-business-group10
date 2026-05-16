@@ -48,6 +48,7 @@ export function TodayScreen({
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderPreferenceLoaded, setReminderPreferenceLoaded] = useState(false);
+  const [sheetLiftActive, setSheetLiftActive] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,6 +79,17 @@ export function TodayScreen({
   useEffect(() => {
     const id = setInterval(() => setItems((prev) => [...prev]), 1_000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const frame = rootRef.current?.closest<HTMLElement>('.fevio-authed-main');
+    const targets: Array<Window | Element> = frame ? [window, frame] : [window];
+    const update = () => setSheetLiftActive(
+      (rootRef.current?.getBoundingClientRect().top ?? 0) < -(window.innerHeight * 0.55),
+    );
+    update();
+    targets.forEach((t) => t.addEventListener('scroll', update, { passive: true }));
+    return () => targets.forEach((t) => t.removeEventListener('scroll', update));
   }, []);
 
   const visibleItems = useMemo(
@@ -143,7 +155,11 @@ export function TodayScreen({
           minHeight: 'calc(34dvh + 22px)',
         }}
       >
-        <div className={styles.sheetHeader}>
+        <div className={[
+          heroStory.kind === 'countdown' ? styles.liftedSheetHeader : styles.sheetHeader,
+          sheetLiftActive ? styles.liftedSheetHeaderActive : '',
+        ].filter(Boolean).join(' ')}>
+          {heroStory.kind === 'countdown' && <CountdownSheetLift item={heroStory.item} />}
           <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
         </div>
         <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -360,6 +376,23 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
   );
 }
 
+function CountdownSheetLift({ item }: { item: ScheduleItem }) {
+  const remaining = secondsUntilInjection(item.scheduled_at);
+  return (
+    <div
+      aria-label="상단 메뉴와 함께 올라오는 주사 카운트다운"
+      className={styles.countdownSheetLift}
+      data-testid="countdown-sheet-lift"
+    >
+      <div className={styles.countdownSheetArc} data-testid="countdown-sheet-mini-arc">
+        <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} size={108} />
+      </div>
+      <strong suppressHydrationWarning className={styles.countdownSheetTime}>
+        {formatRemainingClock(remaining)}
+      </strong>
+    </div>
+  );
+}
 
 function CountdownInfoBlock({ item, nextInjection }: { item: ScheduleItem; nextInjection: ScheduleItem | null }) {
   return (

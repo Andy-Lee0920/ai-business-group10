@@ -106,7 +106,7 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-testid="injection-countdown-hero"');
     expect(markup).toContain('천천히 준비하면 돼요');
-    expect(markup).toContain('align-content:end');
+    expect(markup).toContain('align-content:center');
     expect(markup).toContain('background:transparent');
     expect(markup).toContain('box-shadow:none');
     expect(markup).toContain('width:100%;min-height:52px');
