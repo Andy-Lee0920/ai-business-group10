@@ -83,13 +83,15 @@ export function TodayScreen({
 
   useEffect(() => {
     const frame = rootRef.current?.closest<HTMLElement>('.fevio-authed-main');
-    const targets: Array<Window | Element> = frame ? [window, frame] : [window];
-    const update = () => setSheetLiftActive(
-      (rootRef.current?.getBoundingClientRect().top ?? 0) < -(window.innerHeight * 0.55),
-    );
+    const scrollEl: Element = frame ?? document.documentElement;
+    const update = () => {
+      const max = scrollEl.scrollHeight - scrollEl.clientHeight;
+      setSheetLiftActive(max > 0 && scrollEl.scrollTop / max > 0.55);
+    };
     update();
-    targets.forEach((t) => t.addEventListener('scroll', update, { passive: true }));
-    return () => targets.forEach((t) => t.removeEventListener('scroll', update));
+    const target: EventTarget = frame ?? window;
+    target.addEventListener('scroll', update, { passive: true });
+    return () => target.removeEventListener('scroll', update);
   }, []);
 
   const visibleItems = useMemo(
@@ -151,7 +153,7 @@ export function TodayScreen({
           background: 'var(--slc-bg)',
           borderRadius: '28px 28px 0 0',
           marginTop: '-22px',
-          padding: '20px 0 112px',
+          padding: heroStory.kind === 'countdown' ? '20px 0 calc(112px + 48dvh)' : '20px 0 112px',
           minHeight: 'calc(34dvh + 22px)',
         }}
       >
