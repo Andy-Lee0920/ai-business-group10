@@ -78,17 +78,29 @@ describe('app onboarding shell contract', () => {
     expect(onboardingStyles).not.toContain('#d95f4c');
   });
 
-  it('keeps sharing choice cards from fading into bland pastel blocks', () => {
-    for (const token of [
+  it('keeps sharing choice cards clean and partner-forward without decorative slop', () => {
+    for (const slopToken of [
       '.methodHeroCardGreen::before',
       '.sharingPartnerCard::before',
-      'linear-gradient(180deg, var(--onboarding-coral-bright), var(--onboarding-coral-deep))',
-      'radial-gradient(circle at 12% 28%, rgba(231, 101, 81, 0.16)',
-      'radial-gradient(circle at 13% 34%, rgba(231, 101, 81, 0.11)',
-      '0 0 0 8px rgba(231, 101, 81, 0.08)',
-      '0 0 0 7px rgba(126, 101, 200, 0.08)',
+      '.methodHeroCardGreen::after',
+      '.sharingPartnerCard::after',
+      'radial-gradient(circle at 12% 28%, rgba(231, 101, 81',
+      'radial-gradient(circle at 13% 34%, rgba(231, 101, 81',
+      '0 0 0 8px',
+      '0 0 0 7px',
     ]) {
-      expect(onboardingStyles).toContain(token);
+      expect(onboardingStyles).not.toContain(slopToken);
+    }
+
+    for (const token of [
+      "const [sharingChoice, setSharingChoice] = useState<SharingChoice | null>(\'partner\')",
+      '초대 링크로 오늘 할 일을 같이 확인해요',
+      'min-height: 124px',
+      'min-height: 132px',
+      'linear-gradient(145deg, rgba(255, 252, 248, 0.94) 0%, rgba(244, 239, 255, 0.92)',
+      '0 26px 64px rgba(102, 86, 150, 0.18)',
+    ]) {
+      expect(`${onboardingClient}\n${onboardingStyles}`).toContain(token);
     }
   });
 
@@ -142,7 +154,7 @@ describe('app onboarding shell contract', () => {
       '나 혼자 시작할게요',
       '먼저 내 홈에서 오늘 할 일만 확인해요',
       '파트너와 함께 쓸게요',
-      '완료 후 초대 링크를 준비해요',
+      '초대 링크로 오늘 할 일을 같이 확인해요',
       '일정 후보를 만들었어요',
       '일정 후보 요약',
     ]) {

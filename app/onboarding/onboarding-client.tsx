@@ -90,7 +90,7 @@ export function OnboardingClient() {
   const [reviewCandidates, setReviewCandidates] = useState<ReviewCandidate[]>([]);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string | null>(null);
   const [savedReviewItems, setSavedReviewItems] = useState<SavedScheduleItem[]>([]);
-  const [sharingChoice, setSharingChoice] = useState<SharingChoice | null>(null);
+  const [sharingChoice, setSharingChoice] = useState<SharingChoice | null>('partner');
   const [savingCandidates, setSavingCandidates] = useState(false);
   const [completingOnboarding, setCompletingOnboarding] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
@@ -697,7 +697,7 @@ export function OnboardingClient() {
                 </span>
                 <span className={styles.sharingPartnerText}>
                   <strong>파트너와 함께 쓸게요</strong>
-                  <small>완료 후 초대 링크를 준비해요</small>
+                  <small>초대 링크로 오늘 할 일을 같이 확인해요</small>
                 </span>
                 <i aria-hidden="true">›</i>
               </button>

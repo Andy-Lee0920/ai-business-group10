@@ -985,85 +985,53 @@
 }
 
 .methodHeroCardGreen {
-  position: relative;
-  overflow: hidden;
+  min-height: 124px;
+  grid-template-columns: 60px 1fr auto;
+  gap: 16px;
   background:
-    radial-gradient(circle at 12% 28%, rgba(231, 101, 81, 0.16), transparent 32%),
-    linear-gradient(145deg, rgba(255, 252, 247, 0.92) 0%, rgba(237, 246, 234, 0.78) 100%);
-  border-color: rgba(231, 101, 81, 0.24);
+    linear-gradient(145deg, rgba(255, 252, 248, 0.88) 0%, rgba(247, 241, 235, 0.76) 100%);
+  border-color: rgba(219, 202, 190, 0.58);
   box-shadow:
-    0 20px 54px rgba(120, 92, 70, 0.12),
+    0 14px 38px rgba(111, 77, 58, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.methodHeroCardGreen::before,
-.sharingPartnerCard::before {
-  position: absolute;
-  top: 18px;
-  bottom: 18px;
-  left: 0;
-  width: 4px;
-  border-radius: 0 999px 999px 0;
-  background: linear-gradient(180deg, var(--onboarding-coral-bright), var(--onboarding-coral-deep));
-  content: '';
-}
-
-.methodHeroCardGreen::after,
-.sharingPartnerCard::after {
-  position: absolute;
-  right: -34px;
-  bottom: -46px;
-  width: 128px;
-  height: 128px;
-  border-radius: 999px;
-  background: rgba(231, 101, 81, 0.09);
-  filter: blur(4px);
-  content: '';
-}
-
-.methodHeroCardGreen > *,
-.sharingPartnerCard > * {
-  position: relative;
-  z-index: 1;
-}
-
 .methodHeroCardGreen i {
-  color: var(--onboarding-coral);
+  color: #9a8d84;
 }
 
 .methodHeroCardGreenSelected {
-  border-color: rgba(231, 101, 81, 0.48);
+  border-color: rgba(231, 101, 81, 0.26);
   box-shadow:
-    0 22px 56px rgba(207, 88, 71, 0.18),
-    inset 0 0 0 1.5px rgba(231, 101, 81, 0.20),
+    0 16px 42px rgba(207, 88, 71, 0.10),
+    inset 0 0 0 1.5px rgba(231, 101, 81, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.94);
 }
 
 .methodHeroIconGreen {
-  background: linear-gradient(180deg, #fff8f3 0%, #ffe5da 100%);
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.96) 0%, rgba(255, 241, 234, 0.9) 100%);
   color: var(--onboarding-coral);
   box-shadow:
-    0 0 0 8px rgba(231, 101, 81, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.94);
 }
 
 .sharingPartnerCard {
-  position: relative;
   display: grid;
   grid-template-columns: 60px 1fr auto;
   align-items: center;
   gap: 16px;
-  min-height: 96px;
-  padding: 18px 20px;
-  overflow: hidden;
-  border: 1px solid rgba(148, 126, 204, 0.26);
-  border-radius: 22px;
+  min-height: 132px;
+  padding: 22px 20px;
+  border: 1px solid rgba(148, 126, 204, 0.34);
+  border-radius: 26px;
   background:
-    radial-gradient(circle at 13% 34%, rgba(231, 101, 81, 0.11), transparent 31%),
-    linear-gradient(145deg, rgba(255, 251, 248, 0.90) 0%, rgba(239, 235, 250, 0.86) 100%);
+    linear-gradient(145deg, rgba(255, 252, 248, 0.94) 0%, rgba(244, 239, 255, 0.92) 58%, rgba(255, 247, 242, 0.88) 100%);
   box-shadow:
-    0 18px 46px rgba(107, 91, 150, 0.11),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 24px 58px rgba(102, 86, 150, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
   color: #302621;
   font: inherit;
   text-align: left;
@@ -1083,23 +1051,22 @@
 }
 
 .sharingPartnerCardSelected {
-  border-color: rgba(126, 101, 200, 0.42);
+  border-color: rgba(126, 101, 200, 0.46);
   box-shadow:
-    0 20px 52px rgba(112, 96, 184, 0.16),
-    inset 0 0 0 1.5px rgba(126, 101, 200, 0.18),
+    0 26px 64px rgba(102, 86, 150, 0.18),
+    inset 0 0 0 1.5px rgba(126, 101, 200, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.94);
 }
 
 .sharingPartnerIcon {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   place-items: center;
-  border-radius: 15px;
-  background: linear-gradient(180deg, #fff7f1 0%, #e8e1fb 100%);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.96) 0%, rgba(237, 230, 252, 0.92) 100%);
   color: #7b63c8;
   box-shadow:
-    0 0 0 7px rgba(126, 101, 200, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.94);
   flex-shrink: 0;
 }
