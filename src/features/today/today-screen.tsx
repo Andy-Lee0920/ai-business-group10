@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Bell, BellOff } from 'lucide-react';
 import { ActionCard } from '../../components/action-card';
@@ -43,11 +44,16 @@ export function TodayScreen({
 }: TodayScreenProps) {
   const [items, setItems] = useState<ScheduleItem[]>(initialItems);
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
+  const [confirmPortal, setConfirmPortal] = useState<HTMLElement | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderPreferenceLoaded, setReminderPreferenceLoaded] = useState(false);
   const [sheetLiftActive, setSheetLiftActive] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setConfirmPortal(document.getElementById('fevio-confirm-portal'));
+  }, []);
 
   useEffect(() => {
     try {
@@ -170,7 +176,9 @@ export function TodayScreen({
         lastInjectionAt={postClinicBannerState.lastInjectionAt}
         hasNextSchedule={postClinicBannerState.hasNextSchedule}
       />
-      {activeItem && <ConfirmSheet item={activeItem} onComplete={handleComplete} onClose={() => setActiveItem(null)} />}
+      {activeItem != null && confirmPortal != null
+        ? createPortal(<ConfirmSheet item={activeItem} onComplete={handleComplete} onClose={() => setActiveItem(null)} />, confirmPortal)
+        : null}
     </div>
   );
 }

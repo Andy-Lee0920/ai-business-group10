@@ -59,6 +59,7 @@ export default async function AuthedLayout({ children }: { children: React.React
     <div className="fevio-authed-frame" data-bottom-nav={showBottomNav ? 'true' : 'false'}>
       <main className="fevio-authed-main">{children}</main>
       {showBottomNav && <BottomNav />}
+      <div id="fevio-confirm-portal" />
     </div>
   );
 }
