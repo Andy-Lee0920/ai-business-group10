@@ -387,6 +387,11 @@ function extractDeterministicSegmentCandidates(rawText: string, baseDateKey: str
   const unit = dose ? extractDoseUnit(rawText) : null;
   const startDateKey = getStartKoreanDateKey(baseDateKey, rawText);
 
+  // Clinic segments with no date and no time are purpose/description lines, not appointments.
+  if (type === 'clinic' && !times.length && !extractExplicitKoreanDateKey(baseDateKey, rawText)) {
+    return [];
+  }
+
   if (!times.length) {
     const candidateCount = shouldExpandDuration ? durationDays * frequency : frequency;
     return Array.from({ length: candidateCount })

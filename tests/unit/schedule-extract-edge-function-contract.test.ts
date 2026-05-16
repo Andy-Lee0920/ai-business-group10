@@ -110,6 +110,7 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('durationDays * frequency');
     expect(code).toContain('function shouldLeaveTimesForUser');
     expect(code).toContain('^방문\\s*목적\\s*[:：]');
+    expect(code).toContain('Clinic segments with no date and no time are purpose/description lines, not appointments.');
   });
 
   it('repairs common vision extraction mistakes from Korean IVF notices', () => {
