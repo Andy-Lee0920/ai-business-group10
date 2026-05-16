@@ -31,6 +31,7 @@ describe('Records receipts', () => {
     }));
 
     expect(markup).toContain('시술비 기록');
+    expect(markup).toContain('주사 시작일을 기다려요');
     expect(markup).toContain('비용 시각화');
     expect(markup).toContain('aria-label="사이클 누적 비용 차트"');
     expect(markup).toContain('25,000원');
@@ -54,6 +55,7 @@ describe('Records receipts', () => {
     }));
 
     expect(markup).toContain('0원');
+    expect(markup).toContain('주사 시작일을 기다려요');
     expect(markup).toContain('비용 시각화');
     expect(markup).toContain('정부지원금 처리');
     expect(markup).toContain('아직 비용 기록이 없어요');

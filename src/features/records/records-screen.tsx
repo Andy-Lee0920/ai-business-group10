@@ -19,7 +19,7 @@ interface RecordsScreenProps {
   receipts?: Receipt[];
 }
 
-export function RecordsScreen({ receipts = [] }: RecordsScreenProps) {
+export function RecordsScreen({ items, receipts = [] }: RecordsScreenProps) {
   const [receiptItems, setReceiptItems] = useState<Receipt[]>(receipts);
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ReceiptCategory>('진료비');
@@ -30,6 +30,7 @@ export function RecordsScreen({ receipts = [] }: RecordsScreenProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const summary = useMemo(() => buildFinancialSummary(receiptItems), [receiptItems]);
+  const cycleDay = useMemo(() => computeCycleDay(items), [items]);
 
   async function submitReceipt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,6 +83,8 @@ export function RecordsScreen({ receipts = [] }: RecordsScreenProps) {
           +
         </button>
       </header>
+
+      <CycleDayHero cycleDay={cycleDay} />
 
       <section aria-label="비용 요약" style={{ padding: '0 16px 14px' }}>
         <FinancialOverview summary={summary} receipts={receiptItems} />
@@ -165,11 +168,40 @@ export function RecordsScreen({ receipts = [] }: RecordsScreenProps) {
   );
 }
 
+function CycleDayHero({ cycleDay }: { cycleDay: number | null }) {
+  return (
+    <section aria-label="시술 사이클 요약" style={{ padding: '0 16px 14px' }}>
+      <div data-testid="records-cycle-day-hero" style={cycleDayHeroStyle}>
+        <p style={{ margin: '0 0 4px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시작일 기준</p>
+        <p style={{ margin: 0, color: 'var(--slc-text)', fontSize: 26, fontWeight: 950, letterSpacing: '-0.05em', lineHeight: 1.2 }}>
+          {cycleDay === null ? (
+            <>주사 시작일을 기다려요</>
+          ) : (
+            <>주사 시작 <strong style={{ color: 'var(--slc-coral)' }}>{cycleDay}일차</strong></>
+          )}
+        </p>
+        <p style={{ margin: '6px 0 0', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 700 }}>
+          첫 주사 일정 기준 · 병원 일정 목록은 캘린더에서 확인
+        </p>
+      </div>
+    </section>
+  );
+}
+
 type FinancialSummary = {
   gross: number;
   subsidy: number;
   net: number;
 };
+
+function computeCycleDay(items: ScheduleItem[]): number | null {
+  const first = items
+    .filter((item) => item.type === 'injection')
+    .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+  if (!first) return null;
+  const diffDays = Math.floor((Date.now() - new Date(first.scheduled_at).getTime()) / 86_400_000);
+  return diffDays < 0 ? null : diffDays + 1;
+}
 
 function buildFinancialSummary(receipts: Receipt[]): FinancialSummary {
   return receipts.reduce(
@@ -419,6 +451,15 @@ const leadStyle = {
   fontSize: 13,
   fontWeight: 700,
   lineHeight: 1.45,
+} as const;
+
+const cycleDayHeroStyle = {
+  borderRadius: 24,
+  background: 'rgba(255,255,255,0.84)',
+  border: '1px solid var(--slc-border)',
+  boxShadow: '0 14px 38px rgba(80, 50, 40, 0.07)',
+  backdropFilter: 'blur(16px)',
+  padding: '18px 20px',
 } as const;
 
 const financialCardStyle = {
