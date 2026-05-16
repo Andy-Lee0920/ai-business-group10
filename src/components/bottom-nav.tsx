@@ -63,7 +63,6 @@ export function BottomNav() {
                 <span style={iconShellStyle(false, center)}>
                   <NavIcon name={item.icon} />
                 </span>
-                <span style={labelStyle}>{item.label}</span>
               </button>
             );
           }
@@ -203,7 +202,7 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-    color: active || center ? 'var(--slc-coral)' : 'var(--slc-muted)',
+    color: active ? 'var(--slc-coral)' : center ? 'var(--slc-coral)' : 'var(--slc-muted)',
     textDecoration: 'none',
     fontSize: 11,
     fontWeight: active ? 800 : 650,
@@ -214,12 +213,26 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
 }
 
 function iconShellStyle(active: boolean, center: boolean): CSSProperties {
+  if (center) {
+    return {
+      width: 38,
+      height: 38,
+      display: 'grid',
+      placeItems: 'center',
+      borderRadius: 999,
+      background: 'var(--slc-coral)',
+      color: '#fff',
+      boxShadow: '0 10px 22px rgba(216, 98, 77, 0.24)',
+      transform: 'translateY(-1px)',
+    };
+  }
+
   return {
     width: 30,
     height: 26,
     display: 'grid',
     placeItems: 'center',
-    color: active || center ? 'var(--slc-coral)' : 'var(--slc-muted)',
+    color: active ? 'var(--slc-coral)' : 'var(--slc-muted)',
     transform: active ? 'translateY(-1px)' : 'none',
   };
 }

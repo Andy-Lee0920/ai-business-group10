@@ -55,6 +55,18 @@ describe('SLC bottom navigation', () => {
     expect(source).toContain("borderTopLeftRadius: 16");
   });
 
+
+  it('makes the center plus a brand-colored icon-only action', () => {
+    const actionBlock = source.slice(source.indexOf("if (item.kind === 'action')"), source.indexOf('const active = pathname'));
+
+    expect(actionBlock).toContain('aria-label="추가 메뉴 열기"');
+    expect(actionBlock).toContain('iconShellStyle(false, center)');
+    expect(actionBlock).not.toContain('labelStyle');
+    expect(source).toContain("background: 'var(--slc-coral)'");
+    expect(source).toContain("color: '#fff'");
+    expect(source).toContain('0 10px 22px rgba(216, 98, 77, 0.24)');
+  });
+
   it('uses a house outline for the home tab icon instead of the previous sun motif', () => {
     expect(source).toContain('<path d="M4.75 11.25 12 5l7.25 6.25" />');
     expect(source).toContain('<path d="M6.75 10.2v7.55A1.75 1.75 0 0 0 8.5 19.5h7a1.75 1.75 0 0 0 1.75-1.75V10.2" />');
