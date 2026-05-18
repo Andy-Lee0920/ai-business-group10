@@ -68,13 +68,13 @@ function statusLabel(item: ScheduleItem) {
 }
 
 function badgeBg(item: ScheduleItem) {
-  if (item.status === 'completed') return 'var(--slc-coral-light)';
+  if (item.status === 'completed') return '#EEF5EF';
   if (item.status === 'missed') return '#FFF0F0';
   return '#F8F4F0';
 }
 
 function badgeFg(item: ScheduleItem) {
-  if (item.status === 'completed') return 'var(--slc-coral)';
+  if (item.status === 'completed') return 'var(--slc-success)';
   if (item.status === 'missed') return '#C44F4F';
   return 'var(--slc-muted)';
 }
