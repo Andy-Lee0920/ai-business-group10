@@ -351,8 +351,8 @@ export function ManualAddForm({ medications }: Props) {
                 caption_label: { fontWeight: 800 },
                 day: { borderRadius: 999 },
                 selected: { backgroundColor: 'var(--slc-coral)', color: '#fff' },
-                range_middle: { backgroundColor: 'var(--slc-coral-light)', color: 'var(--slc-coral)' },
-                today: { color: 'var(--slc-coral)', fontWeight: 800 },
+                range_middle: { backgroundColor: 'var(--slc-surface-warm)', color: 'var(--slc-muted)' },
+                today: { color: 'var(--fevio-sage-dark)', fontWeight: 800 },
               }}
             />
           </div>

@@ -114,6 +114,18 @@ describe('SLC color token contract', () => {
     expect(editForm).toContain("color: 'var(--slc-coral)'");
   });
 
+  it('keeps add date range guidance neutral while preserving selected mode and save CTAs', () => {
+    const manualAdd = readFileSync('src/features/add/manual-add-form.tsx', 'utf8');
+
+    expect(manualAdd).toContain("selected: { backgroundColor: 'var(--slc-coral)', color: '#fff' }");
+    expect(manualAdd).not.toContain("range_middle: { backgroundColor: 'var(--slc-coral-light)', color: 'var(--slc-coral)' }");
+    expect(manualAdd).toContain("range_middle: { backgroundColor: 'var(--slc-surface-warm)', color: 'var(--slc-muted)' }");
+    expect(manualAdd).not.toContain("today: { color: 'var(--slc-coral)', fontWeight: 800 }");
+    expect(manualAdd).toContain("today: { color: 'var(--fevio-sage-dark)', fontWeight: 800 }");
+    expect(manualAdd).toContain("background: form.scheduleMode === mode ? 'var(--slc-coral)' : 'var(--slc-border)'");
+    expect(manualAdd).toContain("marginTop: 32, background: 'var(--slc-coral)', color: '#fff'");
+  });
+
 
   it('keeps partner projection status labels from using coral as informational color', () => {
     const partnerView = readFileSync('src/features/partner/partner-view.tsx', 'utf8');
