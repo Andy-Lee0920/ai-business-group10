@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deriveRoleBasedHomeIntent, type RoleContext } from '../../../../src/domain/care-os-architecture';
+import { PRIVACY_GATE_VERSION } from '../../../../src/domain/auth-privacy';
 import { buildInitialCareCycleState, defaultSharingLevelByStage, inferStageFromCareItem, type InitialCareCycleState, type IvfStage, type SelectedIntent, type SharingLevel } from '../../../../src/domain/onboarding-care-state';
 import { createCaptureStore, type ConfirmItem } from '../../../../src/lib/capture-confirm-store';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
@@ -64,6 +65,13 @@ export async function POST(request: NextRequest) {
 
   if (!treatmentContext && !firstCareItem) return NextResponse.json({ error: '처음 케어 상태를 저장할 병원 안내가 필요합니다.' }, { status: 400 });
   if (firstItem === 'invalid') return NextResponse.json({ error: '한 개의 유효한 첫 항목만 저장할 수 있어요.' }, { status: 400 });
+
+  // Privacy was accepted before login: cookie is present but DB row is still null.
+  // Backfill now while the user is authenticated so createCaptureStore's gate passes.
+  if (request.cookies.get('fevio_privacy_gate_v1')?.value === 'accepted') {
+    const supabase = await createCookieBackedSupabaseClient();
+    await supabase.rpc('accept_privacy_gate', { p_version: PRIVACY_GATE_VERSION });
+  }
 
   const store = await createCaptureStore(request);
   if (store instanceof Response) return store;
