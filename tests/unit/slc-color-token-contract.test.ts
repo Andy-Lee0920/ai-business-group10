@@ -76,6 +76,21 @@ describe('SLC color token contract', () => {
     expect(records).toContain("sheetSubmitStyle");
   });
 
+  it('keeps records financial visualization and passive guidance away from coral', () => {
+    const records = readFileSync('src/features/records/records-screen.tsx', 'utf8');
+
+    expect(records).not.toContain("summary.net < 0 ? 'var(--slc-coral)' : 'var(--slc-text)'");
+    expect(records).toContain("summary.net < 0 ? 'var(--slc-warning)' : 'var(--slc-text)'");
+    expect(records).not.toContain("<>주사 시작 <strong style={{ color: 'var(--slc-coral)' }}>{cycleDay}일차</strong></>");
+    expect(records).toContain("<>주사 시작 <strong style={{ color: 'var(--fevio-sage-dark)' }}>{cycleDay}일차</strong></>");
+    expect(records).not.toContain('stroke="var(--slc-coral)"');
+    expect(records).not.toContain('fill="var(--slc-coral)"');
+    expect(records).toContain('stroke="var(--fevio-sage-dark)"');
+    expect(records).toContain('fill="var(--fevio-sage-dark)"');
+    expect(records).not.toContain("color: 'var(--slc-coral)', fontWeight: 900 }}>{info.action}</p>");
+    expect(records).toContain("color: 'var(--fevio-sage-dark)', fontWeight: 900 }}>{info.action}</p>");
+  });
+
 
   it('keeps clinic update review labels away from coral while preserving selected-state accents', () => {
     const clinicUpdate = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');

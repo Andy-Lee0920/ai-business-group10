@@ -114,7 +114,7 @@ export function RecordsScreen({ items, receipts = [] }: RecordsScreenProps) {
             </div>
             <strong
               data-testid="receipt-total"
-              style={{ color: summary.net < 0 ? 'var(--slc-coral)' : 'var(--slc-text)', fontSize: 16, fontWeight: 900 }}
+              style={{ color: summary.net < 0 ? 'var(--slc-warning)' : 'var(--slc-text)', fontSize: 16, fontWeight: 900 }}
             >
               {formatWon(summary.net)}
             </strong>
@@ -177,7 +177,7 @@ function CycleDayHero({ cycleDay }: { cycleDay: number | null }) {
           {cycleDay === null ? (
             <>주사 시작일을 기다려요</>
           ) : (
-            <>주사 시작 <strong style={{ color: 'var(--slc-coral)' }}>{cycleDay}일차</strong></>
+            <>주사 시작 <strong style={{ color: 'var(--fevio-sage-dark)' }}>{cycleDay}일차</strong></>
           )}
         </p>
         <p style={{ margin: '6px 0 0', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 700 }}>
@@ -341,12 +341,12 @@ function CostLineChart({ receipts, total }: { receipts: Receipt[]; total: number
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} aria-label="사이클 누적 비용 차트" role="img" style={{ overflow: 'visible' }}>
         <line x1={PAD.left} y1={zeroY} x2={W - PAD.right} y2={zeroY} stroke="var(--slc-border)" strokeWidth="1" />
         {points.length > 1 ? (
-          <polyline points={polylinePoints} fill="none" stroke="var(--slc-coral)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={polylinePoints} fill="none" stroke="var(--fevio-sage-dark)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         ) : (
-          <line x1={PAD.left} y1={zeroY} x2={W - PAD.right} y2={zeroY} stroke="var(--slc-coral)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="3 7" />
+          <line x1={PAD.left} y1={zeroY} x2={W - PAD.right} y2={zeroY} stroke="var(--fevio-sage-dark)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="3 7" />
         )}
         {points.map((point, index) => (
-          <circle key={`${point.date}-${index}`} cx={toX(index)} cy={toY(point.cumulative)} r={index === points.length - 1 ? 4 : 3} fill="var(--slc-coral)" opacity={points.length > 1 ? 1 : 0.45} />
+          <circle key={`${point.date}-${index}`} cx={toX(index)} cy={toY(point.cumulative)} r={index === points.length - 1 ? 4 : 3} fill="var(--fevio-sage-dark)" opacity={points.length > 1 ? 1 : 0.45} />
         ))}
         {maxY > 0 ? (
           <text x={PAD.left - 4} y={PAD.top + 4} textAnchor="end" fontSize="9" fill="#B5A89E" fontWeight="800">
@@ -398,7 +398,7 @@ function SubsidyCards() {
             <div>
               <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 900, color: 'var(--slc-text)' }}>{info.title}</p>
               <p style={{ margin: '0 0 3px', fontSize: 12, color: 'var(--slc-muted)', fontWeight: 700, lineHeight: 1.45 }}>{info.desc}</p>
-              <p style={{ margin: 0, fontSize: 11, color: 'var(--slc-coral)', fontWeight: 900 }}>{info.action}</p>
+              <p style={{ margin: 0, fontSize: 11, color: 'var(--fevio-sage-dark)', fontWeight: 900 }}>{info.action}</p>
             </div>
             <span aria-hidden="true" style={{ color: 'var(--slc-muted)', fontSize: 18 }}>›</span>
           </div>
