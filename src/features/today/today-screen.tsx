@@ -420,7 +420,7 @@ function CompactHeroCard({
   return (
     <div data-testid="home-hero-compact-card" style={{ display: 'grid', gap: 16, paddingTop: 42 }}>
       <div>
-        <p style={{ margin: '0 0 8px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>{eyebrow}</p>
+        <p style={{ margin: '0 0 8px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>{eyebrow}</p>
         <QuietHeroContent focus={focus} paddingTop={0} />
       </div>
       <ActionCard item={item} onCta={onCta} compact showCountdown={false} />
@@ -440,7 +440,7 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
     >
       <div style={countdownHeroCardStyle}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ margin: '0 0 5px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>{isDueNow ? '확인 필요' : '주사 준비'}</p>
+          <p style={{ margin: '0 0 5px', color: isDueNow ? 'var(--slc-coral)' : 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>{isDueNow ? '확인 필요' : '주사 준비'}</p>
           <strong style={{ color: 'var(--slc-text)', fontSize: 21, lineHeight: 1.18, letterSpacing: '-0.04em' }}>
             {isDueNow ? '예정 시간이 지났어요' : '천천히 준비하면 돼요'}
           </strong>

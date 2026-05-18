@@ -163,6 +163,32 @@ describe('SLC home screen vertical slices', () => {
     expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
   });
 
+  it('keeps calm home hero labels from using coral until an urgent state needs attention', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const compactMarkup = render([
+      item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
+    ]);
+
+    expect(compactMarkup).toContain('color:var(--slc-muted);font-size:12px;font-weight:900">오늘 할 일');
+    expect(compactMarkup).not.toContain('color:var(--slc-coral);font-size:12px;font-weight:900">오늘 할 일');
+
+    const countdownMarkup = render([
+      item({ id: 'soon-injection', type: 'injection', title: '고날에프', scheduled_at: '2026-05-14T09:45:00.000Z' }),
+    ]);
+
+    expect(countdownMarkup).toContain('color:var(--slc-muted);font-size:12px;font-weight:900">주사 준비');
+    expect(countdownMarkup).not.toContain('color:var(--slc-coral);font-size:12px;font-weight:900">주사 준비');
+
+    const dueMarkup = render([
+      item({ id: 'due-injection', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-14T09:00:00.000Z' }),
+    ]);
+
+    expect(dueMarkup).toContain('data-tone="coral"');
+    expect(dueMarkup).toContain('>지금</span>');
+  });
+
+
   it('keeps missed cards calm without AI-slop left accent borders or duplicating the hero item in the list', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
