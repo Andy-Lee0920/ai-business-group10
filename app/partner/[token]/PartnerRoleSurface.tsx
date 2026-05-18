@@ -4,7 +4,21 @@ import type { PartnerSurfaceSignal } from '../../../src/types/care-surface.types
 import type { PartnerActionViewItem } from '../../../src/types/partner-view.types';
 import styles from './partner-role-surface.module.css';
 
-export function PartnerRoleSurface({ items, live = false, signal }: { items: PartnerActionViewItem[]; live?: boolean; signal?: PartnerSurfaceSignal }) {
+export function PartnerRoleSurface({
+  items,
+  live = false,
+  signal,
+  onAssist,
+  assistedIds,
+  assistingIds,
+}: {
+  items: PartnerActionViewItem[];
+  live?: boolean;
+  signal?: PartnerSurfaceSignal;
+  onAssist?: (item: PartnerActionViewItem) => void;
+  assistedIds?: ReadonlySet<string>;
+  assistingIds?: ReadonlySet<string>;
+}) {
   if (items.length === 0) return <p className="notice">지금 공유된 파트너 할 일이 없어요.</p>;
 
   const primary = items[0];
@@ -46,6 +60,16 @@ export function PartnerRoleSurface({ items, live = false, signal }: { items: Par
               <div>
                 <strong>{item.partner_action}</strong>
                 <small>{item.title}</small>
+                {onAssist && item.card_type === 'injection' && item.display_state !== 'completed' ? (
+                  <button
+                    className={styles.assistButton}
+                    disabled={assistedIds?.has(item.safe_id) || assistingIds?.has(item.safe_id)}
+                    onClick={() => onAssist(item)}
+                    type="button"
+                  >
+                    {assistedIds?.has(item.safe_id) ? '도움 기록됨' : assistingIds?.has(item.safe_id) ? '기록 중' : '도움 완료'}
+                  </button>
+                ) : null}
               </div>
             </article>
           ))}

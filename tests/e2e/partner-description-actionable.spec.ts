@@ -1,6 +1,21 @@
 import { expect, test } from '@playwright/test';
 
 test('partner view shows confirmed action cue without raw memo leak', async ({ page }) => {
+
+  const assistRequests: unknown[] = [];
+  await page.route('**/api/partner/e2e-token/assist', async (route) => {
+    assistRequests.push(route.request().postDataJSON());
+    await route.fulfill({
+      contentType: 'application/json',
+      status: 202,
+      body: JSON.stringify({
+        injectionLogId: 'log-e2e',
+        status: 'awaiting_patient_confirmation',
+        requiresPatientConfirmation: true,
+      }),
+    });
+  });
+
   await page.route('**/api/partner/e2e-token/cards', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -36,4 +51,8 @@ test('partner view shows confirmed action cue without raw memo leak', async ({ p
   await expect(page.getByText('마지막 순간 질문하거나 재촉하지 않기')).toBeVisible();
   await expect(page.getByLabel('공유된 케어').getByText('오늘 21시 고날에프 1회')).toBeVisible();
   await expect(page.getByText(/rev 7|revision|sync_revision|원문 메모|raw memo|visit_inputs|source_input_id/)).toHaveCount(0);
+  await page.getByRole('button', { name: '도움 완료' }).click();
+  await expect(page.getByRole('button', { name: '도움 기록됨' })).toBeDisabled();
+  expect(assistRequests).toHaveLength(1);
+  expect(assistRequests[0]).toMatchObject({ action: 'record_assist', cardId: 'safe-injection' });
 });

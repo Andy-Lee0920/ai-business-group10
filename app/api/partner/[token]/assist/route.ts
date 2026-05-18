@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { canPartnerPerformAction, deriveInjectionTrustState, type PartnerPermissionAction } from '../../../../../src/domain/care-os-architecture';
-import { hashPartnerShareToken } from '../../../../../src/services/partner-view';
+import { hashPartnerShareToken, safePartnerItemId } from '../../../../../src/services/partner-view';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 
 type AssistBody = {
@@ -12,6 +12,10 @@ type AssistBody = {
 type PartnerAssistRpcRow = {
   injection_log_id: string;
   confirmed_by_patient: boolean;
+};
+
+type PartnerActionViewRow = {
+  id?: string | null;
 };
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -30,9 +34,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const { token } = await params;
   const supabase = await createCookieBackedSupabaseClient();
+  const tokenHash = hashPartnerShareToken(token);
+  const resolvedCardId = isUuid(cardId)
+    ? cardId
+    : await resolveCardIdFromSafeId(supabase, tokenHash, cardId);
+
+  if (!resolvedCardId) return NextResponse.json({ error: 'partner_card_not_found' }, { status: 404 });
+
   const { data, error } = await supabase.rpc('record_partner_assisted_injection', {
-    p_token_hash: hashPartnerShareToken(token),
-    p_card_id: cardId,
+    p_token_hash: tokenHash,
+    p_card_id: resolvedCardId,
     p_actual_time: actualTime,
   });
 
@@ -48,6 +59,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   });
 
   return NextResponse.json({ injectionLogId: row?.injection_log_id ?? null, ...trust }, { status: 202 });
+}
+
+async function resolveCardIdFromSafeId(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  tokenHash: string,
+  safeId: string,
+) {
+  const { data, error } = await supabase.rpc('get_partner_action_view', { p_token_hash: tokenHash });
+  if (error || !Array.isArray(data)) return null;
+  const row = (data as PartnerActionViewRow[]).find((candidate) => {
+    return typeof candidate.id === 'string' && safePartnerItemId(candidate.id) === safeId;
+  });
+  return row?.id ?? null;
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(value);
 }
 
 function normalizeAction(value: unknown): PartnerPermissionAction | null {
