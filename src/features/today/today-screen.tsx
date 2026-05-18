@@ -30,7 +30,7 @@ interface TodayScreenProps {
 type DayOffset = 0 | 1 | 2;
 type HeroStory =
   | { kind: 'countdown'; item: ScheduleItem; nextInjection: ScheduleItem | null; focus: HomeFocus }
-  | { kind: 'overdue_backlog'; missedCount: number; todayCount: number; clinicCount: number }
+  | { kind: 'overdue_backlog'; item: ScheduleItem; missedCount: number; todayCount: number; clinicCount: number }
   | { kind: 'today_pending'; item: ScheduleItem; focus: HomeFocus }
   | { kind: 'tomorrow'; item: ScheduleItem; focus: HomeFocus }
   | { kind: 'quiet'; focus: HomeFocus };
@@ -259,7 +259,7 @@ function HeroZone({
       <div data-testid="home-hero-zone" data-focus-kind={focusKind} style={{ height: '100%' }}>
         <div style={{ height: '100%', padding: '8px 20px 22px' }}>
           {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
-          {story.kind === 'overdue_backlog' && <OverdueBacklogHero missedCount={story.missedCount} todayCount={story.todayCount} clinicCount={story.clinicCount} />}
+          {story.kind === 'overdue_backlog' && <OverdueBacklogHero item={story.item} missedCount={story.missedCount} todayCount={story.todayCount} clinicCount={story.clinicCount} onCta={onCta} />}
           {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
           {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
           {story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
@@ -296,7 +296,7 @@ function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus, selectedDay: 
     );
     if (missedItems.length > 0) {
       const todayCount = items.filter((item) => isOnDay(item.scheduled_at, 0) && item.status !== 'completed').length;
-      return { kind: 'overdue_backlog', missedCount: missedItems.length, todayCount, clinicCount: initialClinicUpdates.length };
+      return { kind: 'overdue_backlog', item: missedItems[0], missedCount: missedItems.length, todayCount, clinicCount: initialClinicUpdates.length };
     }
   }
 
@@ -338,10 +338,10 @@ function QuietHeroContent({ focus, paddingTop = 60 }: { focus: HomeFocus; paddin
     return (
       <div style={{ paddingTop }}>
         <p style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--slc-text)', lineHeight: 1.2, margin: '0 0 8px' }}>
-          지금은 확인할 일정이 없어요
+          오늘은 예정된 일정이 없어요
         </p>
         <p style={{ fontSize: 13, color: 'var(--slc-muted)', lineHeight: 1.45, margin: '0 0 20px' }}>
-          병원 안내가 바뀌었다면<br />일정을 업데이트해 주세요.
+          {SLC_SAFE_COPY.noSchedule}
         </p>
         <Link href="/add" style={{ display: 'inline-block', padding: '11px 20px', borderRadius: 999, background: 'var(--slc-coral-gradient)', color: '#fff', fontSize: 14, fontWeight: 900, textDecoration: 'none' }}>
           일정 추가
@@ -361,16 +361,29 @@ function QuietHeroContent({ focus, paddingTop = 60 }: { focus: HomeFocus; paddin
   );
 }
 
-function OverdueBacklogHero({ missedCount, todayCount, clinicCount }: { missedCount: number; todayCount: number; clinicCount: number }) {
+function OverdueBacklogHero({
+  item,
+  missedCount,
+  todayCount,
+  clinicCount,
+  onCta,
+}: {
+  item: ScheduleItem;
+  missedCount: number;
+  todayCount: number;
+  clinicCount: number;
+  onCta: (item: ScheduleItem) => void;
+}) {
+  const typeLabel = scheduleTypeLabel(item.type);
   return (
     <div style={{ height: '100%', display: 'grid', alignContent: 'center', gap: 16 }}>
       <div>
-        <p style={{ margin: '0 0 6px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>돌아오셨군요</p>
+        <p style={{ margin: '0 0 6px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>기록 확인</p>
         <h2 style={{ margin: '0 0 8px', color: 'var(--slc-text)', fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.2 }}>
-          지난 일정이 조금 쌓였어요
+          확인이 필요한 {typeLabel}가 있어요
         </h2>
         <p style={{ margin: 0, color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.55 }}>
-          괜찮아요. 중요한 일정부터 빠르게 정리하고<br />오늘부터 다시 이어가면 돼요.
+          {formatScheduleTime(item.scheduled_at)} 예정된 {typeLabel} 기록이 아직 완료되지 않았어요.
         </p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
@@ -382,11 +395,11 @@ function OverdueBacklogHero({ missedCount, todayCount, clinicCount }: { missedCo
         ))}
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
-        <Link href="/records" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 20px', borderRadius: 999, background: 'var(--slc-text)', color: 'var(--slc-bg)', fontSize: 14, fontWeight: 900, textDecoration: 'none', width: 'fit-content' }}>
-          3분만에 정리하기
-        </Link>
-        <Link href="/add" style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 700, textDecoration: 'none' }}>
-          오늘부터 다시 시작 ›
+        <button type="button" onClick={() => onCta(item)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 20px', border: 0, borderRadius: 999, background: 'var(--slc-text)', color: 'var(--slc-bg)', fontSize: 14, fontWeight: 900, fontFamily: 'inherit', textDecoration: 'none', width: 'fit-content', cursor: 'pointer' }}>
+          완료로 기록
+        </button>
+        <Link href={`/schedule/${item.id}/edit`} style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 700, textDecoration: 'none' }}>
+          시간 수정
         </Link>
       </div>
     </div>
@@ -610,7 +623,7 @@ function EmptyState({ selectedDay, firstScheduleSkipped }: { selectedDay: DayOff
   return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
       <SLCIllustration asset={asset} size="empty" style={{ opacity: 0.86, marginBottom: 12 }} />
-      <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>{DAY_LABELS[selectedDay]}은 비어 있어요</p>
+      <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>{selectedDay === 0 ? '오늘은 예정된 일정이 없어요' : `${DAY_LABELS[selectedDay]}은 예정된 일정이 없어요`}</p>
       <p style={{ color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.5, margin: 0 }}>{SLC_SAFE_COPY.noSchedule}</p>
       <Link href="/add" style={emptyLinkStyle}>추가하기</Link>
     </div>

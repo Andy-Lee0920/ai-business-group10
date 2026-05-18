@@ -15,7 +15,7 @@ describe('SLC user-safe copy contract', () => {
     const copy = Object.values(SLC_SAFE_COPY).join('\n');
     expect(copy).toContain('아직 기록이 없어요');
     expect(SLC_SAFE_COPY.emptyRecords).toContain('오늘 일정을 완료하면 이곳에 자동으로 정리됩니다');
-    expect(SLC_SAFE_COPY.noSchedule).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
+    expect(SLC_SAFE_COPY.noSchedule).toContain('새 일정이 생기면 여기에서 바로 보여드릴게요');
     expect(SLC_SAFE_COPY.medicationNotFound).toContain('찾는 약이 없나요?');
     expect(SLC_SAFE_COPY.saveFailed).toContain('네트워크 상태를 확인한 뒤 다시 시도해주세요');
     expect(copy).not.toMatch(/schema cache|public\.|user_profiles|clinic_updates|schedule_items|공포|두려움|판단하세요/);

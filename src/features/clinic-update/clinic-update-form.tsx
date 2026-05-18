@@ -60,7 +60,7 @@ const MODE_COPY = {
     textTitle: '문자로 일정 추가',
     textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
     diffTitle: '겹치는 일정이 있어요',
-    diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
+    diffDescription: '기존 일정과 새 후보를 비교한 뒤 저장할 항목을 선택해 주세요.',
     applyLabel: '일정 적용',
   },
   memo: {
@@ -75,7 +75,7 @@ const MODE_COPY = {
     textTitle: '문자로 업데이트',
     textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
     diffTitle: '겹치는 일정이 있어요',
-    diffDescription: '현재 일정과 새 후보를 비교하고, 저장 전 직접 고칠 수 있어요.',
+    diffDescription: '기존 일정과 새 후보를 비교한 뒤 저장할 항목을 선택해 주세요.',
     applyLabel: '변경사항 적용',
   },
 } as const satisfies Record<ClinicUpdateMode, Record<string, string>>;

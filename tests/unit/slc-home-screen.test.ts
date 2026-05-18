@@ -167,13 +167,15 @@ describe('SLC home screen vertical slices', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
-      item({ id: 'late-injection', type: 'injection', title: '확인 필요 주사', status: 'missed', scheduled_at: '2026-05-14T08:00:00.000Z' }),
+      item({ id: 'late-injection', type: 'injection', title: '확인 필요 주사', status: 'missed', scheduled_at: '2026-05-13T23:00:00.000Z' }),
     ]);
 
     expect(markup).toContain('data-focus-kind="overdue_backlog"');
     expect(markup).not.toMatch(/border-left|borderLeft/u);
-    expect(markup).toContain('지난 일정이 조금 쌓였어요');
-    expect(markup).toContain('3분만에 정리하기');
+    expect(markup).toContain('확인이 필요한 주사가 있어요');
+    expect(markup).toContain('08:00 예정된 주사 기록이 아직 완료되지 않았어요.');
+    expect(markup).toContain('완료로 기록');
+    expect(markup).toContain('시간 수정');
   });
 
   it('shows tomorrow card after today is completed and removes recent-completed home section', () => {
@@ -270,9 +272,9 @@ describe('SLC home screen vertical slices', () => {
       userId: 'patient-1',
     }));
 
-    expect(markup).toContain('지금은 확인할 일정이 없어요');
+    expect(markup).toContain('오늘은 예정된 일정이 없어요');
     expect(markup).toContain('아직 사이클 기록이 없습니다');
-    expect(markup).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
+    expect(markup).toContain('새 일정이 생기면 여기에서 바로 보여드릴게요');
     expect(markup).not.toContain('data-testid="pending-partner-request-card"');
     expect(markup).not.toContain('승인하기');
   });
@@ -287,7 +289,7 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('등록된 약 일정이 없습니다');
     expect(markup).not.toContain('아직 사이클 기록이 없습니다');
-    expect(markup).toContain('병원 일정이나 투약 시간을 추가하면 오늘 할 일을 함께 볼 수 있어요');
+    expect(markup).toContain('새 일정이 생기면 여기에서 바로 보여드릴게요');
   });
 
   it('hides the cycle empty illustration when today has schedule data', () => {
