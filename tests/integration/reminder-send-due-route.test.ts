@@ -97,6 +97,18 @@ describe('/api/reminders/send-due', () => {
     expect(payload.result).toEqual({ candidates: 2, sent: 2, skipped: 0, failed: 0 });
   });
 
+  it('accepts CRON_SECRET even when legacy REMINDER_DISPATCH_SECRET is also configured', async () => {
+    vi.stubEnv('REMINDER_DISPATCH_SECRET', 'legacy-secret');
+    vi.stubEnv('CRON_SECRET', 'cron-secret');
+    const supabase = createSupabaseMock();
+    mockedCreateSupabase.mockReturnValue(supabase as never);
+
+    const response = await GET(request('cron-secret'));
+
+    expect(response.status).toBe(200);
+    expect(mockedCreateSupabase).toHaveBeenCalled();
+  });
+
   it('rejects unauthenticated scheduler calls', async () => {
     const response = await GET(request('wrong-secret'));
     expect(response.status).toBe(401);

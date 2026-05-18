@@ -15,9 +15,11 @@ export async function POST(request: NextRequest) {
 }
 
 async function dispatch(request: NextRequest) {
-  const secret = process.env.REMINDER_DISPATCH_SECRET?.trim() || process.env.CRON_SECRET?.trim();
-  if (!secret) return NextResponse.json({ error: 'Reminder dispatch secret is not configured.' }, { status: 503 });
-  if (request.headers.get('authorization') !== `Bearer ${secret}`) {
+  const secrets = [process.env.REMINDER_DISPATCH_SECRET?.trim(), process.env.CRON_SECRET?.trim()]
+    .filter((value): value is string => Boolean(value));
+  if (!secrets.length) return NextResponse.json({ error: 'Reminder dispatch secret is not configured.' }, { status: 503 });
+  const authorization = request.headers.get('authorization');
+  if (!secrets.some((secret) => authorization === `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'Unauthorized reminder dispatch.' }, { status: 401 });
   }
 
