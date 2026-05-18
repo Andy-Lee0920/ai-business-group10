@@ -99,7 +99,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
   return (
     <AmbientStoryBackground asset={slcAssets.partner.syncOverview} intensity="subtle" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)' }}>
       <header style={{ marginBottom: 22 }}>
-        <p style={{ fontSize: 12, fontWeight: 900, color: 'var(--slc-coral)', margin: '0 0 6px' }}>공유와 설정 관리</p>
+        <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 900, color: 'var(--fevio-sage-dark)', margin: '0 0 6px' }}>공유와 설정 관리</span>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: 0, letterSpacing: '-0.03em' }}>관리</h1>
       </header>
 
@@ -204,7 +204,7 @@ async function getResetAuthorizationHeader() {
 function PartnerCardHeader({ title, muted = false }: { title: string; muted?: boolean }) {
   return (
     <div style={{ display: 'grid', gap: 10, alignItems: 'center', marginBottom: 12 }}>
-      <p style={{ fontSize: muted ? 13 : 14, color: muted ? 'var(--slc-muted)' : 'var(--slc-coral)', fontWeight: 900, margin: 0 }}>{title}</p>
+      <p style={{ fontSize: muted ? 13 : 14, color: 'var(--slc-muted)', fontWeight: 900, margin: 0 }}>{title}</p>
     </div>
   );
 }

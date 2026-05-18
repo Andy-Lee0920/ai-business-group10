@@ -11,7 +11,7 @@ export default function SettingsPrivacyPage() {
       </Link>
 
       <header style={{ marginBottom: 22 }}>
-        <p style={{ fontSize: 12, fontWeight: 900, color: 'var(--slc-coral)', margin: '0 0 8px' }}>데이터 보안</p>
+        <span style={{ display: 'inline-block', fontSize: 12, fontWeight: 900, color: 'var(--fevio-sage-dark)', margin: '0 0 8px' }}>데이터 보안</span>
         <h1 style={{ fontSize: 30, lineHeight: 1.18, letterSpacing: '-0.05em', margin: 0 }}>저장 범위와 삭제 기준</h1>
         <p style={{ margin: '12px 0 0', color: 'var(--slc-muted)', lineHeight: 1.6, fontSize: 15, wordBreak: 'keep-all' }}>
           Fevio는 병원 안내를 직접 확인한 일정으로 바꾸기 위해 필요한 정보만 저장합니다.

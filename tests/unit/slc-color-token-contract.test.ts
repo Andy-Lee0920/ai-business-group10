@@ -39,4 +39,18 @@ describe('SLC color token contract', () => {
     expect(privacy).toContain('var(--slc-coral-gradient)');
   });
 
+
+  it('keeps settings and more informational labels away from coral', () => {
+    const settingsPrivacy = readFileSync('app/(authed)/settings/privacy/page.tsx', 'utf8');
+    const more = readFileSync('src/features/more/more-screen.tsx', 'utf8');
+
+    expect(settingsPrivacy).not.toContain("데이터 보안</p>");
+    expect(settingsPrivacy).toContain("데이터 보안</span>");
+    expect(settingsPrivacy).not.toContain("color: 'var(--slc-coral)', margin: '0 0 8px' }");
+
+    expect(more).not.toContain("공유와 설정 관리</p>");
+    expect(more).toContain("공유와 설정 관리</span>");
+    expect(more).not.toContain("muted ? 'var(--slc-muted)' : 'var(--slc-coral)'");
+  });
+
 });
