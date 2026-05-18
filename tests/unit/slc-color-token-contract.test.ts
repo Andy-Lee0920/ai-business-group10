@@ -117,4 +117,19 @@ describe('SLC color token contract', () => {
     );
   });
 
+
+  it('keeps clinic update decorative progress, badges, and icons away from coral', () => {
+    const clinicUpdate = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');
+
+    expect(clinicUpdate).not.toContain("<span style={{ color: 'var(--slc-coral)', fontWeight: 900 }}>{label}</span>");
+    expect(clinicUpdate).toContain("<span style={{ color: 'var(--slc-muted)', fontWeight: 900 }}>{label}</span>");
+    expect(clinicUpdate).toContain("const progressFillStyle: CSSProperties = { display: 'block', height: '100%', borderRadius: 999, background: 'var(--slc-coral-light)' };");
+    for (const styleName of ['badgeStyle', 'statusLineStyle', 'hospitalIconStyle', 'aiChipStyle', 'iconPillStyle']) {
+      const declaration = clinicUpdate.match(new RegExp(`const ${styleName}[^;]+;`, 'u'))?.[0] ?? '';
+      expect(declaration).not.toContain("color: 'var(--slc-coral)'"
+      );
+    }
+    expect(clinicUpdate).toContain("border: `2px solid ${active ? 'var(--slc-coral)' : '#F0E1D6'}`");
+  });
+
 });
