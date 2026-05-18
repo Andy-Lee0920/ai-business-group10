@@ -9,7 +9,6 @@
 
 create extension if not exists pg_cron with schema extensions;
 create extension if not exists pg_net with schema extensions;
-create extension if not exists vault with schema vault;
 
 select cron.unschedule('fevio-reminder-check')
 where exists (

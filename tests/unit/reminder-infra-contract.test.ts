@@ -28,6 +28,7 @@ describe('reminder infrastructure contract', () => {
     const migration = readFileSync('supabase/migrations/202605190003_web_push_pg_cron_scheduler.sql', 'utf8');
     expect(migration).toContain('create extension if not exists pg_cron');
     expect(migration).toContain('create extension if not exists pg_net');
+    expect(migration).not.toContain('create extension if not exists vault');
     expect(migration).toContain('cron.schedule');
     expect(migration).toContain('fevio-reminder-check');
     expect(migration).toContain("'* * * * *'");
