@@ -6,6 +6,7 @@ const page = readFileSync('app/(authed)/clinic-update/page.tsx', 'utf8');
 const addPage = readFileSync('app/(authed)/add/page.tsx', 'utf8');
 const guideTypes = readFileSync('src/types/clinic-guide.types.ts', 'utf8');
 const guideInterview = readFileSync('src/domain/clinic-guide-interview.ts', 'utf8');
+const agentInstructions = readFileSync('AGENTS.md', 'utf8');
 
 describe('Clinic Guide visual flow contract', () => {
   it('implements entry, guided interview header, search, draft, confirmation, and success states', () => {
@@ -16,6 +17,7 @@ describe('Clinic Guide visual flow contract', () => {
       '병원 안내를\\\\n오늘 일정으로 바꿀게요',
       '일정을 추가할게요',
       '사진, 문자, 직접 수정 중 편한 방법으로 시작하세요.',
+      '사진이나 문자에서 일정 후보를 찾고, 저장 전 직접 확인해요.',
       '사진으로 업데이트',
       '문자로 업데이트',
       '직접 수정',
@@ -36,6 +38,8 @@ describe('Clinic Guide visual flow contract', () => {
       '기존 일정과 새 후보를 비교한 뒤 저장할 항목을 선택해 주세요.',
       '현재 일정',
       '새 후보',
+      '새 일정으로 교체',
+      '기존 일정 유지',
       '변경사항 적용',
       '일정 적용',
       '직접 입력 form 열기',
@@ -95,5 +99,18 @@ describe('Clinic Guide visual flow contract', () => {
     expect(guideInterview).toContain("source: 'fallback'");
     expect(addPage).toContain("from('schedule_items')");
     expect(addPage).not.toContain('ManualAddForm');
+  });
+
+  it('documents component grammar rules for copy and visual polish issues', () => {
+    for (const rule of [
+      'Component grammar rules',
+      '카드 중첩 금지',
+      'border + box-shadow 동시 사용 금지',
+      'full-width primary CTA',
+      'pill(태그) 남발 금지',
+      '대형 일러스트',
+    ]) {
+      expect(agentInstructions).toContain(rule);
+    }
   });
 });
