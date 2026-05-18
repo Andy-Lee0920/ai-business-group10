@@ -34,6 +34,7 @@ export type ReminderPushDispatchStore = {
   claimPushDispatch(input: { cardId: string; scheduledAt: string; channel: ReminderPushWindow['channel'] }): Promise<ClaimedDispatch>;
   markPushDispatchSent(input: { dispatchId: string; providerMessageId: string | null }): Promise<void>;
   markPushDispatchFailed(input: { dispatchId: string; error: string }): Promise<void>;
+  deletePushSubscription(input: { endpoint: string }): Promise<void>;
 };
 
 export type ReminderMailer = {
@@ -128,10 +129,28 @@ export async function dispatchDuePushReminders({
       try {
         const payload = buildReminderPushPayload({ candidate, appUrl });
         const providerIds: string[] = [];
+        let expiredSubscriptions = 0;
+
         for (const subscription of candidate.pushSubscriptions) {
-          const provider = await pusher.send({ subscription, payload });
-          if (provider.providerMessageId) providerIds.push(provider.providerMessageId);
+          try {
+            const provider = await pusher.send({ subscription, payload });
+            if (provider.providerMessageId) providerIds.push(provider.providerMessageId);
+          } catch (error) {
+            if (!isExpiredPushSubscriptionError(error)) throw error;
+            expiredSubscriptions += 1;
+            await store.deletePushSubscription({ endpoint: subscription.endpoint });
+          }
         }
+
+        if (providerIds.length === 0) {
+          await store.markPushDispatchFailed({
+            dispatchId: claim.dispatchId,
+            error: expiredSubscriptions > 0 ? 'All push subscriptions expired' : 'No push subscriptions delivered',
+          });
+          result.failed += 1;
+          continue;
+        }
+
         await store.markPushDispatchSent({ dispatchId: claim.dispatchId, providerMessageId: providerIds[0] ?? null });
         result.sent += 1;
       } catch (error) {
@@ -146,4 +165,10 @@ export async function dispatchDuePushReminders({
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unknown reminder provider error';
+}
+
+function isExpiredPushSubscriptionError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as { statusCode?: unknown; status?: unknown };
+  return candidate.statusCode === 404 || candidate.statusCode === 410 || candidate.status === 404 || candidate.status === 410;
 }

@@ -36,6 +36,7 @@ function createPushStore(overrides: Partial<ReminderPushDispatchStore> = {}): Re
     claimPushDispatch: vi.fn().mockResolvedValue({ claimed: true, dispatchId: 'dispatch-1' }),
     markPushDispatchSent: vi.fn().mockResolvedValue(undefined),
     markPushDispatchFailed: vi.fn().mockResolvedValue(undefined),
+    deletePushSubscription: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -136,4 +137,37 @@ describe('dispatchDuePushReminders', () => {
     expect(store.markPushDispatchSent).toHaveBeenCalledWith({ dispatchId: 'dispatch-1', providerMessageId: 'push-1' });
     expect(result).toEqual({ candidates: 2, sent: 2, skipped: 0, failed: 0 });
   });
+
+  it('removes expired browser push subscriptions and still sends to remaining subscriptions', async () => {
+    const expiredSubscription = { endpoint: 'https://push.example.test/expired', keys: { p256dh: 'old-key', auth: 'old-auth' } };
+    const activeSubscription = { endpoint: 'https://push.example.test/active', keys: { p256dh: 'new-key', auth: 'new-auth' } };
+    const store = createPushStore({
+      findDuePushCandidates: vi.fn(async (window) => window.channel === 'web_push_t60' ? [{
+        cardId: 'card-1',
+        title: '오늘 21시 고날에프 1회',
+        scheduledAt: '2026-05-11T12:00:00.000Z',
+        recipientEmail: 'user@example.com',
+        pushSubscriptions: [expiredSubscription, activeSubscription],
+      }] : []),
+      deletePushSubscription: vi.fn().mockResolvedValue(undefined),
+    } as Partial<ReminderPushDispatchStore>);
+    const pusher = createPusher({
+      send: vi.fn(async ({ subscription }) => {
+        if (subscription.endpoint === expiredSubscription.endpoint) {
+          const error = new Error('push subscription expired') as Error & { statusCode: number };
+          error.statusCode = 410;
+          throw error;
+        }
+        return { providerMessageId: 'push-active' };
+      }),
+    });
+
+    const result = await dispatchDuePushReminders({ store, pusher, now: NOW, appUrl: 'https://project-oznp0.vercel.app' });
+
+    expect(store.deletePushSubscription).toHaveBeenCalledWith({ endpoint: expiredSubscription.endpoint });
+    expect(store.markPushDispatchSent).toHaveBeenCalledWith({ dispatchId: 'dispatch-1', providerMessageId: 'push-active' });
+    expect(store.markPushDispatchFailed).not.toHaveBeenCalled();
+    expect(result).toEqual({ candidates: 1, sent: 1, skipped: 0, failed: 0 });
+  });
+
 });

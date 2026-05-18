@@ -13,9 +13,14 @@ type UpdateChain = {
   update(value: Record<string, unknown>): UpdateChain;
   eq(column: string, value: string): Promise<unknown> | UpdateChain;
 };
+type DeleteChain = {
+  delete(): DeleteChain;
+  eq(column: string, value: string): Promise<unknown>;
+};
 type ReminderSupabaseClient = {
   rpc<T>(name: string, args?: Record<string, unknown>): Promise<RpcResult<T>>;
   from(table: 'reminder_dispatches'): InsertChain<{ id: string }> & UpdateChain;
+  from(table: 'push_subscriptions'): DeleteChain;
 };
 
 type DueReminderRow = {
@@ -93,6 +98,13 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore, Rem
 
   async markPushDispatchFailed(input: { dispatchId: string; error: string }) {
     await this.markDispatchFailed(input);
+  }
+
+  async deletePushSubscription(input: { endpoint: string }) {
+    await this.supabase
+      .from('push_subscriptions')
+      .delete()
+      .eq('endpoint', input.endpoint);
   }
 
   async claimEmailDispatch(input: { cardId: string; scheduledAt: string; recipientEmail: string }) {
