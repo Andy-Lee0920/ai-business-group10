@@ -106,7 +106,7 @@ Fevio [페비오]는 IVF 치료 중 병원 지시사항을 부부가 함께 실�
 | Action Split | Manual line split + 4-button classification |
 | Confirmation | source text와 action card 확인 후 CareActionCard 생성 |
 | Dynamic Home | onboarding/clinic/injection/waiting/routine care_day 지원 |
-| Partner View | couple-level 7-day share link, read-only live view, acknowledgement |
+| Partner View | couple-level 7-day share link, "오늘 도와줄 일" 중심, 파트너 도움 완료 처리 가능, 3초 폴링 실시간 반영 |
 | BYOK LLM | optional OpenRouter BYOK, settings only, Supabase Vault storage |
 | Safety | LLM 의료 판단 금지, confirmation-first, display-only safety priority |
 | Audit | confirmation, partner acknowledgement, card revision seen 기록 |
@@ -180,7 +180,7 @@ Dynamic Care Context Home recomposed
         ↓
 Partner share link generated
         ↓
-Partner Action View: live read-only view + acknowledgement
+Partner Action View: "오늘 도와줄 일" 중심 + 파트너 도움 완료 처리 + 3초 폴링 실시간 동기화
 ```
 
 ---

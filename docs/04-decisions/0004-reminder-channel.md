@@ -2,6 +2,16 @@
 
 ## Status
 
+Amended — 2026-05-18 (MVP decision)
+
+2026-05-18 amendment: **이메일 채널 폐기, PWA 웹 push로 전환.** MVP closed beta에서 리마인더 채널은 PWA Service Worker 기반 웹 push로 결정됐다. Resend/이메일 발송 코드는 MVP에서 사용하지 않는다.
+
+- 채널: PWA 웹 push (VAPID + Service Worker)
+- 타이밍: T-60분 + T-15분 (2회, 이슈 #347)
+- 스케줄러: Supabase pg_cron (매분 실행)
+- Android Chrome/Edge: 설치 없이 지원. iOS 16.4+: 홈화면 추가 필요 — MVP는 Android 우선.
+- 근거: closed beta 대상 사용자에게 실시간 알림 경험을 검증하는 것이 이메일보다 제품 가치에 부합.
+
 Amended — 2026-05-11
 
 2026-05-11 amendment: email remains an optional deterministic dispatch path, but production email sending and scheduler proof are **not** a current SLC release gate. The core #52 closure criterion is in-app imminent injection emphasis; external reminder delivery is deferred unless stakeholders reclassify it as core.

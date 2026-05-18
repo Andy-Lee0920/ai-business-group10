@@ -19,6 +19,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
   const [linkError, setLinkError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const generateLink = async () => {
     setGenerating(true);
@@ -77,6 +78,21 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
       window.location.assign(data.redirectTo ?? '/onboarding');
     } finally {
       setResetting(false);
+    }
+  };
+
+  const signOut = async () => {
+    setLoggingOut(true);
+    try {
+      const res = await fetch('/auth/reset', {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      const data = await res.json().catch(() => ({})) as { redirectTo?: string };
+      window.location.assign(data.redirectTo ?? '/auth/sign-in');
+    } catch {
+      window.location.assign('/auth/sign-in');
     }
   };
 
@@ -162,7 +178,14 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
           disabled={resetting}
           onClick={resetAllInformation}
         />
-        <SettingsRow href="/auth/reset" icon="↩" label="로그아웃" danger />
+        <SettingsRow
+          icon="↩"
+          label="로그아웃"
+          detail={loggingOut ? '나가는 중' : undefined}
+          danger
+          disabled={loggingOut}
+          onClick={signOut}
+        />
       </SettingsSection>
     </AmbientStoryBackground>
   );

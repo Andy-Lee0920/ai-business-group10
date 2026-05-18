@@ -14,9 +14,19 @@ const FEVIO_STATE_COOKIES = [
 ] as const;
 
 export async function GET(request: NextRequest) {
+  const response = NextResponse.json(
+    { error: 'method_not_allowed' },
+    { status: 405 },
+  );
+  response.headers.set('allow', 'POST');
+  response.headers.set('cache-control', 'no-store');
+  return response;
+}
+
+export async function POST(request: NextRequest) {
   await signOutBestEffort();
 
-  const response = NextResponse.redirect(new URL('/auth/sign-in', request.url), { status: 303 });
+  const response = NextResponse.json({ redirectTo: '/auth/sign-in' });
   for (const name of cookiesToClear(request)) {
     response.cookies.set(name, '', {
       path: '/',

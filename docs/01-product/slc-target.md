@@ -1,5 +1,7 @@
 # Fevio [페비오] SLC Product Definition
 
+> **SLC ⊂ MVP.** SLC는 MVP의 첫 internal milestone이다. MVP 범주 정의는 `docs/01-product/mvp-target.md` 참조.
+
 ## SLC meaning
 
 For this repository, **SLC** means **Simple, Lovable, Complete**:

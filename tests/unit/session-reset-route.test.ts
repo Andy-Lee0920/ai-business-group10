@@ -9,8 +9,9 @@ vi.mock('../../src/lib/server-supabase', () => ({
   }),
 }));
 
-function request() {
+function request(method = 'GET') {
   return new NextRequest('https://project-oznp0.vercel.app/auth/reset', {
+    method,
     headers: {
       cookie: [
         'fevio_privacy_accepted=1',
@@ -28,14 +29,26 @@ function request() {
 describe('/auth/reset', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('signs out and clears app/session state while preserving privacy acceptance before returning to sign-in', async () => {
+  it('does not sign out on GET requests so route prefetch cannot clear the session', async () => {
     const { GET } = await import('../../app/auth/reset/route');
 
     const response = await GET(request());
-    const setCookie = response.headers.getSetCookie().join('\n');
 
-    expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toBe('https://project-oznp0.vercel.app/auth/sign-in');
+    expect(response.status).toBe(405);
+    expect(response.headers.get('allow')).toBe('POST');
+    expect(signOut).not.toHaveBeenCalled();
+    expect(response.headers.getSetCookie()).toEqual([]);
+  });
+
+  it('signs out and clears app/session state on explicit POST while preserving privacy acceptance', async () => {
+    const { POST } = await import('../../app/auth/reset/route');
+
+    const response = await POST(request('POST'));
+    const setCookie = response.headers.getSetCookie().join('\n');
+    const body = await response.json() as { redirectTo?: string };
+
+    expect(response.status).toBe(200);
+    expect(body.redirectTo).toBe('/auth/sign-in');
     expect(signOut).toHaveBeenCalledTimes(1);
     expect(setCookie).not.toContain('fevio_privacy_accepted=;');
     expect(setCookie).toContain('fevio_onboarding_first_card=;');
