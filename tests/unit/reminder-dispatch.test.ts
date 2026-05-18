@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildReminderEmail,
+  buildReminderPushPayload,
   getReminderWindow,
+  getReminderPushWindows,
   shouldDispatchReminder,
   type ReminderCandidate,
 } from '../../src/domain/reminder-dispatch';
@@ -30,6 +32,40 @@ describe('reminder dispatch domain', () => {
       startsAt: '2026-05-11T11:59:00.000Z',
       endsAt: '2026-05-11T12:01:00.000Z',
     });
+  });
+
+
+
+  it('computes T-60 and T-15 push windows for one-minute cron checks', () => {
+    expect(getReminderPushWindows(NOW)).toEqual([
+      {
+        channel: 'web_push_t60',
+        offsetMinutes: 60,
+        startsAt: '2026-05-11T12:29:00.000Z',
+        endsAt: '2026-05-11T12:31:00.000Z',
+      },
+      {
+        channel: 'web_push_t15',
+        offsetMinutes: 15,
+        startsAt: '2026-05-11T11:44:00.000Z',
+        endsAt: '2026-05-11T11:46:00.000Z',
+      },
+    ]);
+  });
+
+  it('builds a safe web push payload with only card title, scheduled time, and /home deep link', () => {
+    const payload = buildReminderPushPayload({
+      candidate: candidate({ title: '오비트렐 · 250mcg · 22:00' }),
+      appUrl: 'https://project-oznp0.vercel.app',
+    });
+
+    expect(payload).toEqual({
+      title: '오비트렐 · 250mcg · 22:00',
+      body: '예정 시간: 2026. 5. 11. 오후 9:00',
+      url: '/home',
+      tag: 'fevio-reminder-card-1',
+    });
+    expect(JSON.stringify(payload)).not.toMatch(/투여하세요|복용하세요|판단|source_text|raw memo|원문/u);
   });
 
   it('builds deterministic Korean email copy without medical advice or raw memo text', () => {

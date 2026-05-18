@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { dispatchDueEmailReminders, type ReminderDispatchStore, type ReminderMailer } from '../../src/services/reminder-dispatch-service';
+import { dispatchDueEmailReminders, dispatchDuePushReminders, type ReminderDispatchStore, type ReminderMailer, type ReminderPushDispatchStore, type ReminderPusher } from '../../src/services/reminder-dispatch-service';
 
 const NOW = new Date('2026-05-11T11:30:00.000Z');
 
@@ -16,6 +16,33 @@ function createStore(overrides: Partial<ReminderDispatchStore> = {}): ReminderDi
     claimEmailDispatch: vi.fn().mockResolvedValue({ claimed: true, dispatchId: 'dispatch-1' }),
     markEmailDispatchSent: vi.fn().mockResolvedValue(undefined),
     markEmailDispatchFailed: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  };
+}
+
+
+
+function createPushStore(overrides: Partial<ReminderPushDispatchStore> = {}): ReminderPushDispatchStore {
+  return {
+    findDuePushCandidates: vi.fn().mockResolvedValue([
+      {
+        cardId: 'card-1',
+        title: '오늘 21시 고날에프 1회',
+        scheduledAt: '2026-05-11T12:00:00.000Z',
+        recipientEmail: 'user@example.com',
+        pushSubscriptions: [{ endpoint: 'https://push.example.test/1', keys: { p256dh: 'key', auth: 'auth' } }],
+      },
+    ]),
+    claimPushDispatch: vi.fn().mockResolvedValue({ claimed: true, dispatchId: 'dispatch-1' }),
+    markPushDispatchSent: vi.fn().mockResolvedValue(undefined),
+    markPushDispatchFailed: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  };
+}
+
+function createPusher(overrides: Partial<ReminderPusher> = {}): ReminderPusher {
+  return {
+    send: vi.fn().mockResolvedValue({ providerMessageId: 'push-1' }),
     ...overrides,
   };
 }
@@ -70,5 +97,43 @@ describe('dispatchDueEmailReminders', () => {
 
     expect(store.markEmailDispatchFailed).toHaveBeenCalledWith({ dispatchId: 'dispatch-1', error: 'provider rejected' });
     expect(result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
+  });
+});
+
+describe('dispatchDuePushReminders', () => {
+  it('claims T-60/T-15 push windows before sending safe web push payloads', async () => {
+    const store = createPushStore();
+    const pusher = createPusher();
+
+    const result = await dispatchDuePushReminders({ store, pusher, now: NOW, appUrl: 'https://project-oznp0.vercel.app' });
+
+    expect(store.findDuePushCandidates).toHaveBeenCalledWith({
+      channel: 'web_push_t60',
+      offsetMinutes: 60,
+      startsAt: '2026-05-11T12:29:00.000Z',
+      endsAt: '2026-05-11T12:31:00.000Z',
+    });
+    expect(store.findDuePushCandidates).toHaveBeenCalledWith({
+      channel: 'web_push_t15',
+      offsetMinutes: 15,
+      startsAt: '2026-05-11T11:44:00.000Z',
+      endsAt: '2026-05-11T11:46:00.000Z',
+    });
+    expect(store.claimPushDispatch).toHaveBeenCalledWith({
+      cardId: 'card-1',
+      scheduledAt: '2026-05-11T12:00:00.000Z',
+      channel: 'web_push_t60',
+    });
+    expect(pusher.send).toHaveBeenCalledWith({
+      subscription: { endpoint: 'https://push.example.test/1', keys: { p256dh: 'key', auth: 'auth' } },
+      payload: {
+        title: '오늘 21시 고날에프 1회',
+        body: '예정 시간: 2026. 5. 11. 오후 9:00',
+        url: '/home',
+        tag: 'fevio-reminder-card-1',
+      },
+    });
+    expect(store.markPushDispatchSent).toHaveBeenCalledWith({ dispatchId: 'dispatch-1', providerMessageId: 'push-1' });
+    expect(result).toEqual({ candidates: 2, sent: 2, skipped: 0, failed: 0 });
   });
 });

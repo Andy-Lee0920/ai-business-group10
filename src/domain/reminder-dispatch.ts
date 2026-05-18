@@ -12,7 +12,34 @@ export type ReminderEmail = {
 };
 
 const REMINDER_LEAD_MINUTES = 30;
+const PUSH_REMINDER_OFFSETS = [60, 15] as const;
 const WINDOW_RADIUS_MINUTES = 1;
+
+export type ReminderPushWindow = {
+  channel: `web_push_t${typeof PUSH_REMINDER_OFFSETS[number]}`;
+  offsetMinutes: typeof PUSH_REMINDER_OFFSETS[number];
+  startsAt: string;
+  endsAt: string;
+};
+
+export type ReminderPushPayload = {
+  title: string;
+  body: string;
+  url: '/home';
+  tag: string;
+};
+
+export function getReminderPushWindows(now: Date): ReminderPushWindow[] {
+  return PUSH_REMINDER_OFFSETS.map((offsetMinutes) => {
+    const center = now.getTime() + offsetMinutes * 60_000;
+    return {
+      channel: `web_push_t${offsetMinutes}` as const,
+      offsetMinutes,
+      startsAt: new Date(center - WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
+      endsAt: new Date(center + WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
+    };
+  });
+}
 
 export function getReminderWindow(now: Date) {
   const center = now.getTime() + REMINDER_LEAD_MINUTES * 60_000;
@@ -26,6 +53,20 @@ export function shouldDispatchReminder(candidate: ReminderCandidate, now: Date) 
   const { startsAt, endsAt } = getReminderWindow(now);
   const scheduledAt = new Date(candidate.scheduledAt).getTime();
   return scheduledAt >= new Date(startsAt).getTime() && scheduledAt <= new Date(endsAt).getTime();
+}
+
+export function buildReminderPushPayload({
+  candidate,
+}: {
+  candidate: ReminderCandidate;
+  appUrl: string;
+}): ReminderPushPayload {
+  return {
+    title: candidate.title,
+    body: `예정 시간: ${formatKoreanTime(candidate.scheduledAt)}`,
+    url: '/home',
+    tag: `fevio-reminder-${candidate.cardId}`,
+  };
 }
 
 export function buildReminderEmail({
