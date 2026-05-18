@@ -107,7 +107,7 @@ export function RecordsScreen({ items, receipts = [] }: RecordsScreenProps) {
           <div style={sheetHandleBarStyle} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
             <div>
-              <p style={{ fontSize: 12, color: 'var(--slc-coral)', fontWeight: 900, margin: '0 0 4px' }}>영수증 입력</p>
+              <span style={{ display: 'inline-block', fontSize: 12, color: 'var(--fevio-sage-dark)', fontWeight: 900, margin: '0 0 4px' }}>영수증 입력</span>
               <h2 style={{ color: 'var(--slc-text)', fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', margin: 0 }}>
                 비용도 함께 기록해요
               </h2>
@@ -172,7 +172,7 @@ function CycleDayHero({ cycleDay }: { cycleDay: number | null }) {
   return (
     <section aria-label="시술 사이클 요약" style={{ padding: '0 16px 14px' }}>
       <div data-testid="records-cycle-day-hero" style={cycleDayHeroStyle}>
-        <p style={{ margin: '0 0 4px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시작일 기준</p>
+        <span style={{ display: 'inline-block', margin: '0 0 4px', color: 'var(--fevio-sage-dark)', fontSize: 12, fontWeight: 900 }}>시작일 기준</span>
         <p style={{ margin: 0, color: 'var(--slc-text)', fontSize: 26, fontWeight: 950, letterSpacing: '-0.05em', lineHeight: 1.2 }}>
           {cycleDay === null ? (
             <>주사 시작일을 기다려요</>
@@ -221,7 +221,7 @@ function FinancialOverview({ summary, receipts }: { summary: FinancialSummary; r
     <div data-testid="records-financial-overview" style={financialCardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <p style={{ margin: '0 0 4px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>이번 사이클 실부담</p>
+          <span style={{ display: 'inline-block', margin: '0 0 4px', color: 'var(--fevio-sage-dark)', fontSize: 12, fontWeight: 900 }}>이번 사이클 실부담</span>
           <strong style={{ display: 'block', color: 'var(--slc-text)', fontSize: 30, fontWeight: 950, letterSpacing: '-0.06em', lineHeight: 1.05 }}>
             {formatWon(summary.net)}
           </strong>

@@ -53,4 +53,19 @@ describe('SLC color token contract', () => {
     expect(more).not.toContain("muted ? 'var(--slc-muted)' : 'var(--slc-coral)'");
   });
 
+
+  it('keeps records screen section labels away from coral while preserving action/alert colors', () => {
+    const records = readFileSync('src/features/records/records-screen.tsx', 'utf8');
+
+    expect(records).not.toContain("영수증 입력</p>");
+    expect(records).toContain("영수증 입력</span>");
+    expect(records).not.toContain("시작일 기준</p>");
+    expect(records).toContain("시작일 기준</span>");
+    expect(records).not.toContain("이번 사이클 실부담</p>");
+    expect(records).toContain("이번 사이클 실부담</span>");
+
+    expect(records).toContain('role="alert" style={{ color: \'var(--slc-coral)\'');
+    expect(records).toContain("sheetSubmitStyle");
+  });
+
 });
