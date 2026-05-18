@@ -1,0 +1,38 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+describe('PWA push infrastructure contract', () => {
+  it('stores push subscriptions in an authenticated RLS table without clinic payload columns', () => {
+    const migration = readFileSync('supabase/migrations/202605190001_push_subscriptions.sql', 'utf8');
+
+    expect(migration).toContain('create table if not exists public.push_subscriptions');
+    expect(migration).toContain('user_id uuid not null references auth.users(id) on delete cascade');
+    expect(migration).toContain('endpoint text not null unique');
+    expect(migration).toContain('subscription jsonb not null');
+    expect(migration).toContain('alter table public.push_subscriptions enable row level security');
+    expect(migration).toContain('auth.uid() = user_id');
+    expect(migration).not.toMatch(/memo|clinic_note|dose|diagnosis|raw_text/u);
+  });
+
+  it('handles push notification display and opens /home from notification clicks', () => {
+    const worker = readFileSync('public/sw.js', 'utf8');
+
+    expect(worker).toContain("addEventListener('push'");
+    expect(worker).toContain('showNotification');
+    expect(worker).toContain("url: '/home'");
+    expect(worker).toContain("addEventListener('notificationclick'");
+    expect(worker).toContain('clients.openWindow');
+  });
+
+  it('exposes a browser subscribe helper and wires the home bell to request permission', () => {
+    const client = readFileSync('src/lib/pwa-push-client.ts', 'utf8');
+    const home = readFileSync('src/features/today/today-screen.tsx', 'utf8');
+
+    expect(client).toContain('enablePushReminderSubscription');
+    expect(client).toContain("navigator.serviceWorker.register('/sw.js')");
+    expect(client).toContain('Notification.requestPermission()');
+    expect(client).toContain("fetch('/api/push/subscribe'");
+    expect(home).toContain('enablePushReminderSubscription');
+    expect(home).toContain('data-push-subscription-status');
+  });
+});

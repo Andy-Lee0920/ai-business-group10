@@ -17,6 +17,7 @@ import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
 import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
 import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-date';
 import { isInInjectionCountdownWindow, secondsUntilInjection } from '../adaptive-home/injection-timing';
+import { enablePushReminderSubscription, type PushReminderSubscriptionStatus } from '../../lib/pwa-push-client';
 import styles from './today-screen.module.css';
 
 interface TodayScreenProps {
@@ -48,6 +49,7 @@ export function TodayScreen({
   const [confirmPortal, setConfirmPortal] = useState<HTMLElement | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
   const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [pushSubscriptionStatus, setPushSubscriptionStatus] = useState<PushReminderSubscriptionStatus>('idle');
   const [reminderPreferenceLoaded, setReminderPreferenceLoaded] = useState(false);
   const [sheetLiftActive, setSheetLiftActive] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -117,6 +119,19 @@ export function TodayScreen({
   const hasSelectedDaySchedule = visibleItems.length > 0 || Boolean(clinicFollowUpItem);
   const postClinicBannerState = useMemo(() => resolvePostClinicBannerState(items), [items]);
 
+  const handleReminderToggle = useCallback(async () => {
+    if (reminderEnabled) {
+      setReminderEnabled(false);
+      setPushSubscriptionStatus('idle');
+      return;
+    }
+
+    setPushSubscriptionStatus('requesting');
+    const status = await enablePushReminderSubscription();
+    setPushSubscriptionStatus(status);
+    if (status === 'subscribed') setReminderEnabled(true);
+  }, [reminderEnabled]);
+
   const handleComplete = useCallback(async (site?: InjectionSite) => {
     if (!activeItem) return;
     const completedId = activeItem.id;
@@ -142,7 +157,7 @@ export function TodayScreen({
           flexDirection: 'column',
         }}
       >
-        <Header reminderEnabled={reminderEnabled} onToggleReminder={() => setReminderEnabled((value) => !value)} />
+        <Header reminderEnabled={reminderEnabled} onToggleReminder={handleReminderToggle} pushSubscriptionStatus={pushSubscriptionStatus} />
         <HeroZone story={heroStory} onCta={setActiveItem} />
       </div>
 
@@ -552,7 +567,7 @@ const heroCtaStyle = {
   marginTop: 2,
 } as const;
 
-function Header({ reminderEnabled, onToggleReminder }: { reminderEnabled: boolean; onToggleReminder: () => void }) {
+function Header({ reminderEnabled, onToggleReminder, pushSubscriptionStatus }: { reminderEnabled: boolean; onToggleReminder: () => void; pushSubscriptionStatus: PushReminderSubscriptionStatus }) {
   const today = new Date();
   const ReminderIcon = reminderEnabled ? Bell : BellOff;
   return (
@@ -568,6 +583,7 @@ function Header({ reminderEnabled, onToggleReminder }: { reminderEnabled: boolea
         aria-pressed={reminderEnabled}
         aria-label={reminderEnabled ? '홈 알림 끄기' : '홈 알림 켜기'}
         data-reminder-state={reminderEnabled ? 'on' : 'off'}
+        data-push-subscription-status={pushSubscriptionStatus}
         data-testid="home-reminder-toggle"
         onClick={onToggleReminder}
         style={reminderToggleStyle(reminderEnabled)}
