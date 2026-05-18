@@ -1,5 +1,5 @@
-import type { ReminderCandidate } from '../domain/reminder-dispatch';
-import type { ReminderDispatchStore, ReminderDispatchWindow } from '../services/reminder-dispatch-service';
+import type { ReminderCandidate, ReminderPushWindow } from '../domain/reminder-dispatch';
+import type { ReminderDispatchStore, ReminderDispatchWindow, ReminderPushCandidate, ReminderPushDispatchStore, ReminderPushSubscription } from '../services/reminder-dispatch-service';
 
 type DbError = { code?: string; message: string };
 type RpcResult<T> = { data: T[] | null; error: DbError | null };
@@ -25,7 +25,14 @@ type DueReminderRow = {
   recipient_email: string;
 };
 
-export class SupabaseReminderDispatchStore implements ReminderDispatchStore {
+type DuePushReminderRow = {
+  card_id: string;
+  title: string;
+  scheduled_at: string;
+  push_subscriptions: unknown;
+};
+
+export class SupabaseReminderDispatchStore implements ReminderDispatchStore, ReminderPushDispatchStore {
   constructor(private readonly supabase: ReminderSupabaseClient) {}
 
   async findDueEmailCandidates(window: ReminderDispatchWindow): Promise<ReminderCandidate[]> {
@@ -41,6 +48,51 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore {
       scheduledAt: row.scheduled_at,
       recipientEmail: row.recipient_email,
     }));
+  }
+
+
+  async findDuePushCandidates(window: ReminderPushWindow): Promise<ReminderPushCandidate[]> {
+    const result = await this.supabase.rpc<DuePushReminderRow>('get_due_web_push_reminder_candidates', {
+      p_window_start: window.startsAt,
+      p_window_end: window.endsAt,
+      p_channel: window.channel,
+    });
+    if (result.error) throw new Error(result.error.message);
+
+    return (result.data ?? []).map((row) => ({
+      cardId: row.card_id,
+      title: row.title,
+      scheduledAt: row.scheduled_at,
+      recipientEmail: '',
+      pushSubscriptions: normalizePushSubscriptions(row.push_subscriptions),
+    })).filter((candidate) => candidate.pushSubscriptions.length > 0);
+  }
+
+  async claimPushDispatch(input: { cardId: string; scheduledAt: string; channel: ReminderPushWindow['channel'] }) {
+    const result = await this.supabase
+      .from('reminder_dispatches')
+      .insert({
+        card_id: input.cardId,
+        scheduled_at: input.scheduledAt,
+        channel: input.channel,
+        status: 'queued',
+      })
+      .select('id')
+      .single();
+
+    if (result.error) {
+      if (isUniqueViolation(result.error)) return { claimed: false };
+      throw new Error(result.error.message);
+    }
+    return result.data?.id ? { claimed: true, dispatchId: result.data.id } : { claimed: false };
+  }
+
+  async markPushDispatchSent(input: { dispatchId: string; providerMessageId: string | null }) {
+    await this.markDispatchSent(input);
+  }
+
+  async markPushDispatchFailed(input: { dispatchId: string; error: string }) {
+    await this.markDispatchFailed(input);
   }
 
   async claimEmailDispatch(input: { cardId: string; scheduledAt: string; recipientEmail: string }) {
@@ -64,6 +116,14 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore {
   }
 
   async markEmailDispatchSent(input: { dispatchId: string; providerMessageId: string | null }) {
+    await this.markDispatchSent(input);
+  }
+
+  async markEmailDispatchFailed(input: { dispatchId: string; error: string }) {
+    await this.markDispatchFailed(input);
+  }
+
+  private async markDispatchSent(input: { dispatchId: string; providerMessageId: string | null }) {
     await this.supabase
       .from('reminder_dispatches')
       .update({
@@ -75,7 +135,7 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore {
       .eq('id', input.dispatchId);
   }
 
-  async markEmailDispatchFailed(input: { dispatchId: string; error: string }) {
+  private async markDispatchFailed(input: { dispatchId: string; error: string }) {
     await this.supabase
       .from('reminder_dispatches')
       .update({
@@ -89,4 +149,16 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore {
 
 function isUniqueViolation(error: DbError) {
   return error.code === '23505' || /duplicate|unique/i.test(error.message);
+}
+
+function normalizePushSubscriptions(value: unknown): ReminderPushSubscription[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const candidate = item as Record<string, unknown>;
+    const keys = candidate.keys as Record<string, unknown> | undefined;
+    if (typeof candidate.endpoint !== 'string' || !keys) return [];
+    if (typeof keys.p256dh !== 'string' || typeof keys.auth !== 'string') return [];
+    return [{ endpoint: candidate.endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } }];
+  });
 }

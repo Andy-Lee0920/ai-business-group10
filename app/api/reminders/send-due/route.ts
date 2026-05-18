@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseReminderDispatchStore } from '../../../../src/lib/reminder-dispatch-repository';
-import { ResendReminderMailer, requireReminderMailerConfig } from '../../../../src/lib/resend-reminder-mailer';
 import { createSupabaseServiceRoleClient } from '../../../../src/lib/server-supabase-admin';
-import { dispatchDueEmailReminders } from '../../../../src/services/reminder-dispatch-service';
+import { requireWebPushConfig, WebPushReminderPusher } from '../../../../src/lib/web-push-reminder-pusher';
+import { dispatchDuePushReminders } from '../../../../src/services/reminder-dispatch-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +21,11 @@ async function dispatch(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized reminder dispatch.' }, { status: 401 });
   }
 
-  const config = requireReminderMailerConfig();
+  const config = requireWebPushConfig();
   const supabase = createSupabaseServiceRoleClient();
-  const result = await dispatchDueEmailReminders({
+  const result = await dispatchDuePushReminders({
     store: new SupabaseReminderDispatchStore(supabase as never),
-    mailer: new ResendReminderMailer(config.apiKey, config.fromEmail),
+    pusher: new WebPushReminderPusher(config),
     now: new Date(),
     appUrl: process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin,
   });

@@ -7,6 +7,14 @@ vi.mock('../../src/lib/server-supabase-admin', () => ({
   createSupabaseServiceRoleClient: vi.fn(),
 }));
 
+
+vi.mock('web-push', () => ({
+  default: {
+    setVapidDetails: vi.fn(),
+    sendNotification: vi.fn().mockResolvedValue({ statusCode: 201, headers: { location: 'push-message-1' } }),
+  },
+}));
+
 const mockedCreateSupabase = vi.mocked(createSupabaseServiceRoleClient);
 
 function request(secret = 'test-secret') {
@@ -22,7 +30,9 @@ function createSupabaseMock() {
         card_id: 'card-1',
         title: '오늘 21시 고날에프 1회',
         scheduled_at: '2026-05-11T12:00:00.000Z',
-        recipient_email: 'user@example.com',
+        push_subscriptions: [
+          { endpoint: 'https://push.example.test/1', keys: { p256dh: 'key-material', auth: 'auth-material' } },
+        ],
       },
     ],
     error: null,
@@ -44,18 +54,17 @@ describe('/api/reminders/send-due', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-11T11:30:00.000Z'));
+    vi.unstubAllEnvs();
     vi.stubEnv('REMINDER_DISPATCH_SECRET', 'test-secret');
-    vi.stubEnv('RESEND_API_KEY', 'resend-test-key');
-    vi.stubEnv('REMINDER_FROM_EMAIL', 'Fevio <reminders@example.com>');
+    vi.stubEnv('VAPID_PUBLIC_KEY', 'public-key');
+    vi.stubEnv('VAPID_PRIVATE_KEY', 'private-key');
+    vi.stubEnv('VAPID_SUBJECT', 'mailto:reminders@example.com');
     vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://project-oznp0.vercel.app');
     vi.clearAllMocks();
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({ id: 'msg-1' }),
-    }) as never;
+    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as never;
   });
 
-  it('dispatches due reminders once through service role and Resend', async () => {
+  it('dispatches due reminders once through service role and Web Push, not Resend', async () => {
     const supabase = createSupabaseMock();
     mockedCreateSupabase.mockReturnValue(supabase as never);
 
@@ -63,28 +72,29 @@ describe('/api/reminders/send-due', () => {
     const payload = (await response.json()) as { result: { candidates: number; sent: number; skipped: number; failed: number } };
 
     expect(response.status).toBe(200);
-    expect(supabase.rpc).toHaveBeenCalledWith('get_due_email_reminder_candidates', {
-      p_window_start: '2026-05-11T11:59:00.000Z',
-      p_window_end: '2026-05-11T12:01:00.000Z',
+    expect(supabase.rpc).toHaveBeenCalledWith('get_due_web_push_reminder_candidates', {
+      p_window_start: '2026-05-11T12:29:00.000Z',
+      p_window_end: '2026-05-11T12:31:00.000Z',
+      p_channel: 'web_push_t60',
+    });
+    expect(supabase.rpc).toHaveBeenCalledWith('get_due_web_push_reminder_candidates', {
+      p_window_start: '2026-05-11T11:44:00.000Z',
+      p_window_end: '2026-05-11T11:46:00.000Z',
+      p_channel: 'web_push_t15',
     });
     expect(supabase.insertChain.insert).toHaveBeenCalledWith(expect.objectContaining({
       card_id: 'card-1',
       scheduled_at: '2026-05-11T12:00:00.000Z',
-      channel: 'email',
+      channel: 'web_push_t60',
       status: 'queued',
-      recipient_email: 'user@example.com',
     }));
-    expect(global.fetch).toHaveBeenCalledWith('https://api.resend.com/emails', expect.objectContaining({
-      method: 'POST',
-      headers: expect.objectContaining({ authorization: 'Bearer resend-test-key' }),
-      body: expect.stringContaining('오늘 21시 고날에프 1회'),
-    }));
+    expect(global.fetch).not.toHaveBeenCalledWith('https://api.resend.com/emails', expect.anything());
     expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
       status: 'sent',
-      provider_message_id: 'msg-1',
+      provider_message_id: expect.any(String),
       sent_at: expect.any(String),
     }));
-    expect(payload.result).toEqual({ candidates: 1, sent: 1, skipped: 0, failed: 0 });
+    expect(payload.result).toEqual({ candidates: 2, sent: 2, skipped: 0, failed: 0 });
   });
 
   it('rejects unauthenticated scheduler calls', async () => {
