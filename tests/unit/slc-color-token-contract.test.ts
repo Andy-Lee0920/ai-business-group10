@@ -89,6 +89,8 @@ describe('SLC color token contract', () => {
     expect(records).toContain('fill="var(--fevio-sage-dark)"');
     expect(records).not.toContain("color: 'var(--slc-coral)', fontWeight: 900 }}>{info.action}</p>");
     expect(records).toContain("color: 'var(--fevio-sage-dark)', fontWeight: 900 }}>{info.action}</p>");
+    expect(records).not.toContain("const receiptCountBadgeStyle = {\n  flex: '0 0 auto',\n  padding: '7px 11px',\n  borderRadius: 999,\n  background: 'var(--slc-coral-light)',\n  color: 'var(--slc-coral)'");
+    expect(records).toContain("const receiptCountBadgeStyle = {\n  flex: '0 0 auto',\n  padding: '7px 11px',\n  borderRadius: 999,\n  background: 'var(--slc-surface-warm)',\n  color: 'var(--fevio-sage-dark)'");
   });
 
 

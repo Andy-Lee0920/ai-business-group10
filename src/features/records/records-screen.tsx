@@ -475,8 +475,8 @@ const receiptCountBadgeStyle = {
   flex: '0 0 auto',
   padding: '7px 11px',
   borderRadius: 999,
-  background: 'var(--slc-coral-light)',
-  color: 'var(--slc-coral)',
+  background: 'var(--slc-surface-warm)',
+  color: 'var(--fevio-sage-dark)',
   fontSize: 12,
   fontWeight: 900,
 } as const;
