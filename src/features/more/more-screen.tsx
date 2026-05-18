@@ -140,7 +140,7 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
         {inviteCode ? (
           <div style={{ margin: '0 14px 14px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
             <PartnerCardHeader title="초대 코드 · 읽기 전용 연결" muted />
-            <p style={{ fontSize: 12, color: 'var(--slc-coral)', fontFamily: 'monospace', margin: '0 0 12px', wordBreak: 'break-all' }}>
+            <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontFamily: 'monospace', margin: '0 0 12px', wordBreak: 'break-all' }}>
               {typeof window !== 'undefined' ? `${window.location.origin}/invite/${inviteCode}` : `/invite/${inviteCode}`}
             </p>
             <button onClick={copyLink} style={pillButtonStyle('primary')}>{copied ? '복사됨 ✓' : '링크 복사'}</button>

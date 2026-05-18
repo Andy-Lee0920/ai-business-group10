@@ -53,6 +53,14 @@ describe('SLC color token contract', () => {
     expect(more).not.toContain("muted ? 'var(--slc-muted)' : 'var(--slc-coral)'");
   });
 
+  it('keeps raw partner invite links neutral while preserving More primary actions', () => {
+    const more = readFileSync('src/features/more/more-screen.tsx', 'utf8');
+
+    expect(more).not.toContain("color: 'var(--slc-coral)', fontFamily: 'monospace'");
+    expect(more).toContain("color: 'var(--slc-muted)', fontFamily: 'monospace'");
+    expect(more).toContain("background: tone === 'primary' ? 'var(--slc-coral)' : 'var(--slc-border)'");
+  });
+
 
   it('keeps records screen section labels away from coral while preserving action/alert colors', () => {
     const records = readFileSync('src/features/records/records-screen.tsx', 'utf8');
