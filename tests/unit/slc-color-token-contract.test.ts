@@ -29,4 +29,14 @@ describe('SLC color token contract', () => {
     expect(presentationCalendar).toContain("item.status === 'completed') return 'var(--slc-success)'");
     expect(presentationCalendar).not.toContain("item.status === 'completed') return 'var(--slc-coral)'");
   });
+
+  it('keeps non-action privacy gate icons and eyebrow away from coral', () => {
+    const privacy = readFileSync('app/privacy/page.tsx', 'utf8');
+    expect(privacy).not.toContain("color: 'var(--slc-coral)'",
+    );
+    expect(privacy).toContain("color: 'var(--slc-muted)'");
+    expect(privacy).toContain("color: 'var(--fevio-sage-dark)'");
+    expect(privacy).toContain('var(--slc-coral-gradient)');
+  });
+
 });

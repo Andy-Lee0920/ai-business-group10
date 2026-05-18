@@ -50,8 +50,8 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
             borderRadius: 24,
             display: 'grid',
             placeItems: 'center',
-            background: '#FFF8F4',
-            color: 'var(--slc-coral)',
+            background: '#F4F7F1',
+            color: 'var(--fevio-sage-dark)',
             boxShadow: '0 18px 38px rgba(149, 94, 72, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.88)',
             marginBottom: 34,
           }}
@@ -59,7 +59,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
           <ShieldIcon />
         </span>
 
-        <p style={{ margin: '0 0 12px', color: 'var(--slc-coral)', fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em' }}>
+        <p style={{ margin: '0 0 12px', color: 'var(--slc-muted)', fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em' }}>
           개인정보 보호 안내
         </p>
         <h1
@@ -86,7 +86,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
             이 정보는 오늘 할 일, 기록, 파트너 읽기 전용 화면을 만들기 위해 사용됩니다.
           </PrivacyInfoRow>
           <PrivacyInfoRow icon="book" isLast>
-            자세한 내용은 <Link href="/privacy#details" style={{ color: 'var(--slc-coral)', fontWeight: 800 }}>개인정보 안내</Link>에서 확인할 수 있습니다.
+            자세한 내용은 <Link href="/privacy#details" style={{ color: 'var(--fevio-sage-dark)', fontWeight: 800 }}>개인정보 안내</Link>에서 확인할 수 있습니다.
           </PrivacyInfoRow>
         </div>
 
@@ -99,7 +99,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
               minHeight: 66,
               border: 0,
               borderRadius: 999,
-              background: 'linear-gradient(135deg, #E96E5B 0%, #D15B49 100%)',
+              background: 'var(--slc-coral-gradient)',
               color: '#fff',
               fontSize: 20,
               fontWeight: 900,
@@ -165,8 +165,8 @@ function PrivacyInfoRow({ icon, children, isLast = false }: { icon: 'person' | '
           width: 50,
           height: 50,
           borderRadius: 18,
-          background: '#FFF4EF',
-          color: 'var(--slc-coral)',
+          background: 'var(--slc-surface-warm)',
+          color: 'var(--slc-muted)',
           display: 'grid',
           placeItems: 'center',
         }}
