@@ -68,4 +68,17 @@ describe('SLC color token contract', () => {
     expect(records).toContain("sheetSubmitStyle");
   });
 
+
+  it('keeps clinic update review labels away from coral while preserving selected-state accents', () => {
+    const clinicUpdate = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');
+
+    expect(clinicUpdate).not.toContain("<h2 style={{ ...sectionTitleStyle, color: 'var(--slc-coral)' }}>정리된 내용</h2>");
+    expect(clinicUpdate).toContain("<h2 style={{ ...sectionTitleStyle, color: 'var(--slc-text)' }}>정리된 내용</h2>");
+    expect(clinicUpdate).not.toContain("<strong style={{ color: 'var(--slc-coral)' }}>AI 질문</strong>");
+    expect(clinicUpdate).toContain("<strong style={{ color: 'var(--slc-muted)' }}>AI 질문</strong>");
+
+    expect(clinicUpdate).toContain("active ? 'var(--slc-coral)' : '#EFE4DC'");
+    expect(clinicUpdate).toContain("background: active ? 'var(--slc-coral-light)' : '#fff'");
+  });
+
 });

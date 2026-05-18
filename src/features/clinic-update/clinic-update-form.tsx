@@ -878,7 +878,7 @@ function QuestionCard({ icon, title, lead, children }: { icon?: string; title: s
 function DraftPanel({ medicationNames, nextVisit, memo, aiDraft }: { medicationNames: string[]; nextVisit: string; memo: string; aiDraft: Partial<ClinicUpdate> }) {
   return (
     <section style={panelStyle} aria-label="정리된 내용">
-      <h2 style={{ ...sectionTitleStyle, color: 'var(--slc-coral)' }}>정리된 내용</h2>
+      <h2 style={{ ...sectionTitleStyle, color: 'var(--slc-text)' }}>정리된 내용</h2>
       <p>• 새 약: {medicationNames.length ? medicationNames.join(', ') : '없음'}</p>
       <p>• 다음 방문: {nextVisit}</p>
       <p>• 메모: {memo || aiDraft.memo || '없음'}</p>
@@ -892,7 +892,7 @@ function AiInterviewPanel({ question, chips, loading, error, available }: { ques
   if (!available) return null;
   return (
     <section style={aiPanelStyle} aria-label="Clinic Guide AI 질문">
-      <strong style={{ color: 'var(--slc-coral)' }}>AI 질문</strong>
+      <strong style={{ color: 'var(--slc-muted)' }}>AI 질문</strong>
       <p style={{ margin: '8px 0', color: 'var(--slc-text)', fontWeight: 800 }}>{loading ? '다음 질문을 정리하고 있어요...' : question}</p>
       {chips.length ? <div style={chipRowStyle}>{chips.slice(0, 4).map((chip) => <span key={chip} style={aiChipStyle}>{chip}</span>)}</div> : null}
       {error ? <p style={safeNoteStyle}>{error}</p> : null}
