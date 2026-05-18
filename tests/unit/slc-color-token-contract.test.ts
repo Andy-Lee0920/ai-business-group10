@@ -91,4 +91,14 @@ describe('SLC color token contract', () => {
     expect(editForm).toContain("color: 'var(--slc-coral)'");
   });
 
+
+  it('keeps partner projection status labels from using coral as informational color', () => {
+    const partnerView = readFileSync('src/features/partner/partner-view.tsx', 'utf8');
+
+    expect(partnerView).not.toContain("color: 'var(--slc-coral)', fontWeight: 600, margin: 0 }}>오늘 병원 방문 후 일정이 변경됐어요");
+    expect(partnerView).toContain("color: 'var(--slc-warning)', fontWeight: 600, margin: 0 }}>오늘 병원 방문 후 일정이 변경됐어요");
+    expect(partnerView).not.toContain("color: 'var(--slc-coral)', fontWeight: 600 }}>읽기 전용</span>");
+    expect(partnerView).toContain("color: 'var(--slc-muted)', fontWeight: 600 }}>읽기 전용</span>");
+  });
+
 });

@@ -30,7 +30,7 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
 
       {latestClinicUpdate && (
         <div style={{ background: '#FFF8F5', borderRadius: 16, padding: '14px 18px', border: '1.5px solid #F4D4C8', marginBottom: 20 }}>
-          <p style={{ fontSize: 13, color: 'var(--slc-coral)', fontWeight: 600, margin: 0 }}>오늘 병원 방문 후 일정이 변경됐어요</p>
+          <p style={{ fontSize: 13, color: 'var(--slc-warning)', fontWeight: 600, margin: 0 }}>오늘 병원 방문 후 일정이 변경됐어요</p>
         </div>
       )}
 
@@ -47,7 +47,7 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
                 marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
                 <span style={{ fontSize: 15, color: '#6B5E55' }}>{time} {item.title} {completedLabel(item.type)}했어요</span>
-                <span style={{ fontSize: 12, color: 'var(--slc-coral)', fontWeight: 600 }}>읽기 전용</span>
+                <span style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 600 }}>읽기 전용</span>
               </div>
             );
           })}
