@@ -58,7 +58,7 @@ export function ScheduleEditForm({ item }: ScheduleEditFormProps) {
     <main style={pageStyle}>
       <Link href="/home" style={backLinkStyle}>‹ 홈으로</Link>
       <header style={{ margin: '18px 0 20px' }}>
-        <p style={{ margin: '0 0 5px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>일정 수정</p>
+        <p style={{ margin: '0 0 5px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>일정 수정</p>
         <h1 style={{ margin: 0, color: 'var(--slc-text)', fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em' }}>등록한 내용을 고칠게요</h1>
         <p style={{ margin: '9px 0 0', color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.5 }}>병원 안내와 다르게 저장된 이름, 시간, 용량만 직접 수정해 주세요.</p>
       </header>

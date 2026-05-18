@@ -81,4 +81,14 @@ describe('SLC color token contract', () => {
     expect(clinicUpdate).toContain("background: active ? 'var(--slc-coral-light)' : '#fff'");
   });
 
+
+  it('keeps schedule edit header label neutral while preserving destructive/action affordances', () => {
+    const editForm = readFileSync('src/features/schedule/schedule-edit-form.tsx', 'utf8');
+
+    expect(editForm).not.toContain("<p style={{ margin: '0 0 5px', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>일정 수정</p>");
+    expect(editForm).toContain("<p style={{ margin: '0 0 5px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>일정 수정</p>");
+    expect(editForm).toContain("background: 'var(--slc-coral)'");
+    expect(editForm).toContain("color: 'var(--slc-coral)'");
+  });
+
 });
