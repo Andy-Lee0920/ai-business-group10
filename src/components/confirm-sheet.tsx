@@ -21,13 +21,14 @@ const TOUCH_ZONES: Array<{ site: InjectionSite; label: string; style: CSSPropert
 
 export function ConfirmSheet({ item, onComplete, onClose }: ConfirmSheetProps) {
   if (item.type !== 'injection') {
+    const copy = nonInjectionConfirmCopy(item.type);
     return (
       <div className="fevio-confirm-sheet-overlay" style={overlayStyle} onClick={onClose}>
         <div style={sheetStyle} onClick={(event) => event.stopPropagation()}>
           <div style={handleStyle} />
           <h3 style={sheetTitleStyle}>{item.title}</h3>
-          <p style={sheetDescriptionStyle}>복용을 완료했나요?</p>
-          <button type="button" onClick={() => onComplete()} style={ctaButtonStyle}>복용 완료</button>
+          <p style={sheetDescriptionStyle}>{copy.description}</p>
+          <button type="button" onClick={() => onComplete()} style={ctaButtonStyle}>{copy.cta}</button>
           <button type="button" onClick={onClose} style={cancelButtonStyle}>취소</button>
         </div>
       </div>
@@ -59,6 +60,20 @@ export function ConfirmSheet({ item, onComplete, onClose }: ConfirmSheetProps) {
       </div>
     </div>
   );
+}
+
+function nonInjectionConfirmCopy(type: Exclude<ScheduleItem['type'], 'injection'>) {
+  if (type === 'clinic') {
+    return {
+      description: '병원 방문을 완료했나요?',
+      cta: '방문 완료',
+    };
+  }
+
+  return {
+    description: '복용을 완료했나요?',
+    cta: '복용 완료',
+  };
 }
 
 const overlayStyle: CSSProperties = {

@@ -34,4 +34,46 @@ describe('SLC injection confirm sheet render contract', () => {
     expect(markup).toContain('탭하면 해당 위치로 즉시 기록됩니다');
     expect(markup).not.toContain('주사 완료');
   });
+
+  it('uses clinic-specific copy for clinic visit completion', () => {
+    const clinic: ScheduleItem = {
+      ...injection,
+      id: 'clinic-1',
+      medication_id: null,
+      type: 'clinic',
+      title: '병원 방문',
+      dose: null,
+      unit: null,
+    };
+    const markup = renderToStaticMarkup(React.createElement(ConfirmSheet, {
+      item: clinic,
+      onComplete: () => undefined,
+      onClose: () => undefined,
+    }));
+
+    expect(markup).toContain('병원 방문을 완료했나요?');
+    expect(markup).toContain('방문 완료');
+    expect(markup).not.toContain('복용을 완료했나요?');
+    expect(markup).not.toContain('복용 완료');
+  });
+
+  it('keeps medication-specific copy for medication completion', () => {
+    const medication: ScheduleItem = {
+      ...injection,
+      id: 'medication-1',
+      medication_id: 'med-1',
+      type: 'medication',
+      title: '질정',
+      dose: '1',
+      unit: '정',
+    };
+    const markup = renderToStaticMarkup(React.createElement(ConfirmSheet, {
+      item: medication,
+      onComplete: () => undefined,
+      onClose: () => undefined,
+    }));
+
+    expect(markup).toContain('복용을 완료했나요?');
+    expect(markup).toContain('복용 완료');
+  });
 });
