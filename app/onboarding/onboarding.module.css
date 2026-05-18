@@ -339,7 +339,7 @@
   place-items: center;
   border-radius: 16px;
   background: #fff4ef;
-  color: var(--slc-coral, #d8624d);
+  color: var(--fevio-sage-dark, #6e8f72);
 }
 
 .bottomDock {
@@ -566,7 +566,7 @@
 }
 
 .homePreviewCard small {
-  color: var(--slc-coral, #d8624d);
+  color: var(--fevio-sage-dark, #6e8f72);
   font-size: 0.78rem;
   font-weight: 930;
 }
@@ -600,7 +600,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 99px;
-  background: var(--slc-coral);
+  background: var(--fevio-sage-dark);
   transition: width 0.3s ease;
 }
 
@@ -771,7 +771,7 @@
 }
 
 .methodHeroCard i {
-  color: var(--slc-coral, #d8624d);
+  color: var(--fevio-sage-dark, #6e8f72);
   font-style: normal;
   font-size: 1.8rem;
   line-height: 1;

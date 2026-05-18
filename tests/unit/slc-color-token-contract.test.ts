@@ -126,6 +126,25 @@ describe('SLC color token contract', () => {
     expect(manualAdd).toContain("marginTop: 32, background: 'var(--slc-coral)', color: '#fff'");
   });
 
+  it('keeps onboarding decorative icons, preview labels, and progress away from coral', () => {
+    const onboardingCss = readFileSync('app/onboarding/onboarding.module.css', 'utf8');
+    const onboardingUi = readFileSync('src/features/onboarding/onboarding-ui.tsx', 'utf8');
+
+    for (const selector of ['.methodIcon', '.homePreviewCard small', '.methodHeroCard i']) {
+      const start = onboardingCss.indexOf(`${selector} {`);
+      const block = start >= 0 ? onboardingCss.slice(start, onboardingCss.indexOf('}', start) + 1) : '';
+      expect(block).not.toContain('var(--slc-coral');
+      expect(block).toContain('var(--fevio-sage-dark');
+    }
+    const progressBlock = onboardingCss.match(/\.candidateProgressFill\s*\{[^}]+\}/u)?.[0] ?? '';
+    expect(progressBlock).not.toContain('background: var(--slc-coral)');
+    expect(progressBlock).toContain('background: var(--fevio-sage-dark)');
+
+    expect(onboardingCss).toContain('border-color: var(--slc-coral)');
+    expect(onboardingCss).toContain('color: var(--slc-coral)');
+    expect(onboardingUi).toContain("primary: 'var(--slc-coral)'");
+  });
+
 
   it('keeps partner projection status labels from using coral as informational color', () => {
     const partnerView = readFileSync('src/features/partner/partner-view.tsx', 'utf8');
