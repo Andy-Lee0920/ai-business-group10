@@ -101,4 +101,20 @@ describe('SLC color token contract', () => {
     expect(partnerView).toContain("color: 'var(--slc-muted)', fontWeight: 600 }}>읽기 전용</span>");
   });
 
+
+  it('keeps presentation testbed labels neutral while preserving active navigation coral', () => {
+    const calendarDemo = readFileSync('src/features/presentation/presentation-calendar-demo.tsx', 'utf8');
+    const homeDemo = readFileSync('src/features/today/presentation-home-demo.tsx', 'utf8');
+    const testbedNav = readFileSync('src/features/presentation/presentation-testbed.tsx', 'utf8');
+
+    expect(calendarDemo).not.toContain("color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드");
+    expect(calendarDemo).toContain("color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드");
+    expect(homeDemo).not.toContain("color: 'var(--slc-coral)', fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em'");
+    expect(homeDemo).toContain("color: 'var(--slc-muted)', fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em'");
+    expect(homeDemo).toContain("background: 'var(--slc-surface-warm)', color: 'var(--slc-muted)'"
+    );
+    expect(testbedNav).toContain("background: active ? 'var(--slc-coral)' : 'rgba(255, 255, 255, 0.72)'"
+    );
+  });
+
 });

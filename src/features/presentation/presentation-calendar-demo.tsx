@@ -8,7 +8,7 @@ export function PresentationCalendarDemo() {
   return (
     <main data-testid="presentation-calendar-demo" style={{ minHeight: '100dvh', padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)', background: 'var(--slc-bg)' }}>
       <header style={{ marginBottom: 18, display: 'grid', gap: 10 }}>
-        <p style={{ margin: 0, color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드</p>
+        <p style={{ margin: 0, color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드</p>
         <h1 style={{ margin: 0, color: 'var(--slc-text)', fontSize: 28, letterSpacing: '-0.05em' }}>Calendar</h1>
         <p style={{ margin: 0, color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.5 }}>병원 안내가 여러 날짜 일정으로 펼쳐졌을 때의 캘린더형 확인 화면입니다.</p>
         <PresentationTestbedNav current="calendar" />

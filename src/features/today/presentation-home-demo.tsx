@@ -19,7 +19,7 @@ export function PresentationHomeDemo() {
       }}
     >
       <header style={{ maxWidth: 1040, margin: '0 auto 24px', display: 'grid', gap: 10 }}>
-        <p style={{ margin: 0, color: 'var(--slc-coral)', fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em' }}>
+        <p style={{ margin: 0, color: 'var(--slc-muted)', fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em' }}>
           Fevio scenario testbed
         </p>
         <h1 style={{ margin: 0, color: 'var(--slc-text)', fontSize: 34, lineHeight: 1.12, letterSpacing: '-0.06em' }}>
@@ -55,7 +55,7 @@ export function PresentationHomeDemo() {
             }}
           >
             <div style={{ padding: '18px 18px 14px' }}>
-              <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 999, background: '#FFF4EF', color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>
+              <span style={{ display: 'inline-flex', padding: '6px 10px', borderRadius: 999, background: 'var(--slc-surface-warm)', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>
                 {scenario.label}
               </span>
               <h2 style={{ margin: '10px 0 4px', color: 'var(--slc-text)', fontSize: 21, lineHeight: 1.18, letterSpacing: '-0.05em' }}>
