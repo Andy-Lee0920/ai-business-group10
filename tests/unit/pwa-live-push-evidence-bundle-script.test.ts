@@ -33,4 +33,19 @@ describe('live push evidence bundle scaffold', () => {
     expect(readme).toContain('l6-lockscreen.mov');
     expect(readme).toContain('Do not close #383');
   });
+
+  it('creates both Android and iOS evidence bundles with a top-level completion guide', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fevio-push-bundle-both-'));
+
+    const output = execFileSync('node', [scriptPath, '--platform', 'both', '--out-dir', dir], { encoding: 'utf8' });
+    const readme = readFileSync(join(dir, 'README.md'), 'utf8');
+
+    expect(output).toContain('android-live-push-evidence');
+    expect(output).toContain('ios-live-push-evidence');
+    expect(existsSync(join(dir, 'android-live-push-evidence', 'README.md'))).toBe(true);
+    expect(existsSync(join(dir, 'ios-live-push-evidence', 'README.md'))).toBe(true);
+    expect(readme).toContain('npm run verify:mvp:complete -- \\\n  --android-evidence-json android-live-push-evidence/evidence.json');
+    expect(readme).toContain('--ios-evidence-json ios-live-push-evidence/evidence.json');
+  });
+
 });
