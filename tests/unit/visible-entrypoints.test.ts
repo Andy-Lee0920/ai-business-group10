@@ -22,7 +22,10 @@ describe('Vercel-visible entrypoints', () => {
     expect(quick).toContain('accept="image/*"');
     expect(quick).toContain('저장됐어요');
     expect(prescription).toContain('type="file"');
-    expect(prescription).toContain('doseConfirmed');
-    expect(prescription).toContain('/api/prescription/capture');
+    expect(prescription).toContain('/api/onboard/photo-upload');
+    expect(prescription).toContain('/api/onboard/photo-analyze');
+    expect(prescription).toContain('/api/onboard/text-analyze');
+    expect(prescription).toContain('/api/onboard/candidates/confirm');
+    expect(prescription).toContain('확인 후 저장');
   });
 });
