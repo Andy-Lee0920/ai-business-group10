@@ -4,7 +4,7 @@ Objective: 사진 한 장 → confirmed care card → Home/Partner/Reminder가 �
 
 This audit is a handoff artifact, not a completion claim. Do not mark the goal complete while the remaining live-device Reds below are open.
 
-Latest audit refresh: `2026-05-19`, production commit `9e70d761bbd2`, deploy `dpl_CMmERcZxKef1jsfe7KawDnAGaeai`.
+Latest audit refresh: `2026-05-19`, audit/tooling commit `1237ef9`, production runtime commit `9e70d761bbd2`, deploy `dpl_CMmERcZxKef1jsfe7KawDnAGaeai`. Commits after `9e70d761bbd2` are guard/runbook/audit tooling only; no product runtime redeploy is required for the remaining physical-device evidence collection.
 
 ## Fixed decisions
 
@@ -34,11 +34,11 @@ Latest audit refresh: `2026-05-19`, production commit `9e70d761bbd2`, deploy `dp
 
 - Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, synthetic-card archive helper, npm live-smoke helper commands, production PWA prerequisite smoke, and GitHub-ready live-device evidence comment formatting.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 167 files / 623 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, evidence comment formatting, closure evidence guarding, service-worker notificationclick behavior coverage, and live evidence bundle scaffolding.
+- `npm test` passed: 171 files / 633 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, evidence comment formatting, closure evidence guarding, service-worker notificationclick behavior coverage, live evidence bundle scaffolding, physical-device readiness guard, and final MVP completion gate.
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
-- Latest production refresh on commit `9e70d761bbd2` passed `npm run typecheck`, `npm test` (169 files / 628 tests), `npm run build`, `npm run test:e2e` (6/6), deploy smoke, and production PWA prerequisite smoke.
+- Latest production refresh on runtime commit `9e70d761bbd2` passed `npm run typecheck`, `npm test` (169 files / 628 tests), `npm run build`, `npm run test:e2e` (6/6), deploy smoke, and production PWA prerequisite smoke. Later commits `4e67397` and `1237ef9` added local guard/runbook tooling and were verified with `npm run typecheck`, `npm test` (171 files / 633 tests), `npm run verify:mvp:readiness`, `npm run verify:push:issues`, and expected failing completion/device gates.
 
 
 ## Production PWA prerequisite smoke
@@ -144,6 +144,7 @@ Green evidence:
 
 Codex runner cannot produce the final physical-device evidence in its current state:
 
+- `npm run verify:push:devices`: Android physical device `MISSING`, iOS physical device `MISSING`.
 - `adb devices`: `adb` is not installed.
 - `xcrun xctrace list devices`: no physical iOS device surfaced.
 - USB scan: no iPhone/iPad/Android device detected.
