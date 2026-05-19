@@ -34,8 +34,9 @@ describe('MVP visible delta completion audit', () => {
       'smoke:push:bundle',
       '--platform both',
       'verify:push:closure',
-      '171 files / 633 tests',
+      '171 files / 634 tests',
       'verify:mvp:complete',
+      'post-runtime guard/runbook tooling',
     ]) {
       expect(audit).toContain(artifact);
     }
