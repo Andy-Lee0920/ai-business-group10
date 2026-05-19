@@ -13,7 +13,12 @@ This runbook is the reproducible evidence path for #382 and #383. It does not re
 ## Shared setup
 
 1. Use a test account that has accepted privacy/onboarding boundaries.
-2. Create or confirm one `care_action_cards` row for an injection/partner-visible card scheduled inside the next T-60 or T-15 reminder window.
+2. Create or confirm one `care_action_cards` row for an injection/partner-visible card scheduled inside the next T-60 or T-15 reminder window. To prepare a synthetic confirmed injection card without hand-written SQL:
+
+   ```bash
+   node scripts/prepare-pwa-live-push-card.mjs --user-id <user-id> --offset-minutes 15
+   ```
+
 3. Keep the card title synthetic or non-identifying.
 4. Mask endpoint values before posting evidence (`https://...abcd` is enough).
 5. Collect DB evidence from:
