@@ -111,8 +111,8 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('box-shadow:none');
     expect(markup).toContain('width:100%;min-height:52px');
     expect(markup).toContain('Menopur 150 IU');
-    expect(markup).toContain('다음 주사');
-    expect(markup).toContain('Cetrotide 0.25 mg');
+    expect(markup).not.toContain('다음 주사');
+    expect(markup).not.toContain('Cetrotide 0.25 mg');
     expect(markup).not.toContain('data-card-emphasis="primary"');
   });
 
@@ -144,8 +144,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('주사 준비');
     expect(markup).toContain('남은 시간');
     expect(markup).toContain('45:00');
-    expect(markup).toContain('다음 주사');
-    expect(markup).toContain('data-testid="countdown-info-block"');
+    expect(markup).not.toContain('data-testid="countdown-info-block"');
     expect(markup).toContain('min-height:52px');
     expect(markup).toContain('background:var(--slc-coral-gradient)');
   });
@@ -200,6 +199,9 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).not.toMatch(/border-left|borderLeft/u);
     expect(markup).toContain('확인이 필요한 주사가 있어요');
     expect(markup).toContain('08:00 예정된 주사 기록이 아직 완료되지 않았어요.');
+    expect(markup).not.toContain('미기록');
+    expect(markup).not.toContain('오늘 일정</span>');
+    expect(markup).not.toContain('병원 안내</span>');
     expect(markup).toContain('완료로 기록');
     expect(markup).toContain('시간 수정');
   });
@@ -327,6 +329,22 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).not.toContain('아직 사이클 기록이 없습니다');
     expect(markup).toContain('고날에프 주사');
+  });
+
+  it('shows a deterministic medication reference image for mapped injection titles only', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const mappedMarkup = render([
+      item({ id: 'ovidrel', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-14T09:30:00.000Z' }),
+    ]);
+    expect(mappedMarkup).toContain('data-testid="medication-reference-image"');
+    expect(mappedMarkup).toContain('/assets/medications/ovidrel.svg');
+    expect(mappedMarkup).toContain('확인을 돕는 참고 이미지');
+
+    const unmappedMarkup = render([
+      item({ id: 'unknown', type: 'injection', title: '하얀색 주사약', scheduled_at: '2026-05-14T09:30:00.000Z' }),
+    ]);
+    expect(unmappedMarkup).not.toContain('data-testid="medication-reference-image"');
   });
 });
 

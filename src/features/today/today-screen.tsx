@@ -16,6 +16,7 @@ import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
 import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
 import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-date';
+import { resolveMedicationReferenceAsset } from '../../domain/medication-reference-assets';
 import { isInInjectionCountdownWindow, secondsUntilInjection } from '../adaptive-home/injection-timing';
 import { enablePushReminderSubscription, type PushReminderSubscriptionStatus } from '../../lib/pwa-push-client';
 import styles from './today-screen.module.css';
@@ -30,7 +31,7 @@ interface TodayScreenProps {
 type DayOffset = 0 | 1 | 2;
 type HeroStory =
   | { kind: 'countdown'; item: ScheduleItem; nextInjection: ScheduleItem | null; focus: HomeFocus }
-  | { kind: 'overdue_backlog'; item: ScheduleItem; missedCount: number; todayCount: number; clinicCount: number }
+  | { kind: 'overdue_backlog'; item: ScheduleItem }
   | { kind: 'today_pending'; item: ScheduleItem; focus: HomeFocus }
   | { kind: 'tomorrow'; item: ScheduleItem; focus: HomeFocus }
   | { kind: 'quiet'; focus: HomeFocus };
@@ -259,7 +260,7 @@ function HeroZone({
       <div data-testid="home-hero-zone" data-focus-kind={focusKind} style={{ height: '100%' }}>
         <div style={{ height: '100%', padding: '8px 20px 22px' }}>
           {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
-          {story.kind === 'overdue_backlog' && <OverdueBacklogHero item={story.item} missedCount={story.missedCount} todayCount={story.todayCount} clinicCount={story.clinicCount} onCta={onCta} />}
+          {story.kind === 'overdue_backlog' && <OverdueBacklogHero item={story.item} onCta={onCta} />}
           {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
           {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
           {story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
@@ -295,8 +296,7 @@ function resolveHeroStory(items: ScheduleItem[], focus: HomeFocus, selectedDay: 
       ),
     );
     if (missedItems.length > 0) {
-      const todayCount = items.filter((item) => isOnDay(item.scheduled_at, 0) && item.status !== 'completed').length;
-      return { kind: 'overdue_backlog', item: missedItems[0], missedCount: missedItems.length, todayCount, clinicCount: initialClinicUpdates.length };
+      return { kind: 'overdue_backlog', item: missedItems[0] };
     }
   }
 
@@ -363,15 +363,9 @@ function QuietHeroContent({ focus, paddingTop = 60 }: { focus: HomeFocus; paddin
 
 function OverdueBacklogHero({
   item,
-  missedCount,
-  todayCount,
-  clinicCount,
   onCta,
 }: {
   item: ScheduleItem;
-  missedCount: number;
-  todayCount: number;
-  clinicCount: number;
   onCta: (item: ScheduleItem) => void;
 }) {
   const typeLabel = scheduleTypeLabel(item.type);
@@ -385,14 +379,6 @@ function OverdueBacklogHero({
         <p style={{ margin: 0, color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.55 }}>
           {formatScheduleTime(item.scheduled_at)} 예정된 {typeLabel} 기록이 아직 완료되지 않았어요.
         </p>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-        {([['미기록', missedCount], ['오늘 일정', todayCount], ['병원 안내', clinicCount]] as const).map(([label, count]) => (
-          <div key={label} style={{ borderRadius: 16, background: 'rgba(255,252,250,0.72)', border: '1px solid var(--slc-border)', padding: '10px 12px', display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11, color: 'var(--slc-muted)', fontWeight: 800 }}>{label}</span>
-            <strong style={{ fontSize: 20, color: 'var(--slc-text)', fontWeight: 900, letterSpacing: '-0.04em' }}>{count}건</strong>
-          </div>
-        ))}
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
         <button type="button" onClick={() => onCta(item)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 20px', border: 0, borderRadius: 999, background: 'var(--slc-text)', color: 'var(--slc-bg)', fontSize: 14, fontWeight: 900, fontFamily: 'inherit', textDecoration: 'none', width: 'fit-content', cursor: 'pointer' }}>
@@ -423,6 +409,7 @@ function CompactHeroCard({
         <p style={{ margin: '0 0 8px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>{eyebrow}</p>
         <QuietHeroContent focus={focus} paddingTop={0} />
       </div>
+      <MedicationReferenceImage item={item} />
       <ActionCard item={item} onCta={onCta} compact showCountdown={false} />
     </div>
   );
@@ -444,6 +431,9 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
           <strong style={{ color: 'var(--slc-text)', fontSize: 21, lineHeight: 1.18, letterSpacing: '-0.04em' }}>
             {isDueNow ? '예정 시간이 지났어요' : '천천히 준비하면 돼요'}
           </strong>
+          <p style={{ margin: '6px 0 0', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 800, lineHeight: 1.35 }}>
+            {formatScheduleTime(item.scheduled_at)} · {formatScheduleTitle(item)}
+          </p>
         </div>
         {isDueNow ? (
           <div style={dueNowPanelStyle}>
@@ -452,6 +442,7 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
           </div>
         ) : (
           <>
+            <MedicationReferenceImage item={item} compact />
             <InjectionCountdownArc totalSeconds={3600} remainingSeconds={remaining} size={196} />
             <div style={{ textAlign: 'center', marginTop: -36 }}>
               <p style={{ margin: '0 0 4px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 800 }}>남은 시간</p>
@@ -461,10 +452,43 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
             </div>
           </>
         )}
-        <CountdownInfoBlock item={item} nextInjection={nextInjection} />
         <button type="button" onClick={() => onCta(item)} style={heroCtaStyle}>{ctaLabel(item.type)}</button>
       </div>
     </section>
+  );
+}
+
+function MedicationReferenceImage({ item, compact = false }: { item: ScheduleItem; compact?: boolean }) {
+  if (item.type !== 'injection' && item.type !== 'medication') return null;
+  const asset = resolveMedicationReferenceAsset({ medicationId: item.medication_id, title: item.title });
+  if (!asset) return null;
+
+  return (
+    <figure
+      aria-label={`${asset.displayLabel} 확인을 돕는 참고 이미지`}
+      data-testid="medication-reference-image"
+      style={{
+        margin: 0,
+        display: 'grid',
+        justifyItems: 'center',
+        gap: 4,
+      }}
+    >
+      <img
+        alt={`${asset.displayLabel} 참고 이미지`}
+        src={asset.assetPath}
+        style={{
+          width: compact ? 168 : 196,
+          maxWidth: '72%',
+          height: 'auto',
+          borderRadius: 20,
+          filter: 'drop-shadow(0 14px 28px rgba(75,52,42,0.12))',
+        }}
+      />
+      <figcaption style={{ color: 'var(--slc-muted)', fontSize: 11, fontWeight: 700 }}>
+        확인을 돕는 참고 이미지
+      </figcaption>
+    </figure>
   );
 }
 

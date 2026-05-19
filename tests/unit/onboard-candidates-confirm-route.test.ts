@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 type User = { id: string } | null;
 const isPresentationRequest = vi.hoisted(() => vi.fn(() => false));
-type Candidate = { id: string; patient_id: string; type: 'injection' | 'medication' | 'clinic'; title: string; scheduled_at: string | null; dose: string | null; unit: string | null };
+type Candidate = { id: string; couple_id: string; draft_id: string; visit_input_id: string; source_text: string; suggested_card_type: 'injection' | 'medication' | 'clinic_visit' | null };
 
 const state = vi.hoisted(() => ({
   user: null as User,
   ownedCandidates: [] as Candidate[],
   insertedRows: [] as Array<Record<string, unknown>>,
-  updates: [] as Array<{ table: string; values: unknown; ids: string[]; patientId: string }>,
+  rpcCalls: [] as Array<{ name: string; args: Record<string, unknown> }>,
 }));
 
 vi.mock('../../src/config', () => ({ isPresentationRequest }));
@@ -17,23 +17,17 @@ vi.mock('../../src/config', () => ({ isPresentationRequest }));
 vi.mock('../../src/lib/server-supabase', () => ({
   createCookieBackedSupabaseClient: async () => ({
     auth: { getUser: async () => ({ data: { user: state.user }, error: null }) },
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      state.rpcCalls.push({ name, args });
+      return { data: null, error: null };
+    },
     from: (table: string) => {
-      if (table === 'schedule_candidates') {
+      if (table === 'split_candidates') {
         return {
           select: () => ({
-            in: (_column: string, ids: string[]) => ({
-              eq: async (_patientColumn: string, patientId: string) => ({
-                data: state.ownedCandidates.filter((candidate) => ids.includes(candidate.id) && candidate.patient_id === patientId),
-                error: null,
-              }),
-            }),
-          }),
-          update: (values: unknown) => ({
-            in: (_column: string, ids: string[]) => ({
-              eq: async (_patientColumn: string, patientId: string) => {
-                state.updates.push({ table, values, ids, patientId });
-                return { error: null };
-              },
+            in: async (_column: string, ids: string[]) => ({
+              data: state.ownedCandidates.filter((candidate) => ids.includes(candidate.id)),
+              error: null,
             }),
           }),
         };
@@ -42,7 +36,7 @@ vi.mock('../../src/lib/server-supabase', () => ({
         insert: (rows: Array<Record<string, unknown>>) => ({
           select: async () => {
             state.insertedRows = rows;
-            return { data: rows.map((row, index) => ({ id: `item-${index + 1}`, status: 'upcoming', created_at: 'now', ...row })), error: null };
+            return { data: rows.map((row, index) => ({ id: `card-${index + 1}`, status: 'confirmed', created_at: 'now', ...row })), error: null };
           },
         }),
       };
@@ -62,7 +56,7 @@ describe('/api/onboard/candidates/confirm', () => {
     state.user = null;
     state.ownedCandidates = [];
     state.insertedRows = [];
-    state.updates = [];
+    state.rpcCalls = [];
     isPresentationRequest.mockReturnValue(false);
   });
 
@@ -110,35 +104,49 @@ describe('/api/onboard/candidates/confirm', () => {
       expect.objectContaining({ id: 'presentation-item-presentation-1', patient_id: 'presentation', title: '고날에프', source: 'capture' }),
     ]);
     expect(state.insertedRows).toHaveLength(0);
-    expect(state.updates).toHaveLength(0);
   });
 
-  it('copies confirmed candidates into schedule_items with source capture and marks rejected rows', async () => {
+  it('copies confirmed split candidates into care_action_cards and ignores rejected rows', async () => {
     state.user = { id: 'patient-1' };
     state.ownedCandidates = [
-      { id: 'candidate-1', patient_id: 'patient-1', type: 'injection', title: '고날에프', scheduled_at: '2026-05-15T12:00:00.000Z', dose: '150', unit: 'IU' },
-      { id: 'candidate-2', patient_id: 'patient-1', type: 'clinic', title: '병원 방문', scheduled_at: '2026-05-16T00:00:00.000Z', dose: null, unit: null },
+      { id: 'candidate-1', couple_id: 'couple-1', draft_id: 'draft-1', visit_input_id: 'visit-1', source_text: '고날에프', suggested_card_type: 'injection' },
+      { id: 'candidate-2', couple_id: 'couple-1', draft_id: 'draft-1', visit_input_id: 'visit-1', source_text: '병원 방문', suggested_card_type: 'clinic_visit' },
     ];
     const { POST } = await import('../../app/api/onboard/candidates/confirm/route');
 
-    const response = await POST(request({ confirmedIds: ['candidate-1'], rejectedIds: ['candidate-2'] }));
+    const response = await POST(request({
+      confirmedIds: ['candidate-1'],
+      rejectedIds: ['candidate-2'],
+      candidateEdits: [
+        { id: 'candidate-1', type: 'injection', title: '고날에프', scheduled_at: '2026-05-15T12:00:00.000Z', dose: '150', unit: 'IU' },
+        { id: 'candidate-2', type: 'clinic', title: '병원 방문', scheduled_at: '2026-05-16T00:00:00.000Z', dose: null, unit: null },
+      ],
+    }));
     const payload = await response.json() as { savedCount: number; items: Array<{ id: string }> };
 
     expect(response.status).toBe(200);
     expect(payload.savedCount).toBe(1);
     expect(state.insertedRows).toEqual([
-      expect.objectContaining({ patient_id: 'patient-1', type: 'injection', title: '고날에프', source: 'capture' }),
+      expect.objectContaining({
+        couple_id: 'couple-1',
+        created_by: 'patient-1',
+        source_input_id: 'visit-1',
+        split_candidate_id: 'candidate-1',
+        card_type: 'injection',
+        title: '고날에프',
+        description: '150 IU',
+        source_text: '고날에프',
+        scheduled_at: '2026-05-15T12:00:00.000Z',
+        status: 'confirmed',
+      }),
     ]);
-    expect(state.updates).toEqual([
-      expect.objectContaining({ values: { status: 'confirmed' }, ids: ['candidate-1'], patientId: 'patient-1' }),
-      expect.objectContaining({ values: { status: 'rejected' }, ids: ['candidate-2'], patientId: 'patient-1' }),
-    ]);
+    expect(state.rpcCalls).toEqual([{ name: 'mark_first_capture_completed', args: { p_couple_id: 'couple-1' } }]);
   });
 
-  it('uses inline candidate edits when copying confirmed candidates into schedule_items', async () => {
+  it('uses inline candidate edits when copying confirmed candidates into care_action_cards', async () => {
     state.user = { id: 'patient-1' };
     state.ownedCandidates = [
-      { id: 'candidate-1', patient_id: 'patient-1', type: 'injection', title: '고날에프', scheduled_at: '2026-05-15T12:00:00.000Z', dose: '150', unit: 'IU' },
+      { id: 'candidate-1', couple_id: 'couple-1', draft_id: 'draft-1', visit_input_id: 'visit-1', source_text: '고날에프', suggested_card_type: 'injection' },
     ];
     const { POST } = await import('../../app/api/onboard/candidates/confirm/route');
 
@@ -153,13 +161,12 @@ describe('/api/onboard/candidates/confirm', () => {
     expect(response.status).toBe(200);
     expect(state.insertedRows).toEqual([
       expect.objectContaining({
-        patient_id: 'patient-1',
-        type: 'injection',
+        created_by: 'patient-1',
+        card_type: 'injection',
         title: '수정한 고날에프',
-        dose: '225',
-        unit: 'IU',
+        description: '225 IU',
         scheduled_at: '2026-05-15T13:30:00.000Z',
-        source: 'capture',
+        source_text: '고날에프',
       }),
     ]);
   });

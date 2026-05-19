@@ -111,14 +111,14 @@ describe('dispatchDuePushReminders', () => {
     expect(store.findDuePushCandidates).toHaveBeenCalledWith({
       channel: 'web_push_t60',
       offsetMinutes: 60,
-      startsAt: '2026-05-11T12:29:00.000Z',
-      endsAt: '2026-05-11T12:31:00.000Z',
+      startsAt: '2026-05-11T12:25:00.000Z',
+      endsAt: '2026-05-11T12:35:00.000Z',
     });
     expect(store.findDuePushCandidates).toHaveBeenCalledWith({
       channel: 'web_push_t15',
       offsetMinutes: 15,
-      startsAt: '2026-05-11T11:44:00.000Z',
-      endsAt: '2026-05-11T11:46:00.000Z',
+      startsAt: '2026-05-11T11:40:00.000Z',
+      endsAt: '2026-05-11T11:50:00.000Z',
     });
     expect(store.claimPushDispatch).toHaveBeenCalledWith({
       cardId: 'card-1',

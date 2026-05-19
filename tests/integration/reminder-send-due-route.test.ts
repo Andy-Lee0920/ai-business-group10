@@ -73,13 +73,13 @@ describe('/api/reminders/send-due', () => {
 
     expect(response.status).toBe(200);
     expect(supabase.rpc).toHaveBeenCalledWith('get_due_web_push_reminder_candidates', {
-      p_window_start: '2026-05-11T12:29:00.000Z',
-      p_window_end: '2026-05-11T12:31:00.000Z',
+      p_window_start: '2026-05-11T12:25:00.000Z',
+      p_window_end: '2026-05-11T12:35:00.000Z',
       p_channel: 'web_push_t60',
     });
     expect(supabase.rpc).toHaveBeenCalledWith('get_due_web_push_reminder_candidates', {
-      p_window_start: '2026-05-11T11:44:00.000Z',
-      p_window_end: '2026-05-11T11:46:00.000Z',
+      p_window_start: '2026-05-11T11:40:00.000Z',
+      p_window_end: '2026-05-11T11:50:00.000Z',
       p_channel: 'web_push_t15',
     });
     expect(supabase.insertChain.insert).toHaveBeenCalledWith(expect.objectContaining({

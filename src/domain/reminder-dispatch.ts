@@ -13,7 +13,8 @@ export type ReminderEmail = {
 
 const REMINDER_LEAD_MINUTES = 30;
 const PUSH_REMINDER_OFFSETS = [60, 15] as const;
-const WINDOW_RADIUS_MINUTES = 1;
+const EMAIL_WINDOW_RADIUS_MINUTES = 1;
+const PUSH_WINDOW_RADIUS_MINUTES = 5;
 
 export type ReminderPushWindow = {
   channel: `web_push_t${typeof PUSH_REMINDER_OFFSETS[number]}`;
@@ -35,8 +36,8 @@ export function getReminderPushWindows(now: Date): ReminderPushWindow[] {
     return {
       channel: `web_push_t${offsetMinutes}` as const,
       offsetMinutes,
-      startsAt: new Date(center - WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
-      endsAt: new Date(center + WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
+      startsAt: new Date(center - PUSH_WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
+      endsAt: new Date(center + PUSH_WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
     };
   });
 }
@@ -44,8 +45,8 @@ export function getReminderPushWindows(now: Date): ReminderPushWindow[] {
 export function getReminderWindow(now: Date) {
   const center = now.getTime() + REMINDER_LEAD_MINUTES * 60_000;
   return {
-    startsAt: new Date(center - WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
-    endsAt: new Date(center + WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
+    startsAt: new Date(center - EMAIL_WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
+    endsAt: new Date(center + EMAIL_WINDOW_RADIUS_MINUTES * 60_000).toISOString(),
   };
 }
 

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { isPresentationRequest } from '../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
+import { createCaptureStore } from '../../../../src/lib/capture-confirm-store';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
 import type { ScheduleType } from '../../../../src/types/slc.types';
 
@@ -14,14 +15,15 @@ type ExtractedCandidate = {
   unit: string | null;
 };
 type InsertedCandidate = ExtractedCandidate & { id: string };
+type SplitCandidateRow = { id: string };
 type TextAnalyzeBody = { rawText?: unknown };
 type OnboardAnalyzeClient = {
   auth: { getUser(): Promise<{ data: { user: { id: string } | null }; error: DbError | null }> };
   functions: {
     invoke(name: 'schedule-extract', options: { body: { mode: 'text'; rawText: string; patientId: string } }): Promise<{ data: { candidates?: ExtractedCandidate[] } | null; error: DbError | null }>;
   };
-  from(table: 'schedule_candidates'): {
-    insert(rows: Array<Record<string, unknown>>): { select(): Promise<{ data: InsertedCandidate[] | null; error: DbError | null }> };
+  from(table: 'split_candidates'): {
+    insert(rows: Array<Record<string, unknown>>): { select(columns: string): Promise<{ data: SplitCandidateRow[] | null; error: DbError | null }> };
   };
 };
 
@@ -56,22 +58,24 @@ export async function POST(request: NextRequest) {
   const safeCandidates = chooseSafeTextCandidates(rawText, candidates);
   if (safeCandidates.length === 0) return NextResponse.json({ candidates: [] });
 
-  const rows = safeCandidates.map((candidate) => ({
-    patient_id: user.id,
-    image_path: null,
-    raw_text: rawText,
-    status: 'draft',
-    type: candidate.type,
-    title: candidate.title,
-    scheduled_at: candidate.scheduled_at,
-    dose: candidate.dose,
-    unit: candidate.unit,
+  const store = await createCaptureStore(request);
+  if (store instanceof Response) return store;
+  const capture = await store.createCapture(rawText);
+  const rows = safeCandidates.map((candidate, index) => ({
+    couple_id: store.coupleId,
+    draft_id: capture.draftId,
+    visit_input_id: capture.visitInputId,
+    source_text: candidate.title,
+    assigned_to: 'my_action',
+    suggested_card_type: toSuggestedCardType(candidate.type),
+    confidence: 'needs_confirmation',
+    order_index: index,
   }));
 
-  const { data: inserted, error } = await supabase.from('schedule_candidates').insert(rows).select();
+  const { data: inserted, error } = await supabase.from('split_candidates').insert(rows).select('id');
   if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
 
-  return NextResponse.json({ candidates: inserted ?? [] });
+  return NextResponse.json({ candidates: withInsertedIds(safeCandidates, inserted ?? []) });
 }
 
 
@@ -344,6 +348,15 @@ function normalizeCandidate(value: unknown): ExtractedCandidate | null {
 
 function normalizeScheduleType(value: unknown): ScheduleType | null {
   return value === 'injection' || value === 'medication' || value === 'clinic' ? value : null;
+}
+
+function toSuggestedCardType(type: string) {
+  if (type === 'clinic') return 'clinic_visit';
+  return type;
+}
+
+function withInsertedIds(candidates: ExtractedCandidate[], rows: SplitCandidateRow[]): InsertedCandidate[] {
+  return candidates.map((candidate, index) => ({ id: rows[index]?.id ?? `candidate-${index + 1}`, ...candidate }));
 }
 
 function normalizeNullableText(value: unknown) {

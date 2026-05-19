@@ -34,8 +34,8 @@ describe('partner assist API route', () => {
     expect(rpcCalls).toHaveLength(0);
   });
 
-  it('records assist injection as pending patient confirmation', async () => {
-    rpcResponses.push({ data: [{ injection_log_id: 'log-1', confirmed_by_patient: false }], error: null });
+  it('records partner assist on the canonical care card', async () => {
+    rpcResponses.push({ data: [{ card_id: '11111111-1111-1111-1111-111111111111', partner_assist_at: '2026-05-12T12:03:00.000Z' }], error: null });
     const { POST } = await import('../../app/api/partner/[token]/assist/route');
 
     const response = await POST(new Request('http://localhost/api/partner/live-token/assist', {
@@ -46,15 +46,15 @@ describe('partner assist API route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(202);
-    expect(rpcCalls[0]).toMatchObject({ name: 'record_partner_assisted_injection' });
-    expect(payload).toMatchObject({ state: 'pending_patient_confirmation', patientCopy: '파트너가 기록했어요. 확인할까요?' });
+    expect(rpcCalls[0]).toMatchObject({ name: 'record_partner_assist' });
+    expect(payload).toMatchObject({ cardId: '11111111-1111-1111-1111-111111111111', partnerAssistAt: '2026-05-12T12:03:00.000Z' });
   });
 
   it('resolves a partner-safe id before recording assist so raw card ids stay off the client', async () => {
     const rawCardId = '11111111-1111-4111-8111-111111111111';
     rpcResponses.push(
       { data: [{ id: rawCardId }], error: null },
-      { data: [{ injection_log_id: 'log-2', confirmed_by_patient: false }], error: null },
+      { data: [{ card_id: rawCardId, partner_assist_at: '2026-05-12T12:03:00.000Z' }], error: null },
     );
     const { POST } = await import('../../app/api/partner/[token]/assist/route');
 
@@ -67,7 +67,7 @@ describe('partner assist API route', () => {
     expect(response.status).toBe(202);
     expect(rpcCalls[0]).toMatchObject({ name: 'get_partner_action_view' });
     expect(rpcCalls[1]).toMatchObject({
-      name: 'record_partner_assisted_injection',
+      name: 'record_partner_assist',
       args: expect.objectContaining({ p_card_id: rawCardId }),
     });
   });

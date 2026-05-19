@@ -27,7 +27,7 @@ describe('reminder dispatch domain', () => {
     expect(shouldDispatchReminder(candidate({ scheduledAt: '2026-05-11T11:58:59.000Z' }), NOW)).toBe(false);
   });
 
-  it('computes a narrow scheduler window so a 1-minute cron does not drift into duplicate sends', () => {
+  it('computes a narrow scheduler window for the legacy 30-minute email reminder', () => {
     expect(getReminderWindow(NOW)).toEqual({
       startsAt: '2026-05-11T11:59:00.000Z',
       endsAt: '2026-05-11T12:01:00.000Z',
@@ -36,19 +36,19 @@ describe('reminder dispatch domain', () => {
 
 
 
-  it('computes T-60 and T-15 push windows for one-minute cron checks', () => {
+  it('computes T-60 and T-15 push windows with five-minute sweep tolerance for scheduler jitter', () => {
     expect(getReminderPushWindows(NOW)).toEqual([
       {
         channel: 'web_push_t60',
         offsetMinutes: 60,
-        startsAt: '2026-05-11T12:29:00.000Z',
-        endsAt: '2026-05-11T12:31:00.000Z',
+        startsAt: '2026-05-11T12:25:00.000Z',
+        endsAt: '2026-05-11T12:35:00.000Z',
       },
       {
         channel: 'web_push_t15',
         offsetMinutes: 15,
-        startsAt: '2026-05-11T11:44:00.000Z',
-        endsAt: '2026-05-11T11:46:00.000Z',
+        startsAt: '2026-05-11T11:40:00.000Z',
+        endsAt: '2026-05-11T11:50:00.000Z',
       },
     ]);
   });

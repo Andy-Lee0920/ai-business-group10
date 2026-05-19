@@ -5,36 +5,31 @@ import { maskTechnicalError } from '../../../../../src/domain/slc-copy';
 import type { ScheduleItem, ScheduleType } from '../../../../../src/types/slc.types';
 
 type DbError = { message: string };
-type ScheduleCandidateRow = {
+type SplitCandidateRow = {
   id: string;
-  patient_id: string;
-  type: ScheduleType;
-  title: string;
-  scheduled_at: string | null;
-  dose: string | null;
-  unit: string | null;
+  couple_id: string;
+  draft_id: string;
+  visit_input_id: string;
+  source_text: string;
+  suggested_card_type: 'injection' | 'medication' | 'clinic_visit' | 'clinic_confirmation' | 'partner_support' | 'record' | 'general_action' | null;
 };
 type CandidateEdit = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null };
 type ConfirmBody = { confirmedIds?: unknown; rejectedIds?: unknown; candidateEdits?: unknown };
-interface ScheduleCandidatesTable {
+interface SplitCandidatesTable {
   select(columns: string): {
-    in(column: 'id', values: string[]): {
-      eq(column: 'patient_id', value: string): Promise<{ data: ScheduleCandidateRow[] | null; error: DbError | null }>;
-    };
-  };
-  update(values: { status: 'confirmed' | 'rejected' }): {
-    in(column: 'id', values: string[]): { eq(column: 'patient_id', value: string): Promise<{ error: DbError | null }> };
+    in(column: 'id', values: string[]): Promise<{ data: SplitCandidateRow[] | null; error: DbError | null }>;
   };
 }
 
-interface ScheduleItemsTable {
+interface CareActionCardsTable {
   insert(rows: Array<Record<string, unknown>>): { select(): Promise<{ data: ScheduleItem[] | null; error: DbError | null }> };
 }
 
 interface OnboardConfirmClient {
   auth: { getUser(): Promise<{ data: { user: { id: string } | null }; error: DbError | null }> };
-  from(table: 'schedule_candidates'): ScheduleCandidatesTable;
-  from(table: 'schedule_items'): ScheduleItemsTable;
+  rpc(name: 'mark_first_capture_completed', args: { p_couple_id: string }): Promise<{ data: unknown; error: DbError | null }>;
+  from(table: 'split_candidates'): SplitCandidatesTable;
+  from(table: 'care_action_cards'): CareActionCardsTable;
 }
 
 export async function POST(request: NextRequest) {
@@ -56,43 +51,49 @@ export async function POST(request: NextRequest) {
   }
 
   const { data: ownedCandidates, error: selectError } = await supabase
-    .from('schedule_candidates')
-    .select('id, patient_id, type, title, scheduled_at, dose, unit')
-    .in('id', requestedIds)
-    .eq('patient_id', user.id);
+    .from('split_candidates')
+    .select('id, couple_id, draft_id, visit_input_id, source_text, suggested_card_type')
+    .in('id', requestedIds);
 
   if (selectError) return NextResponse.json({ error: maskTechnicalError(selectError.message) }, { status: 500 });
   if ((ownedCandidates ?? []).length !== requestedIds.length) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const editById = new Map(candidateEdits.map((edit) => [edit.id, edit]));
-  const candidateById = new Map((ownedCandidates ?? []).map((candidate) => [candidate.id, { ...candidate, ...editById.get(candidate.id) }]));
+  const candidateById = new Map((ownedCandidates ?? []).map((candidate) => [candidate.id, candidate]));
   const rows = confirmedIds
-    .map((id) => candidateById.get(id))
-    .filter((candidate): candidate is ScheduleCandidateRow => Boolean(candidate))
+    .map((id) => {
+      const candidate = candidateById.get(id);
+      const edit = editById.get(id);
+      return candidate && edit ? { candidate, edit } : null;
+    })
+    .filter((entry): entry is { candidate: SplitCandidateRow; edit: CandidateEdit } => Boolean(entry))
     .map((candidate) => ({
-      patient_id: user.id,
-      medication_id: null,
-      type: candidate.type,
-      title: candidate.title,
-      dose: candidate.dose,
-      unit: candidate.unit,
-      scheduled_at: candidate.scheduled_at ?? new Date().toISOString(),
-      source: 'capture',
+      couple_id: candidate.candidate.couple_id,
+      created_by: user.id,
+      source_input_id: candidate.candidate.visit_input_id,
+      split_candidate_id: candidate.candidate.id,
+      assignee_role: 'primary_user',
+      card_type: toCareCardType(candidate.edit.type),
+      title: candidate.edit.title,
+      description: formatDose(candidate.edit.dose, candidate.edit.unit),
+      source_text: candidate.candidate.source_text,
+      scheduled_at: candidate.edit.scheduled_at ?? new Date().toISOString(),
+      status: 'confirmed',
+      confirmation_required: false,
+      user_marked_important: candidate.edit.type === 'injection',
+      partner_visible: false,
     }));
 
   let items: ScheduleItem[] = [];
   if (rows.length) {
-    const { data, error } = await supabase.from('schedule_items').insert(rows).select();
+    const { data, error } = await supabase.from('care_action_cards').insert(rows).select();
     if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
-    items = data ?? [];
-
-    const { error: updateError } = await supabase.from('schedule_candidates').update({ status: 'confirmed' }).in('id', confirmedIds).eq('patient_id', user.id);
-    if (updateError) return NextResponse.json({ error: maskTechnicalError(updateError.message) }, { status: 500 });
-  }
-
-  if (rejectedIds.length) {
-    const { error } = await supabase.from('schedule_candidates').update({ status: 'rejected' }).in('id', rejectedIds).eq('patient_id', user.id);
-    if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
+    items = (data ?? []).map(toSavedScheduleItem);
+    const coupleId = rows[0]?.couple_id;
+    if (typeof coupleId === 'string') {
+      const { error: captureStateError } = await supabase.rpc('mark_first_capture_completed', { p_couple_id: coupleId });
+      if (captureStateError) return NextResponse.json({ error: maskTechnicalError(captureStateError.message) }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ savedCount: items.length, items });
@@ -158,6 +159,34 @@ function normalizeCandidateEdit(value: unknown): CandidateEdit | null {
 
 function normalizeScheduleType(value: unknown): ScheduleType | null {
   return value === 'injection' || value === 'medication' || value === 'clinic' ? value : null;
+}
+
+function toCareCardType(type: ScheduleType) {
+  if (type === 'clinic') return 'clinic_visit';
+  return type;
+}
+
+function toSavedScheduleItem(card: ScheduleItem): ScheduleItem {
+  const row = card as unknown as Record<string, unknown>;
+  const cardType = row.card_type === 'clinic_visit' || row.card_type === 'clinic_confirmation' ? 'clinic' : row.card_type;
+  return {
+    id: String(row.id ?? ''),
+    patient_id: String(row.created_by ?? row.patient_id ?? ''),
+    medication_id: null,
+    type: cardType === 'injection' || cardType === 'medication' || cardType === 'clinic' ? cardType : 'clinic',
+    title: String(row.title ?? ''),
+    dose: null,
+    unit: null,
+    scheduled_at: typeof row.scheduled_at === 'string' ? row.scheduled_at : new Date().toISOString(),
+    status: 'upcoming',
+    source: 'capture',
+    created_at: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
+  };
+}
+
+function formatDose(dose: string | null, unit: string | null) {
+  if (!dose && !unit) return null;
+  return `${dose ?? ''}${dose && unit ? ' ' : ''}${unit ?? ''}`.trim();
 }
 
 function normalizeNullableText(value: unknown) {

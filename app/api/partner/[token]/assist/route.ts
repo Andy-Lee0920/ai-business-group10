@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { canPartnerPerformAction, deriveInjectionTrustState, type PartnerPermissionAction } from '../../../../../src/domain/care-os-architecture';
+import { canPartnerPerformAction, type PartnerPermissionAction } from '../../../../../src/domain/care-os-architecture';
 import { hashPartnerShareToken, safePartnerItemId } from '../../../../../src/services/partner-view';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 
@@ -10,8 +10,8 @@ type AssistBody = {
 };
 
 type PartnerAssistRpcRow = {
-  injection_log_id: string;
-  confirmed_by_patient: boolean;
+  card_id: string;
+  partner_assist_at: string;
 };
 
 type PartnerActionViewRow = {
@@ -41,7 +41,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   if (!resolvedCardId) return NextResponse.json({ error: 'partner_card_not_found' }, { status: 404 });
 
-  const { data, error } = await supabase.rpc('record_partner_assisted_injection', {
+  const { data, error } = await supabase.rpc('record_partner_assist', {
     p_token_hash: tokenHash,
     p_card_id: resolvedCardId,
     p_actual_time: actualTime,
@@ -49,16 +49,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   if (error) return NextResponse.json({ error: 'partner_assist_unavailable' }, { status: 404 });
   const row = Array.isArray(data) ? (data[0] as PartnerAssistRpcRow | undefined) : undefined;
-  const trust = deriveInjectionTrustState({
-    scheduledTime: actualTime,
-    actualTime,
-    administeredBy: 'partner',
-    recordedBy: 'partner',
-    confirmedByPatient: row?.confirmed_by_patient === true,
-    confirmedAt: null,
-  });
-
-  return NextResponse.json({ injectionLogId: row?.injection_log_id ?? null, ...trust }, { status: 202 });
+  return NextResponse.json({ cardId: row?.card_id ?? resolvedCardId, partnerAssistAt: row?.partner_assist_at ?? actualTime }, { status: 202 });
 }
 
 async function resolveCardIdFromSafeId(

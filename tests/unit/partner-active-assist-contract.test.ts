@@ -20,8 +20,11 @@ describe('Partner active assist contract', () => {
     expect(client).toContain('cardId: item.safe_id');
     expect(surface).toContain('도움 완료');
     expect(surface).toContain('도움 기록됨');
-    expect(surface).toContain("item.card_type === 'injection'");
+    expect(surface).toContain('canRecordAssist(item)');
+    expect(surface).not.toContain("item.card_type === 'injection'");
     expect(assistRoute).toContain('resolveCardIdFromSafeId');
     expect(assistRoute).toContain('safePartnerItemId(candidate.id)');
+    expect(assistRoute).toContain('record_partner_assist');
+    expect(assistRoute).not.toContain('record_partner_assisted_injection');
   });
 });

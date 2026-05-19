@@ -11,10 +11,27 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json() as { scheduleItemId: string; injectionSite?: InjectionSite };
   const { scheduleItemId, injectionSite } = body;
+  const completedAt = new Date().toISOString();
+
+  const careCardResult = await supabase
+    .from('care_action_cards')
+    .update({ status: 'completed', completed_at: completedAt, updated_at: completedAt })
+    .eq('id', scheduleItemId)
+    .eq('created_by', user.id)
+    .select('id')
+    .maybeSingle();
+
+  if (careCardResult.error) {
+    if (!isMissingSlcTable(careCardResult.error)) {
+      return NextResponse.json({ error: maskTechnicalError(careCardResult.error.message) }, { status: 500 });
+    }
+  } else if (careCardResult.data) {
+    return NextResponse.json({ ok: true, source: 'care_action_cards' });
+  }
 
   const { error: updateError } = await supabase
     .from('schedule_items')
-    .update({ status: 'completed', updated_at: new Date().toISOString() })
+    .update({ status: 'completed', updated_at: completedAt })
     .eq('id', scheduleItemId)
     .eq('patient_id', user.id);
 
@@ -28,7 +45,7 @@ export async function POST(request: NextRequest) {
     .insert({
       schedule_item_id: scheduleItemId,
       patient_id: user.id,
-      completed_at: new Date().toISOString(),
+      completed_at: completedAt,
       injection_site: injectionSite ?? null,
     });
 

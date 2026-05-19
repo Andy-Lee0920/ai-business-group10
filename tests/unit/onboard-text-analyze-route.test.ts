@@ -15,6 +15,7 @@ const state = vi.hoisted(() => ({
 vi.mock('../../src/lib/server-supabase', () => ({
   createCookieBackedSupabaseClient: async () => ({
     auth: { getUser: async () => ({ data: { user: state.user }, error: null }) },
+    rpc: async () => ({ data: { couple_id: 'couple-1', privacy_gate_accepted_at: '2026-05-10T00:00:00.000Z' }, error: null }),
     functions: {
       invoke: async (name: string, options: unknown) => {
         state.invokeCalls.push({ name, options });
@@ -23,9 +24,14 @@ vi.mock('../../src/lib/server-supabase', () => ({
     },
     from: (table: string) => ({
       insert: (rows: Array<Record<string, unknown>>) => ({
-        select: async () => {
-          state.insertCalls.push({ table, rows });
-          return { data: rows.map((row, index) => ({ id: `candidate-${index + 1}`, ...row })), error: null };
+        select: () => {
+          const normalizedRows = Array.isArray(rows) ? rows : [rows];
+          state.insertCalls.push({ table, rows: normalizedRows });
+          const data = normalizedRows.map((row, index) => ({ id: `${table}-${index + 1}`, ...row }));
+          return {
+            single: async () => ({ data: data[0] ?? null, error: null }),
+            then: (resolve: (value: { data: Array<Record<string, unknown>>; error: null }) => unknown) => resolve({ data, error: null }),
+          };
         },
       }),
     }),
@@ -97,9 +103,18 @@ describe('/api/onboard/text-analyze', () => {
       name: 'schedule-extract',
       options: { body: { mode: 'text', rawText: '내일 병원 방문', patientId: 'patient-1' } },
     });
-    expect(state.insertCalls[0]).toMatchObject({
-      table: 'schedule_candidates',
-      rows: [expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '내일 병원 방문', status: 'draft' })],
+    expect(state.insertCalls.map((call) => call.table)).toEqual(['visit_inputs', 'action_split_drafts', 'split_candidates']);
+    expect(state.insertCalls[2]).toMatchObject({
+      table: 'split_candidates',
+      rows: [expect.objectContaining({
+        couple_id: 'couple-1',
+        draft_id: 'action_split_drafts-1',
+        visit_input_id: 'visit_inputs-1',
+        source_text: '병원 방문',
+        assigned_to: 'my_action',
+        suggested_card_type: 'clinic_visit',
+        confidence: 'needs_confirmation',
+      })],
     });
   });
 
@@ -122,11 +137,11 @@ describe('/api/onboard/text-analyze', () => {
       '2026-05-15T08:00:00.000Z',
       '2026-05-15T00:00:00.000Z',
     ]);
-    expect(state.insertCalls[0]).toMatchObject({
-      table: 'schedule_candidates',
+    expect(state.insertCalls[2]).toMatchObject({
+      table: 'split_candidates',
       rows: [
-        expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '오늘 밤 부터 고날에프 17시 한번 09시 한번 10일간 맞아야한대', status: 'draft', type: 'injection', title: '고날에프' }),
-        expect.objectContaining({ patient_id: 'patient-1', image_path: null, raw_text: '오늘 밤 부터 고날에프 17시 한번 09시 한번 10일간 맞아야한대', status: 'draft', type: 'injection', title: '고날에프' }),
+        expect.objectContaining({ couple_id: 'couple-1', source_text: '고날에프', assigned_to: 'my_action', suggested_card_type: 'injection' }),
+        expect.objectContaining({ couple_id: 'couple-1', source_text: '고날에프', assigned_to: 'my_action', suggested_card_type: 'injection' }),
       ],
     });
     vi.useRealTimers();
