@@ -63,9 +63,9 @@ Requires real Android device evidence:
 - L4: notification tap opens `/home`
 - L6: lock-screen/background receipt
 - L7: live dedup for `(card_id, scheduled_at, channel)`
-- Prep helper: `node scripts/prepare-pwa-live-push-card.mjs --user-id <user-id> --offset-minutes 15` after privacy gate acceptance
-- Evidence helper: `node scripts/collect-pwa-live-push-evidence.mjs --user-id <user-id> --card-id <card-id> --rerun-scheduler` after physical receipt/tap evidence
-- Archive helper: `node scripts/archive-pwa-live-push-card.mjs --card-id <card-id>` after evidence capture, only for synthetic smoke cards
+- Prep helper: `npm run smoke:push:prepare -- --user-id <user-id> --offset-minutes 15` after privacy gate acceptance
+- Evidence helper: `npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler` after physical receipt/tap evidence
+- Archive helper: `npm run smoke:push:archive -- --card-id <card-id>` after evidence capture, only for synthetic smoke cards
 
 ### #383 iOS live push
 
@@ -80,9 +80,9 @@ Requires real iPhone Home Screen PWA evidence:
 - L4: notification tap opens Home Screen PWA `/home`
 - L6: lock-screen/background receipt
 - L7: live dedup for `(card_id, scheduled_at, channel)`
-- Prep helper: `node scripts/prepare-pwa-live-push-card.mjs --user-id <user-id> --offset-minutes 15` after privacy gate acceptance
-- Evidence helper: `node scripts/collect-pwa-live-push-evidence.mjs --user-id <user-id> --card-id <card-id> --rerun-scheduler` after physical receipt/tap evidence
-- Archive helper: `node scripts/archive-pwa-live-push-card.mjs --card-id <card-id>` after evidence capture, only for synthetic smoke cards
+- Prep helper: `npm run smoke:push:prepare -- --user-id <user-id> --offset-minutes 15` after privacy gate acceptance
+- Evidence helper: `npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler` after physical receipt/tap evidence
+- Archive helper: `npm run smoke:push:archive -- --card-id <card-id>` after evidence capture, only for synthetic smoke cards
 
 ## Stop condition
 

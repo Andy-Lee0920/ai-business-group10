@@ -24,8 +24,7 @@ describe('PWA live push evidence helper', () => {
   it('documents the helper in the Android/iOS live smoke runbook', () => {
     const runbook = readFileSync(runbookPath, 'utf8');
 
-    expect(runbook).toContain('scripts/collect-pwa-live-push-evidence.mjs');
-    expect(runbook).toContain('node scripts/collect-pwa-live-push-evidence.mjs --user-id');
+    expect(runbook).toContain('npm run smoke:push:evidence -- --user-id');
     expect(runbook).toContain('endpoint/provider ids are masked');
   });
 });

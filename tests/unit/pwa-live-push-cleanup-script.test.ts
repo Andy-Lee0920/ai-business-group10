@@ -23,8 +23,7 @@ describe('PWA live push synthetic card archive helper', () => {
   it('documents cleanup as optional after evidence is captured', () => {
     const runbook = readFileSync(runbookPath, 'utf8');
 
-    expect(runbook).toContain('scripts/archive-pwa-live-push-card.mjs');
-    expect(runbook).toContain('node scripts/archive-pwa-live-push-card.mjs --card-id');
+    expect(runbook).toContain('npm run smoke:push:archive -- --card-id');
     expect(runbook).toContain('after evidence is captured');
   });
 });

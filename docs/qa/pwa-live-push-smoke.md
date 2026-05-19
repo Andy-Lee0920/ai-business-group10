@@ -16,7 +16,7 @@ This runbook is the reproducible evidence path for #382 and #383. It does not re
 2. Create or confirm one `care_action_cards` row for an injection/partner-visible card scheduled inside the next T-60 or T-15 reminder window. To prepare a synthetic confirmed injection card without hand-written SQL:
 
    ```bash
-   node scripts/prepare-pwa-live-push-card.mjs --user-id <user-id> --offset-minutes 15
+   npm run smoke:push:prepare -- --user-id <user-id> --offset-minutes 15
    ```
 
 3. Keep the card title synthetic or non-identifying.
@@ -28,13 +28,13 @@ This runbook is the reproducible evidence path for #382 and #383. It does not re
 7. Use the evidence helper after the device receives/taps the notification; endpoint/provider ids are masked and subscription keys are not printed:
 
    ```bash
-   node scripts/collect-pwa-live-push-evidence.mjs --user-id <user-id> --card-id <card-id> --rerun-scheduler
+   npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler
    ```
 
 8. Optional cleanup after evidence is captured: archive only the synthetic smoke card, never delete care history:
 
    ```bash
-   node scripts/archive-pwa-live-push-card.mjs --card-id <card-id>
+   npm run smoke:push:archive -- --card-id <card-id>
    ```
 
 ## Android Chrome (#382)

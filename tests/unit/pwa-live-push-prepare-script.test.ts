@@ -26,8 +26,7 @@ describe('PWA live push test card preparation helper', () => {
   it('adds the preparation command to the live smoke runbook', () => {
     const runbook = readFileSync(runbookPath, 'utf8');
 
-    expect(runbook).toContain('scripts/prepare-pwa-live-push-card.mjs');
-    expect(runbook).toContain('node scripts/prepare-pwa-live-push-card.mjs --user-id');
+    expect(runbook).toContain('npm run smoke:push:prepare -- --user-id');
     expect(runbook).toContain('synthetic confirmed injection card');
   });
 });
