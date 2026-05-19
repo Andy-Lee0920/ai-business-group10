@@ -4,7 +4,7 @@ Objective: 사진 한 장 → confirmed care card → Home/Partner/Reminder가 �
 
 This audit is a handoff artifact, not a completion claim. Do not mark the goal complete while the remaining live-device Reds below are open.
 
-Latest audit refresh: `2026-05-19`, audit/tooling commit `1237ef9`, production runtime commit `9e70d761bbd2`, deploy `dpl_CMmERcZxKef1jsfe7KawDnAGaeai`. Commits after `9e70d761bbd2` are guard/runbook/audit tooling only; no product runtime redeploy is required for the remaining physical-device evidence collection.
+Latest audit refresh: `2026-05-19`, production runtime commit `9e70d761bbd2`, deploy `dpl_CMmERcZxKef1jsfe7KawDnAGaeai`. Later `main` commits are guard/runbook/audit tooling only unless explicitly noted as product runtime changes; no product runtime redeploy is required for the remaining physical-device evidence collection.
 
 ## Fixed decisions
 
