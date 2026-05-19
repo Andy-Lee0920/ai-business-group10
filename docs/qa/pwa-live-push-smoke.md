@@ -39,6 +39,15 @@ npm run smoke:pwa:production
    npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler
    ```
 
+   To generate a GitHub-ready evidence comment after collecting real-device screenshots/videos:
+
+   ```bash
+   npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler --format github-comment --platform android
+   npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler --format github-comment --platform ios
+   ```
+
+   Attach real-device screenshots or videos before closing #382/#383. The generated comment does not replace live-device evidence.
+
 8. Optional cleanup after evidence is captured: archive only the synthetic smoke card, never delete care history:
 
    ```bash

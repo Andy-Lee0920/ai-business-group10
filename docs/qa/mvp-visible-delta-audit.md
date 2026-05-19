@@ -30,9 +30,9 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 ## Verification already run
 
-- Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, synthetic-card archive helper, npm live-smoke helper commands, and production PWA prerequisite smoke.
+- Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, synthetic-card archive helper, npm live-smoke helper commands, production PWA prerequisite smoke, and GitHub-ready live-device evidence comment formatting.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 163 files / 612 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, and production PWA prerequisite smoke.
+- `npm test` passed: 164 files / 614 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, and evidence comment formatting.
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
@@ -49,6 +49,16 @@ Green evidence:
 - Verified `/sw.js` handles push display and `notificationclick` tap-through to `/home`.
 - Verified `/api/push/subscribe` and `/api/reminders/send-due` are reachable but auth-safe without test credentials (`405/401` in the latest production smoke).
 - This does not replace live-device evidence for #382/#383.
+
+
+## Live-device evidence comment formatting
+
+Green evidence:
+
+- Command option: `npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler --format github-comment --platform android`.
+- Command option: `npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler --format github-comment --platform ios`.
+- Script support: `scripts/collect-pwa-live-push-evidence.mjs` formats masked DB rows into #382/#383 GitHub comment templates.
+- The generated `github-comment` output still requires attached physical-device screenshots/videos before closure.
 
 ## Completed model gate
 
