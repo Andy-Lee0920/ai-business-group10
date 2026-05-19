@@ -96,6 +96,15 @@ Green evidence:
 - The guard fails DB-only packages and requires L3/L4/L6 physical media files; iOS additionally requires Home Screen install media. It also fails missing scheduler rerun evidence and duplicate sent dispatch rows for the same `(card_id, scheduled_at, channel)`.
 - Passing the guard does not replace reviewer judgment or the required GitHub evidence comments.
 
+## GitHub issue state guard
+
+Green evidence:
+
+- Command: `npm run verify:push:issues`.
+- Script: `scripts/verify-live-push-issue-state.mjs`.
+- Verifies #377, #380, #382, and #383 remain open while physical live-device Reds remain open.
+- Current check output: `#377 OPEN`, `#380 OPEN`, `#382 OPEN`, `#383 OPEN`, `live push issue state guard passed`.
+
 ## Completed model gate
 
 ### #376 model gate

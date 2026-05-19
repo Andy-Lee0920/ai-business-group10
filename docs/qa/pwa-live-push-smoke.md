@@ -78,6 +78,14 @@ npm run verify:push:closure -- --platform ios --evidence-json evidence.json --io
 
 Passing this guard does not replace reviewer judgment; it only prevents DB-only closure.
 
+Before and after posting closure evidence, verify the GitHub issue state guard so parent issues and live-device children cannot be accidentally closed while #382/#383 are still Red:
+
+```bash
+npm run verify:push:issues
+```
+
+This command checks #377, #380, #382, and #383. It fails if a live-device child is closed without physical evidence or if a parent closes while live-device Reds remain open.
+
 ## Android Chrome (#382)
 
 Green gates:
