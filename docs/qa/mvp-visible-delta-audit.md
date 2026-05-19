@@ -32,8 +32,8 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 - Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, and synthetic-card archive helper.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 158 files / 601 tests after the Gemini model switch and completeness selector repair.
-- `npm run build` passed after the latest implementation and QA artifacts.
+- `npm test` passed: 161 files / 607 tests after live-push prep/evidence/archive helper additions.
+- `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
 
