@@ -26,7 +26,7 @@ describe('live push evidence bundle scaffold', () => {
     expect(readme).toContain('npm run verify:push:closure');
     expect(readme).toContain('npm run verify:mvp:complete');
     expect(readme).toContain('--ios-evidence-json ios-live-push-evidence/evidence.json');
-    expect(readme).toContain('--android-evidence-json android-live-push-evidence/evidence.json');
+    expect(readme).toContain('npm run verify:mvp:complete -- \\\n  --android-evidence-json android-live-push-evidence/evidence.json');
     expect(readme).toContain('ios-homescreen.png');
     expect(readme).toContain('l3-notification.png');
     expect(readme).toContain('l4-home.png');

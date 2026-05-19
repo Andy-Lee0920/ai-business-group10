@@ -19,20 +19,66 @@ function renderReadme(platform) {
     ? 'npm run verify:push:closure -- --platform ios --evidence-json evidence.json --ios-install-media ios-homescreen.png --l3-media l3-notification.png --l4-media l4-home.png --l6-media l6-lockscreen.mov'
     : 'npm run verify:push:closure -- --platform android --evidence-json evidence.json --l3-media l3-notification.png --l4-media l4-home.png --l6-media l6-lockscreen.mov';
   const commentCommand = `npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler --format github-comment --platform ${platform}`;
+  const finalCompletionCommand = [
+    'npm run verify:mvp:complete -- \\',
+    '  --android-evidence-json android-live-push-evidence/evidence.json \\',
+    '  --android-l3-media android-live-push-evidence/l3-notification.png \\',
+    '  --android-l4-media android-live-push-evidence/l4-home.png \\',
+    '  --android-l6-media android-live-push-evidence/l6-lockscreen.mov \\',
+    '  --ios-evidence-json ios-live-push-evidence/evidence.json \\',
+    '  --ios-install-media ios-live-push-evidence/ios-homescreen.png \\',
+    '  --ios-l3-media ios-live-push-evidence/l3-notification.png \\',
+    '  --ios-l4-media ios-live-push-evidence/l4-home.png \\',
+    '  --ios-l6-media ios-live-push-evidence/l6-lockscreen.mov',
+  ].join('\n');
 
-  return `# Fevio ${platform.toUpperCase()} live push evidence bundle\n\nDo not close ${issue} until every required file below exists, the closure guard passes, and the generated GitHub comment is posted with media attached.\n\n## Required files\n\n- \`evidence.json\` — JSON output from \`npm run smoke:push:evidence\`\n${installLine}- \`l3-notification.png\` — OS notification receipt/tray screenshot\n- \`l4-home.png\` — notification tap-through to /home screenshot\n- \`l6-lockscreen.mov\` — background or lock-screen delivery video/screenshot\n\n## Commands\n\n1. Production prerequisite smoke:\n\n\`\`\`bash\nnpm run smoke:pwa:production\n\`\`\`\n\n2. Prepare a synthetic card if needed:\n\n\`\`\`bash\nnpm run smoke:push:prepare -- --user-id <user-id> --offset-minutes 15\n\`\`\`\n\n3. Collect masked DB evidence:\n\n\`\`\`bash\nnpm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler > evidence.json\n\`\`\`\n\n4. Generate the GitHub comment after media files are present:\n\n\`\`\`bash\n${commentCommand}\n\`\`\`\n\n5. Verify the closure bundle:\n\n\`\`\`bash\n${closureCommand}\n\`\`\`\n\n6. Verify final MVP completion after both Android and iOS bundles exist:
+  return `# Fevio ${platform.toUpperCase()} live push evidence bundle
+
+Do not close ${issue} until every required file below exists, the closure guard passes, and the generated GitHub comment is posted with media attached.
+
+## Required files
+
+- \`evidence.json\` — JSON output from \`npm run smoke:push:evidence\`
+${installLine}- \`l3-notification.png\` — OS notification receipt/tray screenshot
+- \`l4-home.png\` — notification tap-through to /home screenshot
+- \`l6-lockscreen.mov\` — background or lock-screen delivery video/screenshot
+
+## Commands
+
+1. Production prerequisite smoke:
 
 \`\`\`bash
-npm run verify:mvp:complete -- \
-  --android-evidence-json android-live-push-evidence/evidence.json \
-  --android-l3-media android-live-push-evidence/l3-notification.png \
-  --android-l4-media android-live-push-evidence/l4-home.png \
-  --android-l6-media android-live-push-evidence/l6-lockscreen.mov \
-  --ios-evidence-json ios-live-push-evidence/evidence.json \
-  --ios-install-media ios-live-push-evidence/ios-homescreen.png \
-  --ios-l3-media ios-live-push-evidence/l3-notification.png \
-  --ios-l4-media ios-live-push-evidence/l4-home.png \
-  --ios-l6-media ios-live-push-evidence/l6-lockscreen.mov
+npm run smoke:pwa:production
+\`\`\`
+
+2. Prepare a synthetic card if needed:
+
+\`\`\`bash
+npm run smoke:push:prepare -- --user-id <user-id> --offset-minutes 15
+\`\`\`
+
+3. Collect masked DB evidence:
+
+\`\`\`bash
+npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler > evidence.json
+\`\`\`
+
+4. Generate the GitHub comment after media files are present:
+
+\`\`\`bash
+${commentCommand}
+\`\`\`
+
+5. Verify the closure bundle:
+
+\`\`\`bash
+${closureCommand}
+\`\`\`
+
+6. Verify final MVP completion after both Android and iOS bundles exist:
+
+\`\`\`bash
+${finalCompletionCommand}
 \`\`\`
 
 7. Cleanup only the synthetic smoke card after evidence is posted:
