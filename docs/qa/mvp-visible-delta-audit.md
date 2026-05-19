@@ -43,6 +43,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 Current state:
 
 - `scripts/compare-openrouter-vision-models.mjs` exists.
+- `scripts/smoke-production-schedule-extract-fixtures.mjs` captures the production default baseline through Supabase Edge Function without exposing OpenRouter key values.
 - Synthetic, production-safe fixtures exist under `tests/fixtures/vision-model/`.
 - Supabase has an `OPENROUTER_API_KEY` secret name, but only its digest is visible.
 - Local `.env.local` has no readable `OPENROUTER_API_KEY`.
