@@ -105,6 +105,15 @@ Green evidence:
 - Verifies #377, #380, #382, and #383 remain open while physical live-device Reds remain open.
 - Current check output: `#377 OPEN`, `#380 OPEN`, `#382 OPEN`, `#383 OPEN`, `live push issue state guard passed`.
 
+## MVP local readiness guard
+
+Green evidence:
+
+- Command: `npm run verify:mvp:readiness`.
+- Script: `scripts/verify-mvp-visible-delta-readiness.mjs`.
+- Verifies canonical spine artifacts, reminder/PWA/live-smoke helpers, audit/runbook coverage, and GitHub issue state.
+- This is not a completion gate; it intentionally preserves #382/#383 physical-device Reds.
+
 ## Completed model gate
 
 ### #376 model gate
