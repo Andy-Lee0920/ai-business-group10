@@ -81,10 +81,10 @@ Green evidence:
 
 Green evidence:
 
-- Command: `npm run smoke:push:bundle -- --platform android --out-dir tmp/live-push-evidence`.
-- Command: `npm run smoke:push:bundle -- --platform ios --out-dir tmp/live-push-evidence`.
+- Preferred command: `npm run smoke:push:bundle -- --platform both --out-dir tmp/live-push-evidence`.
+- Single-platform commands remain available: `--platform android` or `--platform ios`.
 - Script: `scripts/create-live-push-evidence-bundle.mjs`.
-- Creates a platform-specific README and placeholder `evidence.json` with required media filenames and commands for `smoke:pwa:production`, `smoke:push:prepare`, `smoke:push:evidence`, `verify:push:closure`, and `smoke:push:archive`.
+- Creates Android/iOS platform READMEs, placeholder `evidence.json` files, and a top-level final `verify:mvp:complete` README with required media filenames and commands for `smoke:pwa:production`, `smoke:push:prepare`, `smoke:push:evidence`, `verify:push:closure`, `verify:mvp:complete`, and `smoke:push:archive`.
 - This scaffold does not replace real-device media.
 
 ## Service-worker tap-through behavior

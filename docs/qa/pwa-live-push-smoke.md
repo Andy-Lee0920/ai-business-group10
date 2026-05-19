@@ -16,11 +16,10 @@ This runbook is the reproducible evidence path for #382 and #383. It does not re
 To create a local folder with the exact filenames and commands needed for closure review:
 
 ```bash
-npm run smoke:push:bundle -- --platform android --out-dir tmp/live-push-evidence
-npm run smoke:push:bundle -- --platform ios --out-dir tmp/live-push-evidence
+npm run smoke:push:bundle -- --platform both --out-dir tmp/live-push-evidence
 ```
 
-The generated README still requires real-device media before #382/#383 can close.
+This creates Android and iOS platform folders plus a top-level README containing the final `npm run verify:mvp:complete` command. Single-platform bundles remain available with `--platform android` or `--platform ios`. The generated README still requires real-device media before #382/#383 can close.
 
 
 ## Physical device readiness preflight

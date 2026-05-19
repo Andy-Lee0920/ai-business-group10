@@ -32,6 +32,7 @@ describe('MVP visible delta completion audit', () => {
       'duplicate sent dispatch rows',
       'scripts/create-live-push-evidence-bundle.mjs',
       'smoke:push:bundle',
+      '--platform both',
       'verify:push:closure',
       '171 files / 633 tests',
       'verify:mvp:complete',

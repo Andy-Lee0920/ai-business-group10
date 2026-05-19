@@ -63,6 +63,7 @@ for (const requiredText of [
   'npm run verify:push:issues',
   'npm run verify:push:devices',
   'npm run verify:mvp:complete',
+  '--platform both',
   'Do not close #382',
   'Do not close #383',
 ]) {
