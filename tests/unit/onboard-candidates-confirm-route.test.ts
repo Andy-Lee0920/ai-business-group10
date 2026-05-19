@@ -170,4 +170,30 @@ describe('/api/onboard/candidates/confirm', () => {
       }),
     ]);
   });
+
+  it('lets the user confirm partner ownership so the canonical card is partner-visible', async () => {
+    state.user = { id: 'patient-1' };
+    state.ownedCandidates = [
+      { id: 'candidate-1', couple_id: 'couple-1', draft_id: 'draft-1', visit_input_id: 'visit-1', source_text: '오비드렐', suggested_card_type: 'injection' },
+    ];
+    const { POST } = await import('../../app/api/onboard/candidates/confirm/route');
+
+    const response = await POST(request({
+      confirmedIds: ['candidate-1'],
+      rejectedIds: [],
+      candidateEdits: [
+        { id: 'candidate-1', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-19T12:00:00.000Z', dose: '250', unit: 'mcg', assignedTo: 'partner_action' },
+      ],
+    }));
+
+    expect(response.status).toBe(200);
+    expect(state.insertedRows).toEqual([
+      expect.objectContaining({
+        assignee_role: 'partner',
+        partner_visible: true,
+        card_type: 'injection',
+        title: '오비드렐',
+      }),
+    ]);
+  });
 });

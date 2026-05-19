@@ -12,6 +12,7 @@ type Candidate = {
   scheduled_at: string | null;
   dose: string | null;
   unit: string | null;
+  assignedTo?: 'my_action' | 'partner_action';
 };
 type AnalyzeResponse = { candidates?: Candidate[]; path?: string; error?: string };
 type ConfirmResponse = { savedCount?: number; items?: Array<{ title?: string }>; error?: string };
@@ -125,8 +126,26 @@ export function PrescriptionCaptureClient() {
                 <option value="medication">약</option>
                 <option value="clinic">병원 방문</option>
               </select>
+              <label className="field-label" htmlFor={`candidate-owner-${candidate.id}`}>담당</label>
+              <select
+                id={`candidate-owner-${candidate.id}`}
+                className="text-input"
+                value={candidate.assignedTo ?? 'my_action'}
+                onChange={(event) => updateCandidate(candidate.id, { assignedTo: event.target.value as Candidate['assignedTo'] })}
+              >
+                <option value="my_action">나</option>
+                <option value="partner_action">파트너</option>
+              </select>
               <label className="field-label" htmlFor={`candidate-title-${candidate.id}`}>제목</label>
               <input id={`candidate-title-${candidate.id}`} className="text-input" value={candidate.title} onChange={(event) => updateCandidate(candidate.id, { title: event.target.value })} />
+              <label className="field-label" htmlFor={`candidate-time-${candidate.id}`}>후보 시간</label>
+              <input
+                id={`candidate-time-${candidate.id}`}
+                className="text-input"
+                type="datetime-local"
+                value={toDateTimeLocal(candidate.scheduled_at)}
+                onChange={(event) => updateCandidate(candidate.id, { scheduled_at: fromDateTimeLocal(event.target.value) })}
+              />
               <label className="field-label" htmlFor={`candidate-dose-${candidate.id}`}>용량/메모</label>
               <input id={`candidate-dose-${candidate.id}`} className="text-input" value={formatDose(candidate)} onChange={(event) => updateCandidate(candidate.id, { dose: event.target.value, unit: null })} />
             </article>
@@ -183,9 +202,24 @@ function toCandidateEdit(candidate: Candidate) {
     scheduled_at: candidate.scheduled_at,
     dose: candidate.dose,
     unit: candidate.unit,
+    assignedTo: candidate.assignedTo ?? 'my_action',
   };
 }
 
 function formatDose(candidate: Candidate) {
   return [candidate.dose, candidate.unit].filter(Boolean).join(' ');
+}
+
+function toDateTimeLocal(value: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function fromDateTimeLocal(value: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }

@@ -14,7 +14,7 @@ test('prescription capture turns one photo into confirmable canonical care card 
     calls.push('/api/onboard/candidates/confirm');
     expect(route.request().postDataJSON()).toMatchObject({
       confirmedIds: ['candidate-1'],
-      candidateEdits: [expect.objectContaining({ id: 'candidate-1', type: 'injection', title: '오비드렐 주사' })],
+      candidateEdits: [expect.objectContaining({ id: 'candidate-1', type: 'injection', title: '오비드렐 주사', assignedTo: 'partner_action', scheduled_at: '2026-05-19T13:00:00.000Z' })],
     });
     await route.fulfill({ json: { savedCount: 1, items: [{ title: '오비드렐 주사' }] } });
   });
@@ -25,6 +25,8 @@ test('prescription capture turns one photo into confirmable canonical care card 
 
   await expect(page.getByLabel('카드 후보 확인')).toBeVisible();
   await expect(page.locator('input[value="오비드렐 주사"]')).toBeVisible();
+  await page.getByLabel('담당').selectOption('partner_action');
+  await page.getByLabel('후보 시간').fill('2026-05-19T22:00');
   await page.getByRole('button', { name: '확인 후 저장' }).click();
 
   await expect(page.getByText('저장됐어요. 1개 카드가 준비됐습니다.')).toBeVisible();

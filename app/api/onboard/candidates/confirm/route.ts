@@ -13,7 +13,8 @@ type SplitCandidateRow = {
   source_text: string;
   suggested_card_type: 'injection' | 'medication' | 'clinic_visit' | 'clinic_confirmation' | 'partner_support' | 'record' | 'general_action' | null;
 };
-type CandidateEdit = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null };
+type CandidateOwner = 'my_action' | 'partner_action';
+type CandidateEdit = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null; assignedTo: CandidateOwner };
 type ConfirmBody = { confirmedIds?: unknown; rejectedIds?: unknown; candidateEdits?: unknown };
 interface SplitCandidatesTable {
   select(columns: string): {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
       created_by: user.id,
       source_input_id: candidate.candidate.visit_input_id,
       split_candidate_id: candidate.candidate.id,
-      assignee_role: 'primary_user',
+      assignee_role: candidate.edit.assignedTo === 'partner_action' ? 'partner' : 'primary_user',
       card_type: toCareCardType(candidate.edit.type),
       title: candidate.edit.title,
       description: formatDose(candidate.edit.dose, candidate.edit.unit),
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
       status: 'confirmed',
       confirmation_required: false,
       user_marked_important: candidate.edit.type === 'injection',
-      partner_visible: false,
+      partner_visible: candidate.edit.assignedTo === 'partner_action',
     }));
 
   let items: ScheduleItem[] = [];
@@ -154,7 +155,12 @@ function normalizeCandidateEdit(value: unknown): CandidateEdit | null {
     scheduled_at: normalizeNullableIso(candidate.scheduled_at),
     dose: normalizeNullableText(candidate.dose),
     unit: normalizeNullableText(candidate.unit),
+    assignedTo: normalizeCandidateOwner(candidate.assignedTo),
   };
+}
+
+function normalizeCandidateOwner(value: unknown): CandidateOwner {
+  return value === 'partner_action' ? 'partner_action' : 'my_action';
 }
 
 function normalizeScheduleType(value: unknown): ScheduleType | null {
