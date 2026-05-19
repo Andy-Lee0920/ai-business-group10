@@ -5,6 +5,7 @@ import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-sup
 import { createSupabaseServiceRoleClient } from '../../../../src/lib/server-supabase-admin';
 import { createCaptureStore } from '../../../../src/lib/capture-confirm-store';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
+import { filterMedicalAdviceCandidates } from '../../../../src/domain/schedule-extraction-safety';
 import type { ScheduleType } from '../../../../src/types/slc.types';
 
 const CLINIC_PHOTOS_BUCKET = 'clinic-photos';
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
   });
   if (presentation) await removePresentationImage(imagePath).catch(() => null);
 
-  const candidates = normalizeCandidates(data?.candidates);
+  const candidates = filterMedicalAdviceCandidates(normalizeCandidates(data?.candidates));
   if (candidates.length === 0) return NextResponse.json({ candidates: [] });
 
   if (presentation) {

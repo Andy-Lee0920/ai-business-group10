@@ -4,6 +4,7 @@ import { isPresentationRequest } from '../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 import { createCaptureStore } from '../../../../src/lib/capture-confirm-store';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
+import { filterMedicalAdviceCandidates } from '../../../../src/domain/schedule-extraction-safety';
 import type { ScheduleType } from '../../../../src/types/slc.types';
 
 type DbError = { message: string };
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
       body: { mode: 'text', rawText, patientId: 'presentation' },
     });
     const candidates = normalizeCandidates(data?.candidates);
-    const safeCandidates = chooseSafeTextCandidates(rawText, candidates);
+    const safeCandidates = filterMedicalAdviceCandidates(chooseSafeTextCandidates(rawText, candidates));
     return NextResponse.json({ candidates: withPresentationIds(safeCandidates) });
   }
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
   });
 
   const candidates = normalizeCandidates(data?.candidates);
-  const safeCandidates = chooseSafeTextCandidates(rawText, candidates);
+  const safeCandidates = filterMedicalAdviceCandidates(chooseSafeTextCandidates(rawText, candidates));
   if (safeCandidates.length === 0) return NextResponse.json({ candidates: [] });
 
   const store = await createCaptureStore(request);

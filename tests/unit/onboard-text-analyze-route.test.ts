@@ -208,6 +208,19 @@ describe('/api/onboard/text-analyze', () => {
     vi.useRealTimers();
   });
 
+  it('drops extracted text candidates that contain medical advice language before draft persistence', async () => {
+    state.user = { id: 'patient-1' };
+    state.candidates = [{ type: 'medication', title: '복용을 중단하세요', scheduled_at: null, dose: null, unit: null }];
+    const { POST } = await import('../../app/api/onboard/text-analyze/route');
+
+    const response = await POST(request({ rawText: '병원 안내 메모' }));
+    const payload = await response.json() as { candidates: unknown[] };
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({ candidates: [] });
+    expect(state.insertCalls).toHaveLength(0);
+  });
+
   it('expands explicit start date, dose, duration, and daily time into dated candidates', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-15T03:00:00.000Z'));

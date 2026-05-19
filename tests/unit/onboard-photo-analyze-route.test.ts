@@ -149,4 +149,17 @@ describe('/api/onboard/photo-analyze', () => {
     expect(payload).toEqual({ candidates: [] });
     expect(state.insertCalls).toHaveLength(0);
   });
+
+  it('drops extracted image candidates that contain medical advice language before draft persistence', async () => {
+    state.user = { id: 'patient-1' };
+    state.candidates = [{ type: 'medication', title: '용량을 늘리세요', scheduled_at: null, dose: null, unit: null }];
+    const { POST } = await import('../../app/api/onboard/photo-analyze/route');
+
+    const response = await POST(request({ imagePath: 'patient-1/photo.jpg' }));
+    const payload = await response.json() as { candidates: unknown[] };
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({ candidates: [] });
+    expect(state.insertCalls).toHaveLength(0);
+  });
 });
