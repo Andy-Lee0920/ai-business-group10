@@ -20,6 +20,11 @@ This runbook is the reproducible evidence path for #382 and #383. It does not re
    - `push_subscriptions`: user, endpoint masked, created/updated timestamp, no clinic payload columns.
    - `reminder_dispatches`: `card_id`, `scheduled_at`, `channel`, `status`, `provider_message_id` masked, `sent_at`.
 6. Re-run the scheduler once after a successful send and confirm duplicate dispatch is skipped rather than creating a second sent row for the same `(card_id, scheduled_at, channel)`.
+7. Use the evidence helper after the device receives/taps the notification; endpoint/provider ids are masked and subscription keys are not printed:
+
+   ```bash
+   node scripts/collect-pwa-live-push-evidence.mjs --user-id <user-id> --card-id <card-id> --rerun-scheduler
+   ```
 
 ## Android Chrome (#382)
 
