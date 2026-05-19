@@ -4,7 +4,7 @@ Objective: 사진 한 장 → confirmed care card → Home/Partner/Reminder가 �
 
 This audit is a handoff artifact, not a completion claim. Do not mark the goal complete while the remaining live-device Reds below are open.
 
-Latest audit refresh: `2026-05-19`, production runtime commit `9e70d761bbd2`, deploy `dpl_CMmERcZxKef1jsfe7KawDnAGaeai`. Later `main` commits are guard/runbook/audit tooling only unless explicitly noted as product runtime changes; no product runtime redeploy is required for the remaining physical-device evidence collection.
+Latest audit refresh: `2026-05-19`, production alias refreshed at commit `87d1481b88cd`, deploy `dpl_4eG6du4wdJ52aBqqMNvUgF9FqWBw`. Product runtime behavior was introduced by commit `9e70d761bbd2`; later `main` commits are post-runtime guard/runbook tooling unless explicitly noted as product runtime changes.
 
 Production-level SLC backup branches are preserved at runtime commit `9e70d761bbd2`: `2026-05-19-SLC` and `backup/2026-05-19-SLC`.
 
@@ -40,7 +40,7 @@ Production-level SLC backup branches are preserved at runtime commit `9e70d761bb
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
-- Latest production refresh on runtime commit `9e70d761bbd2` passed `npm run typecheck`, `npm test` (169 files / 628 tests), `npm run build`, `npm run test:e2e` (6/6), deploy smoke, and production PWA prerequisite smoke. Later post-runtime guard/runbook tooling commits were verified with `npm run typecheck`, `npm test` (171 files / 634 tests), `npm run verify:mvp:readiness`, `npm run verify:push:issues`, and expected failing completion/device gates.
+- Latest production refresh on commit `87d1481b88cd` passed `npm run typecheck`, `npm test` (171 files / 634 tests), `npm run build`, `npm run test:e2e` (6/6), deploy smoke, production deploy source verification, production PWA prerequisite smoke, `npm run verify:mvp:readiness`, `npm run verify:push:issues`, and expected failing completion/device gates.
 
 
 ## Production PWA prerequisite smoke
@@ -50,7 +50,7 @@ Green evidence:
 - Command: `npm run smoke:pwa:production`.
 - Script: `scripts/verify-production-pwa-prereqs.mjs`.
 - Production URL: `https://project-oznp0.vercel.app`.
-- Latest deploy: `dpl_CMmERcZxKef1jsfe7KawDnAGaeai` for commit `9e70d761bbd2`.
+- Latest deploy: `dpl_4eG6du4wdJ52aBqqMNvUgF9FqWBw` for commit `87d1481b88cd`.
 - Verified `/manifest.json` has `id`, `scope`, `start_url`, `display: standalone`, and icons.
 - Verified `/sw.js` handles push display and `notificationclick` tap-through to `/home`.
 - Verified `/api/push/subscribe` and `/api/reminders/send-due` are reachable but auth-safe without test credentials (`405/401` in the latest production smoke).
