@@ -4,6 +4,8 @@ Objective: 사진 한 장 → confirmed care card → Home/Partner/Reminder가 �
 
 This audit is a handoff artifact, not a completion claim. Do not mark the goal complete while the remaining live-device Reds below are open.
 
+Latest audit refresh: `2026-05-19`, production commit `84cb056268be`, deploy `dpl_5CbhyJpgYeJCaGktxfxwRoiRW2tn`.
+
 ## Fixed decisions
 
 - ADR0013: new photo/OCR/AI flow uses the canonical `split_candidates → care_action_cards` spine. `schedule_items` and `schedule_candidates` are legacy fallback only.
@@ -36,6 +38,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
+- Latest production refresh on commit `84cb056268be` passed `npm run typecheck`, `npm test` (167 files / 623 tests), `npm run build`, `npm run test:e2e` (6/6), deploy smoke, and production PWA prerequisite smoke.
 
 
 ## Production PWA prerequisite smoke
@@ -45,6 +48,7 @@ Green evidence:
 - Command: `npm run smoke:pwa:production`.
 - Script: `scripts/verify-production-pwa-prereqs.mjs`.
 - Production URL: `https://project-oznp0.vercel.app`.
+- Latest deploy: `dpl_5CbhyJpgYeJCaGktxfxwRoiRW2tn` for commit `84cb056268be`.
 - Verified `/manifest.json` has `id`, `scope`, `start_url`, `display: standalone`, and icons.
 - Verified `/sw.js` handles push display and `notificationclick` tap-through to `/home`.
 - Verified `/api/push/subscribe` and `/api/reminders/send-due` are reachable but auth-safe without test credentials (`405/401` in the latest production smoke).
@@ -107,6 +111,19 @@ Green evidence:
 - Production fixture smoke now scores `20/20` and keeps candidate types aligned with source: `injection`, `medication`, `clinic`.
 
 ## Remaining Reds
+
+### Current runner blocker
+
+Codex runner cannot produce the final physical-device evidence in its current state:
+
+- `adb devices`: `adb` is not installed.
+- `xcrun xctrace list devices`: no physical iOS device surfaced.
+- USB scan: no iPhone/iPad/Android device detected.
+
+GitHub blocker comments:
+
+- Android #382: https://github.com/Andy-Lee0920/ai-business-group10/issues/382#issuecomment-4486241271
+- iOS #383: https://github.com/Andy-Lee0920/ai-business-group10/issues/383#issuecomment-4486241479
 
 ### #382 Android live push
 
