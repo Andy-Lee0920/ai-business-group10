@@ -4,7 +4,7 @@ Objective: 사진 한 장 → confirmed care card → Home/Partner/Reminder가 �
 
 This audit is a handoff artifact, not a completion claim. Do not mark the goal complete while the remaining live-device Reds below are open.
 
-Latest audit refresh: `2026-05-19`, production commit `0b0704d1981f`, deploy `dpl_DEf3vUicHrQqsDS1otUG24UnhBLi`.
+Latest audit refresh: `2026-05-19`, production commit `9e70d761bbd2`, deploy `dpl_CMmERcZxKef1jsfe7KawDnAGaeai`.
 
 ## Fixed decisions
 
@@ -38,7 +38,7 @@ Latest audit refresh: `2026-05-19`, production commit `0b0704d1981f`, deploy `dp
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
-- Latest production refresh on commit `0b0704d1981f` passed `npm run typecheck`, `npm test` (168 files / 626 tests), `npm run build`, `npm run test:e2e` (6/6), deploy smoke, and production PWA prerequisite smoke.
+- Latest production refresh on commit `9e70d761bbd2` passed `npm run typecheck`, `npm test` (169 files / 628 tests), `npm run build`, `npm run test:e2e` (6/6), deploy smoke, and production PWA prerequisite smoke.
 
 
 ## Production PWA prerequisite smoke
@@ -48,7 +48,7 @@ Green evidence:
 - Command: `npm run smoke:pwa:production`.
 - Script: `scripts/verify-production-pwa-prereqs.mjs`.
 - Production URL: `https://project-oznp0.vercel.app`.
-- Latest deploy: `dpl_DEf3vUicHrQqsDS1otUG24UnhBLi` for commit `0b0704d1981f`.
+- Latest deploy: `dpl_CMmERcZxKef1jsfe7KawDnAGaeai` for commit `9e70d761bbd2`.
 - Verified `/manifest.json` has `id`, `scope`, `start_url`, `display: standalone`, and icons.
 - Verified `/sw.js` handles push display and `notificationclick` tap-through to `/home`.
 - Verified `/api/push/subscribe` and `/api/reminders/send-due` are reachable but auth-safe without test credentials (`405/401` in the latest production smoke).
