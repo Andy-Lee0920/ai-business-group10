@@ -23,19 +23,32 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 | #385 | Home hero is low-noise: no countdown 3-row info block or overdue 3-chip stats in first fold; clinic completion copy is not “복용했나요?” | Today screen tests and production mobile smoke | Green/closed |
 | #388 | Medication reference image chosen by deterministic mapping only; image hides when unmapped; copy is “확인을 돕는 참고 이미지” | ADR0014, reference asset mapping, home visual smoke | Green/closed |
 | #376 | Same-image current-vs-Gemini OpenRouter comparison before any model switch | `scripts/compare-openrouter-vision-models.mjs`, `scripts/vision-model-quality.mjs`, `tests/fixtures/vision-model/*`, production-safe temporary Supabase comparison evidence | Green/closed: Gemini 20/20 vs Haiku 17/20; production schedule-extract smoke 20/20 after env switch |
-| #377 | PWA manifest/SW/subscription infrastructure exists | `public/manifest.json`, `public/sw.js`, `src/lib/pwa-push-client.ts`, `src/lib/pwa-install-guidance.ts`, `tests/unit/push-infra-contract.test.ts` | Parent open: implementation Green, live child Reds remain |
+| #377 | PWA manifest/SW/subscription infrastructure exists | `public/manifest.json`, `public/sw.js`, `src/lib/pwa-push-client.ts`, `src/lib/pwa-install-guidance.ts`, `scripts/verify-production-pwa-prereqs.mjs`, `tests/unit/push-infra-contract.test.ts` | Parent open: implementation Green, production prerequisite smoke Green, live child Reds remain |
 | #380 | pg_cron/server scheduler path exists and is authenticated | scheduler migration, `CRON_SECRET` Vercel env name evidence, send-due tests | Parent open: server Green, live child Reds remain |
 | #382 | Android live device receives/taps/dedups PWA notification | `docs/qa/pwa-live-push-smoke.md`, `scripts/prepare-pwa-live-push-card.mjs`, `scripts/collect-pwa-live-push-evidence.mjs`, `scripts/archive-pwa-live-push-card.mjs` | Red/open: real Android device evidence required |
 | #383 | iPhone Home Screen PWA receives/taps/dedups PWA notification | `docs/qa/pwa-live-push-smoke.md`, `scripts/prepare-pwa-live-push-card.mjs`, `scripts/collect-pwa-live-push-evidence.mjs`, `scripts/archive-pwa-live-push-card.mjs` | Red/open: real iPhone Home Screen PWA evidence required |
 
 ## Verification already run
 
-- Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, and synthetic-card archive helper.
+- Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, synthetic-card archive helper, npm live-smoke helper commands, and production PWA prerequisite smoke.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 161 files / 607 tests after live-push prep/evidence/archive helper additions.
+- `npm test` passed: 163 files / 612 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, and production PWA prerequisite smoke.
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
+
+
+## Production PWA prerequisite smoke
+
+Green evidence:
+
+- Command: `npm run smoke:pwa:production`.
+- Script: `scripts/verify-production-pwa-prereqs.mjs`.
+- Production URL: `https://project-oznp0.vercel.app`.
+- Verified `/manifest.json` has `id`, `scope`, `start_url`, `display: standalone`, and icons.
+- Verified `/sw.js` handles push display and `notificationclick` tap-through to `/home`.
+- Verified `/api/push/subscribe` and `/api/reminders/send-due` are reachable but auth-safe without test credentials (`405/401` in the latest production smoke).
+- This does not replace live-device evidence for #382/#383.
 
 ## Completed model gate
 
@@ -57,6 +70,7 @@ Green evidence:
 
 Requires real Android device evidence:
 
+- Prerequisite smoke: `npm run smoke:pwa:production` before physical device testing
 - L1: push subscription row
 - L2: reminder dispatch row
 - L3: OS notification tray receipt
@@ -71,6 +85,7 @@ Requires real Android device evidence:
 
 Requires real iPhone Home Screen PWA evidence:
 
+- Prerequisite smoke: `npm run smoke:pwa:production` before physical device testing
 - iG1: Add to Home Screen guidance
 - iG2: gesture-bound permission request
 - iG3: manifest id/scope/start_url/standalone/icons

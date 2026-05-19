@@ -24,6 +24,9 @@ describe('MVP visible delta completion audit', () => {
       'gesture-bound',
       'docs/qa/pwa-live-push-smoke.md',
       'scripts/compare-openrouter-vision-models.mjs',
+      'npm run smoke:pwa:production',
+      'scripts/verify-production-pwa-prereqs.mjs',
+      '163 files / 612 tests',
     ]) {
       expect(audit).toContain(artifact);
     }
