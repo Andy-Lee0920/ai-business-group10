@@ -33,7 +33,8 @@ describe('MVP visible delta completion audit', () => {
       'scripts/create-live-push-evidence-bundle.mjs',
       'smoke:push:bundle',
       'verify:push:closure',
-      '167 files / 623 tests',
+      '171 files / 633 tests',
+      'verify:mvp:complete',
     ]) {
       expect(audit).toContain(artifact);
     }
