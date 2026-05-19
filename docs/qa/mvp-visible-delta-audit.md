@@ -32,7 +32,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 - Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, synthetic-card archive helper, npm live-smoke helper commands, production PWA prerequisite smoke, and GitHub-ready live-device evidence comment formatting.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 164 files / 614 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, and evidence comment formatting.
+- `npm test` passed: 165 files / 617 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, evidence comment formatting, and closure evidence guarding.
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
@@ -59,6 +59,17 @@ Green evidence:
 - Command option: `npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler --format github-comment --platform ios`.
 - Script support: `scripts/collect-pwa-live-push-evidence.mjs` formats masked DB rows into #382/#383 GitHub comment templates.
 - The generated `github-comment` output still requires attached physical-device screenshots/videos before closure.
+
+
+## Live-device closure guard
+
+Green evidence:
+
+- Command: `npm run verify:push:closure -- --platform android --evidence-json evidence.json --l3-media l3-tray.png --l4-media l4-home.png --l6-media l6-lockscreen.mov`.
+- Command: `npm run verify:push:closure -- --platform ios --evidence-json evidence.json --ios-install-media ios-homescreen.png --l3-media l3-notification.png --l4-media l4-home.png --l6-media l6-lockscreen.mov`.
+- Script: `scripts/verify-live-push-closure-evidence.mjs`.
+- The guard fails DB-only packages and requires L3/L4/L6 physical media files; iOS additionally requires Home Screen install media.
+- Passing the guard does not replace reviewer judgment or the required GitHub evidence comments.
 
 ## Completed model gate
 

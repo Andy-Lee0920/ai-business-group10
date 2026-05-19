@@ -54,6 +54,18 @@ npm run smoke:pwa:production
    npm run smoke:push:archive -- --card-id <card-id>
    ```
 
+
+## Closure guard
+
+Before closing #382 or #383, save the JSON output from `npm run smoke:push:evidence` and verify the physical evidence bundle locally. This guard requires DB evidence plus L3/L4/L6 media files, and iOS additionally requires Home Screen install media.
+
+```bash
+npm run verify:push:closure -- --platform android --evidence-json evidence.json --l3-media l3-tray.png --l4-media l4-home.png --l6-media l6-lockscreen.mov
+npm run verify:push:closure -- --platform ios --evidence-json evidence.json --ios-install-media ios-homescreen.png --l3-media l3-notification.png --l4-media l4-home.png --l6-media l6-lockscreen.mov
+```
+
+Passing this guard does not replace reviewer judgment; it only prevents DB-only closure.
+
 ## Android Chrome (#382)
 
 Green gates:

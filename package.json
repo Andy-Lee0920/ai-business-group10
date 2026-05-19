@@ -21,7 +21,8 @@
     "smoke:push:prepare": "node scripts/prepare-pwa-live-push-card.mjs",
     "smoke:push:evidence": "node scripts/collect-pwa-live-push-evidence.mjs",
     "smoke:push:archive": "node scripts/archive-pwa-live-push-card.mjs",
-    "smoke:pwa:production": "node scripts/verify-production-pwa-prereqs.mjs"
+    "smoke:pwa:production": "node scripts/verify-production-pwa-prereqs.mjs",
+    "verify:push:closure": "node scripts/verify-live-push-closure-evidence.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.3",
