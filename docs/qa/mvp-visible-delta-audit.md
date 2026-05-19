@@ -32,7 +32,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 - Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, synthetic-card archive helper, npm live-smoke helper commands, production PWA prerequisite smoke, and GitHub-ready live-device evidence comment formatting.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 165 files / 617 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, evidence comment formatting, and closure evidence guarding.
+- `npm test` passed: 166 files / 619 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, evidence comment formatting, closure evidence guarding, and service-worker notificationclick behavior coverage.
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
@@ -60,6 +60,16 @@ Green evidence:
 - Script support: `scripts/collect-pwa-live-push-evidence.mjs` formats masked DB rows into #382/#383 GitHub comment templates.
 - The generated `github-comment` output still requires attached physical-device screenshots/videos before closure.
 
+
+
+## Service-worker tap-through behavior
+
+Green evidence:
+
+- Test: `tests/unit/service-worker-notificationclick-behavior.test.ts`.
+- Verifies notification clicks without an explicit URL open `https://project-oznp0.vercel.app/home`.
+- Verifies push payload URLs must be path-only; external URLs fall back to `/home`.
+- This supports L4 readiness but does not replace physical notification tap-through evidence for #382/#383.
 
 ## Live-device closure guard
 
