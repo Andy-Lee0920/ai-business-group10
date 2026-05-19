@@ -25,12 +25,12 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 | #376 | Same-image current-vs-Gemini OpenRouter comparison before any model switch | `scripts/compare-openrouter-vision-models.mjs`, `scripts/vision-model-quality.mjs`, `tests/fixtures/vision-model/*`, production-safe temporary Supabase comparison evidence | Green/closed: Gemini 20/20 vs Haiku 17/20; production schedule-extract smoke 20/20 after env switch |
 | #377 | PWA manifest/SW/subscription infrastructure exists | `public/manifest.json`, `public/sw.js`, `src/lib/pwa-push-client.ts`, `src/lib/pwa-install-guidance.ts`, `tests/unit/push-infra-contract.test.ts` | Parent open: implementation Green, live child Reds remain |
 | #380 | pg_cron/server scheduler path exists and is authenticated | scheduler migration, `CRON_SECRET` Vercel env name evidence, send-due tests | Parent open: server Green, live child Reds remain |
-| #382 | Android live device receives/taps/dedups PWA notification | `docs/qa/pwa-live-push-smoke.md`, `scripts/prepare-pwa-live-push-card.mjs`, `scripts/collect-pwa-live-push-evidence.mjs` | Red/open: real Android device evidence required |
-| #383 | iPhone Home Screen PWA receives/taps/dedups PWA notification | `docs/qa/pwa-live-push-smoke.md`, `scripts/prepare-pwa-live-push-card.mjs`, `scripts/collect-pwa-live-push-evidence.mjs` | Red/open: real iPhone Home Screen PWA evidence required |
+| #382 | Android live device receives/taps/dedups PWA notification | `docs/qa/pwa-live-push-smoke.md`, `scripts/prepare-pwa-live-push-card.mjs`, `scripts/collect-pwa-live-push-evidence.mjs`, `scripts/archive-pwa-live-push-card.mjs` | Red/open: real Android device evidence required |
+| #383 | iPhone Home Screen PWA receives/taps/dedups PWA notification | `docs/qa/pwa-live-push-smoke.md`, `scripts/prepare-pwa-live-push-card.mjs`, `scripts/collect-pwa-live-push-evidence.mjs`, `scripts/archive-pwa-live-push-card.mjs` | Red/open: real iPhone Home Screen PWA evidence required |
 
 ## Verification already run
 
-- Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, and masked live-push evidence helper.
+- Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, and synthetic-card archive helper.
 - `npm run typecheck` passed after the implementation slices.
 - `npm test` passed: 158 files / 601 tests after the Gemini model switch and completeness selector repair.
 - `npm run build` passed after the latest implementation and QA artifacts.
@@ -65,6 +65,7 @@ Requires real Android device evidence:
 - L7: live dedup for `(card_id, scheduled_at, channel)`
 - Prep helper: `node scripts/prepare-pwa-live-push-card.mjs --user-id <user-id> --offset-minutes 15` after privacy gate acceptance
 - Evidence helper: `node scripts/collect-pwa-live-push-evidence.mjs --user-id <user-id> --card-id <card-id> --rerun-scheduler` after physical receipt/tap evidence
+- Archive helper: `node scripts/archive-pwa-live-push-card.mjs --card-id <card-id>` after evidence capture, only for synthetic smoke cards
 
 ### #383 iOS live push
 
@@ -81,6 +82,7 @@ Requires real iPhone Home Screen PWA evidence:
 - L7: live dedup for `(card_id, scheduled_at, channel)`
 - Prep helper: `node scripts/prepare-pwa-live-push-card.mjs --user-id <user-id> --offset-minutes 15` after privacy gate acceptance
 - Evidence helper: `node scripts/collect-pwa-live-push-evidence.mjs --user-id <user-id> --card-id <card-id> --rerun-scheduler` after physical receipt/tap evidence
+- Archive helper: `node scripts/archive-pwa-live-push-card.mjs --card-id <card-id>` after evidence capture, only for synthetic smoke cards
 
 ## Stop condition
 

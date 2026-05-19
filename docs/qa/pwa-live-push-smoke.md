@@ -31,6 +31,12 @@ This runbook is the reproducible evidence path for #382 and #383. It does not re
    node scripts/collect-pwa-live-push-evidence.mjs --user-id <user-id> --card-id <card-id> --rerun-scheduler
    ```
 
+8. Optional cleanup after evidence is captured: archive only the synthetic smoke card, never delete care history:
+
+   ```bash
+   node scripts/archive-pwa-live-push-card.mjs --card-id <card-id>
+   ```
+
 ## Android Chrome (#382)
 
 Green gates:
