@@ -32,7 +32,7 @@ describe('MVP visible delta completion audit', () => {
     expect(audit).toContain('OPENROUTER_API_KEY');
     expect(audit).toContain('real Android device');
     expect(audit).toContain('real iPhone Home Screen PWA');
-    expect(audit).toContain('OPENROUTER_API_KEY=...');
+    expect(audit).toContain('Gemini 20/20');
     expect(audit).not.toMatch(/VAPID_PRIVATE_KEY\s*=|Bearer [A-Za-z0-9._-]+/u);
   });
 });

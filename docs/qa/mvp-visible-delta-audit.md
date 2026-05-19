@@ -2,7 +2,7 @@
 
 Objective: 사진 한 장 → confirmed care card → Home/Partner/Reminder가 같은 canonical card를 본다.
 
-This audit is a handoff artifact, not a completion claim. Do not mark the goal complete while the remaining Reds below are open.
+This audit is a handoff artifact, not a completion claim. Do not mark the goal complete while the remaining live-device Reds below are open.
 
 ## Fixed decisions
 
@@ -22,7 +22,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 | #384 | Partner first fold is `오늘 도와줄 일`, action-first, raw memo/token hidden, 3s visible-only polling | `PartnerRoleSurface`, `partner_assist_at`, partner route/e2e evidence | Green/closed |
 | #385 | Home hero is low-noise: no countdown 3-row info block or overdue 3-chip stats in first fold; clinic completion copy is not “복용했나요?” | Today screen tests and production mobile smoke | Green/closed |
 | #388 | Medication reference image chosen by deterministic mapping only; image hides when unmapped; copy is “확인을 돕는 참고 이미지” | ADR0014, reference asset mapping, home visual smoke | Green/closed |
-| #376 | Same-image current-vs-Gemini OpenRouter comparison before any model switch | `scripts/compare-openrouter-vision-models.mjs`, `scripts/vision-model-quality.mjs`, `tests/fixtures/vision-model/*`, `tests/unit/vision-model-fixtures.test.ts` | Red/open: needs runtime key and comparison JSON |
+| #376 | Same-image current-vs-Gemini OpenRouter comparison before any model switch | `scripts/compare-openrouter-vision-models.mjs`, `scripts/vision-model-quality.mjs`, `tests/fixtures/vision-model/*`, production-safe temporary Supabase comparison evidence | Green/closed: Gemini 20/20 vs Haiku 17/20; production schedule-extract smoke 20/20 after env switch |
 | #377 | PWA manifest/SW/subscription infrastructure exists | `public/manifest.json`, `public/sw.js`, `src/lib/pwa-push-client.ts`, `src/lib/pwa-install-guidance.ts`, `tests/unit/push-infra-contract.test.ts` | Parent open: implementation Green, live child Reds remain |
 | #380 | pg_cron/server scheduler path exists and is authenticated | scheduler migration, `CRON_SECRET` Vercel env name evidence, send-due tests | Parent open: server Green, live child Reds remain |
 | #382 | Android live device receives/taps/dedups PWA notification | `docs/qa/pwa-live-push-smoke.md` | Red/open: real Android device evidence required |
@@ -32,37 +32,26 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 - Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, and live-smoke runbook.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 158 files / 601 tests after the schedule-extract heading repair.
+- `npm test` passed: 158 files / 601 tests after the Gemini model switch and completeness selector repair.
 - `npm run build` passed after the latest implementation and QA artifacts.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
 
-## Remaining Reds
+## Completed model gate
 
 ### #376 model gate
 
-Current state:
+Green evidence:
 
-- `scripts/compare-openrouter-vision-models.mjs` exists.
-- `scripts/smoke-production-schedule-extract-fixtures.mjs` captures the production default baseline through Supabase Edge Function without exposing OpenRouter key values.
-- Production default baseline now filters non-action headings such as `주사 안내`; `clinic-note-mixed` no longer emits generic `주사`. Current score remains `15/20`, with remaining quality gaps in date normalization and dose/unit extraction.
 - Synthetic, production-safe fixtures exist under `tests/fixtures/vision-model/`.
-- Supabase has an `OPENROUTER_API_KEY` secret name, but only its digest is visible.
-- Local `.env.local` has no readable `OPENROUTER_API_KEY`.
-- `OPENROUTER_VISION_MODEL` is not currently set in Supabase, so `schedule-extract` uses its code default.
+- Same-image current-vs-Gemini comparison ran through a temporary Supabase Edge Function using the existing `OPENROUTER_API_KEY` secret without exposing the key. The temporary function was deleted after the run.
+- Result: `google/gemini-3-flash-preview` scored `20/20`; `anthropic/claude-haiku-4.5` scored `17/20`.
+- Supabase Edge Function env `OPENROUTER_VISION_MODEL=google/gemini-3-flash-preview` is set.
+- Vercel Production env `OPENROUTER_VISION_MODEL=google/gemini-3-flash-preview` is set.
+- `schedule-extract` was redeployed.
+- Production fixture smoke now scores `20/20` and keeps candidate types aligned with source: `injection`, `medication`, `clinic`.
 
-Required next command when a readable key is available:
-
-```bash
-OPENROUTER_API_KEY=... \
-node scripts/compare-openrouter-vision-models.mjs \
-  --sample tests/fixtures/vision-model/clinic-note-ovidrel.png \
-  --sample tests/fixtures/vision-model/clinic-note-mixed.png \
-  --expect tests/fixtures/vision-model/expected-candidates.json \
-  > /tmp/fevio-vision-model-comparison.json
-```
-
-Close #376 only after the JSON result and model decision are posted. If Gemini wins, set `OPENROUTER_VISION_MODEL`, deploy, and smoke `/onboard/prescription-capture → confirm → /home`.
+## Remaining Reds
 
 ### #382 Android live push
 
@@ -91,4 +80,4 @@ Requires real iPhone Home Screen PWA evidence:
 
 ## Stop condition
 
-Do not mark the goal complete until #376, #382, and #383 have concrete evidence comments and their parent issues #377/#380 are either closed with child Green evidence or explicitly scoped out by the owner.
+Do not mark the goal complete until #382 and #383 have concrete live-device evidence comments and their parent issues #377/#380 are either closed with child Green evidence or explicitly scoped out by the owner.

@@ -362,7 +362,24 @@ function normalizeDoseUnit(unit: string) {
 function chooseCandidateSet(deterministicCandidates: ScheduleCandidate[], llmCandidates: ScheduleCandidate[]) {
   if (!deterministicCandidates.length) return llmCandidates;
   if (!llmCandidates.length) return deterministicCandidates;
-  return deterministicCandidates.length >= llmCandidates.length ? deterministicCandidates : llmCandidates;
+  if (deterministicCandidates.length !== llmCandidates.length) {
+    return deterministicCandidates.length > llmCandidates.length ? deterministicCandidates : llmCandidates;
+  }
+
+  const deterministicScore = scoreCandidateSetCompleteness(deterministicCandidates);
+  const llmScore = scoreCandidateSetCompleteness(llmCandidates);
+  return llmScore > deterministicScore ? llmCandidates : deterministicCandidates;
+}
+
+function scoreCandidateSetCompleteness(candidates: ScheduleCandidate[]) {
+  return candidates.reduce((score, candidate) => {
+    const hasKnownTitle = candidate.title && candidate.title !== '주사' && candidate.title !== '약';
+    return score
+      + (candidate.scheduled_at ? 3 : 0)
+      + (candidate.dose ? 1 : 0)
+      + (candidate.unit ? 1 : 0)
+      + (hasKnownTitle ? 1 : 0);
+  }, 0);
 }
 
 function extractDeterministicTextCandidates(rawText: string, now = new Date()): ScheduleCandidate[] {

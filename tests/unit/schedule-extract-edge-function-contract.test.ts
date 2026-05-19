@@ -101,7 +101,7 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('const deterministicCandidates = parsed.sourceText ? extractDeterministicTextCandidates(parsed.sourceText) : []');
     expect(code).toContain('return chooseCandidateSet(deterministicCandidates, parsed.candidates)');
     expect(code).toContain('function chooseCandidateSet');
-    expect(code).toContain('deterministicCandidates.length >= llmCandidates.length');
+    expect(code).toContain('deterministicCandidates.length !== llmCandidates.length');
     expect(code).toContain('function extractDeterministicTextCandidates');
     expect(code).toContain('function extractDocumentBaseDateKey');
     expect(code).toContain('function normalizeScheduleInstructionBreaks');
@@ -114,6 +114,8 @@ describe('schedule-extract Edge Function image contract', () => {
     expect(code).toContain('Clinic segments with no date and no time are purpose/description lines, not appointments.');
     expect(code).toContain('section heading, not executable schedule lines');
     expect(code).toContain('주사\\s*안내');
+    expect(code).toContain('function scoreCandidateSetCompleteness');
+    expect(code).toContain('llmScore > deterministicScore');
   });
 
   it('repairs common vision extraction mistakes from Korean IVF notices', () => {
