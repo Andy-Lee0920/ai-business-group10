@@ -32,7 +32,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 - Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, live-smoke runbook, synthetic smoke-card preparation helper, masked live-push evidence helper, synthetic-card archive helper, npm live-smoke helper commands, production PWA prerequisite smoke, and GitHub-ready live-device evidence comment formatting.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 166 files / 621 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, evidence comment formatting, closure evidence guarding, and service-worker notificationclick behavior coverage.
+- `npm test` passed: 167 files / 623 tests after live-push prep/evidence/archive helper additions, npm smoke helper entrypoints, production PWA prerequisite smoke, evidence comment formatting, closure evidence guarding, service-worker notificationclick behavior coverage, and live evidence bundle scaffolding.
 - `npm run build` passed after the app/runtime implementation slices; later helper-only commits were verified with typecheck and full unit suite.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
@@ -61,6 +61,17 @@ Green evidence:
 - The generated `github-comment` output still requires attached physical-device screenshots/videos before closure.
 
 
+
+
+## Live-device evidence bundle scaffold
+
+Green evidence:
+
+- Command: `npm run smoke:push:bundle -- --platform android --out-dir tmp/live-push-evidence`.
+- Command: `npm run smoke:push:bundle -- --platform ios --out-dir tmp/live-push-evidence`.
+- Script: `scripts/create-live-push-evidence-bundle.mjs`.
+- Creates a platform-specific README and placeholder `evidence.json` with required media filenames and commands for `smoke:pwa:production`, `smoke:push:prepare`, `smoke:push:evidence`, `verify:push:closure`, and `smoke:push:archive`.
+- This scaffold does not replace real-device media.
 
 ## Service-worker tap-through behavior
 

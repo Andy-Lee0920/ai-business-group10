@@ -10,6 +10,18 @@ This runbook is the reproducible evidence path for #382 and #383. It does not re
 - Dedup key to prove: `(card_id, scheduled_at, channel)`
 - Payload boundary: notification may contain a short card title/time/deeplink only. Do not expose raw clinic memo, raw partner token, VAPID keys, auth tokens, or private user details in screenshots/comments.
 
+
+## Evidence bundle scaffold
+
+To create a local folder with the exact filenames and commands needed for closure review:
+
+```bash
+npm run smoke:push:bundle -- --platform android --out-dir tmp/live-push-evidence
+npm run smoke:push:bundle -- --platform ios --out-dir tmp/live-push-evidence
+```
+
+The generated README still requires real-device media before #382/#383 can close.
+
 ## Production prerequisite smoke
 
 Before using physical Android/iOS devices, verify the deployed PWA shell and auth-safe push routes. This does not replace live-device evidence; it only proves the production URL has the required manifest, service worker, and non-dispatching unauthenticated push endpoints.
