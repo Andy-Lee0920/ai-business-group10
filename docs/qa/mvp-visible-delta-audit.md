@@ -32,7 +32,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 - Targeted tests for canonical photo confirmation, partner assist, home projection, reminder dispatch, PWA infra, safety filtering, vision-model fixtures, and live-smoke runbook.
 - `npm run typecheck` passed after the implementation slices.
-- `npm test` passed: 156 files / 599 tests after the live-smoke runbook.
+- `npm test` passed: 158 files / 601 tests after the schedule-extract heading repair.
 - `npm run build` passed after the latest implementation and QA artifacts.
 - `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
@@ -45,6 +45,7 @@ Current state:
 
 - `scripts/compare-openrouter-vision-models.mjs` exists.
 - `scripts/smoke-production-schedule-extract-fixtures.mjs` captures the production default baseline through Supabase Edge Function without exposing OpenRouter key values.
+- Production default baseline now filters non-action headings such as `주사 안내`; `clinic-note-mixed` no longer emits generic `주사`. Current score remains `15/20`, with remaining quality gaps in date normalization and dose/unit extraction.
 - Synthetic, production-safe fixtures exist under `tests/fixtures/vision-model/`.
 - Supabase has an `OPENROUTER_API_KEY` secret name, but only its digest is visible.
 - Local `.env.local` has no readable `OPENROUTER_API_KEY`.
