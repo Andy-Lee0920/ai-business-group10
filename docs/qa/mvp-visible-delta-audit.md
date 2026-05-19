@@ -67,6 +67,16 @@ Green evidence:
 
 
 
+
+## Physical device readiness preflight
+
+Green evidence:
+
+- Command: `npm run verify:push:devices`.
+- Script: `scripts/verify-live-push-device-readiness.mjs`.
+- Purpose: detects whether the current runner can see a physical Android device and a physical iOS device before attempting #382/#383 live smoke.
+- Current runner status: blocked until physical devices are connected; this command is not a closure gate and does not replace L3/L4/L6/L7 evidence.
+
 ## Live-device evidence bundle scaffold
 
 Green evidence:

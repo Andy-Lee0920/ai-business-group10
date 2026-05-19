@@ -22,6 +22,17 @@ npm run smoke:push:bundle -- --platform ios --out-dir tmp/live-push-evidence
 
 The generated README still requires real-device media before #382/#383 can close.
 
+
+## Physical device readiness preflight
+
+Before attempting the Android/iOS live smoke, verify this runner can actually see physical devices. This command is a blocker detector only; it does not replace L3/L4/L6/L7 evidence.
+
+```bash
+npm run verify:push:devices
+```
+
+Expected Green means both an Android device and an iPhone/iPad are detected. If it fails, keep #382/#383 open and collect the live-smoke evidence from a machine with the required devices.
+
 ## Production prerequisite smoke
 
 Before using physical Android/iOS devices, verify the deployed PWA shell and auth-safe push routes. This does not replace live-device evidence; it only proves the production URL has the required manifest, service worker, and non-dispatching unauthenticated push endpoints.
