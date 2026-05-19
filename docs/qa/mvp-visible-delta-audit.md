@@ -6,6 +6,8 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 
 Latest audit refresh: `2026-05-19`, production runtime commit `9e70d761bbd2`, deploy `dpl_CMmERcZxKef1jsfe7KawDnAGaeai`. Later `main` commits are guard/runbook/audit tooling only unless explicitly noted as product runtime changes; no product runtime redeploy is required for the remaining physical-device evidence collection.
 
+Production-level SLC backup branches are preserved at runtime commit `9e70d761bbd2`: `2026-05-19-SLC` and `backup/2026-05-19-SLC`.
+
 ## Fixed decisions
 
 - ADR0013: new photo/OCR/AI flow uses the canonical `split_candidates → care_action_cards` spine. `schedule_items` and `schedule_candidates` are legacy fallback only.

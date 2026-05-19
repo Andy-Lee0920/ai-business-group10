@@ -37,6 +37,8 @@ describe('MVP visible delta completion audit', () => {
       '171 files / 634 tests',
       'verify:mvp:complete',
       'post-runtime guard/runbook tooling',
+      '2026-05-19-SLC',
+      'backup/2026-05-19-SLC',
     ]) {
       expect(audit).toContain(artifact);
     }
