@@ -18,6 +18,7 @@ describe('MVP visible delta readiness verifier', () => {
     expect(output).toContain('Remaining Red: #382 Android physical live push evidence');
     expect(output).toContain('Remaining Red: #383 iOS Home Screen PWA physical live push evidence');
     expect(output).toContain('Device readiness guard is available for physical live-smoke preflight');
+    expect(output).toContain('Final completion gate requires Android and iOS physical evidence bundles');
     expect(output).toContain('Do not mark goal complete from this readiness check alone');
   });
 });

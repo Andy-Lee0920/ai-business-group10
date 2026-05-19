@@ -186,6 +186,26 @@ Requires real iPhone Home Screen PWA evidence:
 - Evidence helper: `npm run smoke:push:evidence -- --user-id <user-id> --card-id <card-id> --rerun-scheduler` after physical receipt/tap evidence
 - Archive helper: `npm run smoke:push:archive -- --card-id <card-id>` after evidence capture, only for synthetic smoke cards
 
+
+## Final MVP completion gate
+
+The active goal must not be marked complete from readiness checks alone. After Android and iOS evidence bundles are collected, run:
+
+```bash
+npm run verify:mvp:complete -- \
+  --android-evidence-json android-evidence.json \
+  --android-l3-media android-l3.png \
+  --android-l4-media android-l4.png \
+  --android-l6-media android-l6.mov \
+  --ios-evidence-json ios-evidence.json \
+  --ios-install-media ios-install.png \
+  --ios-l3-media ios-l3.png \
+  --ios-l4-media ios-l4.png \
+  --ios-l6-media ios-l6.mov
+```
+
+This wraps readiness plus both physical-device closure evidence checks.
+
 ## Stop condition
 
 Do not mark the goal complete until #382 and #383 have concrete live-device evidence comments and their parent issues #377/#380 are either closed with child Green evidence or explicitly scoped out by the owner.

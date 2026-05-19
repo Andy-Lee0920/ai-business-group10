@@ -78,6 +78,26 @@ npm run smoke:pwa:production
    ```
 
 
+
+## Final MVP completion gate
+
+The active goal must not be marked complete from readiness checks alone. After Android and iOS evidence bundles are collected, run:
+
+```bash
+npm run verify:mvp:complete -- \
+  --android-evidence-json android-evidence.json \
+  --android-l3-media android-l3.png \
+  --android-l4-media android-l4.png \
+  --android-l6-media android-l6.mov \
+  --ios-evidence-json ios-evidence.json \
+  --ios-install-media ios-install.png \
+  --ios-l3-media ios-l3.png \
+  --ios-l4-media ios-l4.png \
+  --ios-l6-media ios-l6.mov
+```
+
+This wraps readiness plus both physical-device closure evidence checks.
+
 ## Closure guard
 
 Before closing #382 or #383, save the JSON output from `npm run smoke:push:evidence` and verify the physical evidence bundle locally. This guard requires DB evidence plus L3/L4/L6 media files, and iOS additionally requires Home Screen install media.

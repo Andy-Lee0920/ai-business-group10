@@ -26,7 +26,8 @@
     "smoke:push:bundle": "node scripts/create-live-push-evidence-bundle.mjs",
     "verify:push:issues": "node scripts/verify-live-push-issue-state.mjs",
     "verify:mvp:readiness": "node scripts/verify-mvp-visible-delta-readiness.mjs",
-    "verify:push:devices": "node scripts/verify-live-push-device-readiness.mjs"
+    "verify:push:devices": "node scripts/verify-live-push-device-readiness.mjs",
+    "verify:mvp:complete": "node scripts/verify-mvp-visible-delta-completion.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.3",

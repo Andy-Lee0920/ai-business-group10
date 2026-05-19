@@ -14,6 +14,7 @@ const requiredFiles = [
   'scripts/verify-live-push-closure-evidence.mjs',
   'scripts/verify-live-push-issue-state.mjs',
   'scripts/verify-live-push-device-readiness.mjs',
+  'scripts/verify-mvp-visible-delta-completion.mjs',
   'scripts/verify-production-pwa-prereqs.mjs',
   'src/domain/reminder-dispatch.ts',
   'src/domain/medication-reference-assets.ts',
@@ -35,6 +36,7 @@ const requiredScripts = [
   'verify:push:closure',
   'verify:push:issues',
   'verify:push:devices',
+  'verify:mvp:complete',
 ];
 for (const script of requiredScripts) {
   if (!packageJson.scripts?.[script]) errors.push(`missing npm script: ${script}`);
@@ -60,6 +62,7 @@ for (const requiredText of [
   'npm run verify:push:closure',
   'npm run verify:push:issues',
   'npm run verify:push:devices',
+  'npm run verify:mvp:complete',
   'Do not close #382',
   'Do not close #383',
 ]) {
@@ -87,6 +90,7 @@ console.log('- Canonical care card spine artifacts are present');
 console.log('- Reminder/PWA/live-smoke helper commands are present');
 console.log('- Audit and runbook preserve live-device Reds');
 console.log('- Device readiness guard is available for physical live-smoke preflight');
+console.log('- Final completion gate requires Android and iOS physical evidence bundles');
 if (!offline) console.log('- GitHub issue state guard passed');
 console.log('Remaining Red: #382 Android physical live push evidence');
 console.log('Remaining Red: #383 iOS Home Screen PWA physical live push evidence');
