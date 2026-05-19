@@ -1,14 +1,29 @@
 {
+  "id": "/",
   "name": "Fevio [페비오]",
   "short_name": "Fevio",
   "description": "병원 메모를 오늘의 부부 실행 카드로 바꾸는 IVF care-operation 앱",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F6F4F1",
   "theme_color": "#6F8F6E",
   "icons": [
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
   ]
 }

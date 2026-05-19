@@ -35,4 +35,16 @@ describe('PWA push infrastructure contract', () => {
     expect(home).toContain('enablePushReminderSubscription');
     expect(home).toContain('data-push-subscription-status');
   });
+
+  it('declares iOS PWA install boundaries before requesting Home Screen push', () => {
+    const manifest = JSON.parse(readFileSync('public/manifest.json', 'utf8')) as Record<string, unknown>;
+    const client = readFileSync('src/lib/pwa-push-client.ts', 'utf8');
+    const home = readFileSync('src/features/today/today-screen.tsx', 'utf8');
+
+    expect(manifest).toMatchObject({ id: '/', scope: '/', display: 'standalone' });
+    expect(client).toContain('getPwaInstallGuidance');
+    expect(home).toContain('홈 화면에 추가');
+    expect(home).toContain('ios_add_to_home_screen');
+  });
+
 });

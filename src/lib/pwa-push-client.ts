@@ -1,3 +1,7 @@
+import { getPwaInstallGuidance } from './pwa-install-guidance';
+
+export { getPwaInstallGuidance };
+
 export type PushReminderSubscriptionStatus =
   | 'idle'
   | 'requesting'

@@ -18,7 +18,7 @@ import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type Hom
 import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-date';
 import { resolveMedicationReferenceAsset } from '../../domain/medication-reference-assets';
 import { isInInjectionCountdownWindow, secondsUntilInjection } from '../adaptive-home/injection-timing';
-import { enablePushReminderSubscription, type PushReminderSubscriptionStatus } from '../../lib/pwa-push-client';
+import { enablePushReminderSubscription, getPwaInstallGuidance, type PushReminderSubscriptionStatus } from '../../lib/pwa-push-client';
 import styles from './today-screen.module.css';
 
 interface TodayScreenProps {
@@ -51,6 +51,7 @@ export function TodayScreen({
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [pushSubscriptionStatus, setPushSubscriptionStatus] = useState<PushReminderSubscriptionStatus>('idle');
+  const [pwaInstallGuidance, setPwaInstallGuidance] = useState<'ios_add_to_home_screen' | 'none'>('none');
   const [reminderPreferenceLoaded, setReminderPreferenceLoaded] = useState(false);
   const [sheetLiftActive, setSheetLiftActive] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -69,6 +70,10 @@ export function TodayScreen({
     } finally {
       setReminderPreferenceLoaded(true);
     }
+  }, []);
+
+  useEffect(() => {
+    setPwaInstallGuidance(getPwaInstallGuidance());
   }, []);
 
   useEffect(() => {
@@ -127,11 +132,16 @@ export function TodayScreen({
       return;
     }
 
+    if (pwaInstallGuidance === 'ios_add_to_home_screen') {
+      setPushSubscriptionStatus('unsupported');
+      return;
+    }
+
     setPushSubscriptionStatus('requesting');
     const status = await enablePushReminderSubscription();
     setPushSubscriptionStatus(status);
     if (status === 'subscribed') setReminderEnabled(true);
-  }, [reminderEnabled]);
+  }, [pwaInstallGuidance, reminderEnabled]);
 
   const handleComplete = useCallback(async (site?: InjectionSite) => {
     if (!activeItem) return;
@@ -158,7 +168,7 @@ export function TodayScreen({
           flexDirection: 'column',
         }}
       >
-        <Header reminderEnabled={reminderEnabled} onToggleReminder={handleReminderToggle} pushSubscriptionStatus={pushSubscriptionStatus} />
+        <Header reminderEnabled={reminderEnabled} onToggleReminder={handleReminderToggle} pushSubscriptionStatus={pushSubscriptionStatus} pwaInstallGuidance={pwaInstallGuidance} />
         <HeroZone story={heroStory} onCta={setActiveItem} />
       </div>
 
@@ -604,7 +614,7 @@ const heroCtaStyle = {
   marginTop: 2,
 } as const;
 
-function Header({ reminderEnabled, onToggleReminder, pushSubscriptionStatus }: { reminderEnabled: boolean; onToggleReminder: () => void; pushSubscriptionStatus: PushReminderSubscriptionStatus }) {
+function Header({ reminderEnabled, onToggleReminder, pushSubscriptionStatus, pwaInstallGuidance }: { reminderEnabled: boolean; onToggleReminder: () => void; pushSubscriptionStatus: PushReminderSubscriptionStatus; pwaInstallGuidance: 'ios_add_to_home_screen' | 'none' }) {
   const today = new Date();
   const ReminderIcon = reminderEnabled ? Bell : BellOff;
   return (
@@ -615,6 +625,7 @@ function Header({ reminderEnabled, onToggleReminder, pushSubscriptionStatus }: {
         </p>
         <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em', color: 'var(--slc-text)', margin: 0 }}>오늘</h1>
       </div>
+      <div style={{ display: 'grid', justifyItems: 'end', gap: 6 }}>
       <button
         type="button"
         aria-pressed={reminderEnabled}
@@ -628,9 +639,24 @@ function Header({ reminderEnabled, onToggleReminder, pushSubscriptionStatus }: {
         <ReminderIcon aria-hidden="true" size={20} strokeWidth={2.35} />
         <span aria-hidden="true" style={reminderToggleDotStyle(reminderEnabled)} />
       </button>
+      {pwaInstallGuidance === 'ios_add_to_home_screen' && (
+        <p style={iosInstallHintStyle}>iPhone 알림은 홈 화면에 추가한 뒤 켤 수 있어요</p>
+      )}
+      </div>
     </header>
   );
 }
+
+
+const iosInstallHintStyle = {
+  maxWidth: 132,
+  margin: 0,
+  color: 'var(--slc-muted)',
+  fontSize: 10,
+  fontWeight: 700,
+  lineHeight: 1.35,
+  textAlign: 'right',
+} as const;
 
 function DayTabs({ selectedDay, onSelect }: { selectedDay: DayOffset; onSelect: (day: DayOffset) => void }) {
   return (
