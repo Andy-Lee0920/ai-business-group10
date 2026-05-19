@@ -29,8 +29,9 @@ describe('MVP visible delta completion audit', () => {
       'github-comment',
       'scripts/verify-live-push-closure-evidence.mjs',
       'service-worker notificationclick behavior',
+      'duplicate sent dispatch rows',
       'verify:push:closure',
-      '166 files / 619 tests',
+      '166 files / 621 tests',
     ]) {
       expect(audit).toContain(artifact);
     }

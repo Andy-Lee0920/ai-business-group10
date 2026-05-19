@@ -65,4 +65,44 @@ describe('live push closure evidence guard', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('iOS Home Screen install media is required');
   });
+
+
+  it('fails closure when scheduler rerun evidence is missing', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fevio-push-guard-'));
+    const evidence = makeEvidence();
+    evidence.schedulerRerun = { attempted: false, status: 0, ok: false };
+    const evidencePath = join(dir, 'evidence.json');
+    const l3 = join(dir, 'l3.png');
+    const l4 = join(dir, 'l4.png');
+    const l6 = join(dir, 'l6.mov');
+    writeFileSync(evidencePath, JSON.stringify(evidence));
+    writeFileSync(l3, 'screenshot');
+    writeFileSync(l4, 'screenshot');
+    writeFileSync(l6, 'video');
+
+    const result = spawnSync('node', [scriptPath, '--platform', 'android', '--evidence-json', evidencePath, '--l3-media', l3, '--l4-media', l4, '--l6-media', l6], { encoding: 'utf8' });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('L7 scheduler rerun evidence is required');
+  });
+
+  it('fails closure when duplicate sent dispatch rows exist for the same card/schedule/channel', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fevio-push-guard-'));
+    const evidence = makeEvidence();
+    evidence.reminderDispatches.push({ ...evidence.reminderDispatches[0], provider_message_id: '...message2' });
+    const evidencePath = join(dir, 'evidence.json');
+    const l3 = join(dir, 'l3.png');
+    const l4 = join(dir, 'l4.png');
+    const l6 = join(dir, 'l6.mov');
+    writeFileSync(evidencePath, JSON.stringify(evidence));
+    writeFileSync(l3, 'screenshot');
+    writeFileSync(l4, 'screenshot');
+    writeFileSync(l6, 'video');
+
+    const result = spawnSync('node', [scriptPath, '--platform', 'android', '--evidence-json', evidencePath, '--l3-media', l3, '--l4-media', l4, '--l6-media', l6], { encoding: 'utf8' });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('duplicate sent dispatch found');
+  });
+
 });
