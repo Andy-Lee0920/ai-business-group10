@@ -41,6 +41,7 @@ const SCHEDULE_EXTRACT_SYSTEM_PROMPT = [
   '단, "본인이 정해서", "정확한 시간 확인", "확인 후 입력"처럼 사용자가 시간을 정해야 하는 항목은 scheduled_at:null로 둔다.',
   '시간 미정이어도 약명, 용량, 단위, 기간, 빈도는 원문에 있으면 반드시 채운다. 용량/단위가 제목에 보이면 dose/unit에도 분리해 채운다.',
   '고날에프, 메노푸어, 세트로타이드, 오비드렐, 퓨리곤은 원문에 복용이라고 쓰지 않는 한 injection으로 분류한다.',
+  '듀파스톤은 medication으로 분류한다.',
   '오후/밤/저녁은 12시간을 더한다. 오후 9시는 21:00이지 09:00이 아니다.',
   '시간을 사용자가 정하라는 안내 문장 자체는 별도 candidate로 만들지 말고, 바로 앞 약명/행위 후보의 시간 미정 정보로만 반영한다.',
   '이미지/텍스트에서 읽은 원문을 source_text에 그대로 전사한 뒤 candidates를 만든다.',
@@ -59,6 +60,7 @@ const INJECTION_MEDICATION_ALIASES: Array<{ pattern: RegExp; title: string }> = 
   { pattern: /메노푸[어르]/iu, title: '메노푸어' },
   { pattern: /질정/iu, title: '질정' },
   { pattern: /프로게스테론/iu, title: '프로게스테론' },
+  { pattern: /듀파스톤|duphaston/iu, title: '듀파스톤' },
 ];
 
 const corsHeaders = {
@@ -187,7 +189,7 @@ async function extractCandidatesFromImageWithOpenRouter(imageUrl: string): Promi
             {
               type: 'text',
               text: JSON.stringify({
-                instruction: '먼저 이미지의 문서 본문을 source_text에 전사하세요. 그 source_text를 기준으로 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 문서의 발행일/작성일을 기준일로 삼아 오늘/오늘부터를 해석하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 오후 9시는 21:00입니다. 고날에프/메노푸어/세트로타이드/오비드렐은 주사입니다. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
+                instruction: '먼저 이미지의 문서 본문을 source_text에 전사하세요. 그 source_text를 기준으로 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 문서의 발행일/작성일을 기준일로 삼아 오늘/오늘부터를 해석하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 오후 9시는 21:00입니다. 고날에프/메노푸어/세트로타이드/오비드렐은 주사입니다. 듀파스톤은 복용 약입니다. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
               }),
             },
             { type: 'image_url', image_url: { url: imageUrl } },
@@ -229,7 +231,7 @@ async function extractCandidatesFromTextWithOpenRouter(rawText: string): Promise
         {
           role: 'user',
           content: JSON.stringify({
-            instruction: '텍스트 원문을 source_text에 그대로 넣고, 그 텍스트에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 문서의 발행일/작성일을 기준일로 삼아 오늘/오늘부터를 해석하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 오후 9시는 21:00입니다. 고날에프/메노푸어/세트로타이드/오비드렐은 주사입니다. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
+            instruction: '텍스트 원문을 source_text에 그대로 넣고, 그 텍스트에 명시된 날짜/시간/약/검사/방문 일정 후보를 줄 단위로 추출하세요. 문서의 발행일/작성일을 기준일로 삼아 오늘/오늘부터를 해석하세요. 명시 시간은 반드시 scheduled_at에 넣고, 사용자가 직접 정해야 하는 시간만 null로 두세요. 오후 9시는 21:00입니다. 고날에프/메노푸어/세트로타이드/오비드렐은 주사입니다. 듀파스톤은 복용 약입니다. 불확실하거나 의료적 해석이 필요한 항목은 제외하세요.',
             rawText,
           }),
         },
@@ -327,6 +329,7 @@ function normalizeMedicationTitle(title: string) {
   if (normalized.includes('세트로')) return '세트로타이드';
   if (normalized.includes('오비드렐')) return '오비드렐';
   if (normalized.includes('퓨리곤')) return '퓨리곤';
+  if (normalized.includes('듀파스톤') || normalized.includes('duphaston')) return '듀파스톤';
   return title;
 }
 
@@ -438,8 +441,8 @@ function isScheduleInstructionSegment(segment: string) {
   if (/^(?:환자\s*정보|투약\s*안내|다음\s*방문\s*안내|공유\s*안내|메모|End of document)/iu.test(segment)) return false;
   if (/최종\s*주사\s*여부|병원\s*안내를\s*다시\s*확인|공유해\s*주세요/iu.test(segment)) return false;
   if (/^방문\s*목적\s*[:：]/iu.test(segment)) return false;
-  if (/안내문?$/u.test(segment) && !/(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment)) return false;
-  return /(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment);
+  if (/안내문?$/u.test(segment) && !/(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|듀파스톤|duphaston|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment)) return false;
+  return /(고날|세트로|오비드렐|퓨리곤|메노푸|질정|프로게스테론|듀파스톤|duphaston|주사|복용|사용|방문|내원|검사|채혈|초음파)/iu.test(segment);
 }
 
 function findScheduleTitle(rawText: string) {
@@ -452,7 +455,7 @@ function findScheduleTitle(rawText: string) {
 
 function inferTextScheduleType(rawText: string, title: string): ScheduleType | null {
   if (title === '병원 방문') return 'clinic';
-  if (title === '질정' || title === '프로게스테론') return 'medication';
+  if (title === '질정' || title === '프로게스테론' || title === '듀파스톤') return 'medication';
   if (/주사|맞|펜|IU|고날|세트로|오비드렐|퓨리곤|메노푸[어르]/iu.test(rawText)) return 'injection';
   if (/복용|먹|질정|정\b|사용/iu.test(rawText)) return 'medication';
   if (/방문|내원|검사|초음파|채혈/iu.test(rawText)) return 'clinic';
