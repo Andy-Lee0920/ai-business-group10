@@ -34,6 +34,7 @@ This audit is a handoff artifact, not a completion claim. Do not mark the goal c
 - `npm run typecheck` passed after the implementation slices.
 - `npm test` passed: 156 files / 599 tests after the live-smoke runbook.
 - `npm run build` passed after the latest implementation and QA artifacts.
+- `supabase migration list --linked` showed remote migrations through `202605190006` applied, including push subscriptions, reminder dispatch, partner assist, medication reference assets, and canonical capture completion support.
 - Production URL-action-result evidence was posted for `/onboard/prescription-capture → /home → /partner/[token]` on the canonical `care_action_cards` spine.
 
 ## Remaining Reds
