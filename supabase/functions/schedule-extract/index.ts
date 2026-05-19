@@ -438,6 +438,8 @@ function normalizeScheduleInstructionBreaks(rawText: string) {
 }
 
 function isScheduleInstructionSegment(segment: string) {
+  // section heading, not executable schedule lines.
+  if (/^(?:주사\s*안내|복약\s*안내|투약\s*안내|처방\s*안내)$/iu.test(segment)) return false;
   if (/^(?:환자\s*정보|투약\s*안내|다음\s*방문\s*안내|공유\s*안내|메모|End of document)/iu.test(segment)) return false;
   if (/최종\s*주사\s*여부|병원\s*안내를\s*다시\s*확인|공유해\s*주세요/iu.test(segment)) return false;
   if (/^방문\s*목적\s*[:：]/iu.test(segment)) return false;
