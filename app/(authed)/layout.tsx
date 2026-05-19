@@ -16,7 +16,7 @@ export default async function AuthedLayout({ children }: { children: React.React
   const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   if (!user && !presentationMode) redirect('/auth/sign-in');
 
-  const [consentResult, profileResult, existingScheduleResult] = user && supabase
+  const [consentResult, profileResult, existingScheduleResult, existingCareCardResult] = user && supabase
     ? await Promise.all([
       supabase
         .from('user_consents')
@@ -34,8 +34,14 @@ export default async function AuthedLayout({ children }: { children: React.React
         .eq('patient_id', user.id)
         .limit(1)
         .maybeSingle(),
+      supabase
+        .from('care_action_cards')
+        .select('id')
+        .eq('created_by', user.id)
+        .limit(1)
+        .maybeSingle(),
     ])
-    : [{ data: null, error: null }, { data: null, error: null }, { data: null, error: null }];
+    : [{ data: null, error: null }, { data: null, error: null }, { data: null, error: null }, { data: null, error: null }];
   const cookieStore = await cookies();
   const fallbackRole = normalizeRole(cookieStore.get(SLC_ROLE_COOKIE)?.value);
   const completedOnboardingRole = normalizeRoleContext(cookieStore.get('fevio_onboarding_role_context')?.value);
@@ -43,7 +49,9 @@ export default async function AuthedLayout({ children }: { children: React.React
   const recoveredConsent = !persistedRole && !consentResult.error && user && supabase && completedOnboardingRole
     ? await recoverConsentFromCompletedOnboarding(supabase, user, completedOnboardingRole)
     : null;
-  const hasExistingCareData = Boolean(existingScheduleResult.data) && !existingScheduleResult.error;
+  const hasExistingCareData = (Boolean(existingScheduleResult.data) || Boolean(existingCareCardResult.data))
+    && !existingScheduleResult.error
+    && !existingCareCardResult.error;
   const effectiveConsent = presentationMode && !user
     ? { role: fallbackRole ?? 'patient' }
     : recoveredConsent ?? (persistedRole
