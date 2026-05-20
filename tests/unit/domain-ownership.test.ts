@@ -31,7 +31,7 @@ describe('domain ownership audit', () => {
   });
 
   it('keeps SLC Today ownership separated from deprecated Care OS architecture', () => {
-    const home = read('app/(authed)/home/page.tsx');
+    const home = read('src/features/today/home-page-loader.tsx');
     const onboarding = read('app/api/onboarding/route.ts');
 
     expect(home).toContain('TodayScreen');

@@ -6,7 +6,9 @@ const authedLayout = readFileSync('app/(authed)/layout.tsx', 'utf8');
 const clinicPage = readFileSync('app/(authed)/clinic-update/page.tsx', 'utf8');
 const addPage = readFileSync('app/(authed)/add/page.tsx', 'utf8');
 const homePage = readFileSync('app/(authed)/home/page.tsx', 'utf8');
+const homeLoader = readFileSync('src/features/today/home-page-loader.tsx', 'utf8');
 const recordsPage = readFileSync('app/(authed)/records/page.tsx', 'utf8');
+const recordsLoader = readFileSync('src/features/records/records-page-loader.ts', 'utf8');
 const partnerPage = readFileSync('app/(authed)/partner/page.tsx', 'utf8');
 const morePage = readFileSync('app/(authed)/more/page.tsx', 'utf8');
 const settingsPage = readFileSync('app/(authed)/settings/page.tsx', 'utf8');
@@ -19,11 +21,14 @@ describe('Clinic Guide presentation fallback without Supabase env', () => {
     expect(clinicPage).toContain('isPresentationRequest({ headers: requestHeaders })');
     expect(clinicPage).toContain('fallbackMedications()');
     expect(morePage).toContain("permanentRedirect('/settings')");
-    for (const page of [addPage, homePage, recordsPage, partnerPage, settingsPage]) {
+    for (const page of [addPage, partnerPage, settingsPage]) {
       expect(page).toContain('isPresentationRequest({ headers: requestHeaders })');
     }
-    expect(homePage).toContain('PresentationHomeDemo');
-    expect(recordsPage).toContain('buildPresentationItems()');
+    expect(homePage).toContain('renderHomePage');
+    expect(homeLoader).toContain('isPresentationRequest({ headers: requestHeaders })');
+    expect(homeLoader).toContain('PresentationHomeDemo');
+    expect(recordsPage).toContain('loadRecordsScreenProps');
+    expect(recordsLoader).toContain('buildPresentationItems()');
     expect(settingsPage).toContain('buildPresentationPartnerLinks()');
   });
 });
