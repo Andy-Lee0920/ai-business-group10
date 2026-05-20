@@ -75,7 +75,7 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
       ? supabase.from('couple_journal_entries').select('id, body, mood, pain_score, photo_urls, author_role, created_at')
         .eq('couple_id', actor.couple_id).is('deleted_at', null).order('created_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
-    supabase.from('community_posts').select('id, body, mood, sub_category, audience, moderation_status, is_official, created_at')
+    supabase.from('community_posts').select('id, body, mood, sub_category, audience, moderation_status, is_official, created_at, community_identities(nickname)')
       .eq('audience', communityAudience).is('deleted_at', null).order('created_at', { ascending: false }),
   ]);
 
@@ -126,7 +126,20 @@ function toCommunityPost(row: Record<string, unknown>): CommunityPostListItem {
     moderationStatus: row.moderation_status === 'approved' || row.moderation_status === 'rejected' ? row.moderation_status : 'pending',
     isOfficial: row.is_official === true,
     createdAt: String(row.created_at),
+    authorNickname: extractCommunityNickname(row.community_identities),
   };
+}
+
+function extractCommunityNickname(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    const first = value[0] as { nickname?: unknown } | undefined;
+    return typeof first?.nickname === 'string' ? first.nickname : null;
+  }
+  if (value && typeof value === 'object' && 'nickname' in value) {
+    const nickname = (value as { nickname?: unknown }).nickname;
+    return typeof nickname === 'string' ? nickname : null;
+  }
+  return null;
 }
 
 function isCommunitySubCategory(value: unknown): value is CommunityPostListItem['subCategory'] {

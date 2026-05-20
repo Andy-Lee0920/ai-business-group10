@@ -87,7 +87,7 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
             <p style={emptyStyle}>아직 이 주제의 글이 없어요.</p>
           ) : visiblePosts.map((post) => (
             <article key={post.id} style={postStyle}>
-              <div style={postMetaStyle}>{labelFor(post.subCategory)} · {post.isOfficial ? '운영팀 안내' : post.audience}</div>
+              <div style={postMetaStyle}>{labelFor(post.subCategory)} · {post.isOfficial ? '운영팀 안내' : post.authorNickname ?? post.audience}</div>
               <p style={postBodyStyle}>{post.body}</p>
               <div style={postActionRowStyle}>
                 <button type="button" onClick={() => toggleEmpathy(post)} style={post.empathyActive ? activeEmpathyButtonStyle : empathyButtonStyle}>공감 {post.empathyCount ?? 0}</button>
@@ -111,6 +111,7 @@ function normalizePost(row: Record<string, unknown>, fallbackCategory: Community
     moderationStatus: row.moderation_status === 'approved' || row.moderation_status === 'rejected' ? row.moderation_status : 'pending',
     isOfficial: row.is_official === true,
     createdAt: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
+    authorNickname: typeof row.author_nickname === 'string' ? row.author_nickname : null,
     empathyCount: typeof row.empathy_count === 'number' ? row.empathy_count : 0,
     empathyActive: row.empathy_active === true,
   };
