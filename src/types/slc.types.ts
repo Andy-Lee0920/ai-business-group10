@@ -44,15 +44,6 @@ export interface ClinicUpdate {
   created_at: string;
 }
 
-export interface Receipt {
-  id: string;
-  couple_id: string;
-  amount: number;
-  category: string;
-  date: string;
-  note: string | null;
-  created_at: string;
-}
 
 export interface Medication {
   id: string;

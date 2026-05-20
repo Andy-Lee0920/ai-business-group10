@@ -30,25 +30,26 @@ const completion = (overrides: Partial<CompletionRecord>): CompletionRecord => (
 });
 
 describe('SLC records screen', () => {
-  it('does not duplicate calendar schedule rows on the records tab', () => {
+  it('shows journal/community entry points without duplicating schedule or billing rows', () => {
     const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
       items: [item({})],
       completions: [completion({})],
       clinicUpdates: [],
     }));
 
-    expect(markup).toContain('시술비 기록');
-    expect(markup).toContain('data-testid="records-cycle-day-hero"');
-    expect(markup).toContain('주사 시작');
-    expect(markup).toContain('일차');
-    expect(markup).toContain('비용 시각화');
-    expect(markup).toContain('정부지원금 처리');
-    expect(markup).toContain('최근 비용 기록');
+    expect(markup).toContain('data-testid="couple-journal-preview"');
+    expect(markup).toContain('data-testid="community-preview"');
+    expect(markup).toContain('부부간 기록');
+    expect(markup).toContain('커뮤니티');
     expect(markup).not.toContain('data-testid="records-calm-card"');
     expect(markup).not.toContain('data-testid="records-timeline"');
     expect(markup).not.toContain('고날에프');
     expect(markup).not.toContain('오른쪽 아래');
     expect(markup).not.toContain('예정 19:00 · 완료');
+    expect(markup).not.toContain('시술비');
+    expect(markup).not.toContain('비용');
+    expect(markup).not.toContain('정부지원금');
+    expect(markup).not.toContain('영수증');
   });
 
   it('uses the canonical records ambient asset instead of an inline empty-state illustration', () => {

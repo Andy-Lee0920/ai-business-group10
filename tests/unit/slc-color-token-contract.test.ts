@@ -62,35 +62,26 @@ describe('SLC color token contract', () => {
   });
 
 
-  it('keeps records screen section labels away from coral while preserving action/alert colors', () => {
+  it('keeps records journal/community preview labels away from coral', () => {
     const records = readFileSync('src/features/records/records-screen.tsx', 'utf8');
 
-    expect(records).not.toContain("영수증 입력</p>");
-    expect(records).toContain("영수증 입력</span>");
-    expect(records).not.toContain("시작일 기준</p>");
-    expect(records).toContain("시작일 기준</span>");
-    expect(records).not.toContain("이번 사이클 실부담</p>");
-    expect(records).toContain("이번 사이클 실부담</span>");
-
-    expect(records).toContain('role="alert" style={{ color: \'var(--slc-coral)\'');
-    expect(records).toContain("sheetSubmitStyle");
+    expect(records).not.toContain("부부간</p>");
+    expect(records).toContain("부부간</span>");
+    expect(records).not.toContain("커뮤니티</p>");
+    expect(records).toContain("커뮤니티</span>");
+    expect(records).not.toContain("color: 'var(--slc-coral)'");
+    expect(records).toContain("color: 'var(--fevio-sage-dark)'");
   });
 
-  it('keeps records financial visualization and passive guidance away from coral', () => {
+  it('keeps deprecated records billing visualization out of the runtime screen', () => {
     const records = readFileSync('src/features/records/records-screen.tsx', 'utf8');
 
-    expect(records).not.toContain("summary.net < 0 ? 'var(--slc-coral)' : 'var(--slc-text)'");
-    expect(records).toContain("summary.net < 0 ? 'var(--slc-warning)' : 'var(--slc-text)'");
-    expect(records).not.toContain("<>주사 시작 <strong style={{ color: 'var(--slc-coral)' }}>{cycleDay}일차</strong></>");
-    expect(records).toContain("<>주사 시작 <strong style={{ color: 'var(--fevio-sage-dark)' }}>{cycleDay}일차</strong></>");
+    expect(records).not.toContain('CostLineChart');
+    expect(records).not.toContain('receiptCountBadgeStyle');
+    expect(records).not.toContain('정부지원금');
+    expect(records).not.toContain('영수증');
     expect(records).not.toContain('stroke="var(--slc-coral)"');
     expect(records).not.toContain('fill="var(--slc-coral)"');
-    expect(records).toContain('stroke="var(--fevio-sage-dark)"');
-    expect(records).toContain('fill="var(--fevio-sage-dark)"');
-    expect(records).not.toContain("color: 'var(--slc-coral)', fontWeight: 900 }}>{info.action}</p>");
-    expect(records).toContain("color: 'var(--fevio-sage-dark)', fontWeight: 900 }}>{info.action}</p>");
-    expect(records).not.toContain("const receiptCountBadgeStyle = {\n  flex: '0 0 auto',\n  padding: '7px 11px',\n  borderRadius: 999,\n  background: 'var(--slc-coral-light)',\n  color: 'var(--slc-coral)'");
-    expect(records).toContain("const receiptCountBadgeStyle = {\n  flex: '0 0 auto',\n  padding: '7px 11px',\n  borderRadius: 999,\n  background: 'var(--slc-surface-warm)',\n  color: 'var(--fevio-sage-dark)'");
   });
 
 
