@@ -28,6 +28,8 @@ describe('community comments contract', () => {
         mood: null,
         subCategory: 'today',
         audience: 'primary_feed',
+        audienceScope: 'everyone',
+        audienceRole: null,
         moderationStatus: 'approved',
         isOfficial: false,
         createdAt: '2026-05-20T08:10:00.000Z',

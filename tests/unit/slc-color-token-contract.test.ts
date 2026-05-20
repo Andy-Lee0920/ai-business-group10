@@ -68,12 +68,12 @@ describe('SLC color token contract', () => {
       readFileSync('src/features/records/community/community-preview.tsx', 'utf8'),
     ].join('\n');
 
-    expect(records).not.toContain("부부간</p>");
-    expect(records).toContain("부부간</span>");
+    expect(records).not.toContain("커플저널</p>");
+    expect(records).toContain("커플저널</span>");
     expect(records).not.toContain("커뮤니티</p>");
     expect(records).toContain("커뮤니티</span>");
-    expect(records).not.toContain("color: 'var(--slc-coral)'");
     expect(records).toContain("color: 'var(--fevio-sage-dark)'");
+    expect(records).toContain("background: 'var(--fevio-coral)'");
   });
 
   it('keeps deprecated records billing visualization out of the runtime screen', () => {

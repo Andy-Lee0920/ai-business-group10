@@ -16,6 +16,11 @@ describe('community moderation route contract', () => {
     expect(source).toContain('runDeterministicModerationFilter');
     expect(source).toContain("from('moderation_filter_rules')");
     expect(source).toContain("moderation_status: 'pending'");
+    expect(source).toContain('audienceScope');
+    expect(source).toContain('normalizeAudienceScope');
+    expect(source).toContain("audience_scope: audienceScope");
+    expect(source).toContain("audience_role: audienceScope === 'same_role' ? actor.role : null");
+    expect(source).not.toContain('normalizeAudience(value');
     expect(source).toContain("from('community_posts')");
     expect(source).toContain(".eq('moderation_status', 'approved')");
   });

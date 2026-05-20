@@ -22,7 +22,7 @@ describe('records/community RLS matrix coverage', () => {
 
   it('records actor, server exception, and test evidence expectations for the new surfaces', () => {
     expect(matrix).toContain('partner-authored journal entries force `pain_score NULL`');
-    expect(matrix).toContain('approved + audience-matched community reads only');
+    expect(matrix).toContain('ADR 0020 scope (`everyone` or role-matched `same_role`)');
     expect(matrix).toContain('service-role only; no authenticated direct grants');
     expect(matrix).toContain('records-community-schema-rls.test.ts');
     expect(matrix).toContain('service-role audit contract');

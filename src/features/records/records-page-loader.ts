@@ -4,7 +4,7 @@ import { buildPresentationClinicUpdates, buildPresentationCompletions, buildPres
 import { createCookieBackedSupabaseClient } from '../../lib/server-supabase';
 import type { ClinicUpdate, CompletionRecord, ScheduleItem } from '../../types/mvp.types';
 import type { CoupleJournalEntry } from '../../types/journal.types';
-import type { CommunityAudience, CommunityPostListItem } from '../../types/community.types';
+import type { CommunityActorRole, CommunityAudience, CommunityAudienceScope, CommunityPostListItem } from '../../types/community.types';
 
 export type RecordsDataSource = { kind: 'fixture' } | { kind: 'supabase' };
 
@@ -15,6 +15,9 @@ export interface RecordsScreenLoaderProps {
   journalEntries: CoupleJournalEntry[];
   communityPosts: CommunityPostListItem[];
   communityAudience: CommunityAudience;
+  actorRole: CommunityActorRole;
+  isPartnerLinked: boolean;
+  coupleId: string | null;
 }
 
 type CoupleMemberRow = { couple_id: string; role: 'primary' | 'partner' };
@@ -48,12 +51,17 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
           mood: null,
           subCategory: 'tip',
           audience: 'primary_feed',
+          audienceScope: 'everyone',
+          audienceRole: null,
           moderationStatus: 'approved',
           isOfficial: true,
           createdAt: new Date().toISOString(),
         },
       ],
       communityAudience: 'primary_feed',
+      actorRole: 'primary',
+      isPartnerLinked: true,
+      coupleId: 'fixture-couple',
     };
   }
 
@@ -63,6 +71,8 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
 
   const actor = await resolveActor(supabase, user.id);
   const communityAudience: CommunityAudience = actor?.role === 'partner' ? 'partner_feed' : 'primary_feed';
+  const actorRole: CommunityActorRole = actor?.role ?? 'primary';
+  const isPartnerLinked = actor ? await hasApprovedPartnerLink(supabase, actor.couple_id) : false;
   const since = new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString();
   const [itemsRes, completionsRes, clinicRes, journalRes, communityRes] = await Promise.all([
     supabase.from('schedule_items').select('*').eq('patient_id', user.id)
@@ -75,8 +85,8 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
       ? supabase.from('couple_journal_entries').select('id, body, mood, pain_score, photo_urls, author_role, created_at')
         .eq('couple_id', actor.couple_id).is('deleted_at', null).order('created_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
-    supabase.from('community_posts').select('id, body, mood, sub_category, audience, moderation_status, is_official, created_at, community_identities(nickname)')
-      .eq('audience', communityAudience).is('deleted_at', null).order('created_at', { ascending: false }),
+    supabase.from('community_posts').select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, is_official, created_at, community_identities(nickname)')
+      .is('deleted_at', null).order('is_official', { ascending: false }).order('created_at', { ascending: false }),
   ]);
 
   if (itemsRes.error || completionsRes.error || clinicRes.error || journalRes.error || communityRes.error) return emptyRecordsProps(communityAudience);
@@ -87,11 +97,14 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
     journalEntries: (journalRes.data ?? []).map(toJournalEntry),
     communityPosts: (communityRes.data ?? []).map(toCommunityPost),
     communityAudience,
+    actorRole,
+    isPartnerLinked,
+    coupleId: actor?.couple_id ?? null,
   };
 }
 
 function emptyRecordsProps(communityAudience: CommunityAudience = 'primary_feed'): RecordsScreenLoaderProps {
-  return { items: [], completions: [], clinicUpdates: [], journalEntries: [], communityPosts: [], communityAudience };
+  return { items: [], completions: [], clinicUpdates: [], journalEntries: [], communityPosts: [], communityAudience, actorRole: communityAudience === 'partner_feed' ? 'partner' : 'primary', isPartnerLinked: false, coupleId: null };
 }
 
 async function resolveActor(
@@ -102,6 +115,29 @@ async function resolveActor(
   if (error || !data) return null;
   const row = data as CoupleMemberRow;
   return row.role === 'primary' || row.role === 'partner' ? row : null;
+}
+
+async function hasApprovedPartnerLink(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  coupleId: string,
+) {
+  const { data: primaryMember } = await supabase
+    .from('couple_members')
+    .select('user_id')
+    .eq('couple_id', coupleId)
+    .eq('role', 'primary')
+    .limit(1)
+    .maybeSingle();
+  const primaryUserId = typeof primaryMember?.user_id === 'string' ? primaryMember.user_id : null;
+  if (!primaryUserId) return false;
+  const { data, error } = await supabase
+    .from('partner_links')
+    .select('id')
+    .eq('patient_id', primaryUserId)
+    .eq('status', 'approved')
+    .limit(1)
+    .maybeSingle();
+  return !error && Boolean(data?.id);
 }
 
 function toJournalEntry(row: Record<string, unknown>): CoupleJournalEntry {
@@ -117,17 +153,24 @@ function toJournalEntry(row: Record<string, unknown>): CoupleJournalEntry {
 }
 
 function toCommunityPost(row: Record<string, unknown>): CommunityPostListItem {
+  const audienceScope = normalizeAudienceScope(row.audience_scope);
   return {
     id: String(row.id),
     body: String(row.body ?? ''),
     mood: typeof row.mood === 'string' ? row.mood : null,
     subCategory: isCommunitySubCategory(row.sub_category) ? row.sub_category : 'today',
     audience: row.audience === 'partner_feed' ? 'partner_feed' : 'primary_feed',
+    audienceScope,
+    audienceRole: row.audience_role === 'primary' || row.audience_role === 'partner' ? row.audience_role : null,
     moderationStatus: row.moderation_status === 'approved' || row.moderation_status === 'rejected' ? row.moderation_status : 'pending',
     isOfficial: row.is_official === true,
     createdAt: String(row.created_at),
     authorNickname: extractCommunityNickname(row.community_identities),
   };
+}
+
+function normalizeAudienceScope(value: unknown): CommunityAudienceScope {
+  return value === 'same_role' ? 'same_role' : 'everyone';
 }
 
 function extractCommunityNickname(value: unknown): string | null {

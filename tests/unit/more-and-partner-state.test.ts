@@ -32,6 +32,12 @@ describe('More and partner read-only state contract', () => {
     expect(moreScreen).toContain('승인하기');
     expect(moreScreen).toContain('나중에');
     expect(moreScreen).toContain('공유와 설정 관리');
+    expect(moreScreen).toContain('data-testid="account-status-card"');
+    expect(moreScreen).toContain('로그인 이메일');
+    expect(moreScreen).toContain('provider');
+    expect(moreScreen).toContain('파트너 연결');
+    expect(moreScreen).toContain('커플저널');
+    expect(moreScreen).toContain('/settings/community-nickname');
     expect(moreScreen).not.toContain('>더보기<');
     expect(morePage).toContain("permanentRedirect('/settings')");
     expect(settingsPage).toContain("redirect('/partner')");

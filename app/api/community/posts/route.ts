@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { runDeterministicModerationFilter, type ModerationFilterRule } from '../../../../src/domain/community-moderation';
-import type { CommunityAudience, CommunitySubCategory } from '../../../../src/types/community.types';
+import type { CommunityAudienceScope, CommunitySubCategory } from '../../../../src/types/community.types';
 import { createAuditedSupabaseServiceRoleClient, createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,8 @@ interface CommunityPostBody {
   body?: unknown;
   mood?: unknown;
   subCategory?: unknown;
-  audience?: unknown;
+  audienceScope?: unknown;
+  audienceRole?: unknown;
 }
 
 type CoupleMemberRow = { couple_id: string; role: 'primary' | 'partner' };
@@ -22,14 +23,18 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const url = new URL(request.url);
-  const audience = normalizeAudience(url.searchParams.get('audience')) ?? 'primary_feed';
-  const { data, error } = await supabase
+  const audienceScope = normalizeAudienceScope(url.searchParams.get('audienceScope'));
+  const subCategory = normalizeSubCategory(url.searchParams.get('subCategory'));
+  let query = supabase
     .from('community_posts')
-    .select('id, body, mood, sub_category, audience, moderation_status, is_official, created_at, community_identity_id')
-    .eq('audience', audience)
+    .select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, is_official, created_at, community_identity_id')
     .eq('moderation_status', 'approved')
     .is('deleted_at', null)
+    .order('is_official', { ascending: false })
     .order('created_at', { ascending: false });
+  if (audienceScope) query = query.eq('audience_scope', audienceScope);
+  if (subCategory) query = query.eq('sub_category', subCategory);
+  const { data, error } = await query;
 
   if (error) return NextResponse.json({ error: 'community_posts_unavailable' }, { status: 500 });
   return NextResponse.json({ posts: data ?? [] });
@@ -43,8 +48,9 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as CommunityPostBody;
   const text = typeof body.body === 'string' ? body.body.trim() : '';
   const subCategory = normalizeSubCategory(body.subCategory);
-  const audience = normalizeAudience(body.audience);
-  if (!text || !subCategory || !audience) return NextResponse.json({ error: 'invalid_post' }, { status: 400 });
+  const audienceScope = normalizeAudienceScope(body.audienceScope) ?? 'everyone';
+  if (body.audienceRole !== undefined) return NextResponse.json({ error: 'audience_role_server_owned' }, { status: 400 });
+  if (!text || !subCategory) return NextResponse.json({ error: 'invalid_post' }, { status: 400 });
 
   const actor = await resolveCommunityActor(supabase, user.id);
   if (!actor) return NextResponse.json({ error: 'community_actor_not_found' }, { status: 403 });
@@ -69,10 +75,12 @@ export async function POST(request: NextRequest) {
       body: text,
       mood: typeof body.mood === 'string' && body.mood.trim() ? body.mood.trim() : null,
       sub_category: subCategory,
-      audience,
+      audience: actor.role === 'partner' ? 'partner_feed' : 'primary_feed',
+      audience_scope: audienceScope,
+      audience_role: audienceScope === 'same_role' ? actor.role : null,
       moderation_status: 'pending',
     })
-    .select('id, body, mood, sub_category, audience, moderation_status, created_at')
+    .select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, created_at')
     .single();
 
   if (error) return NextResponse.json({ error: 'community_post_insert_failed' }, { status: 500 });
@@ -120,8 +128,8 @@ function toModerationRule(row: ModerationRuleRow): ModerationFilterRule {
   return { ruleType: row.rule_type, pattern: row.pattern, severity: row.severity, active: row.active };
 }
 
-function normalizeAudience(value: unknown): CommunityAudience | null {
-  return value === 'primary_feed' || value === 'partner_feed' ? value : null;
+function normalizeAudienceScope(value: unknown): CommunityAudienceScope | null {
+  return value === 'everyone' || value === 'same_role' ? value : null;
 }
 
 function normalizeSubCategory(value: unknown): CommunitySubCategory | null {

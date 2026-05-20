@@ -14,7 +14,8 @@ export function AdminSeedForm() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         body: formData.get('body'),
-        audience: formData.get('audience'),
+        audienceScope: formData.get('audienceScope'),
+        audienceRole: formData.get('audienceRole'),
         subCategory: formData.get('subCategory'),
       }),
     });
@@ -24,10 +25,16 @@ export function AdminSeedForm() {
 
   return (
     <form data-testid="admin-seed-form" onSubmit={submitSeed} style={formStyle}>
-      <label style={labelStyle}>피드
-        <select name="audience" defaultValue="primary_feed" style={inputStyle}>
-          <option value="primary_feed">당사자 피드</option>
-          <option value="partner_feed">파트너 피드</option>
+      <label style={labelStyle}>보기 범위
+        <select name="audienceScope" defaultValue="everyone" style={inputStyle}>
+          <option value="everyone">모두에게</option>
+          <option value="same_role">같은 롤만</option>
+        </select>
+      </label>
+      <label style={labelStyle}>같은 롤 대상
+        <select name="audienceRole" defaultValue="primary" style={inputStyle}>
+          <option value="primary">당사자</option>
+          <option value="partner">파트너</option>
         </select>
       </label>
       <label style={labelStyle}>주제

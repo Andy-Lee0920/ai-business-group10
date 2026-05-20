@@ -18,7 +18,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const actor = await resolveCommunityActor(supabase, user.id);
   if (!actor) return NextResponse.json({ error: 'community_actor_not_found' }, { status: 403 });
-  const post = await requireVisiblePost(supabase, postId, actor.role);
+  const post = await requireVisiblePost(supabase, postId);
   if (!post) return NextResponse.json({ error: 'community_post_not_found' }, { status: 404 });
 
   const { data, error } = await supabase
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const actor = await resolveCommunityActor(supabase, user.id);
   if (!actor) return NextResponse.json({ error: 'community_actor_not_found' }, { status: 403 });
-  const post = await requireVisiblePost(supabase, postId, actor.role);
+  const post = await requireVisiblePost(supabase, postId);
   if (!post) return NextResponse.json({ error: 'community_post_not_found' }, { status: 404 });
 
   const identity = await getOrCreateCommunityIdentity(supabase, user.id, actor);
@@ -73,13 +73,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 async function requireVisiblePost(
   supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
   postId: string,
-  role: CoupleMemberRow['role'],
 ) {
   const { data, error } = await supabase
     .from('community_posts')
-    .select('id')
+    .select('id, audience_scope, audience_role')
     .eq('id', postId)
-    .eq('audience', role === 'partner' ? 'partner_feed' : 'primary_feed')
     .eq('moderation_status', 'approved')
     .is('deleted_at', null)
     .maybeSingle();

@@ -6,14 +6,15 @@ const client = 'app/partner/[token]/PartnerCommunityClient.tsx';
 const page = 'app/partner/[token]/page.tsx';
 
 describe('partner community feed contract', () => {
-  it('exposes only approved partner_feed community posts through token validation', () => {
+  it('exposes only approved partner-readable community posts through token validation', () => {
     expect(existsSync(api)).toBe(true);
     const source = readFileSync(api, 'utf8');
 
     expect(source).toContain('hashPartnerShareToken');
     expect(source).toContain("rpc('is_partner_share_link_usable'");
     expect(source).toContain("from('community_posts')");
-    expect(source).toContain(".eq('audience', 'partner_feed')");
+    expect(source).toContain("audience_scope.eq.everyone");
+    expect(source).toContain("audience_role.eq.partner");
     expect(source).toContain(".eq('moderation_status', 'approved')");
     expect(source).toContain('createAuditedSupabaseServiceRoleClient');
   });

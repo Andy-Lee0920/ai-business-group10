@@ -37,9 +37,9 @@ describe('SLC records screen', () => {
       clinicUpdates: [],
     }));
 
-    expect(markup).toContain('data-testid="couple-journal-preview"');
+    expect(markup).toContain('data-testid="couple-journal-locked"');
     expect(markup).toContain('data-testid="community-preview"');
-    expect(markup).toContain('부부간 기록');
+    expect(markup).toContain('커플저널');
     expect(markup).toContain('커뮤니티');
     expect(markup).not.toContain('data-testid="records-calm-card"');
     expect(markup).not.toContain('data-testid="records-timeline"');

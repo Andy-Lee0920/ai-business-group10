@@ -11,9 +11,23 @@ interface Props {
   userId: string;
   existingLink: PartnerLink | null;
   pendingRequests: PartnerLink[];
+  email?: string | null;
+  provider?: string | null;
+  nickname?: string | null;
+  privacyGateAccepted?: boolean;
+  closedBetaStatus?: string | null;
 }
 
-export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: Props) {
+export function MoreScreen({
+  userId: _userId,
+  existingLink,
+  pendingRequests,
+  email = null,
+  provider = null,
+  nickname = null,
+  privacyGateAccepted = false,
+  closedBetaStatus = 'closed beta',
+}: Props) {
   const [inviteCode, setInviteCode] = useState<string | null>(existingLink?.invite_code ?? null);
   const [generating, setGenerating] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
@@ -103,6 +117,15 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
         <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--slc-text)', margin: 0, letterSpacing: '-0.03em' }}>관리</h1>
       </header>
 
+      <AccountStatusCard
+        nickname={nickname}
+        email={email}
+        provider={provider}
+        privacyGateAccepted={privacyGateAccepted}
+        closedBetaStatus={closedBetaStatus}
+        partnerConnected={existingLink?.status === 'approved'}
+      />
+
       <section id="partner-invite" style={sectionStyle}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 12, alignItems: 'center', padding: '18px 18px 12px' }}>
           <div>
@@ -188,6 +211,52 @@ export function MoreScreen({ userId: _userId, existingLink, pendingRequests }: P
         />
       </SettingsSection>
     </AmbientStoryBackground>
+  );
+}
+
+
+function AccountStatusCard({
+  nickname,
+  email,
+  provider,
+  privacyGateAccepted,
+  closedBetaStatus,
+  partnerConnected,
+}: {
+  nickname: string | null;
+  email: string | null;
+  provider: string | null;
+  privacyGateAccepted: boolean;
+  closedBetaStatus: string | null;
+  partnerConnected: boolean;
+}) {
+  return (
+    <section data-testid="account-status-card" style={{ ...sectionStyle, marginBottom: 22, padding: '16px 18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 12 }}>
+        <div>
+          <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 900, margin: '0 0 5px' }}>내 계정</p>
+          <h2 style={{ fontSize: 20, color: 'var(--slc-text)', fontWeight: 950, margin: 0, letterSpacing: '-0.04em' }}>{nickname?.trim() || '닉네임 설정 전'}</h2>
+        </div>
+        <a href="/settings/community-nickname" style={{ borderRadius: 999, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D', padding: '8px 12px', textDecoration: 'none', fontSize: 12, fontWeight: 900 }}>[수정]</a>
+      </div>
+      <div style={{ display: 'grid', gap: 9 }}>
+        <AccountStatusRow label="로그인 이메일" value={email || '확인 필요'} />
+        <AccountStatusRow label="provider" value={provider || 'unknown'} />
+        <AccountStatusRow label="Privacy Gate" value={privacyGateAccepted ? '완료' : '확인 필요'} />
+        <AccountStatusRow label="Closed beta" value={closedBetaStatus || 'closed beta'} />
+        <AccountStatusRow label="파트너 연결" value={partnerConnected ? '연결됨' : '미연결'} />
+        <AccountStatusRow label="커플저널" value={partnerConnected ? '작성 가능' : '파트너 연결 후 활성'} />
+      </div>
+    </section>
+  );
+}
+
+function AccountStatusRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
+      <span style={{ color: 'var(--slc-muted)', fontWeight: 850 }}>{label}</span>
+      <span style={{ color: 'var(--slc-text)', fontWeight: 900, textAlign: 'right' }}>{value}</span>
+    </div>
   );
 }
 

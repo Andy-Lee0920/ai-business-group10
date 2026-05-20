@@ -19,9 +19,8 @@ export async function POST(_request: Request, { params }: { params: Promise<{ po
 
   const post = await supabase
     .from('community_posts')
-    .select('id')
+    .select('id, audience_scope, audience_role')
     .eq('id', postId)
-    .eq('audience', audienceForRole(actor.role))
     .eq('moderation_status', 'approved')
     .is('deleted_at', null)
     .maybeSingle();
@@ -81,10 +80,6 @@ async function countPostEmpathies(
     .select('id', { count: 'exact', head: true })
     .eq('post_id', postId);
   return count ?? 0;
-}
-
-function audienceForRole(role: CoupleMemberRow['role']) {
-  return role === 'partner' ? 'partner_feed' : 'primary_feed';
 }
 
 function isUuid(value: string) {

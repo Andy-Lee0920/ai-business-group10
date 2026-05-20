@@ -11,6 +11,8 @@ type CommunityPostRow = {
   mood: string | null;
   sub_category: CommunityPostListItem['subCategory'];
   audience: CommunityPostListItem['audience'];
+  audience_scope: CommunityPostListItem['audienceScope'] | null;
+  audience_role: CommunityPostListItem['audienceRole'];
   moderation_status: CommunityPostListItem['moderationStatus'];
   is_official: boolean | null;
   created_at: string;
@@ -40,8 +42,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
     },
     async (client) => client
       .from('community_posts')
-      .select('id, body, mood, sub_category, audience, moderation_status, is_official, created_at')
-      .eq('audience', 'partner_feed')
+      .select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, is_official, created_at')
+      .or('audience_scope.eq.everyone,and(audience_scope.eq.same_role,audience_role.eq.partner)')
       .eq('moderation_status', 'approved')
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -63,6 +65,8 @@ function toCommunityPost(row: CommunityPostRow): CommunityPostListItem {
     mood: row.mood,
     subCategory: row.sub_category,
     audience: row.audience,
+    audienceScope: row.audience_scope === 'same_role' ? 'same_role' : 'everyone',
+    audienceRole: row.audience_role === 'primary' || row.audience_role === 'partner' ? row.audience_role : null,
     moderationStatus: row.moderation_status,
     isOfficial: row.is_official === true,
     createdAt: row.created_at,

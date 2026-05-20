@@ -4,10 +4,16 @@ import { describe, expect, it } from 'vitest';
 
 const migrationsDir = 'supabase/migrations';
 const migrationName = '202605200001_records_community_foundation.sql';
+const dualScopeMigrationName = '202605200003_records_dual_scope_and_journal_gate.sql';
 const migrationPath = join(migrationsDir, migrationName);
+const dualScopeMigrationPath = join(migrationsDir, dualScopeMigrationName);
 
 function migration() {
   return readFileSync(migrationPath, 'utf8');
+}
+
+function dualScopeMigration() {
+  return readFileSync(dualScopeMigrationPath, 'utf8');
 }
 
 describe('records/community schema and RLS foundation', () => {
@@ -72,5 +78,23 @@ describe('records/community schema and RLS foundation', () => {
     expect(sql).toContain('couple_journal_photos_read_own_couple');
     expect(sql).toContain("bucket_id = 'couple-journal-photos'");
     expect(sql).toContain('(storage.foldername(name))[1]::uuid in (select public.current_user_couple_ids())');
+  });
+
+  it('adds dual-scope community audience columns and partner-link gated journal inserts', () => {
+    expect(readdirSync(migrationsDir)).toContain(dualScopeMigrationName);
+    const sql = dualScopeMigration();
+
+    expect(sql).toContain('audience_scope');
+    expect(sql).toContain("audience_scope in ('everyone','same_role')");
+    expect(sql).toContain('audience_role');
+    expect(sql).toContain("audience = 'primary_feed'");
+    expect(sql).toContain("audience_scope = 'same_role'");
+    expect(sql).toContain('community_posts_select_approved_dual_scope');
+    expect(sql).toContain("audience_scope = 'everyone'");
+    expect(sql).toContain('public.current_user_community_roles()');
+    expect(sql).toContain('community_comments_insert_visible_post');
+    expect(sql).toContain('community_post_empathies_insert_visible_post');
+    expect(sql).toContain('current_user_has_approved_partner_link_for_couple');
+    expect(sql).toContain('couple_journal_entries_insert_partner_linked');
   });
 });
