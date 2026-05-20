@@ -3,6 +3,7 @@ import { SLCIllustration } from '../../../src/components/slc-illustration';
 import { slcAssets } from '../../../src/design/slc-assets';
 import { PartnerAccountJoinClient } from './PartnerAccountJoinClient';
 import { PartnerActionViewClient } from './PartnerActionViewClient';
+import { PartnerCommunityClient } from './PartnerCommunityClient';
 import { PartnerRoleSurface } from './PartnerRoleSurface';
 
 export default async function PartnerActionPage({ params }: { params: Promise<{ token: string }> }) {
@@ -20,6 +21,7 @@ export default async function PartnerActionPage({ params }: { params: Promise<{ 
           <>
             <PartnerAccountJoinClient token={token} />
             <PartnerActionViewClient token={token} />
+            <PartnerCommunityClient token={token} />
           </>
         )}
       </section>
