@@ -9,3 +9,14 @@ export interface CommunityPostDraft {
   subCategory: CommunitySubCategory;
   audience: CommunityAudience;
 }
+
+export interface CommunityPostListItem {
+  id: string;
+  body: string;
+  mood: string | null;
+  subCategory: CommunitySubCategory;
+  audience: CommunityAudience;
+  moderationStatus: CommunityModerationStatus;
+  isOfficial: boolean;
+  createdAt: string;
+}

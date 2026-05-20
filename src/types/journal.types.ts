@@ -8,3 +8,13 @@ export interface CoupleJournalEntryDraft {
   photoUrls: string[];
   authorRole: JournalAuthorRole;
 }
+
+export interface CoupleJournalEntry {
+  id: string;
+  body: string;
+  mood: JournalMood | null;
+  painScore: number | null;
+  photoUrls: string[];
+  authorRole: JournalAuthorRole;
+  createdAt: string;
+}
