@@ -1,5 +1,5 @@
 'use client';
-import type { ScheduleItem, CompletionRecord, ClinicUpdate } from '../../types/slc.types';
+import type { ScheduleItem, CompletionRecord, ClinicUpdate } from '../../types/mvp.types';
 import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { slcAssets } from '../../design/slc-assets';
 
