@@ -63,7 +63,10 @@ describe('SLC color token contract', () => {
 
 
   it('keeps records journal/community preview labels away from coral', () => {
-    const records = readFileSync('src/features/records/records-screen.tsx', 'utf8');
+    const records = [
+      readFileSync('src/features/records/journal/journal-preview.tsx', 'utf8'),
+      readFileSync('src/features/records/community/community-preview.tsx', 'utf8'),
+    ].join('\n');
 
     expect(records).not.toContain("부부간</p>");
     expect(records).toContain("부부간</span>");
