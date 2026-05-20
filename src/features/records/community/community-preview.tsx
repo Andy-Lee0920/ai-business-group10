@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type FormEvent } from 'react';
-import type { CommunityAudience, CommunityPostListItem, CommunitySubCategory } from '../../../types/community.types';
+import type { CommunityAudience, CommunityCommentListItem, CommunityPostListItem, CommunitySubCategory } from '../../../types/community.types';
 
 const COMMUNITY_CHIPS: { value: CommunitySubCategory; label: string }[] = [
   { value: 'pain', label: '통증' },
@@ -38,6 +38,28 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
       setCommunityPosts((current) => current.map((candidate) => (candidate.id === post.id
         ? { ...candidate, empathyActive: post.empathyActive, empathyCount: currentCount }
         : candidate)));
+    }
+  }
+
+  async function submitComment(post: CommunityPostListItem, event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const body = String(formData.get('body') ?? '').trim();
+    if (!body) return;
+    const response = await fetch(`/api/community/posts/${encodeURIComponent(post.id)}/comments`, {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ body, parentCommentId: null }),
+    });
+    const payload = await response.json().catch(() => ({})) as { comment?: Record<string, unknown> };
+    const comment = payload.comment;
+    if (response.ok && comment) {
+      setCommunityPosts((current) => current.map((candidate) => (candidate.id === post.id
+        ? { ...candidate, comments: [...(candidate.comments ?? []), normalizeComment(comment)] }
+        : candidate)));
+      form.reset();
     }
   }
 
@@ -93,6 +115,18 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
                 <button type="button" onClick={() => toggleEmpathy(post)} style={post.empathyActive ? activeEmpathyButtonStyle : empathyButtonStyle}>공감 {post.empathyCount ?? 0}</button>
                 {post.moderationStatus === 'pending' ? <span style={pendingStyle}>검수 중</span> : null}
               </div>
+              <div style={commentListStyle}>
+                {(post.comments ?? []).map((comment) => (
+                  <div key={comment.id} style={commentStyle}>
+                    <span style={commentMetaStyle}>{comment.authorNickname ?? '커뮤니티'} · {comment.moderationStatus === 'pending' ? '댓글 검수 중' : '댓글'}</span>
+                    <p style={commentBodyStyle}>{comment.body}</p>
+                  </div>
+                ))}
+              </div>
+              <form onSubmit={(event) => submitComment(post, event)} style={commentFormStyle}>
+                <input name="body" required placeholder="댓글을 남겨주세요." style={commentInputStyle} />
+                <button type="submit" style={commentButtonStyle}>댓글 남기기</button>
+              </form>
             </article>
           ))}
         </div>
@@ -114,6 +148,18 @@ function normalizePost(row: Record<string, unknown>, fallbackCategory: Community
     authorNickname: typeof row.author_nickname === 'string' ? row.author_nickname : null,
     empathyCount: typeof row.empathy_count === 'number' ? row.empathy_count : 0,
     empathyActive: row.empathy_active === true,
+  };
+}
+
+function normalizeComment(row: Record<string, unknown>): CommunityCommentListItem {
+  return {
+    id: String(row.id),
+    postId: String(row.post_id ?? ''),
+    parentCommentId: typeof row.parent_comment_id === 'string' ? row.parent_comment_id : null,
+    body: String(row.body ?? ''),
+    moderationStatus: row.moderation_status === 'approved' || row.moderation_status === 'rejected' ? row.moderation_status : 'pending',
+    authorNickname: typeof row.author_nickname === 'string' ? row.author_nickname : null,
+    createdAt: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
   };
 }
 
@@ -143,5 +189,12 @@ const postActionRowStyle = { display: 'flex', alignItems: 'center', gap: 8, marg
 const empathyButtonStyle = { border: '1px solid var(--slc-border)', borderRadius: 999, background: 'rgba(255, 255, 255, 0.9)', color: 'var(--slc-text)', padding: '6px 9px', fontSize: 11, fontWeight: 900 } as const;
 const activeEmpathyButtonStyle = { ...empathyButtonStyle, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D' } as const;
 const pendingStyle = { display: 'inline-block', borderRadius: 999, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D', padding: '6px 9px', fontSize: 11, fontWeight: 900 } as const;
+const commentListStyle = { display: 'grid', gap: 7, marginTop: 10 } as const;
+const commentStyle = { borderLeft: '2px solid rgba(189, 166, 223, 0.32)', paddingLeft: 9 } as const;
+const commentMetaStyle = { color: 'var(--slc-muted)', fontSize: 10, fontWeight: 850 } as const;
+const commentBodyStyle = { color: 'var(--slc-text)', fontSize: 12, fontWeight: 750, lineHeight: 1.4, margin: '3px 0 0' } as const;
+const commentFormStyle = { display: 'grid', gridTemplateColumns: '1fr auto', gap: 7, marginTop: 10 } as const;
+const commentInputStyle = { minWidth: 0, border: '1px solid var(--slc-border)', borderRadius: 999, padding: '0 12px', font: 'inherit', fontSize: 12, minHeight: 34, background: 'rgba(255,255,255,0.9)' } as const;
+const commentButtonStyle = { border: 0, borderRadius: 999, background: 'rgba(189, 166, 223, 0.22)', color: '#75618D', padding: '0 11px', fontSize: 11, fontWeight: 900 } as const;
 const emptyStyle = { margin: 0, color: 'var(--slc-muted)', fontSize: 13, fontWeight: 800 } as const;
 
