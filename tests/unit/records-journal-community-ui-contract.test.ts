@@ -70,7 +70,7 @@ describe('records journal/community UI contract', () => {
     expect(communityMarkup).toContain('공감 2');
   });
 
-  it('locks couple journal compose until a partner link is approved while leaving community visible', () => {
+  it('keeps the community tab free of partner-link journal guidance when unlinked', () => {
     const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
       items: [],
       completions: [],
@@ -78,11 +78,29 @@ describe('records journal/community UI contract', () => {
       communityPosts: [],
       communityAudience: 'primary_feed',
       isPartnerLinked: false,
+      initialTab: 'community',
+    }));
+
+    expect(markup).toContain('data-testid="community-preview"');
+    expect(markup).not.toContain('data-testid="couple-journal-locked"');
+    expect(markup).not.toContain('파트너 초대하기');
+    expect(markup).not.toContain('/more#partner-invite');
+  });
+
+  it('locks only the couple journal tab until a partner link is approved', () => {
+    const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
+      items: [],
+      completions: [],
+      journalEntries: [],
+      communityPosts: [],
+      communityAudience: 'primary_feed',
+      isPartnerLinked: false,
+      initialTab: 'journal',
     }));
 
     expect(markup).toContain('data-testid="couple-journal-locked"');
     expect(markup).toContain('파트너 초대하기');
     expect(markup).toContain('/more#partner-invite');
-    expect(markup).toContain('data-testid="community-preview"');
+    expect(markup).not.toContain('data-testid="community-preview"');
   });
 });

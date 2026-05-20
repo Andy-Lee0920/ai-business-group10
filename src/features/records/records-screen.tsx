@@ -74,9 +74,6 @@ export function RecordsScreen({
         </button>
       </nav>
 
-      {!isPartnerLinked && activeTab === 'community' ? (
-        <JournalPreview entries={journalEntries} upcomingCount={upcomingCount} isPartnerLinked={false} coupleId={coupleId} compactLocked />
-      ) : null}
 
       {activeTab === 'journal' ? (
         <JournalPreview

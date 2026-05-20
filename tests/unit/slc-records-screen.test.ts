@@ -37,8 +37,8 @@ describe('SLC records screen', () => {
       clinicUpdates: [],
     }));
 
-    expect(markup).toContain('data-testid="couple-journal-locked"');
     expect(markup).toContain('data-testid="community-preview"');
+    expect(markup).not.toContain('data-testid="couple-journal-locked"');
     expect(markup).toContain('커플저널');
     expect(markup).toContain('커뮤니티');
     expect(markup).not.toContain('data-testid="records-calm-card"');
