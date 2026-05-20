@@ -21,6 +21,26 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
   const [isSaving, setIsSaving] = useState(false);
   const visiblePosts = useMemo(() => communityPosts.filter((post) => post.subCategory === selectedCategory), [communityPosts, selectedCategory]);
 
+  async function toggleEmpathy(post: CommunityPostListItem) {
+    const currentCount = post.empathyCount ?? 0;
+    const nextActive = !post.empathyActive;
+    setCommunityPosts((current) => current.map((candidate) => (candidate.id === post.id
+      ? { ...candidate, empathyActive: nextActive, empathyCount: Math.max(0, currentCount + (nextActive ? 1 : -1)) }
+      : candidate)));
+    try {
+      const response = await fetch(`/api/community/posts/${encodeURIComponent(post.id)}/empathy`, { method: 'POST', cache: 'no-store' });
+      const payload = await response.json().catch(() => ({})) as { active?: boolean; count?: number };
+      if (!response.ok || typeof payload.active !== 'boolean' || typeof payload.count !== 'number') throw new Error('empathy_failed');
+      setCommunityPosts((current) => current.map((candidate) => (candidate.id === post.id
+        ? { ...candidate, empathyActive: payload.active, empathyCount: payload.count }
+        : candidate)));
+    } catch {
+      setCommunityPosts((current) => current.map((candidate) => (candidate.id === post.id
+        ? { ...candidate, empathyActive: post.empathyActive, empathyCount: currentCount }
+        : candidate)));
+    }
+  }
+
   async function submitCommunityPost(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -69,7 +89,10 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
             <article key={post.id} style={postStyle}>
               <div style={postMetaStyle}>{labelFor(post.subCategory)} · {post.isOfficial ? '운영팀 안내' : post.audience}</div>
               <p style={postBodyStyle}>{post.body}</p>
-              {post.moderationStatus === 'pending' ? <span style={pendingStyle}>검수 중</span> : null}
+              <div style={postActionRowStyle}>
+                <button type="button" onClick={() => toggleEmpathy(post)} style={post.empathyActive ? activeEmpathyButtonStyle : empathyButtonStyle}>공감 {post.empathyCount ?? 0}</button>
+                {post.moderationStatus === 'pending' ? <span style={pendingStyle}>검수 중</span> : null}
+              </div>
             </article>
           ))}
         </div>
@@ -88,6 +111,8 @@ function normalizePost(row: Record<string, unknown>, fallbackCategory: Community
     moderationStatus: row.moderation_status === 'approved' || row.moderation_status === 'rejected' ? row.moderation_status : 'pending',
     isOfficial: row.is_official === true,
     createdAt: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
+    empathyCount: typeof row.empathy_count === 'number' ? row.empathy_count : 0,
+    empathyActive: row.empathy_active === true,
   };
 }
 
@@ -113,5 +138,9 @@ const listStyle = { display: 'grid', gap: 10, marginTop: 16 } as const;
 const postStyle = { borderRadius: 20, background: 'rgba(255, 255, 255, 0.82)', border: '1px solid var(--slc-border)', padding: 14 } as const;
 const postMetaStyle = { color: 'var(--slc-muted)', fontSize: 11, fontWeight: 850, marginBottom: 7 } as const;
 const postBodyStyle = { color: 'var(--slc-text)', fontSize: 14, fontWeight: 800, lineHeight: 1.45, margin: 0 } as const;
-const pendingStyle = { display: 'inline-block', marginTop: 9, borderRadius: 999, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D', padding: '6px 9px', fontSize: 11, fontWeight: 900 } as const;
+const postActionRowStyle = { display: 'flex', alignItems: 'center', gap: 8, marginTop: 9 } as const;
+const empathyButtonStyle = { border: '1px solid var(--slc-border)', borderRadius: 999, background: 'rgba(255, 255, 255, 0.9)', color: 'var(--slc-text)', padding: '6px 9px', fontSize: 11, fontWeight: 900 } as const;
+const activeEmpathyButtonStyle = { ...empathyButtonStyle, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D' } as const;
+const pendingStyle = { display: 'inline-block', borderRadius: 999, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D', padding: '6px 9px', fontSize: 11, fontWeight: 900 } as const;
 const emptyStyle = { margin: 0, color: 'var(--slc-muted)', fontSize: 13, fontWeight: 800 } as const;
+

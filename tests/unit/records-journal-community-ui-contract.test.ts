@@ -27,6 +27,8 @@ describe('records journal/community UI contract', () => {
         moderationStatus: 'pending',
         isOfficial: false,
         createdAt: '2026-05-20T08:10:00.000Z',
+        empathyCount: 2,
+        empathyActive: false,
       }],
       communityAudience: 'primary_feed',
     }));
@@ -38,5 +40,6 @@ describe('records journal/community UI contract', () => {
     expect(markup).toContain('오비드렐 시간 확인 팁을 남겨요.');
     expect(markup).toContain('검수 중');
     expect(markup).toContain('primary_feed');
+    expect(markup).toContain('공감 2');
   });
 });

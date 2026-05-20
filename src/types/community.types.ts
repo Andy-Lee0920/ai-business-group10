@@ -19,4 +19,6 @@ export interface CommunityPostListItem {
   moderationStatus: CommunityModerationStatus;
   isOfficial: boolean;
   createdAt: string;
+  empathyCount?: number;
+  empathyActive?: boolean;
 }
