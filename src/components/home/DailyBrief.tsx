@@ -22,10 +22,10 @@ export function DailyBrief({ line, compact = false }: { line: string; compact?: 
   );
 }
 
-export function EmptyHomeActions() {
+export function EmptyHomeActions({ accentColor }: { accentColor: string }) {
   return (
     <div data-testid="empty-home-actions" style={actionWrapStyle}>
-      <Link href="/onboard/prescription-capture" style={primaryLinkStyle}>첫 안내문 넣기</Link>
+      <Link href="/onboard/prescription-capture" style={primaryLinkStyle(accentColor)}>첫 안내문 넣기</Link>
       <Link href="/settings" style={secondaryLinkStyle}>파트너 초대하기</Link>
     </div>
   );
@@ -117,16 +117,19 @@ const actionWrapStyle = {
   padding: '0 16px 12px',
 } as const;
 
-const primaryLinkStyle = {
-  textAlign: 'center',
-  textDecoration: 'none',
-  padding: '14px 12px',
-  borderRadius: 999,
-  color: '#fff',
-  background: 'var(--slc-coral-gradient)',
-  fontWeight: 900,
-  fontSize: 14,
-} as const;
+function primaryLinkStyle(accentColor: string) {
+  return {
+    textAlign: 'center' as const,
+    textDecoration: 'none',
+    padding: '14px 12px',
+    borderRadius: 999,
+    color: '#fff',
+    background: accentColor,
+    fontWeight: 900,
+    fontSize: 14,
+    transition: 'background 0.4s ease',
+  };
+}
 
 const secondaryLinkStyle = {
   textAlign: 'center',

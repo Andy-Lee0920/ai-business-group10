@@ -1,10 +1,10 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Bell, BellOff } from 'lucide-react';
 import { ActionCard } from '../../components/action-card';
-import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { ConfirmSheet } from '../../components/confirm-sheet';
 import { DailyBrief, EmptyHomeActions } from '../../components/home/DailyBrief';
 import { ExecutionPreview } from '../../components/home/ExecutionPreview';
@@ -12,12 +12,12 @@ import { ReflectionTurn } from '../../components/home/ReflectionTurn';
 import { InjectionCountdownArc } from '../../components/injection-countdown-arc';
 import { PostClinicBanner } from '../../components/post-clinic-banner';
 import { SLCIllustration } from '../../components/slc-illustration';
-import { slcAssets } from '../../design/slc-assets';
+import { slcAssets, type SLCAsset } from '../../design/slc-assets';
 import type { ClinicUpdate, InjectionSite, ScheduleItem } from '../../types/slc.types';
 import { ctaLabel } from '../../types/slc.types';
 import { SLC_SAFE_COPY } from '../../domain/slc-copy';
 import { resolveClinicFollowUpPrompt } from '../../domain/slc-clinic-followup';
-import { getHomePendingItems, resolveHomeFocus, resolveHomeVisualAsset, type HomeFocus } from '../../domain/slc-home-focus';
+import { getHomePendingItems, resolveHomeFocus, type HomeFocus } from '../../domain/slc-home-focus';
 import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-date';
 import { resolveMedicationReferenceAsset } from '../../domain/medication-reference-assets';
 import { isInInjectionCountdownWindow, secondsUntilInjection } from '../adaptive-home/injection-timing';
@@ -43,6 +43,52 @@ type HeroStory =
 
 const DAY_LABELS = ['오늘', '내일', '모레'] as const;
 const HOME_REMINDER_SETTING_KEY = 'fevio_home_reminder_enabled';
+
+type HeroVisual = {
+  bgGradient: string;
+  sheetBg: string;
+  cardGradient: string;
+  accentColor: string;
+  accentLight: string;
+  textAccent: string;
+  badgeEmoji: string;
+  badgeLabel: string;
+  asset: SLCAsset;
+  heading: string;
+  ddayText: string;
+  ddayLabel: string;
+};
+
+function resolveHeroVisual(story: HeroStory): HeroVisual {
+  // All gradients end at #FAF7F2 so the hero blends into the warm-cream actionSheet below.
+  if (story.kind === 'overdue_backlog') {
+    return {
+      bgGradient: 'linear-gradient(to bottom, #FFE8E2 0%, #FFF0EB 55%, #FFF0EB 100%)',
+      sheetBg: 'rgba(255, 240, 237, 0.96)',
+      cardGradient: 'linear-gradient(145deg, #FFFAF8 0%, #FFF1EC 100%)',
+      accentColor: '#FF6B4E', accentLight: '#FFD8CC', textAccent: '#8B3A22',
+      badgeEmoji: '⚠️', badgeLabel: '확인 필요',
+      asset: slcAssets.home.missedRecovery,
+      heading: '확인이 필요한 일정이 있어요',
+      ddayText: '미완료', ddayLabel: '확인해 주세요',
+    };
+  }
+  const { kind, heading } = story.focus;
+  switch (kind) {
+    case 'clinic_soon':
+      return { bgGradient: 'linear-gradient(to bottom, #FFF5D6 0%, #FFF8E4 55%, #FFF8E4 100%)', sheetBg: 'rgba(255, 252, 238, 0.96)', cardGradient: 'linear-gradient(145deg, #FFFDF6 0%, #FFF8E1 100%)', accentColor: '#E4B014', accentLight: '#FFF0B0', textAccent: '#7A5900', badgeEmoji: '🌼', badgeLabel: '병원', asset: slcAssets.home.clinicWide, heading, ddayText: '오늘', ddayLabel: '방문일이에요' };
+    case 'clinic_tomorrow':
+      return { bgGradient: 'linear-gradient(to bottom, #E6DEFF 0%, #EDE8FF 55%, #EDE8FF 100%)', sheetBg: 'rgba(241, 238, 255, 0.96)', cardGradient: 'linear-gradient(145deg, #F6F2FF 0%, #EDE5FF 100%)', accentColor: '#8B70D4', accentLight: '#D8CEFF', textAccent: '#3A1E7A', badgeEmoji: '🌙', badgeLabel: '내일 병원', asset: slcAssets.home.waiting, heading, ddayText: 'D-1', ddayLabel: '내일이에요' };
+    case 'medication_due':
+      return { bgGradient: 'linear-gradient(to bottom, #CCEFDF 0%, #DCF5EA 55%, #DCF5EA 100%)', sheetBg: 'rgba(232, 251, 241, 0.96)', cardGradient: 'linear-gradient(145deg, #FAFFFE 0%, #EAFFF4 100%)', accentColor: '#52B788', accentLight: '#C8F0DC', textAccent: '#276942', badgeEmoji: '💉', badgeLabel: '주사 준비', asset: slcAssets.home.injectionWide, heading, ddayText: '지금', ddayLabel: '확인해요' };
+    case 'medication_upcoming':
+      return { bgGradient: 'linear-gradient(to bottom, #CCEFDF 0%, #DCF5EA 55%, #DCF5EA 100%)', sheetBg: 'rgba(232, 251, 241, 0.96)', cardGradient: 'linear-gradient(145deg, #FAFFFE 0%, #EAFFF4 100%)', accentColor: '#52B788', accentLight: '#C8F0DC', textAccent: '#276942', badgeEmoji: '💉', badgeLabel: '주사 예정', asset: slcAssets.home.injectionWide, heading, ddayText: '예정', ddayLabel: '준비해요' };
+    case 'missed':
+      return { bgGradient: 'linear-gradient(to bottom, #FFE8E2 0%, #FFF0EB 55%, #FFF0EB 100%)', sheetBg: 'rgba(255, 240, 237, 0.96)', cardGradient: 'linear-gradient(145deg, #FFFAF8 0%, #FFF1EC 100%)', accentColor: '#FF6B4E', accentLight: '#FFD8CC', textAccent: '#8B3A22', badgeEmoji: '⚠️', badgeLabel: '확인', asset: slcAssets.home.missedRecovery, heading, ddayText: '미완료', ddayLabel: '확인해 주세요' };
+    default:
+      return { bgGradient: 'linear-gradient(to bottom, #DCDEFF 0%, #E8E9FF 55%, #E8E9FF 100%)', sheetBg: 'rgba(235, 236, 255, 0.96)', cardGradient: 'linear-gradient(145deg, #F4F5FF 0%, #E8EBFF 100%)', accentColor: '#7B80D4', accentLight: '#CDD0FF', textAccent: '#2E207A', badgeEmoji: '🌿', badgeLabel: '쉬어가는 날', asset: slcAssets.home.empty, heading, ddayText: '오늘', ddayLabel: '안정적인 날' };
+  }
+}
 
 export function TodayScreen({
   dailyBrief = '오늘 확인할 일을 차분히 정리해요.',
@@ -120,7 +166,11 @@ export function TodayScreen({
     [items, visibleItems, homeFocus, selectedDay, initialClinicUpdates],
   );
   const priority = useMemo(() => pickHeroSurface({ now: new Date(), cards: items }), [items]);
-  const heroItemId = priority.heroSurface === 'execution' && 'item' in heroStory ? heroStory.item.id : null;
+  const heroVisual = useMemo(() => resolveHeroVisual(heroStory), [heroStory]);
+  // Only suppress the hero item from the sheet when it's shown with a CTA inside the hero zone (countdown).
+  const heroItemId = (priority.heroSurface === 'execution' && heroStory.kind === 'countdown')
+    ? heroStory.item.id
+    : null;
   const pending = useMemo(() => getHomePendingItems(visibleItems), [visibleItems]);
   const clinicFollowUpItem = useMemo(
     () => selectedDay === 0 ? resolveClinicFollowUpPrompt(visibleItems, initialClinicUpdates) : null,
@@ -165,6 +215,7 @@ export function TodayScreen({
 
   return (
     <div
+      id="home-screen"
       ref={rootRef}
       data-hero-surface={priority.heroSurface}
       data-override-reason={priority.overrideReason}
@@ -172,6 +223,7 @@ export function TodayScreen({
       style={{ position: 'relative', background: 'var(--slc-bg)', minHeight: '100dvh' }}
     >
       <div
+        id="home-hero"
         style={{
           position: 'sticky',
           top: 0,
@@ -180,18 +232,22 @@ export function TodayScreen({
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
+          background: heroVisual.bgGradient,
+          transition: 'background 0.4s ease',
         }}
       >
         <Header reminderEnabled={reminderEnabled} onToggleReminder={handleReminderToggle} pushSubscriptionStatus={pushSubscriptionStatus} pwaInstallGuidance={pwaInstallGuidance} />
-        <HeroZone dailyBrief={dailyBrief} priority={priority.heroSurface} story={heroStory} onCta={setActiveItem} />
+        <HeroZone dailyBrief={dailyBrief} priority={priority.heroSurface} story={heroStory} onCta={setActiveItem} heroVisual={heroVisual} />
       </div>
 
       <div
+        id="home-sheet"
         className={styles.actionSheet}
         style={{
           position: 'relative',
           zIndex: 1,
-          background: 'rgba(250, 247, 242, 0.96)',
+          background: heroVisual.sheetBg,
+          transition: 'background 0.4s ease',
           backdropFilter: 'blur(24px) saturate(1.15)',
           WebkitBackdropFilter: 'blur(24px) saturate(1.15)',
           borderRadius: '28px 28px 0 0',
@@ -202,21 +258,24 @@ export function TodayScreen({
           minHeight: 'calc(34dvh + 22px)',
         }}
       >
-        <div className={[
-          heroStory.kind === 'countdown' ? styles.liftedSheetHeader : styles.sheetHeader,
-          sheetLiftActive ? styles.liftedSheetHeaderActive : '',
-        ].filter(Boolean).join(' ')}>
+        <div
+          id="home-sheet-header"
+          className={[
+            heroStory.kind === 'countdown' ? styles.liftedSheetHeader : styles.sheetHeader,
+            sheetLiftActive ? styles.liftedSheetHeaderActive : '',
+          ].filter(Boolean).join(' ')}
+        >
           {heroStory.kind === 'countdown' && <CountdownSheetLift item={heroStory.item} />}
           {priority.heroSurface === 'execution' ? <DailyBrief line={dailyBrief} compact /> : <ExecutionPreview item={previewItem} onOpen={setActiveItem} />}
-          <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
+          <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} accentColor={heroVisual.accentColor} />
         </div>
-        <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <section id="home-cards" style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
           {!hasSelectedDaySchedule ? (
             <>
-              <EmptyHomeActions />
+              <EmptyHomeActions accentColor={heroVisual.accentColor} />
               <ReflectionTurn />
-              <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} />
+              <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} accentColor={heroVisual.accentColor} />
             </>
           ) : (
             <>
@@ -266,44 +325,72 @@ function HeroZone({
   priority,
   story,
   onCta,
+  heroVisual,
 }: {
   dailyBrief: string;
   priority: 'brief' | 'execution';
   story: HeroStory;
   onCta: (item: ScheduleItem) => void;
+  heroVisual: HeroVisual;
 }) {
-  const asset = story.kind === 'overdue_backlog'
-    ? slcAssets.home.missedRecovery
-    : resolveHomeVisualAsset(story.focus.kind);
-  const intensity = story.kind === 'overdue_backlog' ? 'subtle' : 'hero';
   const focusKind = story.kind === 'overdue_backlog' ? 'overdue_backlog' : story.focus.kind;
 
   return (
-    <AmbientStoryBackground
-      ariaLabel="오늘의 케어 상태"
-      asset={asset}
-      as="section"
-      intensity={intensity}
-      priority
-      style={{
-        flex: 1,
-        minHeight: 0,
-      }}
-      contentStyle={{
-        height: '100%',
-      }}
+    <section
+      data-testid="home-hero-zone"
+      data-focus-kind={focusKind}
+      style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '4px 20px 20px', gap: 10 }}
     >
-      <div data-testid="home-hero-zone" data-focus-kind={focusKind} style={{ height: '100%' }}>
-        <div style={{ height: '100%', padding: '8px 20px 22px' }}>
-          {priority === 'brief' && <DailyBrief line={dailyBrief} />}
-          {priority === 'execution' && story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
-          {priority === 'execution' && story.kind === 'overdue_backlog' && <OverdueBacklogHero item={story.item} onCta={onCta} />}
-          {priority === 'execution' && story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
-          {priority === 'execution' && story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
-          {priority === 'execution' && story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
+      {priority === 'execution' && story.kind === 'countdown' ? (
+        <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} accentColor={heroVisual.accentColor} />
+      ) : priority === 'execution' && story.kind === 'overdue_backlog' ? (
+        <OverdueBacklogHero item={story.item} onCta={onCta} accentColor={heroVisual.accentColor} />
+      ) : (
+        <HomeHeroCard visual={heroVisual} heading={priority === 'brief' ? dailyBrief : heroVisual.heading} />
+      )}
+    </section>
+  );
+}
+
+function HomeHeroCard({ visual, heading }: { visual: HeroVisual; heading: string }) {
+  const isDecorative = 'decorative' in visual.asset && visual.asset.decorative;
+  return (
+    <>
+      {/* Stage badge pill */}
+      <div style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px 7px 10px', borderRadius: 999, background: visual.accentLight, border: `1px solid ${visual.accentColor}30` }}>
+        <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1 }}>{visual.badgeEmoji}</span>
+        <span style={{ color: visual.textAccent, fontSize: 13, fontWeight: 900, letterSpacing: '-0.01em' }}>{visual.badgeLabel}</span>
+      </div>
+
+      {/* Illustration card */}
+      <div style={{ flex: '1 1 0', maxHeight: 'clamp(140px, 34dvh, 220px)', position: 'relative', width: '100%', borderRadius: 28, background: visual.cardGradient, border: '1.5px solid rgba(255,255,255,0.90)', boxShadow: `0 6px 24px ${visual.accentColor}22, 0 2px 8px rgba(0,0,0,0.04)`, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '10px 0' }}>
+        <span aria-hidden="true" style={{ position: 'absolute', top: 10, right: 16, fontSize: 15, opacity: 0.72, lineHeight: 1 }}>✨</span>
+        <span aria-hidden="true" style={{ position: 'absolute', top: 12, left: 14, fontSize: 12, opacity: 0.72, lineHeight: 1 }}>⭐</span>
+
+        <div style={{ position: 'relative', width: '60%', maxWidth: 200 }}>
+          <Image
+            src={visual.asset.src}
+            width={visual.asset.width}
+            height={visual.asset.height}
+            alt={visual.asset.alt ?? ''}
+            aria-hidden={isDecorative || undefined}
+            style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
+            priority
+          />
+        </div>
+
+        {/* D-day badge */}
+        <div style={{ position: 'absolute', bottom: -14, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '6px 18px', borderRadius: 999, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', border: `1.5px solid ${visual.accentLight}`, boxShadow: `0 4px 16px ${visual.accentColor}20`, whiteSpace: 'nowrap' }}>
+          <strong style={{ color: visual.textAccent, fontSize: 17, fontWeight: 950, letterSpacing: '-0.05em', lineHeight: 1, display: 'block' }}>{visual.ddayText}</strong>
+          <span style={{ color: '#9B97B2', fontSize: 10, fontWeight: 800, marginTop: 2, display: 'block', textAlign: 'center' }}>{visual.ddayLabel}</span>
         </div>
       </div>
-    </AmbientStoryBackground>
+
+      {/* Heading */}
+      <h2 style={{ margin: '6px 0 0', color: '#4B4268', fontSize: 20, fontWeight: 950, letterSpacing: '-0.04em', lineHeight: 1.2, wordBreak: 'keep-all' }}>
+        {heading}
+      </h2>
+    </>
   );
 }
 
@@ -401,9 +488,11 @@ function QuietHeroContent({ focus, paddingTop = 60 }: { focus: HomeFocus; paddin
 function OverdueBacklogHero({
   item,
   onCta,
+  accentColor,
 }: {
   item: ScheduleItem;
   onCta: (item: ScheduleItem) => void;
+  accentColor: string;
 }) {
   const typeLabel = scheduleTypeLabel(item.type);
   return (
@@ -418,7 +507,7 @@ function OverdueBacklogHero({
         </p>
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
-        <button type="button" onClick={() => onCta(item)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 20px', border: 0, borderRadius: 999, background: 'var(--slc-text)', color: 'var(--slc-bg)', fontSize: 14, fontWeight: 900, fontFamily: 'inherit', textDecoration: 'none', width: 'fit-content', cursor: 'pointer' }}>
+        <button type="button" onClick={() => onCta(item)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 20px', border: 0, borderRadius: 999, background: accentColor, color: '#fff', fontSize: 14, fontWeight: 900, fontFamily: 'inherit', textDecoration: 'none', width: 'fit-content', cursor: 'pointer', transition: 'background 0.4s ease' }}>
           완료로 기록
         </button>
         <Link href={`/schedule/${item.id}/edit`} style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 700, textDecoration: 'none' }}>
@@ -452,7 +541,7 @@ function CompactHeroCard({
   );
 }
 
-function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: ScheduleItem; nextInjection: ScheduleItem | null; onCta: (item: ScheduleItem) => void }) {
+function InjectionCountdownFocus({ item, nextInjection, onCta, accentColor }: { item: ScheduleItem; nextInjection: ScheduleItem | null; onCta: (item: ScheduleItem) => void; accentColor: string }) {
   const remaining = secondsUntilInjection(item.scheduled_at);
   const isDueNow = remaining <= 0;
 
@@ -489,7 +578,7 @@ function InjectionCountdownFocus({ item, nextInjection, onCta }: { item: Schedul
             </div>
           </>
         )}
-        <button type="button" onClick={() => onCta(item)} style={heroCtaStyle}>{ctaLabel(item.type)}</button>
+        <button type="button" onClick={() => onCta(item)} style={heroCtaStyle(accentColor)}>{ctaLabel(item.type)}</button>
       </div>
     </section>
   );
@@ -627,25 +716,28 @@ const dueNowPanelStyle = {
   fontWeight: 900,
 } as const;
 
-const heroCtaStyle = {
-  width: '100%',
-  minHeight: 52,
-  border: 'none',
-  borderRadius: 999,
-  background: 'var(--slc-coral-gradient)',
-  color: '#fff',
-  fontSize: 15,
-  fontWeight: 900,
-  fontFamily: 'inherit',
-  cursor: 'pointer',
-  marginTop: 2,
-} as const;
+function heroCtaStyle(accentColor: string) {
+  return {
+    width: '100%',
+    minHeight: 52,
+    border: 'none',
+    borderRadius: 999,
+    background: accentColor,
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 900,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+    marginTop: 2,
+    transition: 'background 0.4s ease',
+  };
+}
 
 function Header({ reminderEnabled, onToggleReminder, pushSubscriptionStatus, pwaInstallGuidance }: { reminderEnabled: boolean; onToggleReminder: () => void; pushSubscriptionStatus: PushReminderSubscriptionStatus; pwaInstallGuidance: 'ios_add_to_home_screen' | 'none' }) {
   const today = new Date();
   const ReminderIcon = reminderEnabled ? Bell : BellOff;
   return (
-    <header style={{ padding: '54px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <header id="home-header" style={{ padding: '54px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
         <p style={{ fontSize: 13, color: 'var(--slc-muted)', fontWeight: 600, margin: '0 0 4px' }}>
           {formatKstDateLabel(today)}
@@ -685,24 +777,22 @@ const iosInstallHintStyle = {
   textAlign: 'right',
 } as const;
 
-function DayTabs({ selectedDay, onSelect }: { selectedDay: DayOffset; onSelect: (day: DayOffset) => void }) {
+function DayTabs({ selectedDay, onSelect, accentColor }: { selectedDay: DayOffset; onSelect: (day: DayOffset) => void; accentColor: string }) {
   return (
     <nav aria-label="일정 날짜" style={{ display: 'flex', gap: 8, padding: '0 24px 16px' }}>
       {DAY_LABELS.map((label, index) => (
-        <button key={label} type="button" onClick={() => onSelect(index as DayOffset)} style={tabStyle(selectedDay === index)}>{label}</button>
+        <button key={label} type="button" onClick={() => onSelect(index as DayOffset)} style={tabStyle(selectedDay === index, accentColor)}>{label}</button>
       ))}
     </nav>
   );
 }
 
-function EmptyState({ selectedDay, firstScheduleSkipped }: { selectedDay: DayOffset; firstScheduleSkipped: boolean }) {
-  const asset = firstScheduleSkipped ? slcAssets.empty.medication : slcAssets.empty.cycle;
+function EmptyState({ selectedDay, firstScheduleSkipped: _firstScheduleSkipped, accentColor }: { selectedDay: DayOffset; firstScheduleSkipped: boolean; accentColor: string }) {
   return (
     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-      <SLCIllustration asset={asset} size="empty" style={{ opacity: 0.86, marginBottom: 12 }} />
       <p style={{ color: 'var(--slc-text)', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 8px' }}>{selectedDay === 0 ? '오늘은 예정된 일정이 없어요' : `${DAY_LABELS[selectedDay]}은 예정된 일정이 없어요`}</p>
       <p style={{ color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.5, margin: 0 }}>{SLC_SAFE_COPY.noSchedule}</p>
-      <Link href="/add" style={emptyLinkStyle}>추가하기</Link>
+      <Link href="/add" style={emptyLinkStyle(accentColor)}>추가하기</Link>
     </div>
   );
 }
@@ -810,15 +900,17 @@ function reminderToggleDotStyle(enabled: boolean) {
   } as const;
 }
 
-const emptyLinkStyle = {
-  display: 'inline-block', marginTop: 16, padding: '12px 24px', background: 'var(--slc-coral-gradient)', color: 'var(--slc-bg)',
-  borderRadius: 999, textDecoration: 'none', fontSize: 14, fontWeight: 800,
-} as const;
-
-function tabStyle(active: boolean) {
+function emptyLinkStyle(accentColor: string) {
   return {
-    minHeight: 44, padding: '10px 16px', borderRadius: 999, background: active ? 'var(--slc-coral)' : 'var(--slc-border)',
-    color: active ? 'var(--slc-bg)' : 'var(--slc-muted)', border: 'none', fontSize: 13, fontWeight: 800,
-    cursor: 'pointer', fontFamily: 'inherit',
-  } as const;
+    display: 'inline-block', marginTop: 16, padding: '12px 24px', background: accentColor, color: '#fff',
+    borderRadius: 999, textDecoration: 'none', fontSize: 14, fontWeight: 800, transition: 'background 0.4s ease',
+  };
+}
+
+function tabStyle(active: boolean, accentColor: string) {
+  return {
+    minHeight: 44, padding: '10px 16px', borderRadius: 999, background: active ? accentColor : 'var(--slc-border)',
+    color: active ? '#fff' : 'var(--slc-muted)', border: 'none', fontSize: 13, fontWeight: 800,
+    cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.4s ease, color 0.4s ease',
+  };
 }
