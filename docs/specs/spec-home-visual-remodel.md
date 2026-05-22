@@ -21,7 +21,7 @@ care-day별 홈 화면의 시각 레이어(배경, 히어로 영역, 카드, 이
 | `QuietChecklist`        | 아이템 카드 소재·간격                               |
 | `PartnerConnectBar`     | 배치·소재 조정                                      |
 | phase별 CSS 변수        | 색상 토큰 재조정 (sage/coral/lavender/warm neutral) |
-| home 배경 이미지 에셋   | `public/assets/home/*.png` 교체 및 신규 추가        |
+| home 배경 이미지 에셋   | `public/assets/home/*.png` 신규 적용 (완료)         |
 | `slc-assets.ts`         | 새 에셋 경로·크기 등록                              |
 
 ### 변경 금지 (기능 손대지 않음)
