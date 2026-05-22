@@ -91,13 +91,41 @@ type HeroVisual = {
 };
 
 const CHEER: Record<string, Cheer> = {
-  overdue:             { topEmoji: '🌱', sub: '작은 한 걸음씩 잘 하고 있어요',           bottomEmoji: '💛' },
-  clinic_soon:         { topEmoji: '✨', sub: '궁금한 건 다 여쭤보세요',                 bottomEmoji: '💙' },
-  clinic_tomorrow:     { topEmoji: '🌙', sub: '필요한 것은 미리 챙겨두면 편해요',         bottomEmoji: '💜' },
-  medication_due:      { topEmoji: '💚', sub: '오늘도 잘 하고 있어요',                   bottomEmoji: '🌿' },
-  medication_upcoming: { topEmoji: '🌿', sub: '예정된 케어를 잘 챙기고 계세요',           bottomEmoji: '💚' },
-  missed:              { topEmoji: '🌱', sub: '지금 확인하는 것만으로도 충분해요',         bottomEmoji: '💛' },
-  empty:               { topEmoji: '✨', sub: '몸과 마음이 회복하는 중이에요',            bottomEmoji: '🌙' },
+  overdue: {
+    topEmoji: "🌱",
+    sub: "작은 한 걸음씩 잘 하고 있어요",
+    bottomEmoji: "💛",
+  },
+  clinic_soon: {
+    topEmoji: "✨",
+    sub: "궁금한 건 다 여쭤보세요",
+    bottomEmoji: "💙",
+  },
+  clinic_tomorrow: {
+    topEmoji: "🌙",
+    sub: "필요한 것은 미리 챙겨두면 편해요",
+    bottomEmoji: "💜",
+  },
+  medication_due: {
+    topEmoji: "💚",
+    sub: "오늘도 잘 하고 있어요",
+    bottomEmoji: "🌿",
+  },
+  medication_upcoming: {
+    topEmoji: "🌿",
+    sub: "예정된 케어를 잘 챙기고 계세요",
+    bottomEmoji: "💚",
+  },
+  missed: {
+    topEmoji: "🌱",
+    sub: "지금 확인하는 것만으로도 충분해요",
+    bottomEmoji: "💛",
+  },
+  empty: {
+    topEmoji: "✨",
+    sub: "몸과 마음이 회복하는 중이에요",
+    bottomEmoji: "🌙",
+  },
 };
 
 function resolveHeroVisual(story: HeroStory): HeroVisual {
@@ -627,7 +655,11 @@ function HeroZone({
       ) : (
         <>
           <HomeHeroCard visual={heroVisual} />
-          <CheerCard visual={heroVisual} heading={priority === "brief" ? dailyBrief : heroVisual.heading} />
+          <div style={{ margin: "10px 0" }}></div>
+          <CheerCard
+            visual={heroVisual}
+            heading={priority === "brief" ? dailyBrief : heroVisual.heading}
+          />
         </>
       )}
     </section>
@@ -768,12 +800,17 @@ function HomeHeroCard({ visual }: { visual: HeroVisual }) {
           </span>
         </div>
       </div>
-
     </>
   );
 }
 
-function CheerCard({ visual, heading }: { visual: HeroVisual; heading: string }) {
+function CheerCard({
+  visual,
+  heading,
+}: {
+  visual: HeroVisual;
+  heading: string;
+}) {
   return (
     <div
       role="note"
@@ -798,7 +835,7 @@ function CheerCard({ visual, heading }: { visual: HeroVisual; heading: string })
       </span>
       <p
         style={{
-          margin: 0,
+          margin: 20,
           color: "#4B4268",
           fontSize: 16,
           fontWeight: 800,
