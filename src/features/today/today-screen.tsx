@@ -406,11 +406,8 @@ export function TodayScreen({
       if (!activeItem) return;
       const completedId = activeItem.id;
       setActiveItem(null);
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === completedId ? { ...item, status: "completed" } : item,
-        ),
-      );
+      // prettier-ignore
+      setItems((prev) => prev.map((item) => item.id === completedId ? { ...item, status: 'completed' } : item));
       await fetch("/api/schedule/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1715,19 +1712,8 @@ function ScheduleFlowRow({
       >
         {statusLabel}
       </span>
-      <Link
-        href={`/schedule/${item.id}/edit`}
-        aria-label={`${formatScheduleRowTitle(item)} 수정`}
-        style={{
-          color: "var(--slc-coral)",
-          fontSize: 22,
-          lineHeight: 1,
-          fontWeight: 900,
-          textDecoration: "none",
-        }}
-      >
-        ›
-      </Link>
+      {/* prettier-ignore */}
+      <Link href={`/schedule/${item.id}/edit`} aria-label="일정 수정" style={{ color: "var(--slc-coral)", fontSize: 22, lineHeight: 1, fontWeight: 900, textDecoration: "none" }}>›</Link>
     </div>
   );
 }
