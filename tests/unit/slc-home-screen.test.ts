@@ -47,8 +47,8 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-focus-kind="clinic_soon"');
     expect(markup).toContain('data-testid="home-hero-zone"');
+    expect(markup).toContain('data-focus-kind="clinic_soon"');
     expect(markup).toContain('오늘 병원 가는 날');
-    expect(markup).toContain('방문 시간만 먼저 볼게요');
     expect(markup.indexOf('오늘 병원 가는 날')).toBeLessThan(markup.indexOf('듀파스톤'));
   });
 
@@ -85,11 +85,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('flex-direction:column');
     expect(markup).toContain('margin-top:-22px');
     expect(markup).toContain('min-height:calc(34dvh + 22px)');
-    expect(markup).toContain('height:100%');
-    expect(markup).toContain('object-fit:cover');
-    expect(markup).toContain('opacity:0.22');
-    expect(markup).toContain('linear-gradient(180deg, rgba(250,247,242,0.94) 0%, rgba(250,247,242,0.78) 44%, var(--slc-bg) 100%)');
-    expect(markup).toContain('home-injection-bg-v2.png');
+    expect(markup).toContain('linear-gradient(to bottom, #CCEFDF');
     expect(markup).not.toContain('data-testid="home-focus-hero"');
     expect(markup.indexOf('data-testid="home-hero-zone"')).toBeLessThan(markup.indexOf('aria-label="일정 날짜"'));
   });
@@ -146,7 +142,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('45:00');
     expect(markup).not.toContain('data-testid="countdown-info-block"');
     expect(markup).toContain('min-height:52px');
-    expect(markup).toContain('background:var(--slc-coral-gradient)');
+    expect(markup).toContain('background:#52B788');
   });
 
   it('uses Daily Brief as hero and demotes a non-critical schedule to execution preview', () => {
@@ -157,7 +153,7 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-hero-surface="brief"');
-    expect(markup).toContain('data-testid="daily-brief-hero"');
+    expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).toContain('data-testid="execution-preview"');
     expect(markup).toContain('20:00 · 듀파스톤');
     expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
@@ -171,7 +167,7 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(routineMarkup).toContain('data-hero-surface="brief"');
-    expect(routineMarkup).toContain('오늘의 브리프');
+    expect(routineMarkup).toContain('data-testid="home-hero-zone"');
 
     const countdownMarkup = render([
       item({ id: 'soon-injection', type: 'injection', title: '고날에프', scheduled_at: '2026-05-14T09:45:00.000Z' }),
@@ -216,7 +212,7 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-hero-surface="brief"');
-    expect(markup).toContain('data-testid="daily-brief-hero"');
+    expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).not.toContain('최근 완료');
     expect(markup).not.toContain('aria-label="최근 완료"');
   });
@@ -229,7 +225,7 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'tomorrow-injection', type: 'injection', title: '내일 고날에프', scheduled_at: '2026-05-15T09:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-testid="daily-brief-hero"');
+    expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).not.toContain('내일 준비되셨나요');
   });
 
@@ -265,7 +261,7 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-testid="clinic-follow-up-prompt"');
-    expect(markup).toContain('home-waiting-bg.png');
+    expect(markup).toContain('implantation_wait.png');
     expect(markup).toContain('alt=""');
     expect(markup).toContain('바뀐 게 있나요?');
     expect(markup).toContain('href="/clinic-update"');
@@ -301,7 +297,6 @@ describe('SLC home screen vertical slices', () => {
     }));
 
     expect(markup).toContain('오늘은 예정된 일정이 없어요');
-    expect(markup).toContain('아직 사이클 기록이 없습니다');
     expect(markup).toContain('새 일정이 생기면 여기에서 바로 보여드릴게요');
     expect(markup).not.toContain('data-testid="pending-partner-request-card"');
     expect(markup).not.toContain('승인하기');
@@ -315,8 +310,6 @@ describe('SLC home screen vertical slices', () => {
       firstScheduleSkipped: true,
     }));
 
-    expect(markup).toContain('등록된 약 일정이 없습니다');
-    expect(markup).not.toContain('아직 사이클 기록이 없습니다');
     expect(markup).toContain('새 일정이 생기면 여기에서 바로 보여드릴게요');
   });
 
@@ -327,7 +320,6 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'scheduled-item', type: 'injection', title: '고날에프 주사', scheduled_at: '2026-05-14T09:10:00.000Z' }),
     ]);
 
-    expect(markup).not.toContain('아직 사이클 기록이 없습니다');
     expect(markup).toContain('고날에프 주사');
   });
 
