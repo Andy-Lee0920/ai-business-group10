@@ -82,7 +82,7 @@ injection:   주사, 고날에프, 퓨레곤, 메노푸어, 오비드렐, 데카
 medication:  약, 복약, 복용, 정, 캡슐, mg, 질정, 프로게스테론, 에스트로겐, 루티너스, 듀파스톤, 아스피린
 clinic_visit: 병원, 방문, 내원, 초음파, 채혈, 채취, 이식, 배양, 동결
 clinic_confirmation: 확인, 물어, 문의, 헷갈림, 모르겠
-partner_support: 남편, 파트너, 같이, 함께, 도와, 챙겨
+partner_support: 파트너, 파트너, 같이, 함께, 도와, 챙겨
 record: 기록, 컨디션, 체온, 증상, 통증
 ```
 

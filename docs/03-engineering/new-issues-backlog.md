@@ -199,7 +199,7 @@ Child of `#25`. Spawned by ADR 0002 룰 #27-A.
 
 ### 원문 출처
 
-`original-note-hyunjoo.md` §5-3 인터뷰이 B (남편이 직접 주사 투여), §6-1 실수 방지
+`original-note-hyunjoo.md` §5-3 인터뷰이 B (파트너이 직접 주사 투여), §6-1 실수 방지
 
 ### 한 줄 목표
 

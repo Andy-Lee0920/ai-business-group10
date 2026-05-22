@@ -3,9 +3,13 @@ import { redirect } from 'next/navigation';
 import { isPresentationRequest } from '../../config';
 import { getKstDayEnd, getKstDayStart } from '../../domain/kst-date';
 import { projectCareActionCardsForHome, type CareActionHomeRow } from '../../domain/care-action-home-projection';
+import { careDayForConfirmedPhase } from '../../domain/cycle-state-machine';
+import { factDict } from '../../lib/brief/factDict';
+import { generateDailyBrief } from '../../lib/brief/generateBrief';
 import { createCookieBackedSupabaseClient } from '../../lib/server-supabase';
 import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../lib/slc-fallback';
 import type { ClinicUpdate, ScheduleItem } from '../../types/slc.types';
+import type { IvfPhase } from '../../types/cycle-event.types';
 import { PresentationHomeDemo } from './presentation-home-demo';
 import { TodayScreen } from './today-screen';
 
@@ -65,8 +69,10 @@ async function renderSupabaseHomePage() {
       });
 
   if (careCardItems.length > 0) {
+    const dailyBrief = await buildHomeBrief(careCardItems);
     return (
       <TodayScreen
+        dailyBrief={dailyBrief.line}
         initialItems={careCardItems}
         userId={user.id}
         initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
@@ -84,14 +90,38 @@ async function renderSupabaseHomePage() {
     .order('scheduled_at', { ascending: true });
 
   if (itemsRes.error) {
-    return <TodayScreen initialItems={fallbackScheduleItems(user.id)} userId={user.id} initialClinicUpdates={[]} />;
+    const fallbackItems = fallbackScheduleItems(user.id);
+    const dailyBrief = await buildHomeBrief(fallbackItems);
+    return <TodayScreen dailyBrief={dailyBrief.line} initialItems={fallbackItems} userId={user.id} initialClinicUpdates={[]} />;
   }
+  const legacyItems = (itemsRes.data ?? []) as ScheduleItem[];
+  const dailyBrief = await buildHomeBrief(legacyItems);
   return (
     <TodayScreen
-      initialItems={(itemsRes.data ?? []) as ScheduleItem[]}
+      dailyBrief={dailyBrief.line}
+      initialItems={legacyItems}
       userId={user.id}
       initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
       firstScheduleSkipped={firstScheduleSkipped}
     />
   );
+}
+
+function inferBriefPhase(items: readonly ScheduleItem[]): IvfPhase | 'onboarding' {
+  if (items.length === 0) return 'onboarding';
+  if (items.some((item) => item.type === 'injection')) return 'stimulation';
+  if (items.some((item) => item.type === 'clinic')) return 'follicle_monitoring';
+  return 'consultation';
+}
+
+async function buildHomeBrief(items: readonly ScheduleItem[]) {
+  const confirmedPhase = inferBriefPhase(items);
+  const phaseCareDay = confirmedPhase === 'onboarding' ? 'onboarding' : careDayForConfirmedPhase(confirmedPhase);
+  return generateDailyBrief({
+    confirmedPhase,
+    phaseCareDay,
+    dayIndexInPhase: 0,
+    facts: factDict[confirmedPhase],
+    recentCriticalEventTypes: [],
+  });
 }

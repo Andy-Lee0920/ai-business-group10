@@ -10,6 +10,7 @@
 - Personality: calm, precise, warm, Korean-first, low-pressure.
 - Trust signals: privacy-before-data, user confirmation before saving care actions, restrained medical boundaries.
 - Avoid: generic SaaS dashboards, dense settings-like onboarding, alarmist urgency, raw implementation labels.
+- **No mascot, no character.** 임신앱 (아띠/마미톡 등) 의 cute animal/baby character 패턴을 차용하지 않는다. Retention hook 은 character 친근감이 아니라 botanical/abstract visual + 따뜻한 컴포지션·일러스트 완성도로 확보한다. Daily Brief, 캘린더 hero, 빈 상태, partner projection 모두 동일 원칙.
 
 ## Product goals
 - Goals: turn clinic instructions into confirmed care actions; make today’s next action obvious; support partner awareness without exposing raw clinical text.

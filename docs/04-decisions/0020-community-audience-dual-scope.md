@@ -79,7 +79,7 @@ Product 재검토 (2026-05-20): 사용자가 expect 하는 커뮤니티 경험�
 
 ### Prohibited
 
-- `everyone` / `same_role` 외 별도 audience 옵션 추가 (e.g., "특정 친구에게만"). 본 ADR 의 범위는 두 scope.
+- `everyone` / `same_role` 외 별도 audience 옵션 추가 (e.g., "특정 동료에게만"). 본 ADR 의 범위는 두 scope.
 - `audience_role` 을 사용자가 직접 임의 지정 (server-side 자동 채움만).
 - `same_role` 글을 cross-role 사용자에게 노출 (RLS 우회).
 - AI/LLM 이 audience scope 결정에 개입 — CLAUDE.md AI advisory invariant 그대로.

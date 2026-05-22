@@ -18,11 +18,11 @@ SLC  ⊂  MVP
 
 ## Target
 
-closed beta — 지인 대상 자발적 검증. disclaimer는 앱 외부에서 별도 전달.
+closed beta — 주변 사용자 대상 자발적 검증. disclaimer는 앱 외부에서 별도 전달.
 
 ---
 
-## P0 (반드시 포함 — 6개 축)
+## P0 (반드시 포함 — 7개 축)
 
 ### 1. Input
 
@@ -68,6 +68,18 @@ closed beta — 지인 대상 자발적 검증. disclaimer는 앱 외부에서 �
 - `schedule-extract` 시스템 프롬프트의 의료 판단 금지 제약 유지
 - LLM이 진단·용량 판단·복약 권고 출력 시 해당 candidate 제거 (프롬프트 레벨)
 
+### 7. Daily Brief
+
+- 홈 default surface. `confirmedPhase` (ADR 0011) + `phaseCareDay` (ADR 0008) + `dayIndexInPhase` 입력으로 admin-keyed LLM 이 생성
+- 의료 fact 는 운영팀 큐레이션 dict (KSRM/ASRM 가이드라인 + 식약처 e-제약 공개 데이터) 에서만 인용
+- 매일 1회 + CycleEvent critical event (trigger / retrieval / transfer / beta) 트리거 추가
+- Partner Brief 는 별도 LLM 호출, 한 줄 + 행동 1개 형식 (ADR 0023)
+- Brief Reflection Turn (사용자 self-initiated 한 줄 input + LLM reply) 은 ephemeral, 저장하지 않음 (ADR 0025)
+- 첫 viewport 는 Brief 한 줄 + Execution preview 카드 (ADR 0022 priority renderer)
+- LLM 실패 / guardrail reject 시 deterministic dict raw text 폴백
+- LLM 사용은 closed beta exploration 한정, production destination 은 deterministic template pool (ADR 0021)
+- 관련 ADR: 0021, 0022, 0023, 0024, 0025
+
 ---
 
 ## P0 Release Gates (URL-action-result 형식)
@@ -83,6 +95,14 @@ closed beta — 지인 대상 자발적 검증. disclaimer는 앱 외부에서 �
 5. `/partner/[token]`에서 파트너가 링크를 열었을 때 "오늘 도와줄 일"이 partner_action 문구로 보이고, 당사자가 완료 처리하면 5초 안에 파트너 화면에 반영된다. 파트너도 "도움 완료" 처리를 할 수 있다.
 
 6. 어떤 화면에서도 LLM이 진단·용량 조정·치료 권고 문구를 출력하지 않는다.
+
+7. `/home` 평상시 (시간 임박 카드 없음) 에 사용자가 진입하면 첫 viewport 에 Daily Brief 한 줄 + Execution preview 카드 1개가 보인다.
+
+8. `/home` 에서 사용자가 "오늘의 한 줄" CTA 를 누르면 ephemeral input 이 열리고, 발화 후 LLM 응답이 표시되며, 페이지 이동 시 발화·응답 모두 저장되지 않고 폐기된다.
+
+9. `/partner/[token]` 에서 partner 가 링크를 열면 partner 전용 momentLine + helpAction 형식의 Partner Brief 가 보이고, primary 의 의료 fact / 약 이름 / 감정 발화는 노출되지 않는다.
+
+10. LLM 호출 실패 또는 guardrail reject 발생 시 Daily Brief 자리에 운영팀 큐레이션 dict 의 raw text 가 즉시 표시된다 (surface 자체가 비지 않는다).
 
 ---
 
@@ -116,9 +136,12 @@ closed beta — 지인 대상 자발적 검증. disclaimer는 앱 외부에서 �
 - RLS로 couple-scoped 데이터 격리
 - Partner raw token 미저장 (해시만)
 - LLM 출력은 advisory only — `assigned_to` / `card_type` / safety priority 결정 불가
+- **BYOK 정책은 OCR 영역에만 적용된다**. Daily Brief 와 Partner Brief 의 LLM 호출은 admin-keyed (운영팀 서버 키) 만 사용한다 (ADR 0021).
 - BYOK 키는 Supabase Vault, 브라우저 노출 금지
-- 사용자 키 없어도 manual split 경로로 모든 P0 워크플로우 완수 가능
+- OCR 사용자 키 없어도 manual split 경로로 모든 P0 워크플로우 완수 가능
+- Daily Brief 의 LLM 실패 시 deterministic dict raw text 폴백으로 "Manual P0 must work without LLM" invariant 충족 (LLM 의존성 정책 분리)
 - 이미지 처리: OpenRouter에 signed URL 전달, 처리 후 버킷 내 보관 (사용자 데이터)
+- Brief Reflection Turn 발화·응답 본문은 어떤 테이블에도 저장되지 않는다 (ADR 0025)
 
 ---
 
@@ -135,10 +158,27 @@ closed beta — 지인 대상 자발적 검증. disclaimer는 앱 외부에서 �
 | 5초 동기화 | 3초 폴링 |
 | Safety Boundary | closed beta: 프롬프트 제약만, 앱 내 disclaimer 없음 |
 
+## Daily Brief decisions (grilling 2026-05-21)
+
+| 결정 | 내용 | ADR |
+|---|---|---|
+| Daily-open hook | Hybrid — Operation backbone + Daily Brief priority renderer | 0021, 0022 |
+| Brief content engine | LLM 생성 + deterministic fact guardrail dict | 0021 |
+| LLM access | Admin-keyed (운영팀 서버 키), BYOK 는 OCR 한정 | 0021 |
+| LLM intent | Closed beta exploration tool, production destination = deterministic template pool | 0021 |
+| Visual identity | No mascot, botanical / abstract only | 0024 |
+| Fact ground truth | 운영팀 큐레이션 (KSRM/ASRM 가이드라인 + 식약처 공개 데이터) | 0021 |
+| Medication detail | Care card detail sheet (본인 약) + Brief inline (stage 보편) | 0021 |
+| Partner brief | 별도 brief — momentLine + helpAction | 0023 |
+| Brief cadence | 매일 1회 + CycleEvent critical event-triggered | 0021 |
+| Self-reflection | Ephemeral (저장 없음), self-initiated pull 패턴만 | 0025 |
+| 첫 viewport | Brief 한 줄 + execution preview 카드 | 0022 |
+| Empty home brief | Stage-neutral universal brief (partner-link 무관) | 0021 |
+
 ## Source reading order
 
 1. `docs/01-product/original-note-hyunjoo.md` — 제품 원점
 2. `docs/01-product/slc-target.md` — SLC (MVP 첫 milestone)
 3. 이 문서 (`mvp-target.md`) — MVP 범주 정의
 4. `docs/01-product/prd-v1.0.md` — PRD 구현 세부
-5. `docs/04-decisions/` — 아키텍처 결정
+5. `docs/04-decisions/` — 아키텍처 결정 (Daily Brief 관련: 0021–0025)

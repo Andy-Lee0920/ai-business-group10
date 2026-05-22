@@ -73,4 +73,8 @@ export interface PartnerSurfaceSignal {
   intensity: number;
   phase: CareSurfacePhase;
   momentCopy: string;
+  brief?: {
+    momentLine: string;
+    helpAction: string;
+  };
 }

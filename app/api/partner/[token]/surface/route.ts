@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { computeCareSurface } from '../../../../../src/domain/care-surface-engine';
 import { derivePartnerSurfaceSignal } from '../../../../../src/domain/partner-surface-signal';
 import { hashPartnerShareToken } from '../../../../../src/services/partner-view';
+import { generatePartnerBrief } from '../../../../../src/lib/brief/partnerBrief';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 import { CARD_TYPES, type CardType } from '../../../../../src/types/care-cards.types';
 import type { CareSurfaceOverrideReason, TimelineCareDay } from '../../../../../src/types/treatment-timeline.types';
@@ -35,8 +36,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   const context = toFevioSurfaceContext(rows);
   const composition = computeCareSurface(context);
   const signal = derivePartnerSurfaceSignal(composition, phaseForCareDay(context.careDay, context.overrideReason ?? 'none'));
+  const brief = await generatePartnerBrief({
+    confirmedPhase: 'consultation',
+    phaseCareDay: context.careDay,
+    cardTypes: rows.map((row) => row.card_type),
+  });
 
-  return NextResponse.json(signal, {
+  return NextResponse.json({ ...signal, brief: { momentLine: brief.momentLine, helpAction: brief.helpAction } }, {
     headers: {
       'cache-control': 'no-store',
       'x-fevio-sync-strategy': 'swr-30s',

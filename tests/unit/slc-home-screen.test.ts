@@ -149,28 +149,29 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('background:var(--slc-coral-gradient)');
   });
 
-  it('uses a compact hero card for an incomplete schedule outside the countdown window', () => {
+  it('uses Daily Brief as hero and demotes a non-critical schedule to execution preview', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
       item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-testid="home-hero-compact-card"');
-    expect(markup).toContain('오늘 할 일');
-    expect(markup).toContain('듀파스톤');
+    expect(markup).toContain('data-hero-surface="brief"');
+    expect(markup).toContain('data-testid="daily-brief-hero"');
+    expect(markup).toContain('data-testid="execution-preview"');
+    expect(markup).toContain('20:00 · 듀파스톤');
     expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
   });
 
-  it('keeps calm home hero labels from using coral until an urgent state needs attention', () => {
+  it('keeps execution labels calm until an urgent state needs attention', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
-    const compactMarkup = render([
+    const routineMarkup = render([
       item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
     ]);
 
-    expect(compactMarkup).toContain('color:var(--slc-muted);font-size:12px;font-weight:900">오늘 할 일');
-    expect(compactMarkup).not.toContain('color:var(--slc-coral);font-size:12px;font-weight:900">오늘 할 일');
+    expect(routineMarkup).toContain('data-hero-surface="brief"');
+    expect(routineMarkup).toContain('오늘의 브리프');
 
     const countdownMarkup = render([
       item({ id: 'soon-injection', type: 'injection', title: '고날에프', scheduled_at: '2026-05-14T09:45:00.000Z' }),
@@ -206,7 +207,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('시간 수정');
   });
 
-  it('shows tomorrow card after today is completed and removes recent-completed home section', () => {
+  it('keeps tomorrow items below a Daily Brief hero after today is completed', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -214,14 +215,13 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'tomorrow-clinic', type: 'clinic', title: '내일 병원', scheduled_at: '2026-05-15T09:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-testid="home-hero-compact-card"');
-    expect(markup).toContain('내일 일정');
-    expect(markup).toContain('내일 병원');
+    expect(markup).toContain('data-hero-surface="brief"');
+    expect(markup).toContain('data-testid="daily-brief-hero"');
     expect(markup).not.toContain('최근 완료');
     expect(markup).not.toContain('aria-label="최근 완료"');
   });
 
-  it('uses tomorrow medication copy for injection or medication fallback after today is completed', () => {
+  it('does not promote tomorrow medication copy over the Daily Brief hook', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -229,8 +229,8 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'tomorrow-injection', type: 'injection', title: '내일 고날에프', scheduled_at: '2026-05-15T09:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('내일 준비되셨나요');
-    expect(markup).toContain('내일 고날에프');
+    expect(markup).toContain('data-testid="daily-brief-hero"');
+    expect(markup).not.toContain('내일 준비되셨나요');
   });
 
   it('uses KST day boundaries for the today tab even when the runtime timezone is UTC-like', () => {
