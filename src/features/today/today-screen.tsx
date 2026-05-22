@@ -6,6 +6,9 @@ import { Bell, BellOff } from 'lucide-react';
 import { ActionCard } from '../../components/action-card';
 import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { ConfirmSheet } from '../../components/confirm-sheet';
+import { DailyBrief, EmptyHomeActions } from '../../components/home/DailyBrief';
+import { ExecutionPreview } from '../../components/home/ExecutionPreview';
+import { ReflectionTurn } from '../../components/home/ReflectionTurn';
 import { InjectionCountdownArc } from '../../components/injection-countdown-arc';
 import { PostClinicBanner } from '../../components/post-clinic-banner';
 import { SLCIllustration } from '../../components/slc-illustration';
@@ -19,9 +22,11 @@ import { formatKstDateLabel, formatKstTime, isInKstDay } from '../../domain/kst-
 import { resolveMedicationReferenceAsset } from '../../domain/medication-reference-assets';
 import { isInInjectionCountdownWindow, secondsUntilInjection } from '../adaptive-home/injection-timing';
 import { enablePushReminderSubscription, getPwaInstallGuidance, type PushReminderSubscriptionStatus } from '../../lib/pwa-push-client';
+import { pickHeroSurface } from '../../lib/brief/priority';
 import styles from './today-screen.module.css';
 
 interface TodayScreenProps {
+  dailyBrief?: string;
   initialItems: ScheduleItem[];
   userId: string;
   initialClinicUpdates?: ClinicUpdate[];
@@ -40,6 +45,7 @@ const DAY_LABELS = ['오늘', '내일', '모레'] as const;
 const HOME_REMINDER_SETTING_KEY = 'fevio_home_reminder_enabled';
 
 export function TodayScreen({
+  dailyBrief = '오늘 확인할 일을 차분히 정리해요.',
   initialItems,
   userId: _userId,
   initialClinicUpdates = [],
@@ -113,7 +119,8 @@ export function TodayScreen({
     () => resolveHeroStory(selectedDay === 0 ? items : visibleItems, homeFocus, selectedDay, initialClinicUpdates),
     [items, visibleItems, homeFocus, selectedDay, initialClinicUpdates],
   );
-  const heroItemId = 'item' in heroStory ? heroStory.item.id : null;
+  const priority = useMemo(() => pickHeroSurface({ now: new Date(), cards: items }), [items]);
+  const heroItemId = priority.heroSurface === 'execution' && 'item' in heroStory ? heroStory.item.id : null;
   const pending = useMemo(() => getHomePendingItems(visibleItems), [visibleItems]);
   const clinicFollowUpItem = useMemo(
     () => selectedDay === 0 ? resolveClinicFollowUpPrompt(visibleItems, initialClinicUpdates) : null,
@@ -124,6 +131,7 @@ export function TodayScreen({
   const nextItem = cardItems[1];
   const hasSelectedDaySchedule = visibleItems.length > 0 || Boolean(clinicFollowUpItem);
   const postClinicBannerState = useMemo(() => resolvePostClinicBannerState(items), [items]);
+  const previewItem = useMemo(() => pending.find((item) => item.status !== 'completed') ?? null, [pending]);
 
   const handleReminderToggle = useCallback(async () => {
     if (reminderEnabled) {
@@ -156,7 +164,13 @@ export function TodayScreen({
   }, [activeItem]);
 
   return (
-    <div ref={rootRef} style={{ position: 'relative', background: 'var(--slc-bg)', minHeight: '100dvh' }}>
+    <div
+      ref={rootRef}
+      data-hero-surface={priority.heroSurface}
+      data-override-reason={priority.overrideReason}
+      data-proximity-minutes={priority.proximityMinutes ?? ''}
+      style={{ position: 'relative', background: 'var(--slc-bg)', minHeight: '100dvh' }}
+    >
       <div
         style={{
           position: 'sticky',
@@ -169,7 +183,7 @@ export function TodayScreen({
         }}
       >
         <Header reminderEnabled={reminderEnabled} onToggleReminder={handleReminderToggle} pushSubscriptionStatus={pushSubscriptionStatus} pwaInstallGuidance={pwaInstallGuidance} />
-        <HeroZone story={heroStory} onCta={setActiveItem} />
+        <HeroZone dailyBrief={dailyBrief} priority={priority.heroSurface} story={heroStory} onCta={setActiveItem} />
       </div>
 
       <div
@@ -193,14 +207,22 @@ export function TodayScreen({
           sheetLiftActive ? styles.liftedSheetHeaderActive : '',
         ].filter(Boolean).join(' ')}>
           {heroStory.kind === 'countdown' && <CountdownSheetLift item={heroStory.item} />}
+          {priority.heroSurface === 'execution' ? <DailyBrief line={dailyBrief} compact /> : <ExecutionPreview item={previewItem} onOpen={setActiveItem} />}
           <DayTabs selectedDay={selectedDay} onSelect={setSelectedDay} />
         </div>
         <section style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
-          {!hasSelectedDaySchedule ? <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} /> : (
+          {!hasSelectedDaySchedule ? (
+            <>
+              <EmptyHomeActions />
+              <ReflectionTurn />
+              <EmptyState selectedDay={selectedDay} firstScheduleSkipped={firstScheduleSkipped} />
+            </>
+          ) : (
             <>
               {mainItem && <ActionCard item={mainItem} onCta={setActiveItem} showCountdown={selectedDay === 0} />}
               {nextItem && <NextItem item={nextItem} />}
+              <ReflectionTurn />
             </>
           )}
         </section>
@@ -240,9 +262,13 @@ function resolveNextInjection(primaryItem: ScheduleItem | null, items: ScheduleI
 }
 
 function HeroZone({
+  dailyBrief,
+  priority,
   story,
   onCta,
 }: {
+  dailyBrief: string;
+  priority: 'brief' | 'execution';
   story: HeroStory;
   onCta: (item: ScheduleItem) => void;
 }) {
@@ -269,11 +295,12 @@ function HeroZone({
     >
       <div data-testid="home-hero-zone" data-focus-kind={focusKind} style={{ height: '100%' }}>
         <div style={{ height: '100%', padding: '8px 20px 22px' }}>
-          {story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
-          {story.kind === 'overdue_backlog' && <OverdueBacklogHero item={story.item} onCta={onCta} />}
-          {story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
-          {story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
-          {story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
+          {priority === 'brief' && <DailyBrief line={dailyBrief} />}
+          {priority === 'execution' && story.kind === 'countdown' && <InjectionCountdownFocus item={story.item} nextInjection={story.nextInjection} onCta={onCta} />}
+          {priority === 'execution' && story.kind === 'overdue_backlog' && <OverdueBacklogHero item={story.item} onCta={onCta} />}
+          {priority === 'execution' && story.kind === 'today_pending' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} />}
+          {priority === 'execution' && story.kind === 'tomorrow' && <CompactHeroCard focus={story.focus} item={story.item} onCta={onCta} eyebrow="내일 일정" />}
+          {priority === 'execution' && story.kind === 'quiet' && <QuietHeroContent focus={story.focus} />}
         </div>
       </div>
     </AmbientStoryBackground>

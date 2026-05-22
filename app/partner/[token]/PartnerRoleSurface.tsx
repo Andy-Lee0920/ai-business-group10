@@ -38,10 +38,10 @@ export function PartnerRoleSurface({
             {stateLabel(primary.display_state)}
           </StatusBadge>
         </div>
-        {signal ? <p className={styles.signalCopy} data-testid="partner-surface-signal">{signal.momentCopy}</p> : null}
+        {signal ? <p className={styles.signalCopy} data-testid="partner-surface-signal">{signal.brief?.momentLine ?? signal.momentCopy}</p> : null}
         <h2 id="partner-primary-role-title">오늘 도와줄 일</h2>
         <strong className={styles.roleName}>{formatPrimaryLine(primary)}</strong>
-        <p>{primary.partner_action || primary.description || '내 화면에서 확인된 내용만 보여요.'}</p>
+        <p>{signal?.brief?.helpAction ?? (primary.partner_action || '함께 확인할 행동만 보여요.')}</p>
         {onAssist && canRecordAssist(primary) ? (
           <button
             className={styles.assistButton}
@@ -56,8 +56,8 @@ export function PartnerRoleSurface({
 
       <Card as="section" className={styles.contextCard} aria-label="공유된 케어">
         <span className={styles.microLabel}>공유된 케어</span>
-        <h3 id="partner-context-title">{primary.title}</h3>
-        {primary.description ? <p>{primary.description}</p> : <p>내 화면에서 확인된 내용만 보여요.</p>}
+        <h3 id="partner-context-title">{formatCardLabel(primary)}</h3>
+        <p>파트너에게 필요한 행동만 요약해요.</p>
       </Card>
 
       <Card as="section" className={styles.actionCard} aria-labelledby="partner-action-title">
@@ -71,7 +71,7 @@ export function PartnerRoleSurface({
               <span aria-hidden="true">✓</span>
               <div>
                 <strong>{item.partner_action}</strong>
-                <small>{item.title}</small>
+                <small>{formatCardLabel(item)}</small>
                 {onAssist && canRecordAssist(item) ? (
                   <button
                     className={styles.assistButton}
@@ -102,7 +102,7 @@ export function PartnerRoleSurface({
           {supporting.map((item) => (
             <article className={styles.supportingItem} key={item.safe_id}>
               <span>{item.partner_role}</span>
-              <strong>{item.title}</strong>
+              <strong>{formatCardLabel(item)}</strong>
             </article>
           ))}
         </section>
@@ -131,5 +131,16 @@ function canRecordAssist(item: PartnerActionViewItem) {
 
 function formatPrimaryLine(item: PartnerActionViewItem) {
   const time = item.scheduled_at ? formatKstTime(item.scheduled_at) : '오늘';
-  return `${time} · ${item.title}`;
+  return `${time} · ${formatCardLabel(item)}`;
+}
+
+const CARD_LABELS: Partial<Record<PartnerActionViewItem['card_type'], string>> = {
+  injection: '주사 일정',
+  medication: '복약 일정',
+  clinic_visit: '병원 일정',
+  clinic_confirmation: '병원 일정',
+};
+
+function formatCardLabel(item: PartnerActionViewItem) {
+  return CARD_LABELS[item.card_type] ?? '공유 일정';
 }

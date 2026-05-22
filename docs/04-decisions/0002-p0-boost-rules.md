@@ -9,7 +9,7 @@ Accepted — 2026-05-10
 SLC gate (`docs/01-product/slc-target.md`)는 첫 출시 범위를 작게 유지하기 위한 합의다. 그러나 제품 원문(`docs/01-product/original-note-hyunjoo.md`)이 가장 절박하게 가리키는 두 가지 통증을 SLC P0 구성이 구조적으로 약화시킨다는 점이, 보드 분할(`docs/03-engineering/project-boards.md`) 작업 중 드러났다.
 
 - §5-2 / 인터뷰이 A — 약 혼동·주사 누락. 원문 표현: "놓칠 경우 시술 자체가 취소될 수 있음." SLC는 카드 모델/홈까지만 다루고 안전망(시간 강조·재알림)이 P0에 없다.
-- §5-3 / 인터뷰이 B — 남편이 직접 주사를 놓아야 함. 현행 `#27` Partner View는 read-only sanitized로 정의되어 있어 남편이 카드만 보고 행동할 단서가 부족하다.
+- §5-3 / 인터뷰이 B — 파트너이 직접 주사를 놓아야 함. 현행 `#27` Partner View는 read-only sanitized로 정의되어 있어 파트너이 카드만 보고 행동할 단서가 부족하다.
 
 ADR 0001(SLC-first, manual-first)을 뒤집지 않으면서, 이 두 통증을 첫 출시 안에 녹이려면 기존 P0 이슈의 acceptance를 좁게 강화하고 P1 알림 이슈에서 "webapp으로 가능한 최소 안전망"만 떼어 P0로 옮기는 방식이 필요하다.
 
@@ -61,7 +61,7 @@ ADR 0001(SLC-first, manual-first)을 뒤집지 않으면서, 이 두 통증을 �
 
 쉬워지는 것
 
-- 원문 두 통증(타이밍 + 남편 active 실행)이 첫 출시 SLC 안에 들어온다.
+- 원문 두 통증(타이밍 + 파트너 active 실행)이 첫 출시 SLC 안에 들어온다.
 - P1 알림 확장(#49)이 빈 캔버스가 아닌 stable baseline(in-app + email) 위에서 자란다.
 - Partner View가 read-only 박제 화면이 아니라, 실제로 행동할 수 있는 surface가 된다.
 

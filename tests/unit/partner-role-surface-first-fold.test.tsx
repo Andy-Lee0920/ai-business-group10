@@ -33,7 +33,9 @@ describe('PartnerRoleSurface first fold', () => {
     );
 
     expect(markup).toContain('오늘 도와줄 일');
-    expect(markup.indexOf('듀파스톤 복용')).toBeLessThan(markup.indexOf('완료된 주사'));
+    expect(markup).toContain('복약 일정');
+    expect(markup).not.toContain('듀파스톤 복용');
+    expect(markup).not.toContain('완료된 주사');
     expect(markup).toContain('물과 알람을 같이 확인해 주세요.');
     expect(markup).toContain('도움 완료');
     expect(markup).not.toContain('raw clinic memo');

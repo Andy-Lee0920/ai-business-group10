@@ -142,10 +142,10 @@ function extractClinicVisit(sourceText: string) {
 }
 
 function extractPartnerRole(sourceText: string) {
-  const line = sourceText.split('\n').find((item) => /남편|아내|파트너|배우자/iu.test(item));
+  const line = sourceText.split('\n').find((item) => /파트너|아내|배우자/iu.test(item));
   if (!line) return null;
   const cleaned = line
-    .replace(/^(남편|아내|파트너|배우자)(은|는)?\s*/u, '')
+    .replace(/^(파트너|아내|배우자)(은|는)?\s*/u, '')
     .replace(/^함께\s*/u, '')
     .replace(/전에/u, '전')
     .trim();
