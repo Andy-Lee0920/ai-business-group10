@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
+import { isPresentationMode } from '../src/config';
 import './globals.css';
 import './fevio-ui.css';
 
@@ -39,9 +40,10 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const presentationMode = isPresentationMode() ? '1' : '0';
   return (
     <html lang="ko" className={notoSansKR.variable}>
-      <body>{children}</body>
+      <body data-presentation-mode={presentationMode}>{children}</body>
     </html>
   );
 }

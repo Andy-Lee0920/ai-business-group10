@@ -1,12 +1,24 @@
 import {
   PresentationTestbedNav,
-  buildPresentationHomeScenarios,
 } from "../presentation/presentation-testbed";
-import { TodayScreen } from "./today-screen";
+import { StageHomeScreen, STAGE_KEYS, type StageKey } from "../../components/home/StageHomeScreen";
+
+const STAGE_LABELS: Record<StageKey, string> = {
+  injection: '💉 주사',
+  'egg-collection': '🌼 채취',
+  fertilization: '💫 수정',
+  'two-cell': '🌱 2세포',
+  'four-cell': '🌸 4세포',
+  'eight-cell': '🌺 8세포',
+  blastoid: '✨ 배반포',
+  transplantation: '💗 이식일',
+  'implantation-wait': '🌙 착상대기',
+  'pregnancy-wait': '⭐ 임신대기',
+  pregnancy: '🎉 임신확인',
+  'freeze-storage': '❄️ 냉동',
+};
 
 export function PresentationHomeDemo() {
-  const scenarios = buildPresentationHomeScenarios(new Date());
-
   return (
     <div
       data-testid="presentation-home-demo"
@@ -14,7 +26,7 @@ export function PresentationHomeDemo() {
         position: "relative",
         left: "50%",
         transform: "translateX(-50%)",
-        width: "min(1180px, 100vw)",
+        width: "min(1600px, 100vw)",
         minHeight: "100dvh",
         padding: "34px 18px 92px",
         background:
@@ -61,27 +73,25 @@ export function PresentationHomeDemo() {
             maxWidth: 720,
           }}
         >
-          실제 사용자 데이터나 Google 인증 없이, 병원 안내가 일정 카드로 바뀐 뒤
-          Home · Calendar · Records · More가 어떻게 달라지는지 확인합니다.
+          시술 단계별 홈 화면 디자인을 한눈에 비교합니다.
         </p>
         <PresentationTestbedNav current="home" />
       </header>
 
       <section
-        aria-label="Fevio home demo scenarios"
+        aria-label="Fevio 단계별 홈 화면"
         style={{
-          maxWidth: 1120,
           margin: "0 auto",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gridTemplateColumns: "repeat(4, 1fr)",
           gap: 18,
           alignItems: "start",
         }}
       >
-        {scenarios.map((scenario) => (
+        {STAGE_KEYS.map((key) => (
           <article
-            key={scenario.id}
-            data-testid={`presentation-home-scenario-${scenario.id}`}
+            key={key}
+            data-testid={`presentation-home-scenario-${key}`}
             style={{
               borderRadius: 32,
               border: "1px solid rgba(210, 198, 187, 0.64)",
@@ -90,11 +100,11 @@ export function PresentationHomeDemo() {
               overflow: "hidden",
             }}
           >
-            <div style={{ padding: "18px 18px 14px" }}>
+            <div style={{ padding: "14px 16px 10px" }}>
               <span
                 style={{
                   display: "inline-flex",
-                  padding: "6px 10px",
+                  padding: "5px 10px",
                   borderRadius: 999,
                   background: "var(--slc-surface-warm)",
                   color: "var(--slc-muted)",
@@ -102,48 +112,22 @@ export function PresentationHomeDemo() {
                   fontWeight: 900,
                 }}
               >
-                {scenario.label}
+                {STAGE_LABELS[key]}
               </span>
-              <h2
-                style={{
-                  margin: "10px 0 4px",
-                  color: "var(--slc-text)",
-                  fontSize: 21,
-                  lineHeight: 1.18,
-                  letterSpacing: "-0.05em",
-                }}
-              >
-                {scenario.title}
-              </h2>
-              <p
-                style={{
-                  margin: 0,
-                  color: "var(--slc-muted)",
-                  fontSize: 13,
-                  lineHeight: 1.45,
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                {scenario.description}
-              </p>
             </div>
-            <div style={{ padding: "0 12px 14px" }}>
+            <div style={{ padding: "0 10px 12px" }}>
               <div
                 style={{
-                  height: 720,
+                  height: 680,
                   overflowY: "auto",
                   overflowX: "hidden",
-                  borderRadius: 30,
+                  borderRadius: 26,
                   border: "1px solid #EFE7E0",
                   background: "var(--slc-bg)",
+                  scrollbarWidth: "none",
                 }}
               >
-                <TodayScreen
-                  initialItems={scenario.items}
-                  userId={`presentation-${scenario.id}`}
-                  initialClinicUpdates={[]}
-                  firstScheduleSkipped={scenario.firstScheduleSkipped}
-                />
+                <StageHomeScreen stageKey={key} />
               </div>
             </div>
           </article>

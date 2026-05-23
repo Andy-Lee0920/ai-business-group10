@@ -115,11 +115,8 @@ body {
 .fevio-authed-frame {
   position: relative;
   width: 100%;
-  max-width: var(--fevio-mobile-frame-max);
   min-height: 100vh;
   min-height: 100dvh;
-  margin: 0 auto;
-  overflow-x: clip;
   background: var(--slc-bg);
 }
 
@@ -127,7 +124,6 @@ body {
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow-x: clip;
   scroll-padding-bottom: var(--fevio-page-bottom);
 }
 
@@ -136,14 +132,14 @@ body {
 }
 
 @media (min-width: 768px) {
-  html,
-  body {
+  /* ── presentation-mode=0 : 폰 프레임 시뮬레이션 ── */
+  body[data-presentation-mode="0"] {
     height: 100%;
     overflow: hidden;
   }
 
-  .app-shell,
-  .fevio-authed-frame {
+  body[data-presentation-mode="0"] .app-shell,
+  body[data-presentation-mode="0"] .fevio-authed-frame {
     position: relative;
     width: min(100vw, var(--fevio-phone-frame-max));
     max-width: var(--fevio-phone-frame-max);
@@ -165,16 +161,16 @@ body {
     scrollbar-width: none;
   }
 
-  .app-shell {
+  body[data-presentation-mode="0"] .app-shell {
     overflow-y: auto;
   }
 
-  .fevio-authed-frame {
+  body[data-presentation-mode="0"] .fevio-authed-frame {
     overflow-y: hidden;
     background: var(--slc-bg);
   }
 
-  .fevio-authed-main {
+  body[data-presentation-mode="0"] .fevio-authed-main {
     position: relative;
     height: 100%;
     min-height: 0;
@@ -184,13 +180,13 @@ body {
     scrollbar-width: none;
   }
 
-  .app-shell::-webkit-scrollbar,
-  .fevio-authed-main::-webkit-scrollbar {
+  body[data-presentation-mode="0"] .app-shell::-webkit-scrollbar,
+  body[data-presentation-mode="0"] .fevio-authed-main::-webkit-scrollbar {
     display: none;
   }
 
-  .app-shell::before,
-  .fevio-authed-frame::before {
+  body[data-presentation-mode="0"] .app-shell::before,
+  body[data-presentation-mode="0"] .fevio-authed-frame::before {
     z-index: 80;
     display: block;
     width: var(--fevio-dynamic-island-width);
@@ -206,30 +202,30 @@ body {
     transform: translateX(-50%);
   }
 
-  .app-shell::before {
+  body[data-presentation-mode="0"] .app-shell::before {
     position: fixed;
     top: calc(24px + var(--fevio-dynamic-island-top-offset));
     left: 50%;
   }
 
-  .fevio-authed-frame::before {
+  body[data-presentation-mode="0"] .fevio-authed-frame::before {
     position: absolute;
     top: var(--fevio-dynamic-island-top-offset);
     left: 50%;
   }
 
-  .fevio-authed-frame .fevio-bottom-nav {
+  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-bottom-nav {
     position: absolute !important;
     bottom: 0 !important;
   }
 
-  .fevio-authed-frame .fevio-bottom-sheet-layer,
-  .fevio-authed-frame .fevio-confirm-sheet-overlay {
+  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-bottom-sheet-layer,
+  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-confirm-sheet-overlay {
     position: absolute !important;
     inset: 0 !important;
   }
 
-  .fevio-authed-frame .fevio-post-clinic-banner {
+  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-post-clinic-banner {
     position: absolute !important;
   }
 }
