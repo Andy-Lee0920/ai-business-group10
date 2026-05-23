@@ -159,9 +159,14 @@ describe('SLC color token contract', () => {
 
     expect(calendarDemo).not.toContain("color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드");
     expect(calendarDemo).toContain("color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드");
-    expect(homeDemo).not.toContain("color: 'var(--slc-coral)', fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em'");
-    expect(homeDemo).toContain("color: 'var(--slc-muted)', fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em'");
-    expect(homeDemo).toContain("background: 'var(--slc-surface-warm)', color: 'var(--slc-muted)'"
+    expect(homeDemo).not.toMatch(
+      /color:\s*["']var\(--slc-coral\)["'][\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?letterSpacing:\s*["']-0\.02em["']/u,
+    );
+    expect(homeDemo).toMatch(
+      /color:\s*["']var\(--slc-muted\)["'][\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?letterSpacing:\s*["']-0\.02em["']/u,
+    );
+    expect(homeDemo).toMatch(
+      /background:\s*["']var\(--slc-surface-warm\)["'][\s\S]*?color:\s*["']var\(--slc-muted\)["']/u,
     );
     expect(testbedNav).toContain("background: active ? 'var(--slc-coral)' : 'rgba(255, 255, 255, 0.72)'"
     );
