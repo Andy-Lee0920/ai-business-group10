@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Bell, BellOff } from "lucide-react";
 import { ActionCard } from "../../components/action-card";
 import { ConfirmSheet } from "../../components/confirm-sheet";
-import { DailyBrief, EmptyHomeActions } from "../../components/home/DailyBrief";
+import { EmptyHomeActions } from "../../components/home/DailyBrief";
 import { ExecutionPreview } from "../../components/home/ExecutionPreview";
 import { ReflectionTurn } from "../../components/home/ReflectionTurn";
 import { InjectionCountdownArc } from "../../components/injection-countdown-arc";
@@ -238,15 +238,15 @@ function resolveHeroVisual(story: HeroStory): HeroVisual {
     default:
       return {
         bgGradient:
-          "linear-gradient(to bottom, #DCDEFF 0%, #E8E9FF 55%, #E8E9FF 100%)",
-        sheetBg: "rgba(235, 236, 255, 0.96)",
-        cardGradient: "linear-gradient(145deg, #F4F5FF 0%, #E8EBFF 100%)",
-        accentColor: "#7B80D4",
-        accentLight: "#CDD0FF",
-        textAccent: "#2E207A",
+          "linear-gradient(to bottom, #FFE8CC 0%, #FFF2E0 55%, #FFF2E0 100%)",
+        sheetBg: "rgba(255, 244, 232, 0.96)",
+        cardGradient: "linear-gradient(145deg, #FFFAF5 0%, #FFF0E0 100%)",
+        accentColor: "#E8894A",
+        accentLight: "#FFD8A8",
+        textAccent: "#7A3A00",
         badgeEmoji: "🌿",
         badgeLabel: "쉬어가는 날",
-        asset: slcAssets.home.empty,
+        asset: slcAssets.home.waiting,
         heading,
         ddayText: "오늘",
         ddayLabel: "안정적인 날",
@@ -498,11 +498,7 @@ export function TodayScreen({
           {heroStory.kind === "countdown" && (
             <CountdownSheetLift item={heroStory.item} />
           )}
-          {priority.heroSurface === "execution" ? (
-            <DailyBrief line={dailyBrief} compact />
-          ) : (
-            <ExecutionPreview item={previewItem} onOpen={setActiveItem} />
-          )}
+          <ExecutionPreview item={previewItem} onOpen={setActiveItem} />
           <DayTabs
             selectedDay={selectedDay}
             onSelect={setSelectedDay}
