@@ -78,15 +78,27 @@ export function PresentationHomeDemo() {
         <PresentationTestbedNav current="home" />
       </header>
 
+      <style>{`
+        .presentation-stage-grid {
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 18px;
+          align-items: start;
+        }
+        @media (max-width: 1023px) {
+          .presentation-stage-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 767px) {
+          .presentation-stage-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 479px) {
+          .presentation-stage-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
       <section
         aria-label="Fevio 단계별 홈 화면"
-        style={{
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 18,
-          alignItems: "start",
-        }}
+        className="presentation-stage-grid"
       >
         {STAGE_KEYS.map((key) => (
           <article
