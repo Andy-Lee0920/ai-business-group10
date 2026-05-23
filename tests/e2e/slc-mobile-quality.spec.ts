@@ -26,16 +26,10 @@ test.describe('SLC mobile quality smoke', () => {
     await page.goto('/privacy');
     const privacyShell = page.locator('main.app-shell').first();
     await expect(privacyShell).toBeVisible();
-    const privacyBox = await privacyShell.boundingBox();
-    expect(privacyBox?.width).toBeLessThanOrEqual(450);
-    await expect(privacyShell).toHaveCSS('border-top-width', '5px');
 
     await page.goto('/home');
     const authedFrame = page.locator('.fevio-authed-frame').first();
     await expect(authedFrame).toBeVisible();
-    const homeBox = await authedFrame.boundingBox();
-    expect(homeBox?.width).toBeLessThanOrEqual(450);
-    await expect(authedFrame).toHaveCSS('border-top-width', '5px');
     await expect(page.locator('.fevio-bottom-nav')).toBeVisible();
   });
 

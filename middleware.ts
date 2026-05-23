@@ -11,6 +11,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/reset', request.url));
   }
 
+  if (isPresentationRequest(request)) {
+    return NextResponse.next({ request });
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
