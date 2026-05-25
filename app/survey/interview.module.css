@@ -1,0 +1,171 @@
+.page {
+  /* app-shell이 이미 padding을 처리함 — 추가 padding 없음 */
+}
+
+.header {
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: var(--fevio-radius-card-tight);
+  background: rgba(111, 143, 110, 0.1);
+  border: 1px solid rgba(111, 143, 110, 0.22);
+}
+
+.header h1 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--fevio-ink);
+  line-height: 1.3;
+}
+
+.header p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fevio-muted);
+  line-height: 1.5;
+}
+
+.card {
+  margin: 0 0 14px;
+  padding: 16px;
+  border-radius: var(--fevio-radius-card-tight);
+  background: var(--fevio-card);
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  box-shadow: var(--fevio-shadow-soft);
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--fevio-ink);
+  letter-spacing: -0.01em;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.formGrid input,
+.formGrid select,
+.textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--fevio-border, #E5E7EB);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--fevio-ink);
+}
+
+.formGrid input:focus-visible,
+.formGrid select:focus-visible,
+.textarea:focus-visible {
+  outline: 3px solid rgba(111, 143, 110, 0.26);
+  outline-offset: 2px;
+}
+
+.textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.primaryButton {
+  margin-top: 10px;
+  width: 100%;
+  padding: 0 16px;
+  min-height: 42px;
+  border: 0;
+  border-radius: var(--fevio-radius-control);
+  background: var(--fevio-sage);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.primaryButton:hover {
+  background: var(--fevio-sage-dark);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+}
+
+.sectionHeader span {
+  color: var(--fevio-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  min-width: 580px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--fevio-border, #E5E7EB);
+  text-align: left;
+  vertical-align: top;
+  font-size: 12px;
+}
+
+.table th {
+  background: rgba(111, 143, 110, 0.06);
+  font-weight: 800;
+  color: var(--fevio-ink);
+}
+
+.interviewContent {
+  max-width: 240px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.deleteButton {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(224, 122, 104, 0.15);
+  color: #8C463A;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 120ms ease;
+  white-space: nowrap;
+}
+
+.deleteButton:hover {
+  background: rgba(224, 122, 104, 0.28);
+}
+
+.emptyText {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 13px;
+}
