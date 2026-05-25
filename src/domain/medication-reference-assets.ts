@@ -12,9 +12,9 @@ const ASSETS: Record<string, MedicationReferenceAsset> = {
 };
 
 const TITLE_KEYS: Array<[RegExp, keyof typeof ASSETS]> = [
-  [/\b(?:ovidrel|ovitrelle)\b|오비드렐/iu, 'ovidrel'],
+  [/\b(?:ovidrel|ovitrelle)\b|오비[드트]렐/iu, 'ovidrel'],
   [/\b(?:gonal[-\s]?f)\b|고날\s*(?:에프|f)/iu, 'gonal-f'],
-  [/\bcetrotide\b|세트로\s*타이드/iu, 'cetrotide'],
+  [/\bcetro(?:tide)?\b|세트로\s*(?:타이드|타이드주)?/iu, 'cetrotide'],
   [/\bmenopur\b|메노푸[어르]/iu, 'menopur'],
 ];
 
@@ -32,6 +32,7 @@ function normalizeMedicationKey(value: string | null | undefined) {
   if (!value) return null;
   const key = value.trim().toLowerCase().replace(/_/gu, '-');
   if (key === 'gonal' || key === 'gonalf') return 'gonal-f';
+  if (key === 'cetro') return 'cetrotide';
   if (key === 'ovitrelle') return 'ovidrel';
   return key;
 }

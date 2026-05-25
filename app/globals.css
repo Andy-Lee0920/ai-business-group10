@@ -220,6 +220,7 @@ body {
   }
 
   body[data-presentation-mode="0"] .fevio-authed-frame .fevio-bottom-sheet-layer,
+  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-community-sheet-layer,
   body[data-presentation-mode="0"] .fevio-authed-frame .fevio-confirm-sheet-overlay {
     position: absolute !important;
     inset: 0 !important;

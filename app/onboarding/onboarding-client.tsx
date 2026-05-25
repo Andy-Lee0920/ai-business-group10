@@ -34,7 +34,7 @@ const STEP_ORDER = [
 const VISIBLE_PROGRESS_STEPS: readonly StepDefinition[] = [
   { id: 'brand_intro', label: '시작' },
   { id: 'role_select', label: '역할' },
-  { id: 'add_method', label: '추가 방식' },
+  { id: 'add_method', label: '안내 남기기' },
   { id: 'sharing', label: '공유' },
   { id: 'complete', label: '완료' },
 ] as const;
@@ -70,7 +70,7 @@ export function OnboardingClient() {
   const [directUnit, setDirectUnit] = useState('');
   const [savingDirectEntry, setSavingDirectEntry] = useState(false);
   const [photoPhase, setPhotoPhase] = useState<PhotoPhase>('idle');
-  const [photoMessage, setPhotoMessage] = useState('사진을 선택하면 업로드 후 내용을 분석합니다.');
+  const [photoMessage, setPhotoMessage] = useState('사진을 선택하면 확인할 일정 후보로 정리해요.');
   const [textPasteValue, setTextPasteValue] = useState('');
   const [analyzingText, setAnalyzingText] = useState(false);
   const [textMessage, setTextMessage] = useState<string | null>(null);
@@ -105,6 +105,32 @@ export function OnboardingClient() {
     setActiveStep(enterOnboardingStep(step));
   }
 
+  function goBack() {
+    setError(null);
+    setTimeError(false);
+    if (activeStep === 'role_select') {
+      goToStep('brand_intro');
+      return;
+    }
+    if (activeStep === 'add_method' || activeStep === 'photo_processing') {
+      goToStep('role_select');
+      return;
+    }
+    if (activeStep === 'text_paste' || activeStep === 'direct_entry' || activeStep === 'candidate_review') {
+      goToStep('photo_processing');
+      return;
+    }
+    if (activeStep === 'sharing') {
+      goToStep('photo_processing');
+      return;
+    }
+    if (activeStep === 'complete') {
+      goToStep(selectedRole === 'partner' ? 'role_select' : 'sharing');
+      return;
+    }
+    goToStep(exitOnboardingStep(activeStep, 'back'));
+  }
+
   function selectPatientRole() {
     setSelectedRole('patient');
     setTreatmentExperience('first');
@@ -119,7 +145,7 @@ export function OnboardingClient() {
 
   function continueAfterRole() {
     if (!selectedRole) {
-      setError('시작할 역할을 선택해 주세요.');
+      setError('내 케어 화면인지 파트너 도움 화면인지 선택해 주세요.');
       return;
     }
 
@@ -129,7 +155,7 @@ export function OnboardingClient() {
     }
 
     setTreatmentExperience((current) => current ?? 'first');
-    goToStep('add_method');
+    goToStep('photo_processing');
   }
 
   function directScheduledAt() {
@@ -141,7 +167,7 @@ export function OnboardingClient() {
   async function rememberDirectEntry() {
     const title = directTitle.trim();
     if (!title) {
-      setError('일정 이름을 입력해 주세요.');
+      setError('확인한 일정 이름을 입력해 주세요.');
       return;
     }
 
@@ -164,7 +190,7 @@ export function OnboardingClient() {
       setSavedReviewItems(normalizeSavedScheduleItems(payload.item ? [payload.item] : []));
       goToStep('sharing');
     } catch {
-      setError('저장하지 못했어요. 네트워크 상태를 확인한 뒤 다시 시도해주세요.');
+      setError('확인한 일정을 저장하지 못했어요. 네트워크 상태를 확인한 뒤 다시 시도해주세요.');
     } finally {
       setSavingDirectEntry(false);
     }
@@ -175,7 +201,7 @@ export function OnboardingClient() {
     if (!file) return;
     setError(null);
     setPhotoPhase('uploading');
-    setPhotoMessage('사진을 업로드하고 있어요.');
+    setPhotoMessage('안내문 사진을 받고 있어요.');
 
     try {
       const formData = new FormData();
@@ -186,11 +212,11 @@ export function OnboardingClient() {
       if (!uploadPayload.path) throw new Error('upload_failed');
 
       setPhotoPhase('uploaded');
-      setPhotoMessage('업로드 완료');
+      setPhotoMessage('사진 받음');
       await wait(350);
 
       setPhotoPhase('analyzing');
-      setPhotoMessage('내용 분석 중');
+      setPhotoMessage('일정 후보 정리 중');
       const analyzeResponse = await fetch('/api/onboard/photo-analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -208,7 +234,7 @@ export function OnboardingClient() {
       setSavedReviewItems([]);
       setReviewCandidates(candidates);
       setPhotoPhase('ready');
-      setPhotoMessage('일정 후보 준비');
+      setPhotoMessage('확인 단계 준비');
       await wait(350);
       goToStep('candidate_review');
     } catch {
@@ -218,19 +244,19 @@ export function OnboardingClient() {
 
   function handlePhotoNotFound() {
     setPhotoPhase('not_found');
-    setPhotoMessage('사진에서 일정을 찾지 못했어요');
+    setPhotoMessage('사진에서 확인할 일정을 찾지 못했어요');
     window.setTimeout(() => goToStep('direct_entry'), 900);
   }
 
   async function analyzePastedText() {
     const rawText = textPasteValue.trim();
     if (!rawText) {
-      setTextMessage('병원 안내문을 붙여넣어 주세요.');
+      setTextMessage('받은 병원 안내를 붙여넣어 주세요.');
       return;
     }
 
     setAnalyzingText(true);
-    setTextMessage('내용 분석 중');
+    setTextMessage('일정 후보 정리 중');
     setError(null);
     try {
       const response = await fetch('/api/onboard/text-analyze', {
@@ -242,7 +268,7 @@ export function OnboardingClient() {
       const payload = await response.json() as { candidates?: ApiCandidate[] };
       const candidates = normalizeReviewCandidates(payload.candidates);
       if (!candidates.length) {
-        setTextMessage('일정을 찾지 못했어요');
+        setTextMessage('확인할 일정을 찾지 못했어요');
         return;
       }
 
@@ -251,7 +277,7 @@ export function OnboardingClient() {
       setTextMessage(null);
       goToStep('candidate_review');
     } catch {
-      setTextMessage('일정을 찾지 못했어요');
+      setTextMessage('확인할 일정을 찾지 못했어요');
     } finally {
       setAnalyzingText(false);
     }
@@ -287,7 +313,7 @@ export function OnboardingClient() {
       setSavedReviewItems(normalizeSavedScheduleItems(payload.items));
       goToStep('sharing');
     } catch {
-      setError('일정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+      setError('확인한 일정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setSavingCandidates(false);
     }
@@ -319,6 +345,14 @@ export function OnboardingClient() {
     goToStep('complete');
   }
 
+  function skipScheduleCapture() {
+    setSavedReviewItems([]);
+    setReviewCandidates([]);
+    setTextMessage(null);
+    setPhotoPhase('idle');
+    goToStep('sharing');
+  }
+
   async function completeOnboarding() {
     const partnerIntent = sharingChoice === 'partner' ? 'prepare_invite' : 'skip';
     setCompletingOnboarding(true);
@@ -338,7 +372,7 @@ export function OnboardingClient() {
       const payload = await response.json() as { redirectTo?: string };
       window.location.assign(payload.redirectTo ?? '/home');
     } catch {
-      setError('완료하지 못했어요. 잠시 후 다시 시도해주세요.');
+      setError('온보딩을 마치지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setCompletingOnboarding(false);
     }
@@ -347,6 +381,13 @@ export function OnboardingClient() {
   return (
     <main className={`app-shell ${styles.onboardingShell}`}>
       <div className={styles.onboardingFlow} aria-label="처음 설정 인터뷰" aria-description={progressLabel}>
+        {activeStep !== 'brand_intro' ? (
+          <button className={styles.backButton} onClick={goBack} type="button" aria-label="이전 단계로 돌아가기">
+            <span aria-hidden="true">‹</span>
+            <strong>이전</strong>
+          </button>
+        ) : null}
+
         {activeStep === 'brand_intro' ? (
           <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="brand-intro-title">
             <div className={styles.brandStack}>
@@ -375,19 +416,19 @@ export function OnboardingClient() {
         {activeStep === 'role_select' ? (
           <section className={styles.screen} aria-labelledby="role-select-title">
             <div className={styles.stepHeader}>
-              <h2 className={styles.sectionTitle} id="role-select-title">어떤 화면으로 시작할까요?</h2>
-              <p className={styles.questionLead}>필요한 화면만 먼저 보여드릴게요.</p>
+              <h2 className={styles.sectionTitle} id="role-select-title">어떤 역할로 함께할까요?</h2>
+              <p className={styles.questionLead}>확인한 일정은 내 홈에, 필요한 도움만 파트너 화면에 나눠 보여드려요.</p>
             </div>
             <div className={styles.roleGrid} role="group" aria-label="역할 선택">
               <SelectionChip className={styles.roleCard} onClick={selectPatientRole} selected={selectedRole === 'patient'} tone="sage">
                 <span className={styles.roleImageWrap}><img alt="" src="/assets/onboarding/role-patient.png" /></span>
-                <strong>본인</strong>
-                <small>일정 확인 · 주사 기록</small>
+                <strong>내 케어</strong>
+                <small>병원 안내 확인 · 주사 기록</small>
               </SelectionChip>
               <SelectionChip className={styles.roleCard} onClick={selectPartnerRole} selected={selectedRole === 'partner'} tone="lavender">
                 <span className={styles.roleImageWrap}><img alt="" src="/assets/onboarding/role-partner.png" /></span>
                 <strong>파트너</strong>
-                <small>일정 공유 · 확인 전용</small>
+                <small>공유된 일정 · 도움 역할</small>
               </SelectionChip>
             </div>
             <BottomDock activeIndex={activeIndex}>
@@ -401,22 +442,22 @@ export function OnboardingClient() {
         {activeStep === 'add_method' ? (
           <section className={styles.screen} aria-labelledby="add-method-title">
             <div className={styles.stepHeader}>
-              <h2 className={styles.sectionTitle} id="add-method-title">어떻게 추가할까요?</h2>
-              <p className={styles.questionLead}>확인 후에만 저장해요.</p>
+              <h2 className={styles.sectionTitle} id="add-method-title">병원 안내를 어떻게 남길까요?</h2>
+              <p className={styles.questionLead}>확인한 일정만 저장해요.</p>
             </div>
-            <div className={styles.methodGridFull} role="group" aria-label="안내 추가 방식 선택">
+            <div className={styles.methodGridFull} role="group" aria-label="병원 안내 남기는 방식 선택">
               <button
                 type="button"
                 className={styles.methodHeroCard}
                 onClick={() => goToStep('photo_processing')}
-                aria-label="사진으로 남기기"
+                aria-label="안내문 사진으로 남기기"
               >
                 <span className={styles.methodHeroIcon}>
                   <MethodIcon step="photo_processing" />
                 </span>
                 <span className={styles.methodHeroText}>
-                  <strong>사진으로 남기기</strong>
-                  <small>처방지나 안내문을 찍어주세요</small>
+                  <strong>안내문 사진으로 남기기</strong>
+                  <small>처방지나 병원 안내문을 찍어주세요</small>
                 </span>
                 <i aria-hidden="true">›</i>
               </button>
@@ -425,25 +466,25 @@ export function OnboardingClient() {
                   type="button"
                   className={styles.methodSecondaryCard}
                   onClick={() => goToStep('text_paste')}
-                  aria-label="문자로 붙여넣기"
+                  aria-label="받은 안내 문자로 붙여넣기"
                 >
                   <span className={styles.methodSecondaryIcon}>
                     <MethodIcon step="text_paste" />
                   </span>
-                  <strong>문자로</strong>
-                  <small>붙여넣기</small>
+                  <strong>받은 안내</strong>
+                  <small>문자로 붙여넣기</small>
                 </button>
                 <button
                   type="button"
                   className={styles.methodSecondaryCard}
                   onClick={() => goToStep('direct_entry')}
-                  aria-label="직접 적기"
+                  aria-label="확인한 일정 직접 적기"
                 >
                   <span className={styles.methodSecondaryIcon}>
                     <MethodIcon step="direct_entry" />
                   </span>
                   <strong>직접 적기</strong>
-                  <small>이름·시간·용량</small>
+                  <small>확인한 이름·시간·용량</small>
                 </button>
               </div>
             </div>
@@ -455,8 +496,8 @@ export function OnboardingClient() {
           <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="photo-processing-title">
             <HeroGlyph kind="document" done={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'} />
             <div className={styles.heroCopy}>
-              <h2 className={styles.sectionTitle} id="photo-processing-title">{photoPhase === 'idle' ? '사진으로 남겨주세요' : '사진을 받았어요'}</h2>
-              <p className={styles.questionLead}>{photoPhase === 'idle' ? '처방지나 안내문을 찍어주시면 일정 후보로만 정리해요.' : '일정 후보를 정리하고 있어요.'}</p>
+              <h2 className={styles.sectionTitle} id="photo-processing-title">{photoPhase === 'idle' ? '병원 안내문을 사진으로 남겨주세요' : '안내문 사진을 받았어요'}</h2>
+              <p className={styles.questionLead}>{photoPhase === 'idle' ? '처방지나 안내문을 찍어주시면 확인할 일정 후보로만 정리해요.' : '확인할 일정 후보로 정리하고 있어요.'}</p>
             </div>
 
             <input ref={cameraInputRef} className={styles.hiddenFileInput} type="file" accept="image/*" capture="environment" onChange={(event) => processPhotoFile(event.currentTarget.files?.[0])} />
@@ -464,38 +505,45 @@ export function OnboardingClient() {
 
             {photoPhase === 'idle' ? (
               <div className={styles.photoPickerActions}>
-                <CtaButton className={styles.primaryCta} onClick={() => cameraInputRef.current?.click()} type="button">사진 찍기</CtaButton>
-                <CtaButton className={styles.softCta} onClick={() => galleryInputRef.current?.click()} type="button">사진 선택</CtaButton>
+                <CtaButton className={styles.primaryCta} onClick={() => cameraInputRef.current?.click()} type="button">안내문 찍기</CtaButton>
+                <CtaButton className={styles.softCta} onClick={() => galleryInputRef.current?.click()} type="button">사진에서 선택</CtaButton>
+                <button className={styles.textFallbackButton} onClick={() => goToStep('text_paste')} type="button">
+                  받은 안내를 문자로 붙여넣기
+                </button>
               </div>
             ) : null}
 
             <ol className={styles.processingSteps} aria-label="사진 처리 상태">
-              <li data-active={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'}>업로드 완료</li>
-              <li data-active={photoPhase === 'analyzing' || photoPhase === 'ready'}>내용 분석 중</li>
-              <li data-active={photoPhase === 'ready'}>일정 후보 준비</li>
+              <li data-active={photoPhase === 'uploaded' || photoPhase === 'analyzing' || photoPhase === 'ready'}>사진 받음</li>
+              <li data-active={photoPhase === 'analyzing' || photoPhase === 'ready'}>일정 후보 정리 중</li>
+              <li data-active={photoPhase === 'ready'}>확인 단계 준비</li>
             </ol>
 
-            {photoPhase === 'not_found' ? <Notice className={styles.notice} tone="coral">사진에서 일정을 찾지 못했어요</Notice> : null}
-            {photoPhase === 'not_found' ? <CtaButton className={styles.softCta} onClick={() => setPhotoPhase('idle')} type="button">다시 찍기</CtaButton> : null}
-            <BottomDock activeIndex={activeIndex} />
+            {photoPhase === 'not_found' ? <Notice className={styles.notice} tone="coral">사진에서 확인할 일정을 찾지 못했어요</Notice> : null}
+            {photoPhase === 'not_found' ? <CtaButton className={styles.softCta} onClick={() => setPhotoPhase('idle')} type="button">사진 다시 남기기</CtaButton> : null}
+            <BottomDock activeIndex={activeIndex}>
+              <button className={styles.skipCaptureButton} onClick={skipScheduleCapture} type="button">
+                건너뛰기<span aria-hidden="true">›</span>
+              </button>
+            </BottomDock>
           </section>
         ) : null}
 
         {activeStep === 'text_paste' ? (
           <section className={styles.screen} aria-labelledby="text-paste-title">
             <div className={styles.stepHeader}>
-              <h2 className={styles.sectionTitle} id="text-paste-title">병원 안내를 붙여넣어 주세요</h2>
-              <p className={styles.questionLead}>확인 전에는 일정으로 저장하지 않아요.</p>
+              <h2 className={styles.sectionTitle} id="text-paste-title">받은 병원 안내를 붙여넣어 주세요</h2>
+              <p className={styles.questionLead}>확인한 일정만 저장해요.</p>
             </div>
             <label className={styles.pasteField}>
-              <span>병원 안내문</span>
+              <span>받은 안내</span>
               <textarea maxLength={1000} value={textPasteValue} onChange={(event) => setTextPasteValue(event.target.value)} placeholder="예: 오늘 밤 9시 고날에프 150 IU 주사" />
               <small>{textPasteValue.length}/1000</small>
             </label>
-            {textMessage ? <Notice className={styles.notice} tone={textMessage === '일정을 찾지 못했어요' ? 'coral' : 'sage'}>{textMessage}</Notice> : null}
-            {textMessage === '일정을 찾지 못했어요' ? <CtaButton className={styles.softCta} onClick={() => goToStep('direct_entry')} type="button">직접 입력으로 바꾸기</CtaButton> : null}
+            {textMessage ? <Notice className={styles.notice} tone={textMessage === '확인할 일정을 찾지 못했어요' ? 'coral' : 'sage'}>{textMessage}</Notice> : null}
+            {textMessage === '확인할 일정을 찾지 못했어요' ? <CtaButton className={styles.softCta} onClick={() => goToStep('direct_entry')} type="button">확인한 일정 직접 적기</CtaButton> : null}
             <BottomDock activeIndex={activeIndex}>
-              <CtaButton className={styles.primaryCta} disabled={!textPasteValue.trim() || analyzingText} onClick={analyzePastedText} type="button">{analyzingText ? '분석 중' : '분석하기'}</CtaButton>
+              <CtaButton className={styles.primaryCta} disabled={!textPasteValue.trim() || analyzingText} onClick={analyzePastedText} type="button">{analyzingText ? '정리 중' : '일정 후보 정리하기'}</CtaButton>
             </BottomDock>
           </section>
         ) : null}
@@ -511,20 +559,20 @@ export function OnboardingClient() {
               </div>
 
               <div className={styles.stepHeader}>
-                <p className={styles.kicker}>저장 전 확인</p>
+                <p className={styles.kicker}>확인 후 저장</p>
                 <p className={styles.questionLead} id="candidate-review-title">
                   {cardIndex + 1} / {reviewCandidates.length}
                 </p>
               </div>
 
               {currentCard ? (
-                <article className={styles.candidateStackCard} aria-label="일정 후보 카드">
+                <article className={styles.candidateStackCard} aria-label="확인할 일정 후보">
                   <p className={styles.candidateTypeBadge}>
                     {formatCandidateType(currentCard.type)} · {cardIndex + 1}회차
                   </p>
 
                   <h2 className={styles.candidateCardTitle}>
-                    {currentCard.title || '제목을 확인해 주세요'}
+                    {currentCard.title || '일정 이름을 확인해 주세요'}
                   </h2>
 
                   <div className={styles.candidateFieldGroup}>
@@ -573,7 +621,7 @@ export function OnboardingClient() {
 
                   {timeError ? (
                     <p role="alert" className={styles.candidateFieldError}>
-                      접종 시간을 입력해야 저장할 수 있어요.
+                      확인할 시간을 입력해야 저장할 수 있어요.
                     </p>
                   ) : null}
                 </article>
@@ -597,15 +645,15 @@ export function OnboardingClient() {
                     onClick={() => advanceCard('confirmed')}
                     type="button"
                   >
-                    {savingCandidates ? '저장 중' : '저장할게요'}
+                    {savingCandidates ? '저장 중' : '확인한 일정으로 저장'}
                   </CtaButton>
                 </div>
               </BottomDock>
             </section>
           ) : (
             <PlaceholderStep
-              body="확인할 후보가 없습니다. 사진이나 문자를 다시 추가해 주세요."
-              title="후보가 없어요"
+              body="사진이나 문자에서 확인할 일정을 찾지 못했어요. 직접 적어도 괜찮아요."
+              title="확인할 일정이 없어요"
             />
           )
         ) : null}
@@ -613,8 +661,8 @@ export function OnboardingClient() {
         {activeStep === 'direct_entry' ? (
           <section className={styles.screen} aria-labelledby="direct-entry-title">
             <div className={styles.stepHeader}>
-              <h2 className={styles.sectionTitle} id="direct-entry-title">기억나는 일정만 적어주세요</h2>
-              <p className={styles.questionLead}>확인한 내용만 저장합니다.</p>
+              <h2 className={styles.sectionTitle} id="direct-entry-title">확인한 일정만 직접 적어주세요</h2>
+              <p className={styles.questionLead}>병원에서 확인한 이름과 시간만 남겨요.</p>
             </div>
 
             <div className={styles.segmentGrid} role="group" aria-label="일정 종류 선택">
@@ -652,14 +700,14 @@ export function OnboardingClient() {
               </div>
             </div>
 
-            <div className={styles.homePreviewCard} aria-label="홈 미리보기">
-              <small>홈 미리보기</small>
-              <strong>{directTitle.trim() || '일정 이름이 여기에 보여요'}</strong>
+            <div className={styles.homePreviewCard} aria-label="내 홈 미리보기">
+              <small>내 홈 미리보기</small>
+              <strong>{directTitle.trim() || '확인한 일정이 여기에 보여요'}</strong>
               <span>{directDate || '날짜'} · {directTime || '시간'} · {directType === 'injection' ? '주사' : directType === 'medication' ? '약 복용' : '병원 방문'}{directDose.trim() ? ` · ${directDose.trim()}${directUnit.trim() ? ` ${directUnit.trim()}` : ''}` : ''}</span>
             </div>
 
             <BottomDock activeIndex={activeIndex}>
-              <CtaButton className={styles.primaryCta} disabled={!directTitle.trim() || savingDirectEntry} onClick={rememberDirectEntry} type="button">{savingDirectEntry ? '저장 중' : '이 일정 기억하기'}</CtaButton>
+              <CtaButton className={styles.primaryCta} disabled={!directTitle.trim() || savingDirectEntry} onClick={rememberDirectEntry} type="button">{savingDirectEntry ? '저장 중' : '확인한 일정으로 저장'}</CtaButton>
             </BottomDock>
           </section>
         ) : null}
@@ -667,57 +715,48 @@ export function OnboardingClient() {
         {activeStep === 'sharing' ? (
           <section className={styles.screen} aria-labelledby="sharing-title">
             <div className={styles.stepHeader}>
-              <h2 className={styles.sectionTitle} id="sharing-title">어떻게 시작할까요?</h2>
+              <h2 className={styles.sectionTitle} id="sharing-title">공유 범위를 정할까요?</h2>
               <p className={styles.questionLead}>
                 {savedReviewItems.length
-                  ? `${savedReviewItems[0].title} 일정이 홈에 반영되도록 저장됐어요.`
-                  : '오늘 일정은 나중에 홈에서도 추가할 수 있어요.'}
+                  ? `${savedReviewItems[0].title} 일정이 내 홈에 반영되도록 저장됐어요.`
+                  : '확인한 일정은 나중에 내 홈에서도 남길 수 있어요.'}
               </p>
             </div>
             <div className={styles.methodGridFull} role="group" aria-label="파트너 공유 선택">
               <button
                 type="button"
                 className={`${styles.methodHeroCard} ${styles.methodHeroCardGreen} ${sharingChoice === 'solo' ? styles.methodHeroCardGreenSelected : ''}`}
-                onClick={() => setSharingChoice('solo')}
+                onClick={() => continueSharing('solo')}
                 aria-pressed={sharingChoice === 'solo'}
-                aria-label="나 혼자 시작할게요"
+                aria-label="내 홈만 먼저 볼게요"
               >
                 <span className={`${styles.methodHeroIcon} ${styles.methodHeroIconGreen}`}>
                   <MethodIcon step="direct_entry" />
                 </span>
                 <span className={styles.methodHeroText}>
-                  <strong>나 혼자 시작할게요</strong>
-                  <small>먼저 내 홈에서 오늘 할 일만 확인해요</small>
+                  <strong>내 홈만 먼저 볼게요</strong>
+                  <small>오늘 할 일을 혼자 확인해요</small>
                 </span>
                 <i aria-hidden="true">›</i>
               </button>
               <button
                 type="button"
                 className={`${styles.sharingPartnerCard} ${sharingChoice === 'partner' ? styles.sharingPartnerCardSelected : ''}`}
-                onClick={() => setSharingChoice('partner')}
+                onClick={() => continueSharing('partner')}
                 aria-pressed={sharingChoice === 'partner'}
-                aria-label="파트너와 함께 쓸게요"
+                aria-label="파트너 도움 화면도 준비할게요"
               >
                 <span className={styles.sharingPartnerIcon}>
                   <MethodIcon step="text_paste" />
                 </span>
                 <span className={styles.sharingPartnerText}>
-                  <strong>파트너와 함께 쓸게요</strong>
-                  <small>초대 링크로 오늘 할 일을 같이 확인해요</small>
+                  <strong>파트너 도움 화면도 준비할게요</strong>
+                  <small>초대 링크로 필요한 일정과 역할만 공유해요</small>
                 </span>
                 <i aria-hidden="true">›</i>
               </button>
             </div>
-            <BottomDock activeIndex={activeIndex}>
-              <CtaButton
-                className={styles.primaryCta}
-                disabled={!sharingChoice}
-                onClick={() => sharingChoice ? continueSharing(sharingChoice) : undefined}
-                type="button"
-              >
-                <span>다음</span><span aria-hidden="true">›</span>
-              </CtaButton>
-            </BottomDock>
+            <BottomDock activeIndex={activeIndex} />
           </section>
         ) : null}
 
@@ -726,10 +765,10 @@ export function OnboardingClient() {
             <section className={`${styles.screen} ${styles.centerScreen}`} aria-labelledby="complete-title">
               <HeroGlyph kind="document" done />
               <div className={styles.heroCopy}>
-                <h2 className={styles.sectionTitle} id="complete-title">파트너는 초대 링크로 들어와 주세요</h2>
-                <p className={styles.questionLead}>치료자가 보낸 링크에서 오늘 도울 일만 확인할 수 있어요.</p>
+                <h2 className={styles.sectionTitle} id="complete-title">초대 링크에서 파트너 도움 화면을 열어요</h2>
+                <p className={styles.questionLead}>파트너는 공유된 일정과 오늘 도울 일만 확인해요.</p>
               </div>
-              <Notice className={styles.notice} tone="sage">파트너 계정 없이 링크 안내만 보여드리고 온보딩을 종료합니다.</Notice>
+              <Notice className={styles.notice} tone="sage">원문 안내와 민감한 메모는 파트너 화면에 보내지 않아요.</Notice>
               <BottomDock activeIndex={activeIndex}>
                 <CtaButton className={styles.primaryCta} onClick={() => window.location.assign('/')} type="button">처음 화면으로 가기</CtaButton>
               </BottomDock>
@@ -737,15 +776,15 @@ export function OnboardingClient() {
           ) : (
             <section className={`${styles.screen} ${styles.centerScreen} ${styles.completeAmbientScreen}`} aria-labelledby="complete-title">
               <div className={styles.heroCopy}>
-                <h2 className={styles.sectionTitle} id="complete-title">일정 후보를 만들었어요</h2>
-                <p className={styles.questionLead}>일정 후보를 확인하고 오늘 홈에서 만나보세요.</p>
+                <h2 className={styles.sectionTitle} id="complete-title">확인할 일정 후보를 만들었어요</h2>
+                <p className={styles.questionLead}>저장 전 확인을 마치면 오늘 홈에 반영돼요.</p>
               </div>
-              <div className={styles.homePreviewCard} aria-label="일정 후보 요약">
-                <small>일정 후보 요약</small>
-                <strong>{savedReviewItems[0]?.title ?? '저장된 일정 없이 시작'}</strong>
-                <span>{savedReviewItems[0] ? `${formatCandidateType(savedReviewItems[0].type)} · ${formatCandidateDateTime(savedReviewItems[0].scheduled_at)} · ${formatCandidateDose(savedReviewItems[0].dose, savedReviewItems[0].unit)}` : '홈에서 직접 추가할 수 있어요.'}</span>
+              <div className={styles.homePreviewCard} aria-label="확인할 일정 요약">
+                <small>확인할 일정 요약</small>
+                <strong>{savedReviewItems[0]?.title ?? '아직 저장된 일정이 없어요'}</strong>
+                <span>{savedReviewItems[0] ? `${formatCandidateType(savedReviewItems[0].type)} · ${formatCandidateDateTime(savedReviewItems[0].scheduled_at)} · ${formatCandidateDose(savedReviewItems[0].dose, savedReviewItems[0].unit)}` : '확인한 일정은 홈에서 직접 남길 수 있어요.'}</span>
               </div>
-              {sharingChoice === 'partner' ? <Notice className={styles.notice} tone="sage">파트너 초대 링크를 준비하도록 저장합니다.</Notice> : null}
+              {sharingChoice === 'partner' ? <Notice className={styles.notice} tone="sage">파트너 도움 화면 초대 링크를 준비해둘게요.</Notice> : null}
               <BottomDock activeIndex={activeIndex}>
                 <CtaButton className={styles.primaryCta} disabled={completingOnboarding} onClick={completeOnboarding} type="button">
                   <span>{completingOnboarding ? '완료 중' : '시작하기'}</span><span aria-hidden="true">›</span>

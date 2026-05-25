@@ -40,7 +40,7 @@ describe('SLC records screen', () => {
     expect(markup).toContain('data-testid="community-preview"');
     expect(markup).not.toContain('data-testid="couple-journal-locked"');
     expect(markup).toContain('커플저널');
-    expect(markup).toContain('커뮤니티');
+    expect(markup).toContain('공유 기록');
     expect(markup).not.toContain('data-testid="records-calm-card"');
     expect(markup).not.toContain('data-testid="records-timeline"');
     expect(markup).not.toContain('고날에프');

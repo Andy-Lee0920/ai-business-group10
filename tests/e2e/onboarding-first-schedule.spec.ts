@@ -45,7 +45,7 @@ test('onboarding first schedule is saved only after user confirmation', async ({
 
   await page.goto('/onboarding');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /본인/ }).click();
+  await page.getByRole('button', { name: /내 케어/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
 
   await expect(page.getByRole('heading', { name: '처음 확인할 일정을 하나만 남겨주세요' })).toBeVisible();
@@ -92,7 +92,7 @@ test('clinic visit onboarding keeps medication-only fields hidden', async ({ con
 
   await page.goto('/onboarding');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await page.getByRole('button', { name: /본인/ }).click();
+  await page.getByRole('button', { name: /내 케어/ }).click();
   await page.getByRole('button', { name: '다음' }).click();
 
   await page.getByRole('button', { name: /병원 방문/ }).click();

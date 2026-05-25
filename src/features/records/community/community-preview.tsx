@@ -1,21 +1,21 @@
 'use client';
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { CommunityAudience, CommunityAudienceScope, CommunityCommentListItem, CommunityPostListItem, CommunitySubCategory } from '../../../types/community.types';
 
 const COMMUNITY_FILTERS: { value: CommunitySubCategory | 'all'; label: string }[] = [
   { value: 'all', label: '전체' },
-  { value: 'pain', label: '통증' },
-  { value: 'worry', label: '걱정' },
-  { value: 'today', label: '오늘' },
-  { value: 'tip', label: '팁' },
+  { value: 'pain', label: '주사·증상' },
+  { value: 'worry', label: '방문 전 확인' },
+  { value: 'today', label: '오늘 일정' },
+  { value: 'tip', label: '확인 팁' },
 ];
 
 const COMMUNITY_CATEGORIES: { value: CommunitySubCategory; label: string }[] = [
-  { value: 'today', label: '오늘' },
-  { value: 'pain', label: '통증' },
-  { value: 'worry', label: '걱정' },
-  { value: 'tip', label: '팁' },
+  { value: 'today', label: '오늘 일정' },
+  { value: 'pain', label: '주사·증상' },
+  { value: 'worry', label: '방문 전 확인' },
+  { value: 'tip', label: '확인 팁' },
 ];
 
 interface CommunityPreviewProps {
@@ -29,8 +29,17 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    if (!isComposerOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsComposerOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isComposerOpen]);
+
   const visiblePosts = useMemo(() => {
-    const sorted = [...communityPosts].sort((a, b) => {
+    const sorted = communityPosts.filter((post) => !isSeedArtifactPost(post)).sort((a, b) => {
       if (a.isOfficial !== b.isOfficial) return a.isOfficial ? -1 : 1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
@@ -108,34 +117,47 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
   }
 
   return (
-    <section data-testid="community-preview" aria-label="커뮤니티" style={communityShellStyle}>
+    <section data-testid="community-preview" aria-label="공유 기록" style={communityShellStyle}>
       <header style={communityHeaderStyle}>
         <div>
-          <span style={sectionEyebrowStyle}>커뮤니티</span>
-          <h2 style={sectionTitleStyle}>같은 과정을 지나가는 사람들의 이야기</h2>
+          <span style={sectionEyebrowStyle}>공유 기록</span>
+          <h2 style={sectionTitleStyle}>병원 안내를 확인한 기록</h2>
+          <p style={sectionLeadStyle}>병원에서 확인한 일정, 주사 시간, 방문 후 메모처럼 다시 볼 수 있는 내용만 남겨요.</p>
         </div>
         <button type="button" data-testid="records-compose-button" onClick={() => setIsComposerOpen(true)} style={composeButtonStyle}>＋</button>
       </header>
 
-      <button type="button" onClick={() => setIsComposerOpen(true)} style={slimComposeStyle}>같은 입장의 사람들에게 한 마디 남기기</button>
+      <button type="button" onClick={() => setIsComposerOpen(true)} style={slimComposeStyle}>확인한 내용 남기기</button>
 
-      <div aria-label="커뮤니티 필터" style={filterRowStyle}>
+      <div aria-label="공유 기록 필터" style={filterRowStyle}>
         {COMMUNITY_FILTERS.map((chip) => (
           <button key={chip.value} type="button" onClick={() => setSelectedCategory(chip.value)} style={chip.value === selectedCategory ? activeFilterStyle : filterStyle}>{chip.label}</button>
         ))}
       </div>
 
       {isComposerOpen ? (
-        <div role="dialog" aria-label="커뮤니티 글쓰기" style={sheetBackdropStyle}>
-          <form data-testid="community-post-form" onSubmit={submitCommunityPost} style={sheetStyle}>
+        <div className="fevio-community-sheet-layer" style={sheetLayerStyle}>
+          <button type="button" aria-label="공유 기록 작성 닫기" onClick={() => setIsComposerOpen(false)} style={sheetBackdropStyle} />
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="community-compose-title"
+            data-testid="community-post-form"
+            onSubmit={submitCommunityPost}
+            onClick={(event) => event.stopPropagation()}
+            style={sheetStyle}
+          >
             <div style={sheetHandleStyle} />
-            <h3 style={sheetTitleStyle}>커뮤니티에 남기기</h3>
-            <textarea name="body" required placeholder="오늘 헷갈렸던 것, 확인한 팁, 그냥 남기고 싶은 말을 적어주세요." style={textareaStyle} />
+            <div style={sheetHeaderStyle}>
+              <h3 id="community-compose-title" style={sheetTitleStyle}>확인한 내용 공유하기</h3>
+              <button type="button" aria-label="닫기" onClick={() => setIsComposerOpen(false)} style={sheetCloseButtonStyle}>닫기</button>
+            </div>
+            <textarea name="body" required placeholder="예: 오비드렐은 안내문 시간과 알림 시간을 같이 맞춰두니 덜 헷갈렸어요." style={textareaStyle} />
             <div style={sheetGridStyle}>
-              <label style={labelStyle}>보기 범위
+              <label style={labelStyle}>공개 범위
                 <select name="audienceScope" defaultValue="everyone" style={inputStyle}>
-                  <option value="everyone">모두에게</option>
-                  <option value="same_role">같은 롤만</option>
+                  <option value="everyone">전체 사용자</option>
+                  <option value="same_role">비슷한 단계 사용자</option>
                 </select>
               </label>
               <label style={labelStyle}>주제
@@ -144,7 +166,7 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
                 </select>
               </label>
             </div>
-            <p style={helperStyle}>같은 롤만 = 같은 입장 사용자에게만 보입니다. 검수 중인 글은 본인에게만 표시돼요.</p>
+            <p style={helperStyle}>개인정보와 병원명은 빼고, 직접 확인한 일정·시간·준비물만 남겨주세요. 검수 중인 글은 본인에게만 보여요.</p>
             <button type="submit" disabled={isSaving} style={buttonStyle}>{isSaving ? '등록 중' : '올리기'}</button>
             <button type="button" onClick={() => setIsComposerOpen(false)} style={cancelButtonStyle}>취소</button>
           </form>
@@ -153,11 +175,19 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
 
       <div style={feedStyle}>
         {visiblePosts.length === 0 ? (
-          <p style={emptyStyle}>아직 이 주제의 글이 없어요.</p>
+          <div style={emptyCardStyle}>
+            <strong style={emptyTitleStyle}>아직 공유된 확인 기록이 없어요</strong>
+            <p style={emptyBodyStyle}>주사 시간, 병원 방문 후 기억할 점, 안내문을 확인하며 정리한 팁처럼 다시 볼 수 있는 내용부터 남겨보세요.</p>
+            <div style={promptRowStyle} aria-label="공유 기록 글감 예시">
+              <span style={promptChipStyle}>주사 시간 확인</span>
+              <span style={promptChipStyle}>방문 후 메모</span>
+              <span style={promptChipStyle}>안내문 확인 팁</span>
+            </div>
+          </div>
         ) : visiblePosts.map((post) => (
           <article key={post.id} style={postStyle}>
             <div style={postMetaStyle}>
-              <span>{post.authorNickname ?? '페비오 메이트'}</span>
+              <span>{post.authorNickname ?? '익명 사용자'}</span>
               <span>·</span>
               <span>{formatDate(post.createdAt)}</span>
               <span style={scopeBadgeStyle}>{scopeLabel(post.audienceScope)}</span>
@@ -172,7 +202,7 @@ export function CommunityPreview({ posts, audience }: CommunityPreviewProps) {
             <div style={commentListStyle}>
               {(post.comments ?? []).map((comment) => (
                 <div key={comment.id} style={commentStyle}>
-                  <span style={commentMetaStyle}>{comment.authorNickname ?? '커뮤니티'} · {comment.moderationStatus === 'pending' ? '댓글 검수 중' : '댓글'}</span>
+                  <span style={commentMetaStyle}>{comment.authorNickname ?? '공유 기록'} · {comment.moderationStatus === 'pending' ? '댓글 검수 중' : '댓글'}</span>
                   <p style={commentBodyStyle}>{comment.body}</p>
                 </div>
               ))}
@@ -227,11 +257,16 @@ function normalizeAudienceScope(value: unknown): CommunityAudienceScope | null {
 }
 
 function labelFor(value: CommunitySubCategory) {
-  return COMMUNITY_CATEGORIES.find((chip) => chip.value === value)?.label ?? '오늘';
+  return COMMUNITY_CATEGORIES.find((chip) => chip.value === value)?.label ?? '오늘 일정';
 }
 
 function scopeLabel(value: CommunityAudienceScope) {
-  return value === 'same_role' ? '같은 롤만' : '모두에게';
+  return value === 'same_role' ? '비슷한 단계' : '전체 공개';
+}
+
+function isSeedArtifactPost(post: CommunityPostListItem) {
+  const body = post.body.trim();
+  return /^(same role|everyone) post \d+$/i.test(body) || /^prod approved community smoke [a-f0-9]+$/i.test(body);
 }
 
 function formatDate(value: string) {
@@ -240,42 +275,50 @@ function formatDate(value: string) {
   return parsed.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
 }
 
-const communityShellStyle = { background: 'rgba(255,255,255,0.88)', borderTop: '1px solid var(--slc-border)', borderBottom: '1px solid var(--slc-border)', padding: '18px 20px 92px' } as const;
+const communityShellStyle = { margin: '0 -4px', borderRadius: 28, background: 'linear-gradient(180deg, rgba(255,253,250,0.9) 0%, rgba(247,239,233,0.78) 100%)', border: '1px solid rgba(233, 222, 214, 0.9)', padding: '18px 16px 92px', boxShadow: '0 18px 46px rgba(47, 41, 38, 0.06)' } as const;
 const communityHeaderStyle = { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 } as const;
 const sectionEyebrowStyle = { display: 'inline-block', margin: '0 0 8px', color: 'var(--fevio-sage-dark)', fontSize: 12, fontWeight: 900 } as const;
 const sectionTitleStyle = { color: 'var(--slc-text)', fontSize: 21, fontWeight: 950, letterSpacing: '-0.05em', lineHeight: 1.25, margin: 0 } as const;
-const composeButtonStyle = { width: 44, height: 44, borderRadius: 999, border: 0, background: 'var(--fevio-coral)', color: '#fff', fontSize: 24, fontWeight: 800, boxShadow: '0 12px 26px rgba(185, 97, 75, 0.24)' } as const;
-const slimComposeStyle = { width: '100%', marginTop: 16, border: '1px solid var(--slc-border)', borderRadius: 999, background: 'rgba(255,255,255,0.9)', color: 'var(--slc-muted)', padding: '13px 16px', textAlign: 'left', fontSize: 13, fontWeight: 850 } as const;
-const filterRowStyle = { display: 'flex', gap: 8, overflowX: 'auto', margin: '14px -20px 0', padding: '0 20px 4px' } as const;
+const sectionLeadStyle = { margin: '8px 0 0', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 750, lineHeight: 1.5 } as const;
+const composeButtonStyle = { flex: '0 0 auto', width: 44, height: 44, borderRadius: 999, border: 0, background: 'var(--slc-coral-gradient)', color: '#fff', fontSize: 24, fontWeight: 800, boxShadow: '0 12px 26px rgba(185, 97, 75, 0.24)' } as const;
+const slimComposeStyle = { width: '100%', marginTop: 16, border: '1px solid rgba(224, 216, 207, 0.82)', borderRadius: 18, background: 'rgba(255,255,255,0.76)', color: 'var(--slc-text)', padding: '14px 15px', textAlign: 'left', fontSize: 13, fontWeight: 900, boxShadow: '0 10px 22px rgba(47, 41, 38, 0.04)' } as const;
+const filterRowStyle = { display: 'flex', gap: 8, overflowX: 'auto', margin: '14px -16px 0', padding: '0 16px 4px' } as const;
 const filterStyle = { flex: '0 0 auto', borderRadius: 999, background: 'rgba(255, 255, 255, 0.82)', border: '1px solid var(--slc-border)', color: 'var(--slc-text)', fontSize: 12, fontWeight: 900, padding: '8px 12px' } as const;
-const activeFilterStyle = { ...filterStyle, background: 'var(--fevio-coral)', color: '#fff', border: '1px solid transparent' } as const;
+const activeFilterStyle = { ...filterStyle, background: 'var(--slc-coral)', color: '#fff', border: '1px solid transparent' } as const;
 const feedStyle = { display: 'grid', marginTop: 12 } as const;
-const postStyle = { borderTop: '1px solid var(--slc-border)', padding: '16px 0' } as const;
+const postStyle = { borderTop: '1px solid rgba(224, 216, 207, 0.72)', padding: '18px 0' } as const;
 const postMetaStyle = { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, color: 'var(--slc-muted)', fontSize: 11, fontWeight: 850, marginBottom: 8 } as const;
-const scopeBadgeStyle = { borderRadius: 999, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D', padding: '4px 8px', fontSize: 10, fontWeight: 900 } as const;
+const scopeBadgeStyle = { borderRadius: 999, background: 'rgba(109, 143, 114, 0.13)', color: 'var(--fevio-sage-dark)', padding: '4px 8px', fontSize: 10, fontWeight: 900 } as const;
 const officialBadgeStyle = { borderRadius: 999, background: 'rgba(109, 135, 123, 0.14)', color: 'var(--fevio-sage-dark)', padding: '4px 8px', fontSize: 10, fontWeight: 900 } as const;
-const pendingStyle = { borderRadius: 999, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D', padding: '4px 8px', fontSize: 10, fontWeight: 900 } as const;
+const pendingStyle = { borderRadius: 999, background: 'rgba(201, 95, 75, 0.12)', color: 'var(--slc-coral-dark)', padding: '4px 8px', fontSize: 10, fontWeight: 900 } as const;
 const postBodyStyle = { color: 'var(--slc-text)', fontSize: 15, fontWeight: 800, lineHeight: 1.55, margin: 0, whiteSpace: 'pre-wrap' } as const;
 const postActionRowStyle = { display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 } as const;
 const empathyButtonStyle = { border: '1px solid var(--slc-border)', borderRadius: 999, background: 'rgba(255, 255, 255, 0.9)', color: 'var(--slc-text)', padding: '6px 10px', fontSize: 11, fontWeight: 900 } as const;
-const activeEmpathyButtonStyle = { ...empathyButtonStyle, background: 'rgba(189, 166, 223, 0.18)', color: '#75618D' } as const;
+const activeEmpathyButtonStyle = { ...empathyButtonStyle, background: 'rgba(109, 143, 114, 0.13)', color: 'var(--fevio-sage-dark)' } as const;
 const categoryStyle = { color: 'var(--slc-muted)', fontSize: 11, fontWeight: 850 } as const;
 const commentListStyle = { display: 'grid', gap: 7, marginTop: 10 } as const;
-const commentStyle = { borderLeft: '2px solid rgba(189, 166, 223, 0.32)', paddingLeft: 9 } as const;
+const commentStyle = { borderLeft: '2px solid rgba(109, 143, 114, 0.26)', paddingLeft: 9 } as const;
 const commentMetaStyle = { color: 'var(--slc-muted)', fontSize: 10, fontWeight: 850 } as const;
 const commentBodyStyle = { color: 'var(--slc-text)', fontSize: 12, fontWeight: 750, lineHeight: 1.4, margin: '3px 0 0' } as const;
 const commentFormStyle = { display: 'grid', gridTemplateColumns: '1fr auto', gap: 7, marginTop: 10 } as const;
 const commentInputStyle = { minWidth: 0, border: '1px solid var(--slc-border)', borderRadius: 999, padding: '0 12px', font: 'inherit', fontSize: 12, minHeight: 34, background: 'rgba(255,255,255,0.9)' } as const;
-const commentButtonStyle = { border: 0, borderRadius: 999, background: 'rgba(189, 166, 223, 0.22)', color: '#75618D', padding: '0 11px', fontSize: 11, fontWeight: 900 } as const;
-const emptyStyle = { margin: '16px 0 0', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 800 } as const;
-const sheetBackdropStyle = { position: 'fixed', inset: 0, zIndex: 40, display: 'grid', alignItems: 'end', background: 'rgba(37, 31, 28, 0.22)' } as const;
-const sheetStyle = { display: 'grid', gap: 12, borderRadius: '28px 28px 0 0', background: 'rgba(255,255,255,0.98)', padding: '12px 20px 24px', boxShadow: '0 -18px 44px rgba(80, 50, 40, 0.18)' } as const;
+const commentButtonStyle = { border: 0, borderRadius: 999, background: 'rgba(109, 143, 114, 0.14)', color: 'var(--fevio-sage-dark)', padding: '0 11px', fontSize: 11, fontWeight: 900 } as const;
+const emptyCardStyle = { display: 'grid', gap: 10, marginTop: 16, border: '1px solid rgba(224, 216, 207, 0.82)', borderRadius: 22, background: 'rgba(255, 252, 247, 0.82)', padding: 16, boxShadow: '0 12px 28px rgba(47, 41, 38, 0.05)' } as const;
+const emptyTitleStyle = { color: 'var(--slc-text)', fontSize: 16, fontWeight: 950, letterSpacing: '-0.03em' } as const;
+const emptyBodyStyle = { margin: 0, color: 'var(--slc-muted)', fontSize: 13, fontWeight: 750, lineHeight: 1.55 } as const;
+const promptRowStyle = { display: 'flex', flexWrap: 'wrap', gap: 7 } as const;
+const promptChipStyle = { borderRadius: 999, background: 'rgba(109, 135, 123, 0.12)', color: 'var(--fevio-sage-dark)', padding: '6px 9px', fontSize: 11, fontWeight: 900 } as const;
+const sheetLayerStyle = { position: 'fixed', inset: 0, zIndex: 80, display: 'grid', alignItems: 'end' } as const;
+const sheetBackdropStyle = { position: 'absolute', inset: 0, border: 0, background: 'rgba(37, 31, 28, 0.28)', padding: 0 } as const;
+const sheetStyle = { position: 'relative', display: 'grid', gap: 12, width: '100%', maxWidth: 'var(--fevio-mobile-frame-max)', justifySelf: 'center', maxHeight: 'min(78dvh, 720px)', overflowY: 'auto', borderRadius: '28px 28px 0 0', background: 'rgba(255,255,255,0.98)', padding: '12px 20px calc(30px + env(safe-area-inset-bottom, 0px))', boxShadow: '0 -18px 44px rgba(80, 50, 40, 0.18)' } as const;
 const sheetHandleStyle = { justifySelf: 'center', width: 42, height: 4, borderRadius: 999, background: 'rgba(80,50,40,0.18)' } as const;
-const sheetTitleStyle = { color: 'var(--slc-text)', fontSize: 18, fontWeight: 950, margin: '4px 0 0' } as const;
+const sheetHeaderStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 } as const;
+const sheetTitleStyle = { color: 'var(--slc-text)', fontSize: 18, fontWeight: 950, margin: 0 } as const;
+const sheetCloseButtonStyle = { flex: '0 0 auto', border: '1px solid var(--slc-border)', borderRadius: 999, background: 'rgba(255, 252, 250, 0.92)', color: 'var(--slc-muted)', padding: '8px 12px', fontSize: 12, fontWeight: 900 } as const;
 const textareaStyle = { minHeight: 108, border: '1px solid var(--slc-border)', borderRadius: 18, padding: 14, resize: 'vertical', font: 'inherit', color: 'var(--slc-text)', background: 'rgba(255, 252, 250, 0.9)' } as const;
 const sheetGridStyle = { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 } as const;
 const labelStyle = { display: 'grid', gap: 7, color: 'var(--slc-text)', fontSize: 12, fontWeight: 900 } as const;
 const inputStyle = { minHeight: 42, border: '1px solid var(--slc-border)', borderRadius: 16, padding: '0 12px', font: 'inherit', color: 'var(--slc-text)', background: 'rgba(255, 252, 250, 0.9)' } as const;
 const helperStyle = { margin: 0, color: 'var(--slc-muted)', fontSize: 12, fontWeight: 750, lineHeight: 1.45 } as const;
-const buttonStyle = { border: 0, borderRadius: 18, background: 'var(--fevio-coral)', color: '#fff', fontSize: 14, fontWeight: 950, minHeight: 46 } as const;
+const buttonStyle = { border: 0, borderRadius: 18, background: 'var(--slc-coral-gradient)', color: '#fff', fontSize: 14, fontWeight: 950, minHeight: 46 } as const;
 const cancelButtonStyle = { border: 0, background: 'transparent', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 850, minHeight: 36 } as const;

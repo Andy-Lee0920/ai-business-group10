@@ -938,7 +938,7 @@ function buildTomorrowFocus(item: ScheduleItem): HomeFocus {
   return {
     kind: isClinic ? "clinic_tomorrow" : "medication_upcoming",
     badgeLabel: "내일",
-    heading: "내일 준비되셨나요",
+    heading: isClinic ? "내일 병원 준비를 확인해요" : "다음 일정이 준비되어 있어요",
     description: `${formatScheduleTime(item.scheduled_at)} · ${isClinic ? "방문 시간만 미리 확인해요." : "준비해두세요."}`,
     primaryItem: item,
   };
@@ -1031,7 +1031,6 @@ function OverdueBacklogHero({
   onCta: (item: ScheduleItem) => void;
   accentColor: string;
 }) {
-  const typeLabel = scheduleTypeLabel(item.type);
   return (
     <div
       style={{
@@ -1058,11 +1057,11 @@ function OverdueBacklogHero({
             color: "var(--slc-text)",
             fontSize: 24,
             fontWeight: 900,
-            letterSpacing: "-0.04em",
+            letterSpacing: 0,
             lineHeight: 1.2,
           }}
         >
-          확인이 필요한 {typeLabel}가 있어요
+          확인이 필요한 일정이 있어요
         </h2>
         <p
           style={{
@@ -1072,7 +1071,7 @@ function OverdueBacklogHero({
             lineHeight: 1.55,
           }}
         >
-          {formatScheduleTime(item.scheduled_at)} 예정된 {typeLabel} 기록이 아직
+          {formatScheduleTime(item.scheduled_at)} 예정된 일정 기록이 아직
           완료되지 않았어요.
         </p>
       </div>

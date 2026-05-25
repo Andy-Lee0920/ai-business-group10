@@ -19,22 +19,29 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain('as const satisfies readonly OnboardingStep[]');
   });
 
-  it('renders premium brand intro, role select, partner exit, and merged add method cards', () => {
+  it('renders premium brand intro, role select, photo-first capture, and partner exit', () => {
     for (const copy of [
       'Fevio',
       '소중한 시작을,',
       '시작하기',
-      '본인',
+      '어떤 역할로 함께할까요?',
+      '확인한 일정은 내 홈에, 필요한 도움만 파트너 화면에 나눠 보여드려요.',
+      '이전 단계로 돌아가기',
+      '내 케어',
+      '병원 안내 확인 · 주사 기록',
       '파트너',
-      '파트너는 초대 링크로 들어와 주세요',
-      '어떻게 추가할까요?',
-      '확인 후에만 저장해요.',
-      '사진으로 남기기',
-      '처방지나 안내문을 찍어주세요',
-      '문자로',
-      '붙여넣기',
+      '공유된 일정 · 도움 역할',
+      '초대 링크에서 파트너 도움 화면을 열어요',
+      '병원 안내문을 사진으로 남겨주세요',
+      '처방지나 안내문을 찍어주시면 확인할 일정 후보로만 정리해요.',
+      '확인한 일정만 저장해요.',
+      '안내문 찍기',
+      '사진에서 선택',
+      '받은 안내',
+      '받은 안내를 문자로 붙여넣기',
+      '건너뛰기',
       '직접 적기',
-      '이름·시간·용량',
+      '확인한 이름·시간·용량',
     ]) {
       expect(onboardingClient).toContain(copy);
     }
@@ -47,9 +54,15 @@ describe('app onboarding shell contract', () => {
       'methodSecondaryRow',
       'methodSecondaryCard',
       'completeAmbientScreen',
+      'backButton',
+      'textFallbackButton',
+      'skipCaptureButton',
     ]) {
       expect(onboardingStyles).toContain(styleName);
     }
+
+    expect(onboardingClient).toContain("goToStep('photo_processing')");
+    expect(onboardingClient).toContain('function skipScheduleCapture()');
 
     expect(onboardingClient).not.toContain('addMethodIntroSeen');
     expect(onboardingClient).not.toContain('setAddMethodIntroSeen');
@@ -94,7 +107,7 @@ describe('app onboarding shell contract', () => {
 
     for (const token of [
       "const [sharingChoice, setSharingChoice] = useState<SharingChoice | null>(\'partner\')",
-      '초대 링크로 오늘 할 일을 같이 확인해요',
+      '초대 링크로 필요한 일정과 역할만 공유해요',
       'min-height: 124px',
       'min-height: 132px',
       'linear-gradient(145deg, rgba(255, 252, 248, 0.94) 0%, rgba(244, 239, 255, 0.92)',
@@ -105,9 +118,9 @@ describe('app onboarding shell contract', () => {
   });
 
   it('keeps direct entry confirmation-first and preview-driven', () => {
-    expect(onboardingClient).toContain('이 일정 기억하기');
+    expect(onboardingClient).toContain('확인한 일정으로 저장');
     expect(onboardingClient).toContain("fetch('/api/schedule/add'");
-    expect(onboardingClient).toContain('홈 미리보기');
+    expect(onboardingClient).toContain('내 홈 미리보기');
   });
 
   it('implements photo processing with native image pickers, upload/analyze progress, and safe fallback', () => {
@@ -115,7 +128,7 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain('type="file" accept="image/*"');
     expect(onboardingClient).toContain("fetch('/api/onboard/photo-upload'");
     expect(onboardingClient).toContain("fetch('/api/onboard/photo-analyze'");
-    for (const copy of ['사진 찍기', '사진 선택', '업로드 완료', '내용 분석 중', '일정 후보 준비', '사진에서 일정을 찾지 못했어요', '다시 찍기']) {
+    for (const copy of ['안내문 찍기', '사진에서 선택', '사진 받음', '일정 후보 정리 중', '확인 단계 준비', '사진에서 확인할 일정을 찾지 못했어요', '사진 다시 남기기']) {
       expect(onboardingClient).toContain(copy);
     }
     expect(onboardingClient).not.toContain('getUserMedia');
@@ -132,14 +145,14 @@ describe('app onboarding shell contract', () => {
       'candidateStackFooter',
       "function advanceCard(decision: 'confirmed' | 'rejected')",
       "void confirmCandidates(updated)",
-      '접종 시간을 입력해야 저장할 수 있어요.',
-      '저장할게요',
+      '확인할 시간을 입력해야 저장할 수 있어요.',
+      '확인한 일정으로 저장',
       '건너뛰기',
       'candidateEdits',
       'confirmedIds',
       'rejectedIds',
       "fetch('/api/onboard/candidates/confirm'",
-      '후보가 없어요',
+      '확인할 일정이 없어요',
     ]) {
       expect(`${onboardingClient}\n${onboardingStyles}`).toContain(token);
     }
@@ -166,20 +179,20 @@ describe('app onboarding shell contract', () => {
     expect(onboardingClient).toContain('maxLength={1000}');
     expect(onboardingClient).toContain('{textPasteValue.length}/1000');
     expect(onboardingClient).toContain("fetch('/api/onboard/text-analyze'");
-    expect(onboardingClient).toContain('분석하기');
-    expect(onboardingClient).toContain('일정을 찾지 못했어요');
-    expect(onboardingClient).toContain('직접 입력으로 바꾸기');
+    expect(onboardingClient).toContain('일정 후보 정리하기');
+    expect(onboardingClient).toContain('확인할 일정을 찾지 못했어요');
+    expect(onboardingClient).toContain('확인한 일정 직접 적기');
     expect(onboardingClient).toContain("goToStep('candidate_review')");
   });
 
   it('implements sharing and complete handoff with partner invite intent and home redirect', () => {
     for (const copy of [
-      '나 혼자 시작할게요',
-      '먼저 내 홈에서 오늘 할 일만 확인해요',
-      '파트너와 함께 쓸게요',
-      '초대 링크로 오늘 할 일을 같이 확인해요',
-      '일정 후보를 만들었어요',
-      '일정 후보 요약',
+      '내 홈만 먼저 볼게요',
+      '오늘 할 일을 혼자 확인해요',
+      '파트너 도움 화면도 준비할게요',
+      '초대 링크로 필요한 일정과 역할만 공유해요',
+      '확인할 일정 후보를 만들었어요',
+      '확인할 일정 요약',
     ]) {
       expect(onboardingClient).toContain(copy);
     }
@@ -194,8 +207,10 @@ describe('app onboarding shell contract', () => {
       expect(onboardingClient).toContain(styleName);
       expect(onboardingStyles).toContain(styleName);
     }
+    expect(onboardingClient).toContain("onClick={() => continueSharing('solo')}");
+    expect(onboardingClient).toContain("onClick={() => continueSharing('partner')}");
     expect(onboardingClient).toContain('aria-pressed={sharingChoice ===');
-    expect(onboardingClient).toContain('disabled={!sharingChoice}');
+    expect(onboardingClient).not.toContain('disabled={!sharingChoice}');
     expect(onboardingClient).toContain("fetch('/api/onboarding/complete'");
     expect(onboardingClient).toContain("partnerInvite: { intent: partnerIntent }");
     expect(onboardingClient).toContain("window.location.assign(payload.redirectTo ?? '/home')");
@@ -215,9 +230,13 @@ describe('app onboarding shell contract', () => {
     expect(onboardingStyles).toContain('height: 100px');
   });
 
-  it('does not render onboarding back buttons that can overlap copy', () => {
-    expect(onboardingClient).not.toContain('<BackButton');
-    expect(onboardingStyles).not.toContain('.backButton');
+  it('keeps onboarding back navigation as a compact top control', () => {
+    expect(onboardingClient).toContain("activeStep !== 'brand_intro'");
+    expect(onboardingClient).toContain('aria-label="이전 단계로 돌아가기"');
+    expect(onboardingClient).toContain('function goBack()');
+    expect(onboardingStyles).toContain('.backButton');
+    expect(onboardingStyles).toContain('position: absolute');
+    expect(onboardingStyles).toContain('border-radius: 999px');
   });
 
   it('uses ambient onboarding backgrounds without foreground completion glyph clutter', () => {

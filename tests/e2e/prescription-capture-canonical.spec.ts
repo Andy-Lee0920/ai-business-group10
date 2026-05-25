@@ -29,7 +29,8 @@ test('prescription capture turns one photo into confirmable canonical care card 
   await page.getByLabel('후보 시간').fill('2026-05-19T22:00');
   await page.getByRole('button', { name: '확인 후 저장' }).click();
 
-  await expect(page.getByText('저장됐어요. 1개 카드가 준비됐습니다.')).toBeVisible();
+  await expect(page.getByText('확인한 일정이 저장됐어요')).toBeVisible();
+  await expect(page.getByText('1개 일정이 홈과 캘린더에 준비됐습니다.')).toBeVisible();
   await expect(page.getByRole('link', { name: '홈으로 이동' })).toHaveAttribute('href', '/home');
   expect(calls).toEqual(['/api/onboard/photo-upload', '/api/onboard/photo-analyze', '/api/onboard/candidates/confirm']);
 });

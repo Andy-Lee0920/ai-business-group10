@@ -19,6 +19,7 @@ describe('Clinic Guide clinic asset contract', () => {
     expect(form).toContain("step === 'diff_review'");
     expect(form).toContain("step === 'manual_entry'");
     expect(form).toContain('copy.photoAction');
-    expect(form).toContain('직접 입력 form 열기');
+    expect(form).toContain('진료 내용 직접 남기기');
+    expect(form).toContain('질문으로 정리하기');
   });
 });

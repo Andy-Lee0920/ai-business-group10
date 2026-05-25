@@ -64,19 +64,19 @@ const MODE_COPY = {
     applyLabel: '일정 적용',
   },
   memo: {
-    entryTitle: '병원 안내를\\n오늘 일정으로 바꿀게요',
-    entrySubtitle: '사진, 문자, 직접 수정 중 편한 방법으로 시작하세요.',
-    methodLabel: '병원 업데이트 방법',
-    photoAction: '사진으로 업데이트',
-    photoDescription: '처방전·안내문을 찍고 후보만 확인해요.',
-    textAction: '문자로 업데이트',
-    textDescription: '문자·카톡 안내를 붙여넣고 비교해요.',
+    entryTitle: '진료 내용을\\n남겨주세요',
+    entrySubtitle: '병원에서 확인한 다음 일정, 약 변경, 메모만 차분히 정리해요.',
+    methodLabel: '진료 내용 입력 방법',
+    photoAction: '안내문 사진으로 남기기',
+    photoDescription: '처방전·안내문을 찍고 확인할 일정만 골라요.',
+    textAction: '문자로 받은 안내 붙여넣기',
+    textDescription: '문자·카톡 안내를 그대로 붙여넣고 확인해요.',
     textAriaLabel: '병원 안내 문자',
-    textTitle: '문자로 업데이트',
-    textSubtitle: '병원 문자나 메신저 안내를 그대로 붙여넣어 주세요.',
+    textTitle: '문자로 받은 안내를 붙여넣어 주세요',
+    textSubtitle: '병원 문자나 메신저 안내에서 일정 후보만 정리해요.',
     diffTitle: '겹치는 일정이 있어요',
     diffDescription: '기존 일정과 새 후보를 비교한 뒤 저장할 항목을 선택해 주세요.',
-    applyLabel: '변경사항 적용',
+    applyLabel: '확인한 일정 저장',
   },
 } as const satisfies Record<ClinicUpdateMode, Record<string, string>>;
 
@@ -306,7 +306,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   };
 
   const startManualEntry = () => {
-    setCaptureMessage('직접 수정으로 계속할게요.');
+    setCaptureMessage('직접 입력으로 계속할게요.');
     setStep('manual_entry');
   };
 
@@ -478,14 +478,14 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
             </span>
           </button>
           <button type="button" style={methodCardStyle} onClick={startManualEntry}>
-            <span style={iconPillStyle}>✏️</span>
+            <span style={iconPillStyle}>✎</span>
             <span style={{ display: 'grid', gap: 4 }}>
-              <strong>직접 수정</strong>
-              <small>찾지 못했거나 직접 확인하고 싶을 때 사용해요.</small>
+              <strong>진료 내용 직접 남기기</strong>
+              <small>사진이나 문자가 없어도 질문으로 정리해요.</small>
             </span>
           </button>
         </div>
-        <p style={safeNoteStyle}>ⓘ 의료 판단 없이 사용자가 확인한 일정만 저장해요</p>
+        <p style={safeNoteStyle}>의료 판단 없이 병원에서 확인한 일정만 저장해요</p>
       </div>
       <button type="button" onClick={() => router.push('/home')} style={textButtonStyle}>나중에 할게요</button>
     </Shell>
@@ -495,8 +495,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
     <Shell>
       <input ref={cameraInputRef} aria-label="사진 촬영" type="file" accept="image/*" capture="environment" hidden onChange={(event) => { void processPhotoFile(event.target.files?.[0]); event.currentTarget.value = ''; }} />
       <input ref={galleryInputRef} aria-label="사진 선택" type="file" accept="image/*" hidden onChange={(event) => { void processPhotoFile(event.target.files?.[0]); event.currentTarget.value = ''; }} />
-      <section style={questionCardStyle} aria-label="사진으로 업데이트">
-        <h1 style={titleStyle}>사진으로 업데이트</h1>
+      <section style={questionCardStyle} aria-label="안내문 사진으로 남기기">
+        <h1 style={titleStyle}>안내문 사진으로 남기기</h1>
         <p style={subtitleStyle}>병원 안내 사진을 올리면 일정 후보만 추려서 보여드려요.</p>
         <p style={statusLineStyle}>{captureMessage}</p>
         <div style={progressStepsStyle} aria-label="처리 중 상태">
@@ -507,14 +507,14 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
           <button type="button" style={{ ...chipStyle(false), flex: 1 }} onClick={() => galleryInputRef.current?.click()}>앨범에서 선택</button>
         </div>
       </section>
-      {photoPhase === 'not_found' ? <p style={warningStyle}>찾지 못했어요. 직접 수정으로 이어갈게요.</p> : null}
-      <button type="button" onClick={() => setStep('entry')} style={textButtonStyle}>다른 방법 선택</button>
+      {photoPhase === 'not_found' ? <p style={warningStyle}>찾지 못했어요. 직접 입력으로 이어갈게요.</p> : null}
+      <button type="button" onClick={() => setStep('entry')} style={textButtonStyle}>입력 방법 바꾸기</button>
     </Shell>
   );
 
   if (step === 'text_paste') return (
     <Shell>
-      <section style={questionCardStyle} aria-label="문자로 업데이트">
+      <section style={questionCardStyle} aria-label="문자로 받은 안내 붙여넣기">
         <h1 style={titleStyle}>{copy.textTitle}</h1>
         <p style={subtitleStyle}>{copy.textSubtitle}</p>
         <label style={{ position: 'relative', display: 'block' }}>
@@ -532,18 +532,18 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
         <p style={statusLineStyle}>{captureMessage}</p>
         <button type="button" onClick={analyzePastedText} disabled={analyzingText} style={ctaStyle(analyzingText)}>{analyzingText ? '분석 중...' : '후보 확인하기'}</button>
       </section>
-      <button type="button" onClick={startManualEntry} style={textButtonStyle}>직접 수정으로 바꾸기</button>
+      <button type="button" onClick={startManualEntry} style={textButtonStyle}>직접 입력으로 바꾸기</button>
     </Shell>
   );
 
   if (step === 'manual_entry') return (
     <Shell>
-      <section style={questionCardStyle} aria-label="직접 수정 fallback">
-        <h1 style={titleStyle}>직접 수정할게요</h1>
-        <p style={subtitleStyle}>사진이나 문자에서 찾지 못한 내용은 질문 카드로 직접 확인할 수 있어요.</p>
-        <button type="button" onClick={() => setStep('same_med')} style={ctaStyle()}>직접 입력 form 열기</button>
+      <section style={questionCardStyle} aria-label="진료 내용 직접 남기기">
+        <h1 style={titleStyle}>진료 내용을 직접 남길게요</h1>
+        <p style={subtitleStyle}>약 변경, 며칠치 처방, 다음 방문일을 질문으로 하나씩 확인해요.</p>
+        <button type="button" onClick={() => setStep('same_med')} style={ctaStyle()}>질문으로 정리하기</button>
       </section>
-      <button type="button" onClick={() => setStep('entry')} style={textButtonStyle}>다른 방법 선택</button>
+      <button type="button" onClick={() => setStep('entry')} style={textButtonStyle}>입력 방법 바꾸기</button>
     </Shell>
   );
 
@@ -599,7 +599,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
         {aiError ? <p style={warningStyle}>{aiError}</p> : null}
         <button type="button" onClick={applyExtractedCandidates} disabled={applyingCandidates} style={ctaStyle(applyingCandidates)}>{applyingCandidates ? '적용 중...' : copy.applyLabel}</button>
       </section>
-      <button type="button" onClick={startManualEntry} style={textButtonStyle}>직접 수정으로 바꾸기</button>
+      <button type="button" onClick={startManualEntry} style={textButtonStyle}>직접 입력으로 바꾸기</button>
     </Shell>
   );
 
@@ -620,7 +620,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
           ))}
         </QuestionCard>
       )}
-      <p style={safeNoteStyle}>ⓘ 선택에 따라 다음 질문이 달라져요</p>
+      <p style={safeNoteStyle}>선택에 따라 다음 질문이 달라져요</p>
       <button type="button" disabled={!form.medicationChange} onClick={() => setStep(form.medicationChange === 'changed' ? 'new_med' : 'days')} style={ctaStyle(!form.medicationChange)}>다음</button>
     </Shell>
   );
@@ -1009,12 +1009,11 @@ function todayAtLocalTime(time: '19:00') {
 }
 
 const containerStyle: CSSProperties = { padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #FFFCF7 0%, #F8F1E9 100%)', color: 'var(--slc-text)' };
-const heroTitleStyle: CSSProperties = { margin: 0, textAlign: 'center', fontSize: 34, fontWeight: 900, letterSpacing: '-0.06em' };
-const titleStyle: CSSProperties = { margin: '0 0 8px', textAlign: 'center', fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.25 };
+const heroTitleStyle: CSSProperties = { margin: 0, textAlign: 'center', fontSize: 34, fontWeight: 900, letterSpacing: 0, lineHeight: 1.15, wordBreak: 'keep-all' };
+const titleStyle: CSSProperties = { margin: '0 0 8px', textAlign: 'center', fontSize: 24, fontWeight: 900, letterSpacing: 0, lineHeight: 1.25, wordBreak: 'keep-all' };
 const sectionTitleStyle: CSSProperties = { margin: '0 0 8px', fontSize: 16, fontWeight: 900 };
 const subtitleStyle: CSSProperties = { margin: '0 0 18px', textAlign: 'center', fontSize: 15, color: '#74675F', lineHeight: 1.55 };
 const badgeStyle: CSSProperties = { justifySelf: 'center', width: 'fit-content', padding: '8px 14px', borderRadius: 999, background: 'var(--slc-surface-warm)', color: 'var(--slc-muted)', fontSize: 14, fontWeight: 900 };
-const landingCardStyle: CSSProperties = { display: 'grid', gap: 14, justifyItems: 'center', padding: 28, border: '1px solid #F0E1D6', borderRadius: 24, background: 'rgba(255,255,255,0.82)', boxShadow: '0 18px 40px rgba(82,57,45,0.10)', textAlign: 'center' };
 const methodGridStyle: CSSProperties = { display: 'grid', gap: 12 };
 const methodCardStyle: CSSProperties = { display: 'grid', gridTemplateColumns: '44px 1fr', gap: '4px 12px', alignItems: 'center', width: '100%', padding: '16px 18px', borderRadius: 20, border: '1.5px solid #F0E1D6', background: 'rgba(255,255,255,0.88)', boxShadow: '0 12px 28px rgba(82,57,45,0.08)', color: 'var(--slc-text)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' };
 const statusLineStyle: CSSProperties = { margin: '12px 0', padding: '12px 14px', borderRadius: 14, background: 'var(--slc-surface-warm)', border: '1px solid var(--slc-border)', color: 'var(--slc-muted)', fontSize: 14, fontWeight: 900, textAlign: 'center' };

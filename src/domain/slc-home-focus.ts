@@ -16,9 +16,10 @@ export interface HomeFocus {
   badgeLabel: '병원' | '내일' | '확인' | '지금' | '다음' | '비어 있음';
   heading:
     | '오늘 병원 가는 날'
-    | '내일 준비되셨나요'
-    | '확인이 필요한 주사가 있어요'
-    | '오늘 밤, 주사'
+    | '내일 병원 준비를 확인해요'
+    | '확인이 필요한 일정이 있어요'
+    | '확인할 시간이 가까워졌어요'
+    | '다음 일정이 준비되어 있어요'
     | '쉬어가는 날';
   description: string;
   primaryItem: ScheduleItem | null;
@@ -52,9 +53,20 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     return {
       kind: 'missed',
       badgeLabel: '확인',
-      heading: '확인이 필요한 주사가 있어요',
-      description: formatFocusTime(missed, '예정된 주사 기록이 아직 완료되지 않았어요.'),
+      heading: '확인이 필요한 일정이 있어요',
+      description: formatFocusTime(missed, '예정된 기록이 아직 완료되지 않았어요.'),
       primaryItem: missed,
+    };
+  }
+
+  const medicationDue = pending.find((item) => isMedication(item) && ['due', 'due_soon'].includes(statusFromDiff(minutesUntil(item.scheduled_at, now))));
+  if (medicationDue) {
+    return {
+      kind: 'medication_due',
+      badgeLabel: '지금',
+      heading: '확인할 시간이 가까워졌어요',
+      description: formatFocusTime(medicationDue, '할 일만 먼저 보여드려요.'),
+      primaryItem: medicationDue,
     };
   }
 
@@ -72,23 +84,12 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     };
   }
 
-  const medicationDue = pending.find((item) => isMedication(item) && ['due', 'due_soon'].includes(statusFromDiff(minutesUntil(item.scheduled_at, now))));
-  if (medicationDue) {
-    return {
-      kind: 'medication_due',
-      badgeLabel: '지금',
-      heading: '오늘 밤, 주사',
-      description: formatFocusTime(medicationDue, '할 일만 먼저 보여드려요.'),
-      primaryItem: medicationDue,
-    };
-  }
-
   const medicationUpcoming = pending.find(isMedication);
   if (medicationUpcoming) {
     return {
       kind: 'medication_upcoming',
       badgeLabel: '다음',
-      heading: '내일 준비되셨나요',
+      heading: '다음 일정이 준비되어 있어요',
       description: formatFocusTime(medicationUpcoming, '다음 시간만 확인해요.'),
       primaryItem: medicationUpcoming,
     };
@@ -99,7 +100,7 @@ export function resolveHomeFocus(items: ScheduleItem[], now = new Date()): HomeF
     return {
       kind: 'clinic_tomorrow',
       badgeLabel: '내일',
-      heading: '내일 준비되셨나요',
+      heading: '내일 병원 준비를 확인해요',
       description: formatFocusTime(clinicTomorrow, '방문 시간만 남겨둘게요.'),
       primaryItem: clinicTomorrow,
     };

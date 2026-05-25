@@ -49,7 +49,7 @@ export function RecordsScreen({
         <div>
           <p style={eyebrowStyle}>함께 남기는 기록</p>
           <h1 style={titleStyle}>기록</h1>
-          <p style={leadStyle}>커플저널과 커뮤니티를 한 화면에서 전환해요. 최근 활동 {recentActivityCount}건</p>
+          <p style={leadStyle}>파트너 기록과 확인한 공유 기록을 한 화면에서 전환해요. 최근 활동 {recentActivityCount}건</p>
         </div>
       </header>
 
@@ -70,7 +70,7 @@ export function RecordsScreen({
           onClick={() => setActiveTab('community')}
           style={activeTab === 'community' ? activeTabStyle : tabStyle}
         >
-          커뮤니티
+          공유 기록
         </button>
       </nav>
 
@@ -96,4 +96,4 @@ const titleStyle = { fontSize: 30, fontWeight: 950, color: 'var(--slc-text)', ma
 const leadStyle = { maxWidth: 310, margin: '9px 0 0', color: 'var(--slc-muted)', fontSize: 13, fontWeight: 700, lineHeight: 1.45 } as const;
 const tabShellStyle = { position: 'sticky', top: 0, zIndex: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, margin: '0 16px 14px', padding: 6, borderRadius: 999, background: 'rgba(255,255,255,0.82)', border: '1px solid var(--slc-border)', backdropFilter: 'blur(16px)' } as const;
 const tabStyle = { border: 0, borderRadius: 999, background: 'transparent', color: 'var(--slc-muted)', minHeight: 42, fontSize: 14, fontWeight: 900 } as const;
-const activeTabStyle = { ...tabStyle, background: 'var(--fevio-coral)', color: '#fff', boxShadow: '0 10px 22px rgba(185, 97, 75, 0.18)' } as const;
+const activeTabStyle = { ...tabStyle, background: 'var(--slc-coral-gradient)', color: '#fff', boxShadow: '0 10px 22px rgba(185, 97, 75, 0.18)' } as const;

@@ -1,6 +1,7 @@
 'use client';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { CalendarDays, FileText, Hospital, House, Plus, Settings, Syringe } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 
@@ -103,21 +104,21 @@ export function BottomNav() {
             }}
           >
             <div aria-hidden="true" style={sheetHandleStyle} />
-            <h2 style={sheetTitleStyle}>무엇을 추가할까요?</h2>
+            <h2 style={sheetTitleStyle}>무엇을 남길까요?</h2>
             <div style={{ display: 'grid', gap: 10 }}>
               <Link href="/add" onClick={closeCreateSheet} style={sheetOptionStyle}>
-                <span style={sheetOptionIconStyle}>📅</span>
+                <span style={sheetOptionIconStyle}><Syringe size={21} strokeWidth={1.9} /></span>
                 <span>
-                  <strong style={sheetOptionTitleStyle}>일정 추가</strong>
-                  <small style={sheetOptionDescriptionStyle}>주사·복약·방문 일정을 확인하고 저장해요</small>
+                  <strong style={sheetOptionTitleStyle}>주사·복약 남기기</strong>
+                  <small style={sheetOptionDescriptionStyle}>맞았거나 먹은 시간을 확인하고 저장해요</small>
                 </span>
                 <span aria-hidden="true" style={sheetChevronStyle}>›</span>
               </Link>
               <Link href="/clinic-update" onClick={closeCreateSheet} style={sheetOptionStyle}>
-                <span style={sheetOptionIconStyle}>📋</span>
+                <span style={sheetOptionIconStyle}><Hospital size={21} strokeWidth={1.9} /></span>
                 <span>
-                  <strong style={sheetOptionTitleStyle}>병원 메모</strong>
-                  <small style={sheetOptionDescriptionStyle}>병원 안내를 일정 후보와 메모로 정리해요</small>
+                  <strong style={sheetOptionTitleStyle}>병원 방문 남기기</strong>
+                  <small style={sheetOptionDescriptionStyle}>다녀온 안내를 다음 일정과 메모로 정리해요</small>
                 </span>
                 <span aria-hidden="true" style={sheetChevronStyle}>›</span>
               </Link>
@@ -131,49 +132,22 @@ export function BottomNav() {
 
 function NavIcon({ name }: { name: NavIconName }) {
   if (name === 'care') {
-    return (
-      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4.75 11.25 12 5l7.25 6.25" />
-        <path d="M6.75 10.2v7.55A1.75 1.75 0 0 0 8.5 19.5h7a1.75 1.75 0 0 0 1.75-1.75V10.2" />
-        <path d="M10 19.5v-4.75a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.75" />
-      </svg>
-    );
+    return <House aria-hidden="true" focusable="false" size={20} strokeWidth={1.85} />;
   }
 
   if (name === 'calendar') {
-    return (
-      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7.25 4.75v2.5M16.75 4.75v2.5" />
-        <path d="M5.75 6.25h12.5A1.75 1.75 0 0 1 20 8v9.25A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V8a1.75 1.75 0 0 1 1.75-1.75Z" />
-        <path d="M4 10h16M8 13.25h.01M12 13.25h.01M16 13.25h.01M8 16h.01M12 16h.01" />
-      </svg>
-    );
+    return <CalendarDays aria-hidden="true" focusable="false" size={20} strokeWidth={1.85} />;
   }
 
   if (name === 'plus') {
-    return (
-      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 5.75v12.5M5.75 12h12.5" />
-      </svg>
-    );
+    return <Plus aria-hidden="true" focusable="false" size={22} strokeWidth={2.05} />;
   }
 
   if (name === 'timeline') {
-    return (
-      <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7.25 5.5h9.5a1.75 1.75 0 0 1 1.75 1.75v9.5a1.75 1.75 0 0 1-1.75 1.75h-9.5a1.75 1.75 0 0 1-1.75-1.75v-9.5A1.75 1.75 0 0 1 7.25 5.5Z" />
-        <path d="M8.75 9.25h6.5M8.75 12h5.25M8.75 14.75h3.25" />
-        <path d="M15.5 14.9c.55.2.95.62 1.13 1.15" />
-      </svg>
-    );
+    return <FileText aria-hidden="true" focusable="false" size={20} strokeWidth={1.85} />;
   }
 
-  return (
-    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z" />
-      <path d="M19.25 12a7.3 7.3 0 0 0-.08-1.04l1.58-1.23-1.5-2.6-1.87.76a7.22 7.22 0 0 0-1.8-1.04l-.28-2.02h-3l-.28 2.02a7.22 7.22 0 0 0-1.8 1.04l-1.87-.76-1.5 2.6 1.58 1.23a7.3 7.3 0 0 0 0 2.08l-1.58 1.23 1.5 2.6 1.87-.76a7.22 7.22 0 0 0 1.8 1.04l.28 2.02h3l.28-2.02a7.22 7.22 0 0 0 1.8-1.04l1.87.76 1.5-2.6-1.58-1.23c.05-.34.08-.68.08-1.04Z" />
-    </svg>
-  );
+  return <Settings aria-hidden="true" focusable="false" size={20} strokeWidth={1.85} />;
 }
 
 const navStyle: CSSProperties = {
@@ -183,14 +157,16 @@ const navStyle: CSSProperties = {
   transform: 'translateX(-50%)',
   width: '100%',
   maxWidth: 'var(--fevio-mobile-frame-max)',
-  background: 'var(--slc-bg)',
-  borderTop: '1px solid #E0D8CF',
+  background: 'rgba(255, 252, 247, 0.88)',
+  borderTop: '1px solid rgba(224, 216, 207, 0.7)',
   display: 'grid',
   gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-  gap: 4,
-  padding: '8px 8px max(12px, env(safe-area-inset-bottom))',
+  gap: 2,
+  padding: '8px 10px max(12px, env(safe-area-inset-bottom))',
   minHeight: 'var(--fevio-bottom-nav-height)',
-  boxShadow: '0 -10px 26px rgba(47, 41, 38, 0.04)',
+  boxShadow: '0 -16px 38px rgba(47, 41, 38, 0.08)',
+  backdropFilter: 'blur(18px) saturate(1.08)',
+  WebkitBackdropFilter: 'blur(18px) saturate(1.08)',
   zIndex: 50,
 };
 
@@ -201,14 +177,14 @@ function itemStyle(active: boolean, center: boolean): CSSProperties {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    color: active ? 'var(--slc-coral)' : center ? 'var(--slc-coral)' : 'var(--slc-muted)',
+    gap: 3,
+    color: active ? 'var(--slc-coral)' : center ? 'var(--slc-coral)' : '#8F8179',
     textDecoration: 'none',
     fontSize: 11,
-    fontWeight: active ? 800 : 650,
-    borderRadius: 22,
+    fontWeight: active ? 900 : 700,
+    borderRadius: 18,
     transform: 'none',
-    transition: 'background 160ms ease, color 160ms ease, transform 160ms ease',
+    transition: 'background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease',
   };
 }
 
@@ -220,20 +196,22 @@ function iconShellStyle(active: boolean, center: boolean): CSSProperties {
       display: 'grid',
       placeItems: 'center',
       borderRadius: 999,
-      background: 'var(--slc-coral)',
+      background: 'linear-gradient(180deg, #E96857 0%, #D25B4C 100%)',
       color: '#fff',
-      boxShadow: '0 10px 22px rgba(216, 98, 77, 0.24)',
-      transform: 'translateY(-1px)',
+      boxShadow: '0 12px 24px rgba(216, 98, 77, 0.28)',
+      transform: 'translateY(-2px)',
     };
   }
 
   return {
-    width: 30,
-    height: 26,
+    width: 34,
+    height: 30,
     display: 'grid',
     placeItems: 'center',
-    color: active ? 'var(--slc-coral)' : 'var(--slc-muted)',
-    transform: active ? 'translateY(-1px)' : 'none',
+    borderRadius: 14,
+    background: active ? 'rgba(232, 108, 86, 0.12)' : 'transparent',
+    color: active ? 'var(--slc-coral)' : '#8F8179',
+    transform: 'none',
   };
 }
 
@@ -243,6 +221,7 @@ const buttonResetStyle: CSSProperties = {
   cursor: 'pointer',
   fontFamily: 'inherit',
   padding: 0,
+  appearance: 'none',
 };
 
 const labelStyle: CSSProperties = {
@@ -260,7 +239,7 @@ const sheetOverlayStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
   border: 'none',
-  background: 'rgba(42, 31, 26, 0.18)',
+  background: 'rgba(42, 31, 26, 0.12)',
   padding: 0,
   cursor: 'pointer',
 };
@@ -272,52 +251,56 @@ const sheetStyle: CSSProperties = {
   transform: 'translateX(-50%)',
   width: '100%',
   maxWidth: 'var(--fevio-mobile-frame-max)',
-  padding: '10px 18px max(22px, env(safe-area-inset-bottom))',
-  background: 'var(--slc-surface)',
-  border: '1px solid var(--slc-border)',
+  padding: '12px 18px max(24px, env(safe-area-inset-bottom))',
+  background: 'rgba(255, 252, 247, 0.96)',
+  border: '1px solid rgba(224, 216, 207, 0.82)',
   borderBottom: 'none',
-  borderTopLeftRadius: 16,
-  borderTopRightRadius: 16,
-  boxShadow: '0 -18px 48px rgba(42, 31, 26, 0.12)',
+  borderTopLeftRadius: 28,
+  borderTopRightRadius: 28,
+  boxShadow: '0 -22px 54px rgba(42, 31, 26, 0.14)',
+  backdropFilter: 'blur(20px) saturate(1.08)',
+  WebkitBackdropFilter: 'blur(20px) saturate(1.08)',
 };
 
 const sheetHandleStyle: CSSProperties = {
   width: 42,
-  height: 4,
+  height: 5,
   borderRadius: 999,
-  background: 'var(--slc-border)',
-  margin: '2px auto 14px',
+  background: 'rgba(183, 170, 160, 0.38)',
+  margin: '0 auto 16px',
 };
 
 const sheetTitleStyle: CSSProperties = {
-  margin: '0 0 14px',
+  margin: '0 0 16px',
   color: 'var(--slc-text)',
-  fontSize: 18,
+  fontSize: 19,
   fontWeight: 900,
   letterSpacing: '-0.03em',
 };
 
 const sheetOptionStyle: CSSProperties = {
-  minHeight: 68,
+  minHeight: 72,
   display: 'grid',
-  gridTemplateColumns: '42px 1fr auto',
+  gridTemplateColumns: '44px 1fr auto',
   alignItems: 'center',
   gap: 12,
-  padding: '12px 14px',
-  borderRadius: 18,
-  background: 'var(--slc-bg)',
-  border: '1px solid var(--slc-border)',
+  padding: '13px 14px',
+  borderRadius: 22,
+  background: 'rgba(255, 255, 255, 0.74)',
+  border: '1px solid rgba(224, 216, 207, 0.82)',
   color: 'var(--slc-text)',
   textDecoration: 'none',
+  boxShadow: '0 10px 24px rgba(47, 41, 38, 0.04)',
 };
 
 const sheetOptionIconStyle: CSSProperties = {
-  width: 42,
-  height: 42,
-  borderRadius: 16,
+  width: 44,
+  height: 44,
+  borderRadius: 18,
   display: 'grid',
   placeItems: 'center',
-  background: 'var(--slc-surface)',
+  background: 'linear-gradient(180deg, #FFF6F0 0%, #F8ECE5 100%)',
+  color: '#55756A',
 };
 
 const sheetOptionTitleStyle: CSSProperties = {

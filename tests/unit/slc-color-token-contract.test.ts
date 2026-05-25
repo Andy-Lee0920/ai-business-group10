@@ -62,7 +62,7 @@ describe('SLC color token contract', () => {
   });
 
 
-  it('keeps records journal/community preview labels away from coral', () => {
+  it('keeps records journal/shared-record preview labels away from coral', () => {
     const records = [
       readFileSync('src/features/records/journal/journal-preview.tsx', 'utf8'),
       readFileSync('src/features/records/community/community-preview.tsx', 'utf8'),
@@ -70,10 +70,10 @@ describe('SLC color token contract', () => {
 
     expect(records).not.toContain("커플저널</p>");
     expect(records).toContain("커플저널</span>");
-    expect(records).not.toContain("커뮤니티</p>");
-    expect(records).toContain("커뮤니티</span>");
+    expect(records).not.toContain("공유 기록</p>");
+    expect(records).toContain("공유 기록</span>");
     expect(records).toContain("color: 'var(--fevio-sage-dark)'");
-    expect(records).toContain("background: 'var(--fevio-coral)'");
+    expect(records).toContain("background: 'var(--slc-coral)'");
   });
 
   it('keeps deprecated records billing visualization out of the runtime screen', () => {

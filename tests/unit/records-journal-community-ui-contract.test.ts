@@ -63,11 +63,63 @@ describe('records journal/community UI contract', () => {
     }));
 
     expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('data-testid="community-post-form"');
+    expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('fevio-community-sheet-layer');
+    expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('aria-label="닫기"');
+    expect(communityMarkup).toContain('병원 안내를 확인한 기록');
     expect(communityMarkup).toContain('오비드렐 시간 확인 팁을 남겨요.');
     expect(communityMarkup).toContain('검수 중');
-    expect(communityMarkup).toContain('모두에게');
+    expect(communityMarkup).toContain('전체 공개');
     expect(communityMarkup).toContain('오비드렐메이트');
     expect(communityMarkup).toContain('공감 2');
+  });
+
+  it('does not expose internal seed artifacts or role jargon in the community feed', () => {
+    const source = readFileSync('src/features/records/community/community-preview.tsx', 'utf8');
+    const markup = renderToStaticMarkup(React.createElement(RecordsScreen, {
+      items: [],
+      completions: [],
+      clinicUpdates: [],
+      journalEntries: [],
+      communityPosts: [{
+        id: 'seed-post-1',
+        body: 'same role post 1779273192113',
+        mood: null,
+        subCategory: 'tip',
+        audience: 'primary_feed',
+        moderationStatus: 'approved',
+        isOfficial: false,
+        createdAt: '2026-05-20T08:10:00.000Z',
+        authorNickname: null,
+        audienceScope: 'same_role',
+        audienceRole: 'primary',
+        empathyCount: 0,
+        empathyActive: false,
+      }, {
+        id: 'smoke-post-1',
+        body: 'prod approved community smoke eb2bf360',
+        mood: null,
+        subCategory: 'today',
+        audience: 'primary_feed',
+        moderationStatus: 'approved',
+        isOfficial: false,
+        createdAt: '2026-05-20T08:11:00.000Z',
+        authorNickname: null,
+        audienceScope: 'everyone',
+        audienceRole: null,
+        empathyCount: 0,
+        empathyActive: false,
+      }],
+      communityAudience: 'primary_feed',
+      isPartnerLinked: true,
+      initialTab: 'community',
+    }));
+
+    expect(markup).not.toContain('same role post');
+    expect(markup).not.toContain('prod approved community smoke');
+    expect(markup).not.toContain('같은 롤');
+    expect(markup).toContain('아직 공유된 확인 기록이 없어요');
+    expect(source).toContain('비슷한 단계 사용자');
+    expect(source).not.toContain('같은 롤만');
   });
 
   it('keeps the community tab free of partner-link journal guidance when unlinked', () => {

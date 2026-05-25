@@ -29,8 +29,8 @@ test('dynamic home keeps the Fevio app shell available', async ({ page }) => {
   await expect(page.getByRole('link', { name: '설정' })).toHaveAttribute('href', '/settings');
   await page.getByRole('button', { name: '추가 메뉴 열기' }).click();
   await expect(page.getByTestId('create-bottom-sheet')).toBeVisible();
-  await expect(page.getByRole('link', { name: /일정 추가/ })).toHaveAttribute('href', '/add');
-  await expect(page.getByRole('link', { name: /병원 메모/ })).toHaveAttribute('href', '/clinic-update');
+  await expect(page.getByRole('link', { name: /주사·복약 남기기/ })).toHaveAttribute('href', '/add');
+  await expect(page.getByRole('link', { name: /병원 방문 남기기/ })).toHaveAttribute('href', '/clinic-update');
   await expect(bottomNav).not.toContainText('흐름');
   await expect(bottomNav).not.toContainText('케어');
   await expect(bottomNav).not.toContainText('공유');

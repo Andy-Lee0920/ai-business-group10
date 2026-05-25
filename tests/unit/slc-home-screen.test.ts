@@ -37,7 +37,7 @@ describe('SLC home screen vertical slices', () => {
     vi.useRealTimers();
   });
 
-  it('renders type-first clinic focus copy before medication detail on /home', () => {
+  it('promotes due medication before nearby clinic detail on /home', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -45,11 +45,10 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'clinic-soon', type: 'clinic', title: '차병원 방문', scheduled_at: '2026-05-14T09:45:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-focus-kind="clinic_soon"');
+    expect(markup).toContain('data-focus-kind="medication_due"');
     expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).toContain('data-focus-kind="clinic_soon"');
-    expect(markup).toContain('오늘 병원 가는 날');
-    expect(markup.indexOf('오늘 병원 가는 날')).toBeLessThan(markup.indexOf('듀파스톤'));
+    expect(markup).toContain('확인할 시간이 가까워졌어요');
+    expect(markup.indexOf('확인할 시간이 가까워졌어요')).toBeLessThan(markup.indexOf('차병원 방문'));
   });
 
   it('uses the home header action for reminder settings instead of duplicating schedule add', () => {
@@ -194,8 +193,8 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-focus-kind="overdue_backlog"');
     expect(markup).not.toMatch(/border-left|borderLeft/u);
-    expect(markup).toContain('확인이 필요한 주사가 있어요');
-    expect(markup).toContain('08:00 예정된 주사 기록이 아직 완료되지 않았어요.');
+    expect(markup).toContain('확인이 필요한 일정이 있어요');
+    expect(markup).toContain('08:00 예정된 일정 기록이 아직 완료되지 않았어요.');
     expect(markup).not.toContain('미기록');
     expect(markup).not.toContain('오늘 일정</span>');
     expect(markup).not.toContain('병원 안내</span>');
@@ -227,6 +226,7 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('data-testid="home-hero-zone"');
     expect(markup).not.toContain('내일 준비되셨나요');
+    expect(markup).not.toContain('오늘 밤, 주사');
   });
 
   it('uses KST day boundaries for the today tab even when the runtime timezone is UTC-like', () => {

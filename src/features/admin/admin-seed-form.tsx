@@ -27,11 +27,11 @@ export function AdminSeedForm() {
     <form data-testid="admin-seed-form" onSubmit={submitSeed} style={formStyle}>
       <label style={labelStyle}>보기 범위
         <select name="audienceScope" defaultValue="everyone" style={inputStyle}>
-          <option value="everyone">모두에게</option>
-          <option value="same_role">같은 롤만</option>
+          <option value="everyone">전체 사용자</option>
+          <option value="same_role">비슷한 단계 사용자</option>
         </select>
       </label>
-      <label style={labelStyle}>같은 롤 대상
+      <label style={labelStyle}>대상 상황
         <select name="audienceRole" defaultValue="primary" style={inputStyle}>
           <option value="primary">당사자</option>
           <option value="partner">파트너</option>
@@ -39,10 +39,10 @@ export function AdminSeedForm() {
       </label>
       <label style={labelStyle}>주제
         <select name="subCategory" defaultValue="today" style={inputStyle}>
-          <option value="pain">통증</option>
-          <option value="worry">걱정</option>
-          <option value="today">오늘</option>
-          <option value="tip">팁</option>
+          <option value="pain">주사·증상</option>
+          <option value="worry">방문 전 확인</option>
+          <option value="today">오늘 일정</option>
+          <option value="tip">확인 팁</option>
         </select>
       </label>
       <label style={labelStyle}>운영팀 안내

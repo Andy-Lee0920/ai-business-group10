@@ -59,11 +59,11 @@ test.describe('SLC mobile quality smoke', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/clinic-update');
 
-    await expect(page.getByRole('heading', { name: /병원 안내를/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /사진으로 업데이트/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: /문자로 업데이트/ })).toBeVisible();
-    await page.getByRole('button', { name: /직접 수정/ }).click();
-    await page.getByRole('button', { name: '직접 입력 form 열기' }).click();
+    await expect(page.getByRole('heading', { name: /진료 내용을/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /안내문 사진으로 남기기/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /문자로 받은 안내 붙여넣기/ })).toBeVisible();
+    await page.getByRole('button', { name: /진료 내용 직접 남기기/ }).click();
+    await page.getByRole('button', { name: '질문으로 정리하기' }).click();
     await expect(page.getByText('1/4')).toBeVisible();
     await expect(page.getByText('✦ Clinic Guide AI')).toHaveCount(0);
     await expect(page.getByLabel('Clinic Guide AI 질문')).toHaveCount(0);

@@ -47,12 +47,13 @@ describe('SLC bottom navigation', () => {
     expect(source).toContain('data-testid="bottom-nav-create-button"');
     expect(source).toContain('data-testid="create-bottom-sheet"');
     expect(source).toContain('role="dialog"');
-    expect(source).toContain('일정 추가');
-    expect(source).toContain('병원 메모');
+    expect(source).toContain('무엇을 남길까요?');
+    expect(source).toContain('주사·복약 남기기');
+    expect(source).toContain('병원 방문 남기기');
     expect(source).toContain('href="/add"');
     expect(source).toContain('href="/clinic-update"');
-    expect(source).toContain("background: 'var(--slc-surface)'");
-    expect(source).toContain("borderTopLeftRadius: 16");
+    expect(source).toContain("background: 'rgba(255, 252, 247, 0.96)'");
+    expect(source).toContain("borderTopLeftRadius: 28");
   });
 
 
@@ -62,14 +63,15 @@ describe('SLC bottom navigation', () => {
     expect(actionBlock).toContain('aria-label="추가 메뉴 열기"');
     expect(actionBlock).toContain('iconShellStyle(false, center)');
     expect(actionBlock).not.toContain('labelStyle');
-    expect(source).toContain("background: 'var(--slc-coral)'");
+    expect(source).toContain("background: 'linear-gradient(180deg, #E96857 0%, #D25B4C 100%)'");
     expect(source).toContain("color: '#fff'");
-    expect(source).toContain('0 10px 22px rgba(216, 98, 77, 0.24)');
+    expect(source).toContain('0 12px 24px rgba(216, 98, 77, 0.28)');
   });
 
-  it('uses a house outline for the home tab icon instead of the previous sun motif', () => {
-    expect(source).toContain('<path d="M4.75 11.25 12 5l7.25 6.25" />');
-    expect(source).toContain('<path d="M6.75 10.2v7.55A1.75 1.75 0 0 0 8.5 19.5h7a1.75 1.75 0 0 0 1.75-1.75V10.2" />');
+  it('uses aligned lucide icons for the bottom tab set', () => {
+    expect(source).toContain("import { CalendarDays, FileText, Hospital, House, Plus, Settings, Syringe } from 'lucide-react'");
+    expect(source).toContain('<House aria-hidden="true" focusable="false" size={20} strokeWidth={1.85} />');
+    expect(source).toContain('<Settings aria-hidden="true" focusable="false" size={20} strokeWidth={1.85} />');
     expect(source).not.toContain('<circle cx="12" cy="12" r="4.35" />');
   });
 });
