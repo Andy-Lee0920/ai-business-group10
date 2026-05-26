@@ -153,21 +153,14 @@ describe('SLC color token contract', () => {
 
 
   it('keeps presentation testbed labels neutral while preserving active navigation coral', () => {
-    const calendarDemo = readFileSync('src/features/presentation/presentation-calendar-demo.tsx', 'utf8');
     const homeDemo = readFileSync('src/features/today/presentation-home-demo.tsx', 'utf8');
     const testbedNav = readFileSync('src/features/presentation/presentation-testbed.tsx', 'utf8');
 
-    expect(calendarDemo).not.toContain("color: 'var(--slc-coral)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드");
-    expect(calendarDemo).toContain("color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>시나리오 테스트 베드");
-    expect(homeDemo).not.toMatch(
-      /color:\s*["']var\(--slc-coral\)["'][\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?letterSpacing:\s*["']-0\.02em["']/u,
-    );
-    expect(homeDemo).toMatch(
-      /color:\s*["']var\(--slc-muted\)["'][\s\S]*?fontSize:\s*13[\s\S]*?fontWeight:\s*900[\s\S]*?letterSpacing:\s*["']-0\.02em["']/u,
-    );
-    expect(homeDemo).toMatch(
-      /background:\s*["']var\(--slc-surface-warm\)["'][\s\S]*?color:\s*["']var\(--slc-muted\)["']/u,
-    );
+    expect(homeDemo).not.toContain('Fevio scenario testbed');
+    expect(homeDemo).not.toContain('PresentationTestbedNav');
+    expect(homeDemo).toContain('<TodayScreen');
+    expect(homeDemo).toContain('병원 안내 기준으로 오늘 일정을 정리했어요.');
+    expect(homeDemo).not.toContain('StageHomeScreen');
     expect(testbedNav).toContain("background: active ? 'var(--slc-coral)' : 'rgba(255, 255, 255, 0.72)'"
     );
   });

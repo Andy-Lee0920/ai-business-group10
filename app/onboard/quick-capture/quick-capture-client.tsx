@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { CtaButton, Notice } from '../../../src/components/ui';
 import styles from '../../onboarding/onboarding.module.css';
@@ -40,6 +41,9 @@ export function QuickCaptureClient() {
 
   return (
     <section className={styles.choiceSection} aria-labelledby="quick-capture-title">
+      <Link href="/home" className={styles.escapeLink} aria-label="홈으로 돌아가기">
+        <span aria-hidden="true">‹</span> 홈으로
+      </Link>
       <p className="eyebrow">Quick Capture</p>
       <h1 className={styles.heroTitle} id="quick-capture-title">병원에서 나온 직후 3분만 기록해요</h1>
       <p className={`lead ${styles.heroLead}`}>약 이름과 용량은 지금 입력하지 않아도 됩니다. 시간과 다음 방문일만 먼저 홈에 올려요.</p>

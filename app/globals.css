@@ -131,7 +131,7 @@ body {
   padding-bottom: var(--fevio-bottom-nav-height);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 700px) {
   /* ── presentation-mode=0 : 폰 프레임 시뮬레이션 ── */
   body[data-presentation-mode="0"] {
     height: 100%;

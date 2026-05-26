@@ -20,6 +20,7 @@ test('prescription capture turns one photo into confirmable canonical care card 
   });
 
   await page.goto('/onboard/prescription-capture');
+  await expect(page.getByRole('link', { name: '홈으로 돌아가기' })).toHaveAttribute('href', '/home');
   await page.getByLabel('병원 안내문 사진').setInputFiles({ name: 'clinic-note.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('fake image') });
   await page.getByRole('button', { name: '카드 후보 만들기' }).click();
 

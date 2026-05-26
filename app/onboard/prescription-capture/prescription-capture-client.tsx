@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type CSSProperties } from 'react';
 
 type CandidateType = 'medication' | 'injection' | 'clinic';
@@ -90,6 +91,9 @@ export function PrescriptionCaptureClient() {
 
   return (
     <section style={screenStyle} aria-labelledby="prescription-capture-title">
+      <Link href="/home" aria-label="홈으로 돌아가기" style={exitLinkStyle}>
+        <span aria-hidden="true">‹</span> 홈으로
+      </Link>
       <header style={heroStyle}>
         <div aria-hidden="true" style={heroIconStyle}>
           <span style={heroIconPaperStyle} />
@@ -213,10 +217,27 @@ export function PrescriptionCaptureClient() {
 
 const screenStyle: CSSProperties = {
   minHeight: '100%',
-  padding: '76px 24px 34px',
+  padding: '38px 24px 34px',
   display: 'grid',
   alignContent: 'start',
   gap: 22,
+};
+
+const exitLinkStyle: CSSProperties = {
+  justifySelf: 'start',
+  minHeight: 42,
+  padding: '0 15px',
+  borderRadius: 999,
+  border: '1px solid rgba(224, 197, 181, 0.78)',
+  background: 'rgba(255, 255, 255, 0.72)',
+  color: '#6f625b',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 5,
+  textDecoration: 'none',
+  fontSize: 14,
+  fontWeight: 900,
+  boxShadow: '0 10px 22px rgba(99, 74, 58, 0.08)',
 };
 
 const heroStyle: CSSProperties = {

@@ -37,7 +37,7 @@ describe('SLC home screen vertical slices', () => {
     vi.useRealTimers();
   });
 
-  it('promotes due medication before nearby clinic detail on /home', () => {
+  it('uses a medication-first operation surface instead of an embryo story surface', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -45,10 +45,13 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'clinic-soon', type: 'clinic', title: '차병원 방문', scheduled_at: '2026-05-14T09:45:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-focus-kind="medication_due"');
-    expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).toContain('확인할 시간이 가까워졌어요');
-    expect(markup.indexOf('확인할 시간이 가까워졌어요')).toBeLessThan(markup.indexOf('차병원 방문'));
+    expect(markup).toContain('data-hero-surface="operation"');
+    expect(markup).toContain('data-testid="home-operation-screen"');
+    expect(markup).toContain('다음 예정 항목');
+    expect(markup).toContain('오늘 확인할 항목');
+    expect(markup.indexOf('듀파스톤')).toBeLessThan(markup.indexOf('차병원 방문'));
+    expect(markup).not.toContain('data-testid="home-hero-zone"');
+    expect(markup).not.toContain('오늘의 배아');
   });
 
   it('uses the home header action for reminder settings instead of duplicating schedule add', () => {
@@ -63,170 +66,40 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('aria-pressed="true"');
     expect(markup).toContain('lucide-bell');
     expect(markup).toContain('width:44px;height:44px');
-    expect(markup).toContain('box-shadow:0 12px 28px rgba(196, 97, 74, 0.16)');
     expect(markup).not.toContain('알림 켬');
     expect(markup).not.toContain('알림 끔');
-    expect(markup).not.toContain('aria-label="일정 추가"');
+    expect(markup.indexOf('data-testid="home-reminder-toggle"')).toBeLessThan(markup.indexOf('aria-label="일정 추가"'));
   });
 
-  it('renders the storyline hero as a full-bleed zone before day tabs and cards', () => {
+  it('promotes the current injection through the next action CTA and keeps reference images available', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
-      item({ id: 'injection-now', type: 'injection', title: 'Menopur', dose: '150', unit: 'IU', scheduled_at: '2026-05-14T09:10:00.000Z' }),
+      item({ id: 'ovidrel', type: 'injection', title: '오비드렐', dose: '250', unit: 'mcg', scheduled_at: '2026-05-14T09:10:00.000Z' }),
       item({ id: 'injection-next', type: 'injection', title: 'Cetrotide', dose: '0.25', unit: 'mg', scheduled_at: '2026-05-14T19:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).toContain('position:sticky');
-    expect(markup).toContain('height:66dvh');
-    expect(markup).toContain('display:flex');
-    expect(markup).toContain('flex-direction:column');
-    expect(markup).toContain('margin-top:-22px');
-    expect(markup).toContain('min-height:calc(34dvh + 22px)');
-    expect(markup).toContain('linear-gradient(to bottom, #CCEFDF');
-    expect(markup).not.toContain('data-testid="home-focus-hero"');
-    expect(markup.indexOf('data-testid="home-hero-zone"')).toBeLessThan(markup.indexOf('aria-label="일정 날짜"'));
-  });
-
-
-
-  it('promotes the current injection through the hero CTA and keeps it out of the list', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const markup = render([
-      item({ id: 'injection-now', type: 'injection', title: 'Menopur', dose: '150', unit: 'IU', scheduled_at: '2026-05-14T09:10:00.000Z' }),
-      item({ id: 'injection-next', type: 'injection', title: 'Cetrotide', dose: '0.25', unit: 'mg', scheduled_at: '2026-05-14T19:00:00.000Z' }),
-    ]);
-
-    expect(markup).toContain('data-testid="injection-countdown-hero"');
-    expect(markup).toContain('천천히 준비하면 돼요');
-    expect(markup).toContain('align-content:center');
-    expect(markup).toContain('background:transparent');
-    expect(markup).toContain('box-shadow:none');
-    expect(markup).toContain('width:100%;min-height:52px');
-    expect(markup).toContain('Menopur 150 IU');
-    expect(markup).not.toContain('다음 주사');
-    expect(markup).not.toContain('Cetrotide 0.25 mg');
-    expect(markup).not.toContain('data-card-emphasis="primary"');
-  });
-
-
-  it('shows a first schedule saved from onboarding on /home', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const markup = render([
-      item({ id: 'onboarding-first', type: 'injection', title: '고날에프 주사', source: 'onboarding_interview', scheduled_at: '2026-05-14T09:10:00.000Z' }),
-    ]);
-
-    expect(markup).toContain('고날에프 주사');
-    expect(markup).toContain('주사');
-  });
-
-  it('renders the one-hour injection countdown arc on /home', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const markup = render([
-      item({ id: 'injection-countdown', type: 'injection', title: '고날에프 주사', scheduled_at: '2026-05-14T09:45:00.000Z' }),
-      item({ id: 'next-injection', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-14T21:00:00.000Z' }),
-    ]);
-
-    expect(markup).toContain('data-testid="injection-countdown-hero"');
+    expect(markup).toContain('data-testid="next-action-hero"');
+    expect(markup).toContain('data-testid="next-action-countdown"');
     expect(markup).toContain('data-testid="injection-countdown-arc"');
-    expect(markup).toContain('data-testid="countdown-sheet-lift"');
-    expect(markup).toContain('data-testid="countdown-sheet-mini-arc"');
-    expect(markup).toContain('상단 메뉴와 함께 올라오는 주사 카운트다운');
-    expect(markup).toContain('주사 준비');
+    expect(markup).toContain('오비드렐 250 mcg');
+    expect(markup).toContain('완료 기록하기');
+    expect(markup).toContain('시간 변경');
+    expect(markup).toContain('병원 안내 보기');
     expect(markup).toContain('남은 시간');
-    expect(markup).toContain('45:00');
-    expect(markup).not.toContain('data-testid="countdown-info-block"');
-    expect(markup).toContain('min-height:52px');
-    expect(markup).toContain('background:#52B788');
   });
 
-  it('uses Daily Brief as hero and demotes a non-critical schedule to execution preview', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const markup = render([
-      item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
-    ]);
-
-    expect(markup).toContain('data-hero-surface="brief"');
-    expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).toContain('data-testid="execution-preview"');
-    expect(markup).toContain('20:00 · 듀파스톤');
-    expect(markup.match(/data-card-emphasis=/g)).toHaveLength(1);
-  });
-
-  it('keeps execution labels calm until an urgent state needs attention', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const routineMarkup = render([
-      item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
-    ]);
-
-    expect(routineMarkup).toContain('data-hero-surface="brief"');
-    expect(routineMarkup).toContain('data-testid="home-hero-zone"');
-
-    const countdownMarkup = render([
-      item({ id: 'soon-injection', type: 'injection', title: '고날에프', scheduled_at: '2026-05-14T09:45:00.000Z' }),
-    ]);
-
-    expect(countdownMarkup).toContain('color:var(--slc-muted);font-size:12px;font-weight:900">주사 준비');
-    expect(countdownMarkup).not.toContain('color:var(--slc-coral);font-size:12px;font-weight:900">주사 준비');
-
-    const dueMarkup = render([
-      item({ id: 'due-injection', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-14T09:00:00.000Z' }),
-    ]);
-
-    expect(dueMarkup).toContain('data-tone="coral"');
-    expect(dueMarkup).toContain('>지금</span>');
-  });
-
-
-  it('keeps missed cards calm without AI-slop left accent borders or duplicating the hero item in the list', () => {
+  it('keeps missed cards operational without blame copy', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
       item({ id: 'late-injection', type: 'injection', title: '확인 필요 주사', status: 'missed', scheduled_at: '2026-05-13T23:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-focus-kind="overdue_backlog"');
-    expect(markup).not.toMatch(/border-left|borderLeft/u);
-    expect(markup).toContain('확인이 필요한 일정이 있어요');
-    expect(markup).toContain('08:00 예정된 일정 기록이 아직 완료되지 않았어요.');
+    expect(markup).toContain('완료 여부 확인이 필요해요');
+    expect(markup).toContain('확인 필요');
     expect(markup).not.toContain('미기록');
-    expect(markup).not.toContain('오늘 일정</span>');
-    expect(markup).not.toContain('병원 안내</span>');
-    expect(markup).toContain('완료로 기록');
-    expect(markup).toContain('시간 수정');
-  });
-
-  it('keeps tomorrow items below a Daily Brief hero after today is completed', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const markup = render([
-      item({ id: 'done-today', type: 'injection', title: '오늘 완료 주사', status: 'completed', scheduled_at: '2026-05-14T09:00:00.000Z' }),
-      item({ id: 'tomorrow-clinic', type: 'clinic', title: '내일 병원', scheduled_at: '2026-05-15T09:00:00.000Z' }),
-    ]);
-
-    expect(markup).toContain('data-hero-surface="brief"');
-    expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).not.toContain('최근 완료');
-    expect(markup).not.toContain('aria-label="최근 완료"');
-  });
-
-  it('does not promote tomorrow medication copy over the Daily Brief hook', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const markup = render([
-      item({ id: 'done-today', type: 'injection', title: '오늘 완료 주사', status: 'completed', scheduled_at: '2026-05-14T09:00:00.000Z' }),
-      item({ id: 'tomorrow-injection', type: 'injection', title: '내일 고날에프', scheduled_at: '2026-05-15T09:00:00.000Z' }),
-    ]);
-
-    expect(markup).toContain('data-testid="home-hero-zone"');
-    expect(markup).not.toContain('내일 준비되셨나요');
-    expect(markup).not.toContain('오늘 밤, 주사');
+    expect(markup).not.toContain('잘 하고 있어요');
   });
 
   it('uses KST day boundaries for the today tab even when the runtime timezone is UTC-like', () => {
@@ -289,7 +162,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).not.toContain('data-testid="post-clinic-banner"');
   });
 
-  it('renders safe empty-home copy without a partner banner', () => {
+  it('renders safe empty-home copy with clear add paths', () => {
     const markup = renderToStaticMarkup(React.createElement(TodayScreen, {
       initialItems: [],
       initialClinicUpdates: [],
@@ -298,45 +171,24 @@ describe('SLC home screen vertical slices', () => {
 
     expect(markup).toContain('오늘은 예정된 일정이 없어요');
     expect(markup).toContain('새 일정이 생기면 여기에서 바로 보여드릴게요');
+    expect(markup).toContain('병원 안내 넣기');
+    expect(markup).toContain('직접 추가');
     expect(markup).not.toContain('data-testid="pending-partner-request-card"');
     expect(markup).not.toContain('승인하기');
   });
 
-  it('shows the first-schedule medication empty illustration after the user skips onboarding schedule', () => {
-    const markup = renderToStaticMarkup(React.createElement(TodayScreen, {
-      initialItems: [],
-      initialClinicUpdates: [],
-      userId: 'patient-1',
-      firstScheduleSkipped: true,
-    }));
-
-    expect(markup).toContain('새 일정이 생기면 여기에서 바로 보여드릴게요');
-  });
-
-  it('hides the cycle empty illustration when today has schedule data', () => {
+  it('shows clinic note, recent record, and partner sync sections as secondary home context', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
-      item({ id: 'scheduled-item', type: 'injection', title: '고날에프 주사', scheduled_at: '2026-05-14T09:10:00.000Z' }),
+      item({ id: 'done-today', type: 'injection', title: '오늘 완료 주사', status: 'completed', scheduled_at: '2026-05-14T08:00:00.000Z' }),
+      item({ id: 'clinic-visit', type: 'clinic', title: '난포 확인 방문', scheduled_at: '2026-05-14T10:30:00.000Z' }),
     ]);
 
-    expect(markup).toContain('고날에프 주사');
-  });
-
-  it('shows a deterministic medication reference image for mapped injection titles only', () => {
-    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
-
-    const mappedMarkup = render([
-      item({ id: 'ovidrel', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-14T09:30:00.000Z' }),
-    ]);
-    expect(mappedMarkup).toContain('data-testid="medication-reference-image"');
-    expect(mappedMarkup).toContain('/assets/medications/ovidrel.svg');
-    expect(mappedMarkup).toContain('확인을 돕는 참고 이미지');
-
-    const unmappedMarkup = render([
-      item({ id: 'unknown', type: 'injection', title: '하얀색 주사약', scheduled_at: '2026-05-14T09:30:00.000Z' }),
-    ]);
-    expect(unmappedMarkup).not.toContain('data-testid="medication-reference-image"');
+    expect(markup).toContain('최근 완료 기록');
+    expect(markup).toContain('병원 안내 기준');
+    expect(markup).toContain('공유 상태');
+    expect(markup).toContain('파트너에게 필요한 일정만 공유해요');
   });
 });
 

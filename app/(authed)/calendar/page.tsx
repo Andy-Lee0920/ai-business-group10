@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 import { isPresentationRequest } from '../../../src/config';
 import { CalendarScreen } from '../../../src/features/calendar/calendar-screen';
-import { PresentationCalendarDemo } from '../../../src/features/presentation/presentation-calendar-demo';
+import { buildPresentationItems } from '../../../src/features/presentation/presentation-testbed';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import type { ScheduleItem } from '../../../src/types/slc.types';
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {
   const requestHeaders = await headers();
-  if (isPresentationRequest({ headers: requestHeaders })) return <PresentationCalendarDemo />;
+  if (isPresentationRequest({ headers: requestHeaders })) return <CalendarScreen items={buildPresentationItems()} />;
 
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -40,7 +40,7 @@ export function InjectionCountdownArc({
           <path
             d={arcPath}
             fill="none"
-            stroke="rgba(201,95,75,0.14)"
+            stroke="rgba(231,111,92,0.14)"
             strokeLinecap="round"
             strokeWidth={STROKE_WIDTH}
           />
@@ -49,7 +49,7 @@ export function InjectionCountdownArc({
             data-progress={ratio.toFixed(2)}
             data-testid="injection-countdown-arc-fill"
             fill="none"
-            stroke="var(--slc-coral)"
+            stroke="#E86F5C"
             strokeDasharray={`${visibleLength} ${circumference}`}
             strokeDashoffset={0}
             strokeLinecap="round"

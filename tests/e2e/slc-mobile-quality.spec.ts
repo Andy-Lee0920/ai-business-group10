@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { SLC_FORBIDDEN_VISIBLE_COPY, SLC_MOBILE_ROUTES, SLC_MOBILE_VIEWPORTS } from '../../src/domain/slc-mobile-quality';
+import { SLC_FORBIDDEN_VISIBLE_COPY, SLC_MOBILE_ROUTES, SLC_MOBILE_VIEWPORTS, SLC_STANDALONE_CAPTURE_ROUTES } from '../../src/domain/slc-mobile-quality';
 
 test.describe('SLC mobile quality smoke', () => {
   for (const viewport of SLC_MOBILE_VIEWPORTS) {
@@ -52,6 +52,21 @@ test.describe('SLC mobile quality smoke', () => {
         `${route} should not overflow the mobile viewport`,
       ).toBeLessThanOrEqual(390);
       for (const forbidden of SLC_FORBIDDEN_VISIBLE_COPY) expect(visibleText, route).not.toContain(forbidden);
+    }
+  });
+
+  test('standalone capture pages always expose a visible recovery path', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    for (const route of SLC_STANDALONE_CAPTURE_ROUTES) {
+      await page.goto(route);
+      const homeLink = page.getByRole('link', { name: '홈으로 돌아가기' });
+      await expect(homeLink, `${route} should let mistaken users leave`).toBeVisible();
+      await expect(homeLink, `${route} should recover to Home`).toHaveAttribute('href', '/home');
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+        `${route} should not overflow the mobile viewport`,
+      ).toBeLessThanOrEqual(390);
     }
   });
 
