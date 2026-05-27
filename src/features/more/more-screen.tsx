@@ -28,7 +28,13 @@ export function MoreScreen({
   privacyGateAccepted = false,
   closedBetaStatus = 'closed beta',
 }: Props) {
-  const [inviteCode, setInviteCode] = useState<string | null>(existingLink?.invite_code ?? null);
+  const approvedLink = existingLink?.status === 'approved' ? existingLink : null;
+  const pendingApprovalRequests = approvedLink ? [] : dedupePartnerLinks([
+    ...pendingRequests.filter((link) => link.status === 'requested'),
+    ...(existingLink?.status === 'requested' ? [existingLink] : []),
+  ]);
+  const canManageInvite = !approvedLink && pendingApprovalRequests.length === 0;
+  const [inviteCode, setInviteCode] = useState<string | null>(canManageInvite && existingLink?.status === 'pending' ? existingLink.invite_code : null);
   const [generating, setGenerating] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -123,7 +129,7 @@ export function MoreScreen({
         provider={provider}
         privacyGateAccepted={privacyGateAccepted}
         closedBetaStatus={closedBetaStatus}
-        partnerConnected={existingLink?.status === 'approved'}
+        partnerConnected={Boolean(approvedLink)}
       />
 
       <section id="partner-invite" style={sectionStyle}>
@@ -134,10 +140,10 @@ export function MoreScreen({
           </div>
         </div>
 
-        {pendingRequests.length > 0 && (
+        {pendingApprovalRequests.length > 0 && (
           <div style={{ margin: '0 14px 12px', background: '#FFF8F5', borderRadius: 16, padding: '14px 16px', border: '1px solid #F4D4C8' }}>
             <PartnerCardHeader title="파트너 연결 요청이 있어요" />
-            {pendingRequests.map((req) => (
+            {pendingApprovalRequests.map((req) => (
               <div key={req.id} style={{ display: 'grid', gap: 10, marginBottom: 10 }}>
                 <span style={{ fontSize: 14, color: 'var(--slc-text)', fontWeight: 800 }}>{partnerDisplayName(req)}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -149,18 +155,18 @@ export function MoreScreen({
           </div>
         )}
 
-        {existingLink?.status === 'approved' && (
+        {approvedLink && (
           <div style={{ margin: '0 14px 12px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
             <PartnerCardHeader title="연결된 파트너" muted />
-            <p style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 12px' }}>{partnerDisplayName(existingLink)}</p>
+            <p style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 900, margin: '0 0 12px' }}>{partnerDisplayName(approvedLink)}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <a href="/home" style={{ ...pillButtonStyle('primary'), display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>확인</a>
-              <button onClick={() => sendPartnerAction(existingLink.id, 'revoke')} style={pillButtonStyle('muted')}>연결 해제</button>
+              <button onClick={() => sendPartnerAction(approvedLink.id, 'revoke')} style={pillButtonStyle('muted')}>연결 해제</button>
             </div>
           </div>
         )}
 
-        {inviteCode ? (
+        {canManageInvite && inviteCode ? (
           <div style={{ margin: '0 14px 14px', background: '#fff', borderRadius: 16, padding: '14px 16px', border: '1px solid var(--slc-border)' }}>
             <PartnerCardHeader title="초대 코드 · 읽기 전용 연결" muted />
             <p style={{ fontSize: 12, color: 'var(--slc-muted)', fontFamily: 'monospace', margin: '0 0 12px', wordBreak: 'break-all' }}>
@@ -168,14 +174,14 @@ export function MoreScreen({
             </p>
             <button onClick={copyLink} style={pillButtonStyle('primary')}>{copied ? '복사됨 ✓' : '링크 복사'}</button>
           </div>
-        ) : (
+        ) : canManageInvite ? (
           <div style={{ padding: '0 14px 14px' }}>
             <button onClick={generateLink} disabled={generating} style={{ ...pillButtonStyle('primary'), width: '100%', minHeight: 46, opacity: generating ? 0.7 : 1 }}>
               {generating ? '생성 중...' : '파트너 초대 링크 만들기'}
             </button>
             {linkError ? <p style={{ margin: '8px 0 0', fontSize: 13, color: '#C44F4F' }}>{linkError}</p> : null}
           </div>
-        )}
+        ) : null}
       </section>
 
       <SettingsSection title="케어 관리 메뉴">
@@ -245,7 +251,7 @@ function AccountStatusCard({
         <AccountStatusRow label="Privacy Gate" value={privacyGateAccepted ? '완료' : '확인 필요'} />
         <AccountStatusRow label="Closed beta" value={closedBetaStatus || 'closed beta'} />
         <AccountStatusRow label="파트너 연결" value={partnerConnected ? '연결됨' : '미연결'} />
-        <AccountStatusRow label="커플저널" value={partnerConnected ? '작성 가능' : '파트너 연결 후 활성'} />
+        <AccountStatusRow label="공유 기록" value={partnerConnected ? '읽기 전용 공유 가능' : '파트너 연결 후 활성'} />
       </div>
     </section>
   );
@@ -297,6 +303,15 @@ function menuIcon(label: string) {
 
 function partnerDisplayName(link: PartnerLink) {
   return link.partner_profile?.display_name?.trim() || '파트너';
+}
+
+function dedupePartnerLinks(links: PartnerLink[]) {
+  const seen = new Set<string>();
+  return links.filter((link) => {
+    if (seen.has(link.id)) return false;
+    seen.add(link.id);
+    return true;
+  });
 }
 
 const sectionStyle = {

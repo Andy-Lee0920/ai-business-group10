@@ -30,7 +30,7 @@ describe('Clinic Guide presentation fallback without Supabase env', () => {
     expect(homeLoader).toContain('isPresentationRequest({ headers: requestHeaders })');
     expect(homeLoader).toContain('PresentationHomeDemo');
     expect(homeDemo).toContain('<TodayScreen');
-    expect(homeDemo).toContain('병원 안내 기준으로 오늘 일정을 정리했어요.');
+    expect(homeDemo).toContain('병원 안내 기준으로 다음 실행을 정리했어요.');
     expect(homeDemo).not.toContain('StageHomeScreen');
     expect(homeDemo).not.toContain('PresentationTestbedNav');
     expect(calendarPage).toContain('isPresentationRequest({ headers: requestHeaders })');

@@ -7,7 +7,6 @@ import { Bell, BellOff } from "lucide-react";
 import { ActionCard } from "../../components/action-card";
 import { ConfirmSheet } from "../../components/confirm-sheet";
 import { EmptyHomeActions } from "../../components/home/DailyBrief";
-import { ExecutionPreview } from "../../components/home/ExecutionPreview";
 import { ReflectionTurn } from "../../components/home/ReflectionTurn";
 import { InjectionCountdownArc } from "../../components/injection-countdown-arc";
 import { PostClinicBanner } from "../../components/post-clinic-banner";
@@ -22,7 +21,6 @@ import { ctaLabel } from "../../types/slc.types";
 import { SLC_SAFE_COPY } from "../../domain/slc-copy";
 import { resolveClinicFollowUpPrompt } from "../../domain/slc-clinic-followup";
 import {
-  getHomePendingItems,
   resolveHomeFocus,
   type HomeFocus,
 } from "../../domain/slc-home-focus";
@@ -67,13 +65,11 @@ type HeroStory =
 
 const DAY_LABELS = ["오늘", "내일", "모레"] as const;
 const HOME_REMINDER_SETTING_KEY = "fevio_home_reminder_enabled";
-const HOME_SOFT_CORAL = "#E86F5C";
-const HOME_SOFT_CORAL_DEEP = "#C95F4F";
+const HOME_SOFT_CORAL = "#E76551";
+const HOME_SOFT_CORAL_DEEP = "#CF5847";
 const HOME_SOFT_CORAL_LIGHT = "#FDE8DF";
-const HOME_SOFT_SAGE = "#6F8F6E";
-const HOME_SOFT_SAGE_DEEP = "#567356";
+const HOME_SOFT_WARM_MUTED = "#786B63";
 const HOME_SOFT_BORDER = "rgba(219, 202, 190, 0.58)";
-const HOME_SOFT_SURFACE = "rgba(255, 252, 248, 0.78)";
 
 type Cheer = {
   topEmoji: string;
@@ -99,7 +95,7 @@ type HeroVisual = {
 
 const CHEER: Record<string, Cheer> = {
   overdue: {
-    topEmoji: "🌱",
+    topEmoji: "✨",
     sub: "완료 여부만 확인해 주세요",
     bottomEmoji: "💛",
   },
@@ -114,17 +110,17 @@ const CHEER: Record<string, Cheer> = {
     bottomEmoji: "💜",
   },
   medication_due: {
-    topEmoji: "💚",
+    topEmoji: "✨",
     sub: "기록한 시간만 기준으로 보여드려요",
-    bottomEmoji: "🌿",
+    bottomEmoji: "💛",
   },
   medication_upcoming: {
-    topEmoji: "🌿",
+    topEmoji: "✨",
     sub: "예정된 항목만 정리해요",
-    bottomEmoji: "💚",
+    bottomEmoji: "💛",
   },
   missed: {
-    topEmoji: "🌱",
+    topEmoji: "✨",
     sub: "지금 확인하는 것만으로도 충분해요",
     bottomEmoji: "💛",
   },
@@ -194,12 +190,12 @@ function resolveHeroVisual(story: HeroStory): HeroVisual {
     case "medication_due":
       return {
         bgGradient:
-          "linear-gradient(to bottom, #CCEFDF 0%, #DCF5EA 55%, #DCF5EA 100%)",
-        sheetBg: "rgba(232, 251, 241, 0.96)",
-        cardGradient: "linear-gradient(145deg, #FAFFFE 0%, #EAFFF4 100%)",
-        accentColor: "#52B788",
-        accentLight: "#C8F0DC",
-        textAccent: "#276942",
+          "radial-gradient(circle at 50% -4%, rgba(255, 232, 218, 0.94) 0%, rgba(255, 243, 235, 0.72) 27%, transparent 52%), radial-gradient(circle at 96% 14%, rgba(255, 239, 228, 0.76) 0%, transparent 34%), linear-gradient(180deg, #FFF8F2 0%, #F8EEE7 100%)",
+        sheetBg: "rgba(255, 252, 248, 0.96)",
+        cardGradient: "linear-gradient(145deg, #FFFFFF 0%, #FFF2EA 100%)",
+        accentColor: HOME_SOFT_CORAL,
+        accentLight: HOME_SOFT_CORAL_LIGHT,
+        textAccent: HOME_SOFT_CORAL_DEEP,
         badgeEmoji: "💉",
         badgeLabel: "주사 준비",
         asset: slcAssets.home.injectionWide,
@@ -211,12 +207,12 @@ function resolveHeroVisual(story: HeroStory): HeroVisual {
     case "medication_upcoming":
       return {
         bgGradient:
-          "linear-gradient(to bottom, #CCEFDF 0%, #DCF5EA 55%, #DCF5EA 100%)",
-        sheetBg: "rgba(232, 251, 241, 0.96)",
-        cardGradient: "linear-gradient(145deg, #FAFFFE 0%, #EAFFF4 100%)",
-        accentColor: "#52B788",
-        accentLight: "#C8F0DC",
-        textAccent: "#276942",
+          "radial-gradient(circle at 50% -4%, rgba(255, 232, 218, 0.88) 0%, rgba(255, 243, 235, 0.68) 28%, transparent 54%), radial-gradient(circle at 12% 28%, rgba(255, 248, 241, 0.86) 0%, transparent 36%), linear-gradient(180deg, #FFF8F2 0%, #F8EEE7 100%)",
+        sheetBg: "rgba(255, 252, 248, 0.96)",
+        cardGradient: "linear-gradient(145deg, #FFFFFF 0%, #FFF3ED 100%)",
+        accentColor: HOME_SOFT_CORAL,
+        accentLight: HOME_SOFT_CORAL_LIGHT,
+        textAccent: HOME_SOFT_CORAL_DEEP,
         badgeEmoji: "💉",
         badgeLabel: "주사 예정",
         asset: slcAssets.home.injectionWide,
@@ -251,7 +247,7 @@ function resolveHeroVisual(story: HeroStory): HeroVisual {
         accentColor: "#E8894A",
         accentLight: "#FFD8A8",
         textAccent: "#7A3A00",
-        badgeEmoji: "🌿",
+        badgeEmoji: "✨",
         badgeLabel: "쉬어가는 날",
         asset: slcAssets.home.waiting,
         heading,
@@ -281,7 +277,6 @@ export function TodayScreen({
   >("none");
   const [reminderPreferenceLoaded, setReminderPreferenceLoaded] =
     useState(false);
-  const [sheetLiftActive, setSheetLiftActive] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -321,19 +316,6 @@ export function TodayScreen({
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    const frame = rootRef.current?.closest<HTMLElement>(".fevio-authed-main");
-    const scrollEl: Element = frame ?? document.documentElement;
-    const update = () => {
-      const max = scrollEl.scrollHeight - scrollEl.clientHeight;
-      setSheetLiftActive(max > 0 && scrollEl.scrollTop / max > 0.55);
-    };
-    update();
-    const target: EventTarget = frame ?? window;
-    target.addEventListener("scroll", update, { passive: true });
-    return () => target.removeEventListener("scroll", update);
-  }, []);
-
   const visibleItems = useMemo(
     () => items.filter((item) => isOnDay(item.scheduled_at, selectedDay)),
     [items, selectedDay],
@@ -358,15 +340,6 @@ export function TodayScreen({
     [items],
   );
   const heroVisual = useMemo(() => resolveHeroVisual(heroStory), [heroStory]);
-  // Only suppress the hero item from the sheet when it's shown with a CTA inside the hero zone (countdown).
-  const heroItemId =
-    priority.heroSurface === "execution" && heroStory.kind === "countdown"
-      ? heroStory.item.id
-      : null;
-  const pending = useMemo(
-    () => getHomePendingItems(visibleItems),
-    [visibleItems],
-  );
   const clinicFollowUpItem = useMemo(
     () =>
       selectedDay === 0
@@ -374,20 +347,9 @@ export function TodayScreen({
         : null,
     [selectedDay, visibleItems, initialClinicUpdates],
   );
-  const cardItems = pending.filter(
-    (item) => item.id !== clinicFollowUpItem?.id && item.id !== heroItemId,
-  );
-  const mainItem = cardItems[0];
-  const nextItem = cardItems[1];
-  const hasSelectedDaySchedule =
-    visibleItems.length > 0 || Boolean(clinicFollowUpItem);
   const postClinicBannerState = useMemo(
     () => resolvePostClinicBannerState(items),
     [items],
-  );
-  const previewItem = useMemo(
-    () => pending.find((item) => item.status !== "completed") ?? null,
-    [pending],
   );
   const operationalItems = useMemo(
     () =>
@@ -399,24 +361,6 @@ export function TodayScreen({
             new Date(right.scheduled_at).getTime(),
         ),
     [visibleItems],
-  );
-  const nextActionItem = useMemo(
-    () => {
-      const countdownInjection = operationalItems.find(
-        (item) =>
-          item.type === "injection" &&
-          item.status !== "completed" &&
-          isInInjectionCountdownWindow(item.scheduled_at) &&
-          new Date(item.scheduled_at).getTime() >= Date.now(),
-      );
-      return (
-        countdownInjection ??
-        operationalItems.find((item) => item.status !== "completed") ??
-        operationalItems[0] ??
-        null
-      );
-    },
-    [operationalItems],
   );
   const recentCompletedItem = useMemo(
     () =>
@@ -476,44 +420,75 @@ export function TodayScreen({
     <div
       id="home-screen"
       ref={rootRef}
-      data-hero-surface="operation"
+      data-hero-surface={priority.heroSurface}
+      data-home-experience="care-state-hero"
       data-override-reason={priority.overrideReason}
       data-proximity-minutes={priority.proximityMinutes ?? ""}
       style={{
         position: "relative",
-        background:
-          "radial-gradient(circle at 50% -4%, rgba(255, 232, 218, 0.90) 0%, rgba(255, 243, 235, 0.68) 30%, transparent 56%), radial-gradient(circle at 96% 12%, rgba(255, 239, 228, 0.62) 0%, transparent 34%), linear-gradient(180deg, #FFF8F2 0%, #F8EEE7 100%)",
+        background: "var(--slc-bg)",
         minHeight: "100dvh",
       }}
     >
-      <Header
-        reminderEnabled={reminderEnabled}
-        onToggleReminder={handleReminderToggle}
-        pushSubscriptionStatus={pushSubscriptionStatus}
-        pwaInstallGuidance={pwaInstallGuidance}
-      />
+      <div
+        id="home-hero"
+        data-testid="home-full-bleed-hero"
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "90dvh",
+          zIndex: 0,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          background: heroVisual.bgGradient,
+          transition: "background 0.4s ease",
+        }}
+      >
+        <Header
+          reminderEnabled={reminderEnabled}
+          onToggleReminder={handleReminderToggle}
+          pushSubscriptionStatus={pushSubscriptionStatus}
+          pwaInstallGuidance={pwaInstallGuidance}
+        />
+        <HeroZone
+          dailyBrief={dailyBrief}
+          priority={priority.heroSurface}
+          story={heroStory}
+          onCta={setActiveItem}
+          heroVisual={heroVisual}
+        />
+      </div>
 
-      <main
+      <section
         id="home-operation"
+        aria-label="오늘 실행 목록"
+        className={styles.actionSheet}
         data-testid="home-operation-screen"
         style={{
+          position: "relative",
+          zIndex: 1,
           display: "flex",
           flexDirection: "column",
           gap: 12,
-          padding: "0 18px 112px",
+          background: heroVisual.sheetBg,
+          transition: "background 0.4s ease",
+          backdropFilter: "blur(24px) saturate(1.15)",
+          WebkitBackdropFilter: "blur(24px) saturate(1.15)",
+          borderRadius: "28px 28px 0 0",
+          borderTop: "0.5px solid rgba(255, 255, 255, 0.88)",
+          boxShadow:
+            "0 -8px 36px rgba(75, 52, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.92)",
+          marginTop: 0,
+          padding: "28px 18px 112px",
+          minHeight: "calc(42dvh + 22px)",
         }}
       >
-        <NextActionHero
-          item={nextActionItem}
-          selectedDay={selectedDay}
-          dailyBrief={dailyBrief}
-          firstScheduleSkipped={firstScheduleSkipped}
-          onCta={setActiveItem}
-        />
+        <HomeSheetIntro />
         <DayTabs
           selectedDay={selectedDay}
           onSelect={setSelectedDay}
-          accentColor={HOME_SOFT_CORAL}
+          accentColor={heroVisual.accentColor}
         />
         {clinicFollowUpItem && <ClinicUpdatePrompt item={clinicFollowUpItem} />}
         <TodayRail
@@ -527,7 +502,7 @@ export function TodayScreen({
           hasClinicUpdates={initialClinicUpdates.length > 0}
         />
         <PartnerSyncCard />
-      </main>
+      </section>
 
       <PostClinicBanner
         lastInjectionAt={postClinicBannerState.lastInjectionAt}
@@ -698,7 +673,7 @@ function TodayRail({
       <div style={sectionTitleRowStyle}>
         <div>
           <p style={sectionEyebrowStyle}>
-            {selectedDay === 0 ? "오늘 일정" : `${DAY_LABELS[selectedDay]} 일정`}
+            {selectedDay === 0 ? "오늘 실행" : `${DAY_LABELS[selectedDay]} 일정`}
           </p>
           <h2 style={sectionTitleStyle}>오늘 확인할 항목</h2>
         </div>
@@ -724,6 +699,18 @@ function TodayRail({
         </div>
       )}
     </section>
+  );
+}
+
+function HomeSheetIntro() {
+  return (
+    <div id="home-sheet-header" className={styles.sheetHeader}>
+      <span aria-hidden="true" className={styles.sheetHandle} />
+      <div>
+        <p style={sectionEyebrowStyle}>실행 목록</p>
+        <h2 style={sheetIntroTitleStyle}>확인할 항목은 아래에 접어뒀어요</h2>
+      </div>
+    </div>
   );
 }
 
@@ -759,12 +746,14 @@ function ClinicNoteSummary({
     <section aria-label="병원 안내 기준" style={sectionCardStyle}>
       <p style={sectionEyebrowStyle}>병원 안내 기준</p>
       <h2 style={sectionTitleStyle}>
-        {item ? "다음 확인 일정입니다" : "변경된 처방이 있으면 업데이트하세요"}
+        {item
+          ? "확정한 다음 실행입니다"
+          : "바뀐 안내는 확인 후 반영하세요"}
       </h2>
       <p style={mutedParagraphStyle}>
         {item
           ? `${formatScheduleTime(item.scheduled_at)} · ${formatScheduleTitle(item)}`
-          : "확정 전 정보는 병원 안내를 기준으로 확인해요."}
+          : "AI가 정리한 후보도 병원 안내 기준으로 다시 확인해요."}
       </p>
       <div style={clinicNoteFooterStyle}>
         <span>{hasClinicUpdates ? "업데이트 기록 있음" : "최근 업데이트 없음"}</span>
@@ -780,9 +769,9 @@ function PartnerSyncCard() {
   return (
     <section aria-label="공유 상태" style={sectionCardStyle}>
       <p style={sectionEyebrowStyle}>공유 상태</p>
-      <h2 style={sectionTitleStyle}>파트너에게 필요한 일정만 공유해요</h2>
+      <h2 style={sectionTitleStyle}>함께 챙길 역할만 공유해요</h2>
       <p style={mutedParagraphStyle}>
-        확인한 일정과 예약만 내 홈에도 남길 수 있어요.
+        원문 없이 준비, 동행, 확인처럼 실행에 필요한 역할만 보냅니다.
       </p>
       <Link href="/settings" style={smallTextLinkStyle}>
         공유 설정
@@ -817,10 +806,10 @@ const sectionCardStyle = {
   display: "grid",
   gap: 12,
   padding: "18px 16px",
-  borderRadius: 24,
-  background: HOME_SOFT_SURFACE,
-  border: `1px solid ${HOME_SOFT_BORDER}`,
-  boxShadow: "0 14px 34px rgba(111, 77, 58, 0.055)",
+  borderRadius: 20,
+  background: "rgba(255, 255, 255, 0.70)",
+  border: "1px solid rgba(219, 202, 190, 0.44)",
+  boxShadow: "0 10px 28px rgba(78, 61, 48, 0.04)",
 } as const;
 
 const sectionTitleRowStyle = {
@@ -853,7 +842,7 @@ const nextActionSideStyle = {
 
 const sectionEyebrowStyle = {
   margin: 0,
-  color: HOME_SOFT_SAGE_DEEP,
+  color: HOME_SOFT_WARM_MUTED,
   fontSize: 12,
   fontWeight: 900,
   letterSpacing: 0,
@@ -865,6 +854,15 @@ const sectionTitleStyle = {
   fontSize: 18,
   fontWeight: 900,
   lineHeight: 1.25,
+  letterSpacing: 0,
+} as const;
+
+const sheetIntroTitleStyle = {
+  margin: "4px 0 0",
+  color: "var(--slc-text)",
+  fontSize: 20,
+  fontWeight: 900,
+  lineHeight: 1.22,
   letterSpacing: 0,
 } as const;
 
@@ -1000,12 +998,12 @@ function nextActionStatusStyle(isCompleted: boolean, isMissed: boolean) {
     padding: "6px 10px",
     borderRadius: 999,
     background: isCompleted
-      ? "#EEF5EF"
+      ? "#F7EFE9"
       : isMissed
         ? HOME_SOFT_CORAL_LIGHT
         : "var(--slc-surface-warm)",
     color: isCompleted
-      ? "var(--slc-success)"
+      ? HOME_SOFT_WARM_MUTED
       : isMissed
         ? HOME_SOFT_CORAL_DEEP
         : "var(--slc-muted)",
@@ -1043,8 +1041,8 @@ const compactInfoTitleStyle = {
 const completedBadgeStyle = {
   padding: "5px 9px",
   borderRadius: 999,
-  background: "#EEF5EF",
-  color: "var(--slc-success)",
+  background: "#F7EFE9",
+  color: HOME_SOFT_WARM_MUTED,
   fontSize: 11,
   fontWeight: 900,
 } as const;
@@ -1134,7 +1132,7 @@ function HeroZone({
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
-        padding: "4px 20px 8px",
+        padding: "0 28px 10px",
         gap: 8,
       }}
     >
@@ -1675,7 +1673,7 @@ function InjectionCountdownFocus({
     <section
       aria-label="주사 카운트다운"
       data-testid="injection-countdown-hero"
-      style={{ height: "100%", padding: "0 0 2px" }}
+      style={{ height: "100%", padding: "0 0 10px" }}
     >
       <div style={countdownHeroCardStyle}>
         <div style={{ textAlign: "center" }}>
@@ -1694,7 +1692,7 @@ function InjectionCountdownFocus({
               color: "var(--slc-text)",
               fontSize: 21,
               lineHeight: 1.18,
-              letterSpacing: "-0.04em",
+              letterSpacing: 0,
             }}
           >
             {isDueNow ? "예정 시간이 지났어요" : "천천히 준비하면 돼요"}
@@ -1721,13 +1719,12 @@ function InjectionCountdownFocus({
           </div>
         ) : (
           <>
-            <MedicationReferenceImage item={item} compact />
             <InjectionCountdownArc
               totalSeconds={3600}
               remainingSeconds={remaining}
-              size={196}
+              size={218}
             />
-            <div style={{ textAlign: "center", marginTop: -36 }}>
+            <div style={{ textAlign: "center", marginTop: -42 }}>
               <p
                 style={{
                   margin: "0 0 4px",
@@ -1744,7 +1741,7 @@ function InjectionCountdownFocus({
                   color: "var(--slc-text)",
                   fontSize: 34,
                   lineHeight: 1,
-                  letterSpacing: "-0.04em",
+                  letterSpacing: 0,
                 }}
               >
                 {formatRemainingClock(remaining)}
@@ -1785,55 +1782,43 @@ function MedicationReferenceImage({
       style={{
         margin: 0,
         display: "grid",
-        justifyItems: "center",
-        gap: 4,
-        padding: compact ? "8px 6px" : 0,
-        borderRadius: compact ? 22 : undefined,
-        background: compact ? "rgba(255, 247, 242, 0.70)" : undefined,
+        gridTemplateColumns: compact ? "82px minmax(0, 1fr)" : undefined,
+        alignItems: "center",
+        justifyItems: compact ? "stretch" : "center",
+        gap: compact ? 12 : 4,
+        width: compact ? "min(100%, 294px)" : undefined,
+        padding: compact ? "9px 12px" : 0,
+        borderRadius: compact ? 20 : undefined,
+        background: compact ? "rgba(255, 255, 255, 0.58)" : undefined,
+        border: compact ? "1px solid rgba(214, 190, 178, 0.58)" : undefined,
       }}
     >
       <img
         alt={`${asset.displayLabel} 참고 이미지`}
         src={asset.assetPath}
         style={{
-          width: compact ? 124 : 196,
-          maxWidth: "72%",
+          width: compact ? 78 : 196,
+          maxWidth: compact ? "100%" : "72%",
           height: "auto",
-          borderRadius: 20,
-          filter: "drop-shadow(0 14px 28px rgba(75,52,42,0.12))",
+          borderRadius: compact ? 14 : 20,
+          background: compact ? "rgba(255, 252, 249, 0.92)" : undefined,
+          filter: compact
+            ? "drop-shadow(0 8px 16px rgba(75,52,42,0.08))"
+            : "drop-shadow(0 14px 28px rgba(75,52,42,0.12))",
         }}
       />
       <figcaption
-        style={{ color: "var(--slc-muted)", fontSize: 11, fontWeight: 700 }}
+        style={{
+          color: "var(--slc-muted)",
+          fontSize: compact ? 12 : 11,
+          fontWeight: 800,
+          lineHeight: 1.35,
+          textAlign: compact ? "left" : "center",
+        }}
       >
-        확인을 돕는 참고 이미지
+        {compact ? `${asset.displayLabel} 약명 확인` : "확인을 돕는 참고 이미지"}
       </figcaption>
     </figure>
-  );
-}
-
-function CountdownSheetLift({ item }: { item: ScheduleItem }) {
-  const remaining = secondsUntilInjection(item.scheduled_at);
-  return (
-    <div
-      aria-label="상단 메뉴와 함께 올라오는 주사 카운트다운"
-      className={styles.countdownSheetLift}
-      data-testid="countdown-sheet-lift"
-    >
-      <div
-        className={styles.countdownSheetArc}
-        data-testid="countdown-sheet-mini-arc"
-      >
-        <InjectionCountdownArc
-          totalSeconds={3600}
-          remainingSeconds={remaining}
-          size={108}
-        />
-      </div>
-      <strong suppressHydrationWarning className={styles.countdownSheetTime}>
-        {formatRemainingClock(remaining)}
-      </strong>
-    </div>
   );
 }
 
@@ -1938,9 +1923,9 @@ const countdownHeroCardStyle = {
   display: "grid",
   justifyItems: "center",
   alignContent: "center",
-  gap: 8,
+  gap: 14,
   height: "100%",
-  padding: "0 0 56px",
+  padding: "0 0 82px",
   borderRadius: 0,
   background: "transparent",
   border: "none",
@@ -1964,7 +1949,7 @@ const dueNowPanelStyle = {
 
 function heroCtaStyle(accentColor: string) {
   return {
-    width: "100%",
+    width: "min(100%, 332px)",
     minHeight: 52,
     border: "none",
     borderRadius: 999,
@@ -1974,8 +1959,9 @@ function heroCtaStyle(accentColor: string) {
     fontWeight: 900,
     fontFamily: "inherit",
     cursor: "pointer",
-    marginTop: 2,
+    marginTop: 4,
     transition: "background 0.4s ease",
+    boxShadow: "0 16px 34px rgba(111, 77, 58, 0.14)",
   };
 }
 
@@ -2015,14 +2001,14 @@ function Header({
         </p>
         <h1
           style={{
-            fontSize: 28,
+            fontSize: 30,
             fontWeight: 900,
-            letterSpacing: "-0.05em",
+            letterSpacing: 0,
             color: "var(--slc-text)",
             margin: 0,
           }}
         >
-          오늘 일정
+          오늘 실행
         </h1>
       </div>
       <div style={{ display: "grid", justifyItems: "end", gap: 6 }}>
@@ -2074,7 +2060,7 @@ function DayTabs({
   return (
     <nav
       aria-label="일정 날짜"
-      style={{ display: "flex", gap: 8, padding: "0 24px 16px" }}
+      style={{ display: "flex", gap: 8, padding: "2px 0 8px" }}
     >
       {DAY_LABELS.map((label, index) => (
         <button
@@ -2124,9 +2110,17 @@ function EmptyState({
       >
         {SLC_SAFE_COPY.noSchedule}
       </p>
-      <Link href="/add" style={emptyLinkStyle(accentColor)}>
-        추가하기
-      </Link>
+      <div style={emptyActionRowStyle}>
+        <Link
+          href="/onboard/prescription-capture"
+          style={emptyLinkStyle(accentColor)}
+        >
+          병원 안내 넣기
+        </Link>
+        <Link href="/add" style={emptySecondaryLinkStyle}>
+          직접 추가
+        </Link>
+      </div>
     </div>
   );
 }
@@ -2210,13 +2204,13 @@ function ScheduleFlowRow({
           borderRadius: 999,
           background:
             statusLabel === "완료"
-              ? "#EEF5EF"
+              ? "#F7EFE9"
               : statusLabel === "확인 필요"
                 ? HOME_SOFT_CORAL_LIGHT
                 : "var(--slc-border)",
           color:
             statusLabel === "완료"
-              ? "var(--slc-success)"
+              ? HOME_SOFT_WARM_MUTED
               : statusLabel === "확인 필요"
                 ? HOME_SOFT_CORAL_DEEP
                 : "var(--slc-muted)",
@@ -2373,8 +2367,9 @@ function reminderToggleDotStyle(enabled: boolean) {
 
 function emptyLinkStyle(accentColor: string) {
   return {
-    display: "inline-block",
-    marginTop: 16,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
     padding: "12px 24px",
     background: accentColor,
     color: "#fff",
@@ -2385,6 +2380,28 @@ function emptyLinkStyle(accentColor: string) {
     transition: "background 0.4s ease",
   };
 }
+
+const emptyActionRowStyle = {
+  display: "flex",
+  justifyContent: "center",
+  flexWrap: "wrap",
+  gap: 8,
+  marginTop: 16,
+} as const;
+
+const emptySecondaryLinkStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "12px 20px",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.72)",
+  border: `1px solid ${HOME_SOFT_BORDER}`,
+  color: HOME_SOFT_CORAL_DEEP,
+  fontSize: 14,
+  fontWeight: 800,
+  textDecoration: "none",
+} as const;
 
 function tabStyle(active: boolean, accentColor: string) {
   return {

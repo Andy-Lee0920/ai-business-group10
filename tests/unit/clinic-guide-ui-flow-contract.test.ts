@@ -14,7 +14,7 @@ describe('Clinic Guide visual flow contract', () => {
       "'entry'",
       'mode?: ClinicUpdateMode',
       "mode = 'memo'",
-      '진료 내용을\\\\n남겨주세요',
+      '진료 내용을 남겨주세요',
       '일정을 추가할게요',
       '병원에서 확인한 다음 일정, 약 변경, 메모만 차분히 정리해요.',
       '사진이나 문자에서 일정 후보를 찾고, 저장 전 직접 확인해요.',

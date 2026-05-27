@@ -29,7 +29,7 @@ describe('SLC persona heuristics', () => {
       {
         persona: '진료 후 안내문 사진만 가진 사용자',
         assert: () => {
-          expect(clinicForm).toContain('진료 내용을\\\\n남겨주세요');
+          expect(clinicForm).toContain('진료 내용을 남겨주세요');
           expect(clinicForm).toContain('안내문 사진으로 남기기');
         },
       },

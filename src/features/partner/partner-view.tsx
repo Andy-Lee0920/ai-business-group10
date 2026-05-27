@@ -1,5 +1,4 @@
 import type { ScheduleItem, CompletionRecord, ClinicUpdate } from '../../types/slc.types';
-import { completedLabel } from '../../types/slc.types';
 import { SLCIllustration } from '../../components/slc-illustration';
 import { slcAssets } from '../../design/slc-assets';
 import { partnerStateCopy } from './partner-state';
@@ -46,7 +45,7 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
                 background: '#F7F5F2', borderRadius: 14, padding: '12px 16px',
                 marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
-                <span style={{ fontSize: 15, color: '#6B5E55' }}>{time} {item.title} {completedLabel(item.type)}했어요</span>
+                <span style={{ fontSize: 15, color: '#6B5E55' }}>{time} {partnerItemLabel(item.type)} 확인됐어요</span>
                 <span style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 600 }}>읽기 전용</span>
               </div>
             );
@@ -67,7 +66,7 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
                 marginBottom: 8, border: '1.5px solid var(--slc-border)',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
-                <span style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 500 }}>다음은 {time} {item.title} 예정이에요</span>
+                <span style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 500 }}>다음은 {time} {partnerItemLabel(item.type)} 예정이에요</span>
                 <span style={{ fontSize: 12, color: 'var(--slc-muted)' }}>읽기 전용</span>
               </div>
             );
@@ -82,4 +81,10 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
       )}
     </div>
   );
+}
+
+function partnerItemLabel(type: ScheduleItem['type']) {
+  if (type === 'injection') return '주사 일정';
+  if (type === 'medication') return '복약 일정';
+  return '병원 일정';
 }

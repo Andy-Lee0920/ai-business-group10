@@ -1,17 +1,17 @@
 # Fevio Product North Star
 
-> Same app. Shared state. Different experience.
+> 병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.
 
-Fevio는 난임 치료를 한 사람이 혼자 기억하고 전달해야 하는 복잡한 의료 과정에서, 부부가 함께 이해하고 실행할 수 있는 상태 기반 케어 경험으로 전환하는 앱이다.
+Fevio는 IVF 치료자가 병원 안내와 투약 일정을 놓치지 않도록, 파트너와 함께 확인하고 기록하는 치료 운영 앱이다.
 
-Fevio는 단순한 일정표, 약 알림, 기록장이 아니다.  
-Fevio는 IVF care cycle의 현재 상태를 읽고, 환자와 파트너에게 각자 필요한 utility UI를 다르게 제공하는 **state-driven Generative UI Care OS**다.
+Fevio는 단순한 일정표, 약 알림, 감정 일기 앱이 아니다.
+Fevio는 병원 안내, 투약 시간, 주사 기록, 파트너 공유를 한 화면에서 확인하고 실행하게 해 치료 운영 부담을 줄이는 **state-driven IVF care operations app**이다.
 
 ---
 
 ## 1. One Sentence
 
-**Fevio는 하나의 IVF care cycle state를 환자와 파트너의 역할에 맞는 utility interface로 변환하는 Generative UI Care OS다.**
+**Fevio는 IVF 치료자가 병원 안내와 투약 일정을 놓치지 않도록, 파트너와 함께 확인하고 기록하는 치료 운영 앱이다.**
 
 ---
 
@@ -21,8 +21,8 @@ Fevio는 IVF care cycle의 현재 상태를 읽고, 환자와 파트너에게 �
 
 환자는 병원에서 들은 일정, 약 이름, 주사 시간, 검사 결과, 다음 방문일을 기억하고 집에 돌아와 다시 설명해야 한다. 파트너는 돕고 싶어도 무엇을 해야 할지 알기 어렵다. 이 정보 전달 구조는 실수, 불안, 반복 질문, 감정적 갈등으로 이어진다.
 
-Fevio는 이 문제를 “더 많은 설명”으로 해결하지 않는다.  
-Fevio는 치료 상태를 구조화하고, 그 상태를 각 역할에 맞는 행동 UI로 번역한다.
+Fevio는 이 문제를 “더 많은 설명”이나 “따뜻한 문장”으로 해결하지 않는다.
+Fevio는 병원 안내를 확인 가능한 실행 카드로 구조화하고, 그 상태를 각 역할에 맞는 행동 UI로 번역한다.
 
 환자에게는 기록, 확인, 입력, 공유 제어가 필요하다.  
 파트너에게는 준비, 동행, 관찰, 다음 행동 확인이 필요하다.
@@ -45,10 +45,10 @@ Fevio는 치료 상태를 구조화하고, 그 상태를 각 역할에 맞는 �
 
 ### Fevio is
 
-- IVF care cycle을 따라가는 상태 기반 케어 앱
-- 환자와 파트너가 하나의 care state를 공유하는 앱
-- 역할과 공유 권한에 따라 UI가 달라지는 앱
-- 설명보다 실행을 돕는 utility-first 앱
+- 병원 안내와 투약 일정을 놓치지 않게 하는 IVF 치료 운영 앱
+- 환자와 파트너가 하나의 care state를 함께 확인하는 앱
+- 역할과 공유 권한에 따라 실행 UI가 달라지는 앱
+- 설명보다 투약·방문·기록 실행을 돕는 utility-first 앱
 - 환자의 통제권과 프라이버시를 우선하는 앱
 - 실제 제품 코드로 이어질 수 있는 state-driven interactive prototype
 
@@ -104,12 +104,12 @@ Stage 7 임신 확인 → 결과 확인
 
 ---
 
-## 6. Same App. Shared State. Different Experience.
+## 6. One Care State, Role-Specific Operation
 
 Fevio의 핵심 선언은 다음 한 줄이다.
 
 ```text
-Same app. Shared state. Different experience.
+병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.
 ```
 
 하나의 앱에서 하나의 care cycle state를 공유하지만, 환자와 파트너가 보는 경험은 달라야 한다.
@@ -324,7 +324,7 @@ Animation은 hover/glow 수준만 허용한다.
 Intro footer copy:
 
 ```text
-Same app. Shared state. Different experience.
+병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.
 ```
 
 ---
@@ -438,9 +438,9 @@ Fevio는 난임 치료를 한 사람의 기억과 전달 능력에 의존하는 
 
 환자는 자신의 치료 상태를 기록하고 통제한다.  
 파트너는 같은 상태를 바탕으로 지금 도울 수 있는 행동을 본다.  
-앱은 IVF 7단계 사이클 내내 시기에 맞는 utility UI를 생성한다.
+앱은 IVF 7단계 사이클 내내 병원 안내, 투약 시간, 주사 기록, 파트너 역할을 실행 가능한 utility UI로 정리한다.
 
-**Fevio is a state-driven Generative UI Care OS for IVF couples.**
+**Fevio is a state-driven IVF care operations app for confirmed clinic instructions, medication execution, and partner role sharing.**
 
 ---
 

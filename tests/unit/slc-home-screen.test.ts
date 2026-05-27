@@ -37,7 +37,7 @@ describe('SLC home screen vertical slices', () => {
     vi.useRealTimers();
   });
 
-  it('uses a medication-first operation surface instead of an embryo story surface', () => {
+  it('uses a medication-first full-bleed care-state hero instead of an embryo story surface', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -45,12 +45,17 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'clinic-soon', type: 'clinic', title: '차병원 방문', scheduled_at: '2026-05-14T09:45:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-hero-surface="operation"');
+    expect(markup).toContain('data-hero-surface="execution"');
+    expect(markup).toContain('data-home-experience="care-state-hero"');
+    expect(markup).toContain('data-testid="home-full-bleed-hero"');
+    expect(markup).toContain('data-testid="home-hero-zone"');
+    expect(markup).toContain('data-focus-kind="medication_due"');
     expect(markup).toContain('data-testid="home-operation-screen"');
-    expect(markup).toContain('다음 예정 항목');
+    expect(markup).toContain('position:sticky');
+    expect(markup).toContain('height:90dvh');
+    expect(markup).toContain('확인할 항목은 아래에 접어뒀어요');
     expect(markup).toContain('오늘 확인할 항목');
     expect(markup.indexOf('듀파스톤')).toBeLessThan(markup.indexOf('차병원 방문'));
-    expect(markup).not.toContain('data-testid="home-hero-zone"');
     expect(markup).not.toContain('오늘의 배아');
   });
 
@@ -71,7 +76,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup.indexOf('data-testid="home-reminder-toggle"')).toBeLessThan(markup.indexOf('aria-label="일정 추가"'));
   });
 
-  it('promotes the current injection through the next action CTA and keeps reference images available', () => {
+  it('promotes the current injection through the full-bleed hero CTA and keeps reference images available', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -79,13 +84,12 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'injection-next', type: 'injection', title: 'Cetrotide', dose: '0.25', unit: 'mg', scheduled_at: '2026-05-14T19:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('data-testid="next-action-hero"');
-    expect(markup).toContain('data-testid="next-action-countdown"');
+    expect(markup).toContain('data-testid="injection-countdown-hero"');
     expect(markup).toContain('data-testid="injection-countdown-arc"');
+    expect(markup).not.toContain('data-testid="countdown-sheet-lift"');
     expect(markup).toContain('오비드렐 250 mcg');
-    expect(markup).toContain('완료 기록하기');
-    expect(markup).toContain('시간 변경');
-    expect(markup).toContain('병원 안내 보기');
+    expect(markup).toContain('주사하기');
+    expect(markup).not.toContain('시간 변경');
     expect(markup).toContain('남은 시간');
   });
 
@@ -96,7 +100,8 @@ describe('SLC home screen vertical slices', () => {
       item({ id: 'late-injection', type: 'injection', title: '확인 필요 주사', status: 'missed', scheduled_at: '2026-05-13T23:00:00.000Z' }),
     ]);
 
-    expect(markup).toContain('완료 여부 확인이 필요해요');
+    expect(markup).toContain('확인이 필요한 일정이 있어요');
+    expect(markup).toContain('완료로 기록');
     expect(markup).toContain('확인 필요');
     expect(markup).not.toContain('미기록');
     expect(markup).not.toContain('잘 하고 있어요');
@@ -188,7 +193,8 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('최근 완료 기록');
     expect(markup).toContain('병원 안내 기준');
     expect(markup).toContain('공유 상태');
-    expect(markup).toContain('파트너에게 필요한 일정만 공유해요');
+    expect(markup).toContain('함께 챙길 역할만 공유해요');
+    expect(markup).toContain('원문 없이 준비, 동행, 확인처럼 실행에 필요한 역할만 보냅니다.');
   });
 });
 

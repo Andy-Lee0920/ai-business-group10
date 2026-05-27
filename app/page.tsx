@@ -65,8 +65,9 @@ export default async function LandingPage() {
               lineHeight: 1.5,
             }}
           >
-            Fevio는 의료 판단을 하지 않습니다. 병원에서 받은 안내와 직접 입력한
-            일정을 확인하는 도구입니다.
+            Fevio는 의료 판단을 하지 않습니다. AI/OCR은 병원 안내를 실행
+            후보로 정리하는 보조 도구이며, 사용자가 확인한 일정만 홈과
+            파트너 화면에 반영됩니다.
           </p>
         )}
       </Card>

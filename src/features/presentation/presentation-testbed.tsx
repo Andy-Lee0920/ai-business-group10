@@ -4,10 +4,10 @@ import type { ClinicUpdate, CompletionRecord, PartnerLink, ScheduleItem } from '
 export type PresentationSurface = 'home' | 'calendar' | 'records' | 'more';
 
 const TESTBED_LINKS: Array<{ key: PresentationSurface; href: string; label: string }> = [
-  { key: 'home', href: '/home', label: 'Home' },
-  { key: 'calendar', href: '/calendar', label: 'Calendar' },
-  { key: 'records', href: '/records', label: 'Records' },
-  { key: 'more', href: '/more', label: 'More' },
+  { key: 'home', href: '/home', label: '홈' },
+  { key: 'calendar', href: '/calendar', label: '캘린더' },
+  { key: 'records', href: '/records', label: '기록' },
+  { key: 'more', href: '/more', label: '관리' },
 ];
 
 export function PresentationTestbedNav({ current }: { current: PresentationSurface }) {

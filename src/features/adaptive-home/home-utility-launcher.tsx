@@ -11,7 +11,7 @@ export function HomeUtilityLauncher({ fullSetupPending = false }: { fullSetupPen
       </div>
       <Link className={styles.quickSetupLink} href="/onboard/quick-capture" data-testid="quick-capture-entrypoint">
         <span>병원 직후 3분</span>
-        <strong>Quick Capture 열기</strong>
+        <strong>빠른 기록 열기</strong>
         <small>다음 방문일과 첫 약/주사 시간만 먼저 남깁니다.</small>
       </Link>
       <Link className={styles.quickSetupLink} href="/onboard/prescription-capture" data-testid="prescription-capture-entrypoint">
@@ -22,7 +22,7 @@ export function HomeUtilityLauncher({ fullSetupPending = false }: { fullSetupPen
       {fullSetupPending ? (
         <Link className={styles.quickSetupLink} href="/onboard/full-setup" data-testid="full-setup-entrypoint">
           <span>나머지는 오늘 저녁에</span>
-          <strong>Full Setup 이어서 하기</strong>
+          <strong>자세히 정리 이어서 하기</strong>
           <small>처방 사진, 약 이름, 용량은 준비됐을 때 직접 확인해요.</small>
         </Link>
       ) : null}

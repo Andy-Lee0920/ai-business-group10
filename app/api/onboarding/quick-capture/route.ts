@@ -54,7 +54,7 @@ function normalizePhoto(body: QuickCaptureBody) {
 }
 
 function buildQuickCaptureText({ firstMedicationTime, nextVisitDate, prescriptionPhoto }: { firstMedicationTime: string; nextVisitDate: string; prescriptionPhoto: string }) {
-  const lines = ['Quick Capture', `첫 약/주사 시간: ${firstMedicationTime}`, `다음 병원 방문: ${nextVisitDate}`];
+  const lines = ['빠른 기록', `첫 약/주사 시간: ${firstMedicationTime}`, `다음 병원 방문: ${nextVisitDate}`];
   if (prescriptionPhoto !== 'none') lines.push(`처방 사진: ${prescriptionPhoto}`);
   return lines.join('\n');
 }
@@ -67,7 +67,7 @@ function buildQuickCaptureConfirmItems({ firstMedicationTime, nextVisitDate }: {
       orderIndex: 0,
       userSelectedCardType: 'medication',
       scheduledAt: scheduledAtToday(firstMedicationTime),
-      description: 'Quick Capture에서 저장한 첫 시간이에요. 약 이름과 용량은 Full Setup에서 직접 확인해요.',
+      description: '빠른 기록에서 저장한 첫 시간이에요. 약 이름과 용량은 자세히 정리에서 직접 확인해요.',
       userMarkedImportant: true,
     },
     {
@@ -90,7 +90,7 @@ function toQuickCaptureCareCard(firstMedicationTime: string, coupleId: string, n
     assignee_role: 'primary_user',
     card_type: 'medication',
     title: `오늘 ${firstMedicationTime} 약/주사 확인`,
-    description: '나머지는 오늘 저녁 Full Setup에서 정리해요.',
+    description: '나머지는 오늘 저녁 자세히 정리에서 확인해요.',
     source_text: `오늘 ${firstMedicationTime} 약/주사 확인`,
     scheduled_at: scheduledAtToday(firstMedicationTime, now),
     care_date: null,

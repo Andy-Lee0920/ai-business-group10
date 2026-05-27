@@ -40,6 +40,8 @@ describe('schedule edit contract', () => {
     for (const source of [actionCard, todayScreen, calendarScreen]) {
       expect(source).toContain('/schedule/${');
     }
+    expect(editPage).toContain("redirect('/calendar')");
+    expect(editPage).toContain('isPresentationRequest');
     expect(editPage).toContain('ScheduleEditForm');
     expect(editPage).toContain("from('schedule_items')");
     expect(editPage).toContain(".eq('patient_id', user.id)");

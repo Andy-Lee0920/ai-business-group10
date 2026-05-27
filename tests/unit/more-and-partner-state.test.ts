@@ -3,8 +3,10 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { MORE_MENU_ITEMS } from '../../src/features/more/more-menu';
+import { MoreScreen } from '../../src/features/more/more-screen';
 import { PartnerView } from '../../src/features/partner/partner-view';
 import { partnerStateCopy } from '../../src/features/partner/partner-state';
+import type { PartnerLink } from '../../src/types/slc.types';
 
 const moreScreen = readFileSync('src/features/more/more-screen.tsx', 'utf8');
 const morePage = readFileSync('app/(authed)/more/page.tsx', 'utf8');
@@ -36,7 +38,8 @@ describe('More and partner read-only state contract', () => {
     expect(moreScreen).toContain('로그인 이메일');
     expect(moreScreen).toContain('provider');
     expect(moreScreen).toContain('파트너 연결');
-    expect(moreScreen).toContain('커플저널');
+    expect(moreScreen).toContain('공유 기록');
+    expect(moreScreen).not.toContain('커플저널');
     expect(moreScreen).toContain('/settings/community-nickname');
     expect(moreScreen).not.toContain('>더보기<');
     expect(morePage).toContain("permanentRedirect('/settings')");
@@ -80,6 +83,45 @@ ${partnerTokenPage}`).not.toContain(directImageTag);
     expect(partnerStateCopy('linked_with_schedule').title).toBe('오늘 상황');
     expect(partnerView).toContain('읽기 전용');
     expect(partnerView).not.toMatch(/수정|추가|완료하기|삭제/);
+  });
+
+  it('shows only one partner sharing state when approved and requested links coexist', () => {
+    const approvedLink: PartnerLink = {
+      id: 'approved-link',
+      patient_id: 'patient-1',
+      partner_id: 'partner-1',
+      invite_code: 'APPROVED-CODE',
+      status: 'approved',
+      approved_at: '2026-05-26T10:00:00.000Z',
+      partner_profile: { display_name: '파트너' },
+    };
+    const requestedLink: PartnerLink = {
+      id: 'requested-link',
+      patient_id: 'patient-1',
+      partner_id: 'partner-2',
+      invite_code: 'REQUESTED-CODE',
+      status: 'requested',
+      requested_at: '2026-05-26T10:05:00.000Z',
+      partner_profile: { display_name: '배우자' },
+    };
+
+    const markup = renderToStaticMarkup(React.createElement(MoreScreen, {
+      userId: 'patient-1',
+      existingLink: approvedLink,
+      pendingRequests: [requestedLink],
+      email: 'demo@fevio.app',
+      provider: 'presentation',
+      nickname: '페비오메이트',
+      privacyGateAccepted: true,
+      closedBetaStatus: 'closed beta',
+    }));
+
+    expect(markup).toContain('연결된 파트너');
+    expect(markup).toContain('연결 해제');
+    expect(markup).not.toContain('파트너 연결 요청이 있어요');
+    expect(markup).not.toContain('초대 코드 · 읽기 전용 연결');
+    expect(markup).not.toContain('APPROVED-CODE');
+    expect(markup).not.toContain('REQUESTED-CODE');
   });
 
   it('renders partner schedule status as read-only sentence copy', () => {
@@ -127,9 +169,10 @@ ${partnerTokenPage}`).not.toContain(directImageTag);
     }));
 
     expect(markup).toContain('파트너가 읽기 전용으로 일정을 확인하는 일러스트');
-    expect(markup).toContain('메노푸어 주사 완료했어요');
+    expect(markup).toContain('주사 일정 확인됐어요');
     expect(markup).toContain('다음은');
-    expect(markup).toContain('병원 방문 예정이에요');
+    expect(markup).toContain('병원 일정 예정이에요');
+    expect(markup).not.toContain('메노푸어');
     expect(markup).toContain('오늘 병원 방문 후 일정이 변경됐어요');
     expect(markup).toContain('읽기 전용');
     expect(markup).not.toMatch(/수정|추가|완료하기|삭제/);

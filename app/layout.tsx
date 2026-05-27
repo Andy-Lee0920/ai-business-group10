@@ -43,7 +43,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const presentationMode = isPresentationMode() ? '1' : '0';
   return (
     <html lang="ko" className={notoSansKR.variable}>
-      <body data-presentation-mode={presentationMode}>{children}</body>
+      <body
+        data-presentation-mode={presentationMode}
+        data-iphone-frame="0"
+        suppressHydrationWarning
+      >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var p=new URLSearchParams(location.search);var f=(p.get('frame')||'').toLowerCase();if(f==='iphone'||f==='1'||f==='true'||(p.get('device')||'').toLowerCase()==='iphone'){document.body.dataset.iphoneFrame='1';}}catch(e){}`,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

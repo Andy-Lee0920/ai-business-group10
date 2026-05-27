@@ -820,6 +820,110 @@
   }
 }
 
+@media (min-width: 700px) {
+  :global(body[data-presentation-mode='0']) .screen {
+    min-height: 100%;
+    padding: 34px 12px 0;
+  }
+
+  :global(body[data-presentation-mode='0']) .stepHeader {
+    gap: 10px;
+    margin-top: 30px;
+    margin-bottom: 24px;
+  }
+
+  :global(body[data-presentation-mode='0']) .sectionTitle {
+    max-width: 8.8em;
+    font-size: clamp(1.72rem, 4.8vw, 2.08rem);
+    line-height: 1.14;
+  }
+
+  :global(body[data-presentation-mode='0']) .questionLead {
+    max-width: 20em;
+    font-size: 0.92rem;
+    line-height: 1.56;
+  }
+
+  :global(body[data-presentation-mode='0']) .roleGrid {
+    gap: 12px;
+  }
+
+  :global(body[data-presentation-mode='0']) .roleCard {
+    min-height: 196px;
+    gap: 10px;
+    padding: 22px 12px 20px !important;
+    border-radius: 24px !important;
+  }
+
+  :global(body[data-presentation-mode='0']) .roleImageWrap {
+    width: 84px;
+    height: 84px;
+  }
+
+  :global(body[data-presentation-mode='0']) .roleCard strong {
+    font-size: 1.04rem;
+  }
+
+  :global(body[data-presentation-mode='0']) .roleCard small {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    line-height: 1.32;
+  }
+
+  :global(body[data-presentation-mode='0']) .bottomDock {
+    gap: 14px;
+    padding-top: 18px;
+  }
+
+  :global(body[data-presentation-mode='0']) .primaryCta,
+  :global(body[data-presentation-mode='0']) .softCta {
+    min-height: 54px !important;
+  }
+}
+
+@media (max-height: 780px), (max-width: 390px) {
+  .screen {
+    padding-top: 34px;
+  }
+
+  .stepHeader {
+    gap: 10px;
+    margin-top: 30px;
+    margin-bottom: 24px;
+  }
+
+  .sectionTitle {
+    font-size: clamp(1.58rem, 6.6vw, 2rem);
+    line-height: 1.15;
+  }
+
+  .questionLead {
+    font-size: 0.92rem;
+    line-height: 1.56;
+  }
+
+  .roleCard {
+    min-height: 206px;
+    gap: 10px;
+    padding: 22px 12px 20px !important;
+  }
+
+  .roleImageWrap {
+    width: 86px;
+    height: 86px;
+  }
+
+  .bottomDock {
+    gap: 14px;
+    padding-top: 18px;
+  }
+
+  .primaryCta,
+  .softCta {
+    min-height: 54px !important;
+  }
+}
+
 @media (max-width: 380px) {
   .roleGrid,
   .directFieldRow {

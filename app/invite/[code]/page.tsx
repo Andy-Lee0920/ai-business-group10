@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { isPresentationRequest } from '../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 
 interface InvitePageProps {
@@ -7,6 +9,9 @@ interface InvitePageProps {
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const { code } = await params;
+  const requestHeaders = await headers();
+  if (isPresentationRequest({ headers: requestHeaders })) redirect(`/privacy?mode=presentation&invite=${encodeURIComponent(code)}`);
+
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 

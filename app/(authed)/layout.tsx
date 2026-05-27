@@ -11,6 +11,8 @@ export const dynamic = 'force-dynamic';
 export default async function AuthedLayout({ children }: { children: React.ReactNode }) {
   const requestHeaders = await headers();
   const presentationMode = isPresentationRequest({ headers: requestHeaders });
+  const pathname = requestHeaders.get('x-fevio-pathname') ?? '';
+  const presentationPartnerSurface = presentationMode && pathname === '/partner';
   const skipSupabase = presentationMode;
   const supabase = skipSupabase ? null : await createCookieBackedSupabaseClient();
   const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
@@ -53,7 +55,7 @@ export default async function AuthedLayout({ children }: { children: React.React
     && !existingScheduleResult.error
     && !existingCareCardResult.error;
   const effectiveConsent = presentationMode && !user
-    ? { role: fallbackRole ?? 'patient' }
+    ? { role: presentationPartnerSurface ? 'partner' : fallbackRole ?? 'patient' }
     : recoveredConsent ?? (persistedRole
       ? { role: persistedRole }
       : (isMissingSlcTable(consentResult.error) || isMissingSlcTable(profileResult.error)) ? { role: fallbackRole ?? 'patient' } : null);

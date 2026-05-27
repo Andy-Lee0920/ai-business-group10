@@ -6,13 +6,14 @@ import { shouldResetAppSession } from './src/config/session-refresh';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const requestHeaders = withPathnameHeader(request);
 
   if (shouldResetAppSession(request.nextUrl)) {
     return NextResponse.redirect(new URL('/auth/reset', request.url));
   }
 
   if (isPresentationRequest(request)) {
-    return NextResponse.next({ request });
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,14 +23,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (cookiesToSet) => {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = NextResponse.next({ request: { headers: withPathnameHeader(request) } });
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         );
@@ -52,6 +53,12 @@ export async function middleware(request: NextRequest) {
   }
 
   return response;
+}
+
+function withPathnameHeader(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-fevio-pathname', request.nextUrl.pathname);
+  return requestHeaders;
 }
 
 export const config = {

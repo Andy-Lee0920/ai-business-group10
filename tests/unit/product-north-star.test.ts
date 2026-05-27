@@ -7,9 +7,9 @@ const northStarDoc = () => readFileSync('docs/01-product/fevio-product-north-sta
 describe('Fevio Product North Star contract', () => {
   it('keeps the production one-sentence product definition in code and docs', () => {
     const doc = northStarDoc();
-    expect(FEVIO_PRODUCT_NORTH_STAR.tagline).toBe('Same app. Shared state. Different experience.');
-    expect(FEVIO_PRODUCT_NORTH_STAR.oneSentence).toContain('Generative UI Care OS');
-    expect(FEVIO_PRODUCT_NORTH_STAR.productionLead).toContain('utility interface');
+    expect(FEVIO_PRODUCT_NORTH_STAR.tagline).toBe('병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.');
+    expect(FEVIO_PRODUCT_NORTH_STAR.oneSentence).toContain('치료 운영 앱');
+    expect(FEVIO_PRODUCT_NORTH_STAR.productionLead).toContain('병원 안내, 투약 시간, 주사 기록, 파트너 공유');
     expect(doc).toContain(FEVIO_PRODUCT_NORTH_STAR.tagline);
     expect(doc).toContain(FEVIO_PRODUCT_NORTH_STAR.oneSentence);
   });
@@ -24,6 +24,7 @@ describe('Fevio Product North Star contract', () => {
     expect(FEVIO_PRODUCT_NORTH_STAR.nonNegotiables).toContain('No static fake screen.');
     expect(FEVIO_PRODUCT_NORTH_STAR.nonNegotiables).toContain('No long explanatory phone copy.');
     expect(FEVIO_PRODUCT_NORTH_STAR.nonNegotiables).toContain('No partner copy-paste view.');
-    expect(FEVIO_PRODUCT_NORTH_STAR.primaryQuestion).toContain('shared care state');
+    expect(FEVIO_PRODUCT_NORTH_STAR.nonNegotiables).toContain('No unconfirmed AI output as an executable care action.');
+    expect(FEVIO_PRODUCT_NORTH_STAR.primaryQuestion).toContain('IVF 치료 실행 누락');
   });
 });

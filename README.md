@@ -26,11 +26,11 @@ IVF 치료는 복잡합니다. 진료 때마다 바뀌는 주사 종류·용량�
 
 ---
 
-**Same app. Shared state. Different experience.**
+**병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.**
 
-Fevio는 하나의 IVF care cycle state를 환자와 파트너의 역할에 맞는 utility interface로 변환하는 **state-driven Generative UI Care OS**입니다.
+Fevio는 IVF 치료자가 병원 안내와 투약 일정을 놓치지 않도록, 파트너와 함께 확인하고 기록하는 **치료 운영 앱**입니다.
 
-병원에서 들은 복잡한 지시사항을 사용자가 직접 확인하고, 오늘의 실행 카드·파트너가 도울 행동·치료 맥락에 맞는 홈 화면으로 바꿉니다. Fevio는 의료 판단, 진단, 용량 추천, 치료 전략 추천을 하지 않습니다.
+병원에서 들은 복잡한 지시사항을 사용자가 직접 확인하고, 오늘의 실행 카드·파트너가 도울 행동·치료 맥락에 맞는 홈 화면으로 바꿉니다. AI/OCR 결과는 확정 전 후보일 뿐이며, 사용자가 확인하기 전에는 실행 일정이 되지 않습니다. Fevio는 의료 판단, 진단, 용량 추천, 치료 전략 추천을 하지 않습니다.
 
 - Product North Star: [`docs/01-product/fevio-product-north-star.md`](docs/01-product/fevio-product-north-star.md)
 - SLC 기준: [`docs/01-product/slc-target.md`](docs/01-product/slc-target.md)

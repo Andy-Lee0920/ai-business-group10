@@ -133,13 +133,25 @@ body {
 
 @media (min-width: 700px) {
   /* ── presentation-mode=0 : 폰 프레임 시뮬레이션 ── */
-  body[data-presentation-mode="0"] {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) {
     height: 100%;
     overflow: hidden;
   }
 
-  body[data-presentation-mode="0"] .app-shell,
-  body[data-presentation-mode="0"] .fevio-authed-frame {
+  body[data-iphone-frame="1"] {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(255, 232, 218, 0.86), transparent 34rem),
+      radial-gradient(circle at 84% 6%, rgba(255, 246, 238, 0.82), transparent 34rem),
+      radial-gradient(circle at 50% 110%, rgba(248, 238, 231, 0.72), transparent 32rem),
+      linear-gradient(180deg, #fff8f2 0%, #f8eee7 100%);
+  }
+
+  body[data-iphone-frame="1"] nextjs-portal {
+    display: none !important;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame {
     position: relative;
     width: min(100vw, var(--fevio-phone-frame-max));
     max-width: var(--fevio-phone-frame-max);
@@ -161,16 +173,16 @@ body {
     scrollbar-width: none;
   }
 
-  body[data-presentation-mode="0"] .app-shell {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell {
     overflow-y: auto;
   }
 
-  body[data-presentation-mode="0"] .fevio-authed-frame {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame {
     overflow-y: hidden;
     background: var(--slc-bg);
   }
 
-  body[data-presentation-mode="0"] .fevio-authed-main {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-main {
     position: relative;
     height: 100%;
     min-height: 0;
@@ -180,13 +192,13 @@ body {
     scrollbar-width: none;
   }
 
-  body[data-presentation-mode="0"] .app-shell::-webkit-scrollbar,
-  body[data-presentation-mode="0"] .fevio-authed-main::-webkit-scrollbar {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell::-webkit-scrollbar,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-main::-webkit-scrollbar {
     display: none;
   }
 
-  body[data-presentation-mode="0"] .app-shell::before,
-  body[data-presentation-mode="0"] .fevio-authed-frame::before {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell::before,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame::before {
     z-index: 80;
     display: block;
     width: var(--fevio-dynamic-island-width);
@@ -202,31 +214,31 @@ body {
     transform: translateX(-50%);
   }
 
-  body[data-presentation-mode="0"] .app-shell::before {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell::before {
     position: fixed;
     top: calc(24px + var(--fevio-dynamic-island-top-offset));
     left: 50%;
   }
 
-  body[data-presentation-mode="0"] .fevio-authed-frame::before {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame::before {
     position: absolute;
     top: var(--fevio-dynamic-island-top-offset);
     left: 50%;
   }
 
-  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-bottom-nav {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-bottom-nav {
     position: absolute !important;
     bottom: 0 !important;
   }
 
-  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-bottom-sheet-layer,
-  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-community-sheet-layer,
-  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-confirm-sheet-overlay {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-bottom-sheet-layer,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-community-sheet-layer,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-confirm-sheet-overlay {
     position: absolute !important;
     inset: 0 !important;
   }
 
-  body[data-presentation-mode="0"] .fevio-authed-frame .fevio-post-clinic-banner {
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-post-clinic-banner {
     position: absolute !important;
   }
 }

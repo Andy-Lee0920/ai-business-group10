@@ -1,6 +1,6 @@
 # Fevio Care OS Architecture Scorecard
 
-This scorecard converts the 2026-05-12 architecture advisory images into implementation-grade grading criteria. The metric is not issue count; it is whether Fevio proves: **Same app. Shared state. Different experience.**
+This scorecard converts the 2026-05-12 architecture advisory images into implementation-grade grading criteria. The metric is not issue count; it is whether Fevio proves: **병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.**
 
 Current baseline: 54 / 100
 Next target: 80 / 100

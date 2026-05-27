@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+async function acceptPrivacyGate(page: import('@playwright/test').Page) {
+  await page.context().addCookies([
+    { name: 'fevio_privacy_gate_v1', value: 'accepted', url: 'http://127.0.0.1:3000' },
+    { name: 'fevio_privacy_accepted', value: '1', url: 'http://127.0.0.1:3000' },
+    { name: 'fevio_privacy_gate_v1', value: 'accepted', url: 'http://localhost:3000' },
+    { name: 'fevio_privacy_accepted', value: '1', url: 'http://localhost:3000' },
+  ]);
+}
+
 test('desktop renders Fevio inside an iPhone 17 shell with internal phone scroll', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');
@@ -61,8 +70,9 @@ test('mobile viewport keeps shell readable without horizontal overflow', async (
 });
 
 test('onboarding uses real mobile width without an artificial phone bezel', async ({ page }) => {
-  await page.context().addCookies([{ name: 'fevio_privacy_accepted', value: '1', domain: '127.0.0.1', path: '/' }]);
+  await acceptPrivacyGate(page);
   await page.goto('/onboarding');
+  await expect(page.getByRole('heading', { name: /소중한 시작을/ })).toBeVisible();
 
   const metrics = await page.evaluate(() => {
     const shell = document.querySelector('main.app-shell');
@@ -82,25 +92,25 @@ test('onboarding uses real mobile width without an artificial phone bezel', asyn
 });
 
 
-test('desktop onboarding lets the screen scroll behind the Dynamic Island overlay', async ({ page }) => {
+test('desktop onboarding keeps the Dynamic Island fixed over the phone frame', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.context().addCookies([{ name: 'fevio_privacy_accepted', value: '1', domain: '127.0.0.1', path: '/' }]);
+  await acceptPrivacyGate(page);
   await page.goto('/onboarding');
 
   const shellMotion = await page.locator('main.app-shell').evaluate((shell) => {
     const style = getComputedStyle(shell);
     const before = getComputedStyle(shell, '::before');
-    const card = shell.querySelector('section.hero-card') as HTMLElement | null;
     const beforeTop = before.top;
-    const cardTopBefore = card?.getBoundingClientRect().top ?? 0;
+    const scrollRange = shell.scrollHeight - shell.clientHeight;
     shell.scrollTop = 72;
-    const cardTopAfter = card?.getBoundingClientRect().top ?? 0;
+
     return {
       paddingTop: style.paddingTop,
       overflowY: style.overflowY,
       islandPosition: before.position,
       islandTopStable: getComputedStyle(shell, '::before').top === beforeTop,
-      contentMovedBehindIsland: shell.scrollTop > 0 && cardTopAfter < cardTopBefore,
+      scrollTop: shell.scrollTop,
+      scrollRange,
     };
   });
 
@@ -109,6 +119,33 @@ test('desktop onboarding lets the screen scroll behind the Dynamic Island overla
     overflowY: 'auto',
     islandPosition: 'fixed',
     islandTopStable: true,
-    contentMovedBehindIsland: true,
   });
+  expect(shellMotion.scrollTop).toBeLessThanOrEqual(shellMotion.scrollRange);
+});
+
+test('desktop phone frame keeps role selection CTA visible without page scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await acceptPrivacyGate(page);
+  await page.goto('/onboarding');
+  await page.getByRole('button', { name: /시작하기/ }).click();
+
+  const metrics = await page.evaluate(() => {
+    const shell = document.querySelector('main.app-shell');
+    const cta = Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('다음'));
+    const roleCards = Array.from(document.querySelectorAll('button[class*="roleCard"]'));
+    const shellBox = shell?.getBoundingClientRect();
+    const ctaBox = cta?.getBoundingClientRect();
+
+    return {
+      documentScrollHeight: document.documentElement.scrollHeight,
+      roleCardHeights: roleCards.map((card) => Math.round(card.getBoundingClientRect().height)),
+      shellBottom: shellBox?.bottom ?? 0,
+      ctaBottom: ctaBox?.bottom ?? 0,
+      viewportHeight: window.innerHeight,
+    };
+  });
+
+  expect(metrics.documentScrollHeight).toBeLessThanOrEqual(metrics.viewportHeight);
+  expect(Math.max(...metrics.roleCardHeights)).toBeLessThanOrEqual(215);
+  expect(metrics.ctaBottom).toBeLessThanOrEqual(metrics.shellBottom - 8);
 });

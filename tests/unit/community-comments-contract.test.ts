@@ -45,6 +45,7 @@ describe('community comments contract', () => {
         }],
       }],
       communityAudience: 'primary_feed',
+      initialTab: 'community',
     }));
 
     expect(markup).toContain('댓글 남기기');

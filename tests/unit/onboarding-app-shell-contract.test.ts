@@ -230,6 +230,21 @@ describe('app onboarding shell contract', () => {
     expect(onboardingStyles).toContain('height: 100px');
   });
 
+  it('compacts onboarding role selection inside the desktop phone frame', () => {
+    const compactFrameBlock = onboardingStyles.slice(
+      onboardingStyles.indexOf(":global(body[data-presentation-mode='0']) .screen"),
+      onboardingStyles.indexOf('@media (max-height: 780px)'),
+    );
+
+    expect(compactFrameBlock).toContain('min-height: 100%');
+    expect(compactFrameBlock).toContain('margin-top: 30px');
+    expect(compactFrameBlock).toContain('margin-bottom: 24px');
+    expect(compactFrameBlock).toContain('min-height: 196px');
+    expect(compactFrameBlock).toContain('width: 84px');
+    expect(compactFrameBlock).toContain('height: 84px');
+    expect(compactFrameBlock).toContain('min-height: 54px !important');
+  });
+
   it('keeps onboarding back navigation as a compact top control', () => {
     expect(onboardingClient).toContain("activeStep !== 'brand_intro'");
     expect(onboardingClient).toContain('aria-label="이전 단계로 돌아가기"');

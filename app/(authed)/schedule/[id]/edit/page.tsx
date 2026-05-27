@@ -1,5 +1,7 @@
+import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { ScheduleEditForm } from '../../../../../src/features/schedule/schedule-edit-form';
+import { isPresentationRequest } from '../../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 import type { ScheduleItem } from '../../../../../src/types/slc.types';
 
@@ -10,6 +12,9 @@ type EditSchedulePageProps = {
 };
 
 export default async function EditSchedulePage({ params }: EditSchedulePageProps) {
+  const requestHeaders = await headers();
+  if (isPresentationRequest({ headers: requestHeaders })) redirect('/calendar');
+
   const { id } = await params;
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -127,7 +127,7 @@ test('photo processing uses native picker, shows progress, and sends edited cand
     await route.fulfill({
       status: 200,
       contentType: 'text/html; charset=utf-8',
-      body: '<main><h1>오늘 일정</h1><article>수정한 고날에프 225 IU</article></main>',
+      body: '<main><h1>오늘 실행</h1><article>수정한 고날에프 225 IU</article></main>',
     });
   });
 
@@ -161,7 +161,7 @@ test('photo processing uses native picker, shows progress, and sends edited cand
   await expect(page.getByRole('heading', { name: '확인할 일정 후보를 만들었어요' })).toBeVisible();
   await expect(page.getByLabel('확인할 일정 요약')).toContainText('수정한 고날에프');
   await page.getByRole('button', { name: '시작하기' }).click();
-  await expect(page.getByRole('heading', { name: '오늘 일정' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘 실행' })).toBeVisible();
   await expect(page.getByText('수정한 고날에프 225 IU')).toBeVisible();
 });
 

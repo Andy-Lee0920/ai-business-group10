@@ -25,6 +25,7 @@ export function PartnerRoleSurface({
   const orderedItems = [...items].sort((left, right) => Number(canRecordAssist(right)) - Number(canRecordAssist(left)));
   const primary = orderedItems[0] ?? items[0];
   const supporting = orderedItems.filter((item) => item.safe_id !== primary.safe_id);
+  const avoidPrompts = Array.from(new Set(orderedItems.map((item) => item.avoid_prompt.trim()).filter(Boolean)));
 
   return (
     <section className={styles.surface} aria-label="파트너 역할 카드" aria-live={live ? 'polite' : undefined} style={signal ? ({ '--fevio-surface-intensity': signal.intensity } as React.CSSProperties) : undefined} data-urgency-tier={signal?.urgencyTier} data-intensity={signal?.intensity.toFixed(2)}>
@@ -91,8 +92,8 @@ export function PartnerRoleSurface({
       <Card as="section" className={styles.avoidCard} aria-labelledby="partner-avoid-title">
         <h3 id="partner-avoid-title">오늘 피하기</h3>
         <div className={styles.chipRow}>
-          {orderedItems.map((item) => (
-            <span key={item.safe_id}>{item.avoid_prompt}</span>
+          {avoidPrompts.map((prompt) => (
+            <span key={prompt}>{prompt}</span>
           ))}
         </div>
       </Card>

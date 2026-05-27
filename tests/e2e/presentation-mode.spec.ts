@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-
 test('presentation landing opens the dual-view demo without auth steps', async ({ page }) => {
   await page.goto('/');
 
@@ -9,55 +8,64 @@ test('presentation landing opens the dual-view demo without auth steps', async (
   await expect(page.getByText('Privacy Gate부터 보기')).toHaveCount(0);
 });
 
-test('presentation home defaults to an immersive injection-day care instrument', async ({ page }) => {
+test('presentation home defaults to a full-bleed care-state instrument', async ({ page }) => {
   await page.goto('/home?care=injection');
 
-  await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', 'injection');
-  const phaseNav = page.getByRole('navigation', { name: '케어 단계 전환' });
-  await expect(phaseNav).toBeVisible();
-  await expect(phaseNav.getByRole('link', { name: '주사', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByTestId('injection-countdown-hero')).toContainText('남은 시간');
-  await expect(page.getByTestId('mission-card-pair')).toContainText('오늘의 미션');
-  await expect(page.getByTestId('mission-card-pair')).toContainText('고날에프');
-  await expect(page.getByTestId('quick-stat-row')).toContainText('파트너');
-  await expect(page.getByTestId('partner-connect-bar')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /준비 체크리스트 보기/ })).toBeVisible();
-  await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
+  const screen = page.locator('#home-screen');
+  const hero = page.getByTestId('home-full-bleed-hero');
+  const operation = page.getByTestId('home-operation-screen');
 
-  const missionTop = await page.getByTestId('mission-card-pair').evaluate((element) => element.getBoundingClientRect().top);
-  const viewportHeight = await page.evaluate(() => window.innerHeight);
-  expect(missionTop).toBeLessThan(viewportHeight * 0.36);
+  await expect(screen).toHaveAttribute('data-home-experience', 'care-state-hero');
+  await expect(screen).toHaveAttribute('data-hero-surface', /brief|execution/);
+  await expect(hero).toBeVisible();
+  await expect(page.getByTestId('home-hero-zone')).toBeVisible();
+  await expect(operation).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘 실행' })).toBeVisible();
+  await expect(page.getByTestId('home-hero-zone')).toContainText(/확인이 필요한 일정이 있어요|병원 안내 기준으로 다음 실행을 정리했어요\.|천천히 준비하면 돼요|오늘은 예정된 일정이 없어요/);
+  await expect(page.getByText('확인할 항목은 아래에 접어뒀어요')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: '일정 날짜' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '오늘 확인할 항목' })).toBeVisible();
+  await expect(page.getByRole('region', { name: '병원 안내 기준' })).toBeVisible();
+  await expect(page.getByTestId('partner-connect-bar')).toHaveCount(0);
+  await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW|오늘의 배아/)).toHaveCount(0);
+
+  const geometry = await page.evaluate(() => {
+    const heroElement = document.querySelector('[data-testid="home-full-bleed-hero"]');
+    const operationElement = document.querySelector('[data-testid="home-operation-screen"]');
+    if (!heroElement || !operationElement) return null;
+    const heroRect = heroElement.getBoundingClientRect();
+    const operationRect = operationElement.getBoundingClientRect();
+    return {
+      heroPosition: getComputedStyle(heroElement).position,
+      heroHeight: heroRect.height,
+      heroBottom: heroRect.bottom,
+      operationTop: operationRect.top,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(geometry).not.toBeNull();
+  expect(geometry!.heroPosition).toBe('sticky');
+  expect(geometry!.heroHeight).toBeGreaterThan(geometry!.viewportHeight * 0.55);
+  expect(Math.abs(geometry!.operationTop - geometry!.heroBottom)).toBeLessThan(28);
 });
 
-test('presentation home applies the immersive/adaptive contract to every care day', async ({ page }) => {
-  const scenarios = [
-    { care: 'injection', phase: 'injection', tab: '주사', heading: '주사 준비', action: '준비 체크리스트 보기' },
-    { care: 'clinic', phase: 'clinic', tab: '병원', heading: '다음 일정이 바뀌었는지 확인해요', action: '다음 안내 확인하기' },
-    { care: 'waiting', phase: 'waiting', tab: '대기', heading: '기다리는 날', action: null },
-  ];
+test('presentation home keeps the care-state contract across query variants', async ({ page }) => {
+  for (const care of ['injection', 'clinic', 'waiting'] as const) {
+    await page.goto(`/home?care=${care}`);
 
-  for (const scenario of scenarios) {
-    await page.goto(`/home?care=${scenario.care}`);
-    const scopedPhaseNav = page.getByRole('navigation', { name: '케어 단계 전환' });
-    await expect(page.getByTestId('care-atmosphere-layer')).toHaveAttribute('data-phase', scenario.phase);
-    await expect(scopedPhaseNav.getByRole('link', { name: scenario.tab, exact: true })).toHaveAttribute('aria-current', 'page');
-    if (scenario.care === 'injection') {
-      await expect(page.getByTestId('injection-countdown-hero')).toContainText('남은 시간');
-    } else {
-      await expect(page.getByTestId('compact-hero-greeting')).toContainText(scenario.heading);
-    }
+    await expect(page.locator('#home-screen')).toHaveAttribute('data-home-experience', 'care-state-hero');
+    await expect(page.getByTestId('home-full-bleed-hero')).toBeVisible();
+    await expect(page.getByTestId('home-hero-zone')).toBeVisible();
+    await expect(page.getByTestId('home-operation-screen')).toBeVisible();
+    await expect(page.getByRole('navigation', { name: '일정 날짜' }).getByRole('button', { name: '오늘' })).toBeVisible();
     await expect(page.getByTestId('partner-connect-bar')).toHaveCount(0);
-    await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW/)).toHaveCount(0);
-
-    if (scenario.action) {
-      await expect(page.getByRole('button', { name: new RegExp(scenario.action) })).toBeVisible();
-    }
+    await expect(page.getByText(/Dynamic Home|signalGrid|오늘의 실행 카드|LIVE SYNC|rev \d+|CARE FLOW|오늘의 배아/)).toHaveCount(0);
   }
 });
 
-test('presentation home changes component order by care phase', async ({ page }) => {
+test('presentation home orders the hero before the operation surface', async ({ page }) => {
   const orders: Record<string, string[]> = {};
-  const trackedIds = new Set(['injection-countdown-hero', 'compact-hero-greeting', 'mission-card-pair', 'quick-stat-row', 'home-action-card', 'partner-connect-bar']);
+  const trackedIds = new Set(['home-full-bleed-hero', 'home-hero-zone', 'home-operation-screen']);
 
   for (const care of ['injection', 'clinic', 'waiting'] as const) {
     await page.goto(`/home?care=${care}`);
@@ -69,13 +77,10 @@ test('presentation home changes component order by care phase', async ({ page })
     Array.from(trackedIds));
   }
 
-  expect(orders.injection).toEqual(['injection-countdown-hero', 'mission-card-pair', 'quick-stat-row']);
-  expect(orders.clinic[0]).toBe('compact-hero-greeting');
-  expect(orders.clinic).toContain('home-action-card');
-  expect(orders.clinic).not.toEqual(orders.injection);
-  expect(orders.waiting[1]).toBe('home-action-card');
-  expect(orders.waiting).not.toContain('partner-connect-bar');
-  expect(new Set(Object.values(orders).map((order) => order.join('>'))).size).toBe(3);
+  for (const order of Object.values(orders)) {
+    expect(order.slice(0, 3)).toEqual(['home-full-bleed-hero', 'home-hero-zone', 'home-operation-screen']);
+  }
+  expect(new Set(Object.values(orders).map((order) => order.join('>'))).size).toBe(1);
 });
 
 test('presentation capture pre-fills the clinic memo sample', async ({ page }) => {

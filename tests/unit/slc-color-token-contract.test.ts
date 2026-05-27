@@ -62,14 +62,17 @@ describe('SLC color token contract', () => {
   });
 
 
-  it('keeps records journal/shared-record preview labels away from coral', () => {
+  it('keeps records execution/shared-record preview labels away from coral', () => {
     const records = [
+      readFileSync('src/features/records/records-screen.tsx', 'utf8'),
       readFileSync('src/features/records/journal/journal-preview.tsx', 'utf8'),
       readFileSync('src/features/records/community/community-preview.tsx', 'utf8'),
     ].join('\n');
 
-    expect(records).not.toContain("커플저널</p>");
-    expect(records).toContain("커플저널</span>");
+    expect(records).not.toContain('커플저널');
+    expect(records).not.toContain('오늘의 기분');
+    expect(records).toContain("치료 실행 기록</span>");
+    expect(records).toContain("파트너 확인 메모</span>");
     expect(records).not.toContain("공유 기록</p>");
     expect(records).toContain("공유 기록</span>");
     expect(records).toContain("color: 'var(--fevio-sage-dark)'");
@@ -159,7 +162,7 @@ describe('SLC color token contract', () => {
     expect(homeDemo).not.toContain('Fevio scenario testbed');
     expect(homeDemo).not.toContain('PresentationTestbedNav');
     expect(homeDemo).toContain('<TodayScreen');
-    expect(homeDemo).toContain('병원 안내 기준으로 오늘 일정을 정리했어요.');
+    expect(homeDemo).toContain('병원 안내 기준으로 다음 실행을 정리했어요.');
     expect(homeDemo).not.toContain('StageHomeScreen');
     expect(testbedNav).toContain("background: active ? 'var(--slc-coral)' : 'rgba(255, 255, 255, 0.72)'"
     );

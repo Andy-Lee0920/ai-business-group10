@@ -5,53 +5,16 @@
 
 .sheetHeader {
   display: grid;
+  gap: 14px;
+  padding: 0 6px 4px;
 }
 
-.liftedSheetHeader {
-  display: grid;
-  gap: 8px;
-  padding-top: 2px;
-}
-
-.liftedSheetHeaderActive {
-  /* active state — triggers countdownSheetLift reveal */
-}
-
-.countdownSheetLift {
-  display: grid;
-  justify-items: center;
-  gap: 0;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-  transform: translateY(20px) scale(0.94);
-  /* height changes instantly (no transition) to avoid scroll-time reflow */
-  transition: opacity 280ms ease, transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  will-change: opacity, transform;
-}
-
-.liftedSheetHeaderActive .countdownSheetLift {
-  height: 70px;
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-.countdownSheetArc {
-  height: 48px;
-  overflow: hidden;
-  display: grid;
-  place-items: start center;
-}
-
-.countdownSheetTime {
-  margin-top: -4px;
-  color: var(--slc-text);
-  font-size: 19px;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1;
+.sheetHandle {
+  justify-self: center;
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(121, 108, 98, 0.18);
 }
 
 @keyframes home-sheet-slide-up {
@@ -65,8 +28,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .actionSheet,
-  .countdownSheetLift {
+  .actionSheet {
     animation: none;
     transition: none;
   }

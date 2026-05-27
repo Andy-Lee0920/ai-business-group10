@@ -64,7 +64,7 @@ const MODE_COPY = {
     applyLabel: '일정 적용',
   },
   memo: {
-    entryTitle: '진료 내용을\\n남겨주세요',
+    entryTitle: '진료 내용을 남겨주세요',
     entrySubtitle: '병원에서 확인한 다음 일정, 약 변경, 메모만 차분히 정리해요.',
     methodLabel: '진료 내용 입력 방법',
     photoAction: '안내문 사진으로 남기기',
