@@ -15,11 +15,9 @@ export async function POST(request: NextRequest) {
 }
 
 async function dispatch(request: NextRequest) {
-  const secrets = [process.env.REMINDER_DISPATCH_SECRET?.trim(), process.env.CRON_SECRET?.trim()]
-    .filter((value): value is string => Boolean(value));
-  if (!secrets.length) return NextResponse.json({ error: 'Reminder dispatch secret is not configured.' }, { status: 503 });
-  const authorization = request.headers.get('authorization');
-  if (!secrets.some((secret) => authorization === `Bearer ${secret}`)) {
+  const auth = verifyCronAuthorization(request);
+  if (!auth.ok) {
+    logCronAuthRejection(auth.reason);
     return NextResponse.json({ error: 'Unauthorized reminder dispatch.' }, { status: 401 });
   }
 
@@ -33,4 +31,25 @@ async function dispatch(request: NextRequest) {
   });
 
   return NextResponse.json({ ok: true, result }, { headers: { 'cache-control': 'no-store' } });
+}
+
+type CronAuthFailureReason = 'cron_secret_unconfigured' | 'missing_authorization' | 'malformed_authorization' | 'invalid_token';
+
+function verifyCronAuthorization(request: NextRequest): { ok: true } | { ok: false; reason: CronAuthFailureReason } {
+  const secret = process.env.CRON_SECRET?.trim();
+  if (!secret) return { ok: false, reason: 'cron_secret_unconfigured' };
+
+  const authorization = request.headers.get('authorization');
+  if (!authorization) return { ok: false, reason: 'missing_authorization' };
+
+  const match = /^Bearer\s+(.+)$/u.exec(authorization);
+  const token = match?.[1]?.trim();
+  if (!token) return { ok: false, reason: 'malformed_authorization' };
+  if (token !== secret) return { ok: false, reason: 'invalid_token' };
+
+  return { ok: true };
+}
+
+function logCronAuthRejection(reason: CronAuthFailureReason) {
+  console.warn({ event: 'reminder_dispatch.auth_rejected', reason });
 }

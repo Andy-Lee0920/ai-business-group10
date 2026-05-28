@@ -17,7 +17,6 @@ describe('reminder infrastructure contract', () => {
     expect(env).toContain('VAPID_PUBLIC_KEY=');
     expect(env).toContain('VAPID_PRIVATE_KEY=');
     expect(env).toContain('VAPID_SUBJECT=');
-    expect(env).toContain('REMINDER_DISPATCH_SECRET=');
     expect(env).toContain('CRON_SECRET=');
     expect(env).not.toMatch(/re_[A-Za-z0-9]/u);
   });
@@ -30,6 +29,8 @@ describe('reminder infrastructure contract', () => {
     expect(migration).toContain('create extension if not exists pg_net');
     expect(migration).not.toContain('create extension if not exists vault');
     expect(migration).toContain('cron.schedule');
+    expect(migration.indexOf("cron.unschedule('fevio-reminder-check')")).toBeLessThan(migration.indexOf('cron.schedule'));
+    expect(migration.match(/cron\.schedule\(/gu)).toHaveLength(1);
     expect(migration).toContain('fevio-reminder-check');
     expect(migration).toContain("'* * * * *'");
     expect(migration).toContain('net.http_post');
@@ -39,6 +40,14 @@ describe('reminder infrastructure contract', () => {
     expect(migration).toContain('fevio_app_url');
     expect(migration).toContain('fevio_cron_secret');
     expect(migration).not.toMatch(/project-oznp0\.vercel\.app|sb_secret_|eyJ|Bearer\s+[A-Za-z0-9_-]{16,}/u);
+  });
+
+  it('adds an explicit table-level reminder dispatch unique constraint without a fire window column', () => {
+    const migration = readFileSync('supabase/migrations/202605290001_reminder_dispatches_card_time_channel_unique.sql', 'utf8');
+    expect(migration).toContain('reminder_dispatches_card_time_channel_unique');
+    expect(migration).toContain('unique (card_id, scheduled_at, channel)');
+    expect(migration).toContain('count(*) > 1');
+    expect(migration).not.toMatch(/fire_window/iu);
   });
 
   it('extends reminder dispatch storage for web push T-60/T-15 channels and a raw-memo-free push candidate RPC', () => {
