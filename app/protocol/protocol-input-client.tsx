@@ -44,6 +44,7 @@ export function ProtocolInputClient() {
     if (!captureIds) return;
     sessionStorage.setItem('fevio.splitReview', JSON.stringify({
       ...captureIds,
+      rawText: rawInstruction,
       candidates: drafts.map((item) => ({
         sourceText: item.sourceText,
         sourceOffsetStart: item.sourceOffsetStart,

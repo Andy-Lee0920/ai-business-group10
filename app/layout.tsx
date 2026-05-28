@@ -3,6 +3,7 @@ import { Noto_Sans_KR } from 'next/font/google';
 import { isPresentationMode } from '../src/config';
 import './globals.css';
 import './fevio-ui.css';
+import './capture-flow.css';
 
 const notoSansKR = Noto_Sans_KR({
   subsets: ['latin'],
