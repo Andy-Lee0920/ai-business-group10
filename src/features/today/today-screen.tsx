@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, BellOff } from "lucide-react";
 import { ActionCard } from "../../components/action-card";
 import { ConfirmSheet } from "../../components/confirm-sheet";
 import { EmptyHomeActions } from "../../components/home/DailyBrief";
@@ -34,13 +33,9 @@ import {
   isInInjectionCountdownWindow,
   secondsUntilInjection,
 } from "../adaptive-home/injection-timing";
-import {
-  enablePushReminderSubscription,
-  getPwaInstallGuidance,
-  type PushReminderSubscriptionStatus,
-} from "../../lib/pwa-push-client";
 import { pickHeroSurface } from "../../lib/brief/priority";
 import { FEVIO_CUSTOMER_EXPERIENCE_JOBS } from "../../product/north-star";
+import { PushPermissionCta } from "./PushPermissionCta";
 import styles from "./today-screen.module.css";
 
 interface TodayScreenProps {
@@ -65,7 +60,6 @@ type HeroStory =
   | { kind: "quiet"; focus: HomeFocus };
 
 const DAY_LABELS = ["오늘", "내일", "모레"] as const;
-const HOME_REMINDER_SETTING_KEY = "fevio_home_reminder_enabled";
 const HOME_SOFT_CORAL = "#E76551";
 const HOME_SOFT_CORAL_DEEP = "#CF5847";
 const HOME_SOFT_CORAL_LIGHT = "#FDE8DF";
@@ -292,47 +286,11 @@ export function TodayScreen({
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
   const [confirmPortal, setConfirmPortal] = useState<HTMLElement | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [pushSubscriptionStatus, setPushSubscriptionStatus] =
-    useState<PushReminderSubscriptionStatus>("idle");
-  const [pwaInstallGuidance, setPwaInstallGuidance] = useState<
-    "ios_add_to_home_screen" | "none"
-  >("none");
-  const [reminderPreferenceLoaded, setReminderPreferenceLoaded] =
-    useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setConfirmPortal(document.getElementById("fevio-confirm-portal"));
   }, []);
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(HOME_REMINDER_SETTING_KEY);
-      if (stored === "off") setReminderEnabled(false);
-      if (stored === "on") setReminderEnabled(true);
-    } catch {
-      // localStorage access can fail in restricted browser modes.
-    } finally {
-      setReminderPreferenceLoaded(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    setPwaInstallGuidance(getPwaInstallGuidance());
-  }, []);
-
-  useEffect(() => {
-    if (!reminderPreferenceLoaded) return;
-    try {
-      window.localStorage.setItem(
-        HOME_REMINDER_SETTING_KEY,
-        reminderEnabled ? "on" : "off",
-      );
-    } catch {
-      // localStorage access can fail in restricted browser modes.
-    }
-  }, [reminderEnabled, reminderPreferenceLoaded]);
 
   useEffect(() => {
     const id = setInterval(() => setItems((prev) => [...prev]), 1_000);
@@ -402,24 +360,6 @@ export function TodayScreen({
     operationalItems.find((item) => item.type === "clinic") ??
     null;
 
-  const handleReminderToggle = useCallback(async () => {
-    if (reminderEnabled) {
-      setReminderEnabled(false);
-      setPushSubscriptionStatus("idle");
-      return;
-    }
-
-    if (pwaInstallGuidance === "ios_add_to_home_screen") {
-      setPushSubscriptionStatus("unsupported");
-      return;
-    }
-
-    setPushSubscriptionStatus("requesting");
-    const status = await enablePushReminderSubscription();
-    setPushSubscriptionStatus(status);
-    if (status === "subscribed") setReminderEnabled(true);
-  }, [pwaInstallGuidance, reminderEnabled]);
-
   const handleComplete = useCallback(
     async (site?: InjectionSite) => {
       if (!activeItem) return;
@@ -468,12 +408,7 @@ export function TodayScreen({
           transition: "background 0.4s ease",
         }}
       >
-        <Header
-          reminderEnabled={reminderEnabled}
-          onToggleReminder={handleReminderToggle}
-          pushSubscriptionStatus={pushSubscriptionStatus}
-          pwaInstallGuidance={pwaInstallGuidance}
-        />
+        <Header />
         <HeroZone
           dailyBrief={dailyBrief}
           priority={priority.heroSurface}
@@ -2076,19 +2011,8 @@ function heroCtaStyle(accentColor: string) {
   };
 }
 
-function Header({
-  reminderEnabled,
-  onToggleReminder,
-  pushSubscriptionStatus,
-  pwaInstallGuidance,
-}: {
-  reminderEnabled: boolean;
-  onToggleReminder: () => void;
-  pushSubscriptionStatus: PushReminderSubscriptionStatus;
-  pwaInstallGuidance: "ios_add_to_home_screen" | "none";
-}) {
+function Header() {
   const today = new Date();
-  const ReminderIcon = reminderEnabled ? Bell : BellOff;
   return (
     <header
       id="home-header"
@@ -2122,42 +2046,10 @@ function Header({
           오늘 실행
         </h1>
       </div>
-      <div style={{ display: "grid", justifyItems: "end", gap: 6 }}>
-        <button
-          type="button"
-          aria-pressed={reminderEnabled}
-          aria-label={reminderEnabled ? "홈 알림 끄기" : "홈 알림 켜기"}
-          data-reminder-state={reminderEnabled ? "on" : "off"}
-          data-push-subscription-status={pushSubscriptionStatus}
-          data-testid="home-reminder-toggle"
-          onClick={onToggleReminder}
-          style={reminderToggleStyle(reminderEnabled)}
-        >
-          <ReminderIcon aria-hidden="true" size={20} strokeWidth={2.35} />
-          <span
-            aria-hidden="true"
-            style={reminderToggleDotStyle(reminderEnabled)}
-          />
-        </button>
-        {pwaInstallGuidance === "ios_add_to_home_screen" && (
-          <p style={iosInstallHintStyle}>
-            iPhone 알림은 홈 화면에 추가한 뒤 켤 수 있어요
-          </p>
-        )}
-      </div>
+      <PushPermissionCta />
     </header>
   );
 }
-
-const iosInstallHintStyle = {
-  maxWidth: 132,
-  margin: 0,
-  color: "var(--slc-muted)",
-  fontSize: 10,
-  fontWeight: 700,
-  lineHeight: 1.35,
-  textAlign: "right",
-} as const;
 
 function DayTabs({
   selectedDay,
@@ -2435,45 +2327,6 @@ function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
 
 function isOnDay(iso: string, offset: DayOffset) {
   return isInKstDay(iso, offset);
-}
-
-function reminderToggleStyle(enabled: boolean) {
-  return {
-    width: 44,
-    height: 44,
-    padding: 0,
-    borderRadius: 999,
-    background: enabled
-      ? `linear-gradient(135deg, rgba(255, 255, 255, 0.96), ${HOME_SOFT_CORAL_LIGHT})`
-      : "rgba(255, 255, 255, 0.74)",
-    border: enabled
-      ? "1px solid rgba(231, 111, 92, 0.24)"
-      : "1px solid var(--slc-border)",
-    boxShadow: enabled
-      ? "0 12px 28px rgba(231, 111, 92, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)"
-      : "0 10px 24px rgba(42, 31, 26, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.86)",
-    display: "inline-grid",
-    placeItems: "center",
-    color: enabled ? HOME_SOFT_CORAL : "var(--slc-muted)",
-    fontFamily: "inherit",
-    cursor: "pointer",
-    position: "relative",
-    backdropFilter: "blur(14px)",
-  } as const;
-}
-
-function reminderToggleDotStyle(enabled: boolean) {
-  return {
-    position: "absolute",
-    right: 10,
-    bottom: 10,
-    width: 7,
-    height: 7,
-    borderRadius: "50%",
-    background: enabled ? HOME_SOFT_CORAL : "var(--slc-muted)",
-    border: "1.5px solid #fff",
-    boxShadow: enabled ? "0 0 0 3px rgba(231, 111, 92, 0.10)" : "none",
-  } as const;
 }
 
 function emptyLinkStyle(accentColor: string) {
