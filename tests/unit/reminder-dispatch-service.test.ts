@@ -41,6 +41,14 @@ function createPushStore(overrides: Partial<ReminderPushDispatchStore> = {}): Re
   };
 }
 
+function expectNonEmptyString(value: string | undefined) {
+  if (typeof value !== 'string') {
+    expect(value).toBeTypeOf('string');
+    return;
+  }
+  expect(value.length).toBeGreaterThan(0);
+}
+
 function createPusher(overrides: Partial<ReminderPusher> = {}): ReminderPusher {
   return {
     send: vi.fn().mockResolvedValue({ providerMessageId: 'push-1' }),
@@ -156,10 +164,9 @@ describe('dispatchDuePushReminders', () => {
 
     const result = await dispatchDuePushReminders({ store, pusher, now: NOW, appUrl: 'https://project-oznp0.vercel.app' });
 
-    expect(store.revokePushSubscription).toHaveBeenCalledWith({
-      endpoint: revokedSubscription.endpoint,
-      revokedAt: expect.any(String),
-    });
+    const revokeInput = vi.mocked(store.revokePushSubscription).mock.calls[0]?.[0];
+    expect(revokeInput?.endpoint).toBe(revokedSubscription.endpoint);
+    expectNonEmptyString(revokeInput?.revokedAt);
     expect(store.markPushDispatchFailed).toHaveBeenCalledWith({
       dispatchId: 'dispatch-1',
       failureReason: 'subscription_revoked',

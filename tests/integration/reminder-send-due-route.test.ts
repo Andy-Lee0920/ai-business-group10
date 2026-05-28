@@ -56,6 +56,28 @@ type DispatchInsert = {
   status: string;
 };
 
+type DispatchUpdate = {
+  status?: string;
+  provider_message_id?: string;
+  sent_at?: string;
+  failed_at?: string;
+  failure_reason?: string;
+  error_message?: string;
+};
+
+type PushSubscriptionUpdate = {
+  revoked_at?: string;
+  updated_at?: string;
+};
+
+function expectNonEmptyString(value: string | undefined) {
+  if (typeof value !== 'string') {
+    expect(value).toBeTypeOf('string');
+    return;
+  }
+  expect(value.length).toBeGreaterThan(0);
+}
+
 function bearerRequest(secret = 'test-secret') {
   return new NextRequest('http://localhost/api/reminders/send-due', {
     headers: { authorization: `Bearer ${secret}` },
@@ -107,11 +129,11 @@ function createSupabaseMock(options: { rows?: { web_push_t60?: PushRow[]; web_pu
     }),
   };
   const updateChain = {
-    update: vi.fn(() => updateChain),
+    update: vi.fn((_value: DispatchUpdate) => updateChain),
     eq: vi.fn(() => updateChain),
   };
   const pushUpdateChain = {
-    update: vi.fn(() => pushUpdateChain),
+    update: vi.fn((_value: PushSubscriptionUpdate) => pushUpdateChain),
     eq: vi.fn(() => pushUpdateChain),
   };
   const from = vi.fn((table: string) => {
@@ -171,11 +193,10 @@ describe('/api/reminders/send-due', () => {
       status: 'queued',
     }));
     expect(global.fetch).not.toHaveBeenCalledWith('https://api.resend.com/emails', expect.anything());
-    expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
-      status: 'sent',
-      provider_message_id: expect.any(String),
-      sent_at: expect.any(String),
-    }));
+    const sentUpdate = supabase.updateChain.update.mock.calls[0]?.[0];
+    expect(sentUpdate).toMatchObject({ status: 'sent' });
+    expectNonEmptyString(sentUpdate?.provider_message_id);
+    expectNonEmptyString(sentUpdate?.sent_at);
     expect(payload.result).toEqual({ candidates: 2, sent: 2, skipped: 0, failed: 0 });
   });
 
@@ -226,17 +247,17 @@ describe('/api/reminders/send-due', () => {
     const payload = (await response.json()) as { result: { candidates: number; sent: number; skipped: number; failed: number } };
 
     expect(response.status).toBe(200);
-    expect(supabase.pushUpdateChain.update).toHaveBeenCalledWith(expect.objectContaining({
-      revoked_at: expect.any(String),
-      updated_at: expect.any(String),
-    }));
+    const revokedUpdate = supabase.pushUpdateChain.update.mock.calls[0]?.[0];
+    expectNonEmptyString(revokedUpdate?.revoked_at);
+    expectNonEmptyString(revokedUpdate?.updated_at);
     expect(supabase.pushUpdateChain.eq).toHaveBeenCalledWith('endpoint', defaultPushRow.push_subscriptions[0].endpoint);
-    expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+    const revokedDispatchUpdate = supabase.updateChain.update.mock.calls[0]?.[0];
+    expect(revokedDispatchUpdate).toMatchObject({
       status: 'failed',
-      failed_at: expect.any(String),
       failure_reason: 'subscription_revoked',
       error_message: 'subscription_revoked',
-    }));
+    });
+    expectNonEmptyString(revokedDispatchUpdate?.failed_at);
     expect(payload.result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
   });
 
@@ -255,12 +276,13 @@ describe('/api/reminders/send-due', () => {
 
     expect(response.status).toBe(200);
     expect(supabase.pushUpdateChain.update).not.toHaveBeenCalled();
-    expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+    const serviceFailureUpdate = supabase.updateChain.update.mock.calls[0]?.[0];
+    expect(serviceFailureUpdate).toMatchObject({
       status: 'failed',
-      failed_at: expect.any(String),
       failure_reason: 'push_service_5xx_503',
       error_message: 'push_service_5xx_503',
-    }));
+    });
+    expectNonEmptyString(serviceFailureUpdate?.failed_at);
     expect(payload.result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
   });
 
@@ -281,12 +303,13 @@ describe('/api/reminders/send-due', () => {
 
     expect(response.status).toBe(200);
     expect(supabase.pushUpdateChain.update).not.toHaveBeenCalled();
-    expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+    const networkFailureUpdate = supabase.updateChain.update.mock.calls[0]?.[0];
+    expect(networkFailureUpdate).toMatchObject({
       status: 'failed',
-      failed_at: expect.any(String),
       failure_reason: 'network_error_ECONNRESET',
       error_message: 'network_error_ECONNRESET',
-    }));
+    });
+    expectNonEmptyString(networkFailureUpdate?.failed_at);
     expect(payload.result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
   });
 
