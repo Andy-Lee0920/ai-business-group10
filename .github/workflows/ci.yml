@@ -43,8 +43,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps --only-shell chromium
+      - name: Verify CI browser
+        run: google-chrome --version
 
       - name: E2E smoke
         run: npm run test:e2e
