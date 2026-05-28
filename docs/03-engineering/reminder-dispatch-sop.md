@@ -6,7 +6,7 @@ Fevio exposes a protected scheduler endpoint:
 
 - Path: `/api/reminders/send-due`
 - Methods: `GET` and `POST`
-- Auth: `Authorization: Bearer $REMINDER_DISPATCH_SECRET` or `Authorization: Bearer $CRON_SECRET`
+- Auth: `Authorization: Bearer $CRON_SECRET`
 - Output: `{ ok: true, result: { candidates, sent, skipped, failed } }`
 
 MVP reminder channel is PWA Web Push. The route checks confirmed injection cards inside deterministic T-60 and T-15 reminder windows, claims a unique `reminder_dispatches(card_id, scheduled_at, channel)` row, sends a safe push payload, then marks the row `sent` or `failed`.
@@ -23,14 +23,14 @@ Do not use Resend/email for MVP reminder dispatch.
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
 - `VAPID_SUBJECT`
-- `REMINDER_DISPATCH_SECRET` or `CRON_SECRET`
+- `CRON_SECRET`
 
 ## Required Supabase Vault secrets for pg_cron
 
 The committed migration `supabase/migrations/202605190003_web_push_pg_cron_scheduler.sql` does not store literal production secrets. Before applying/enabling the job remotely, add these Vault secrets in Supabase:
 
 - `fevio_app_url`: production app origin, no trailing slash
-- `fevio_cron_secret`: same value as Vercel `CRON_SECRET` / `REMINDER_DISPATCH_SECRET`
+- `fevio_cron_secret`: same value as Vercel `CRON_SECRET`
 
 ## Scheduler decision
 
@@ -50,7 +50,7 @@ select cron.schedule(
 
 ```bash
 curl -i https://project-oznp0.vercel.app/api/reminders/send-due
-# Expected without auth: 401 when secret is configured, 503 if scheduler secret is missing.
+# Expected without auth or without configured CRON_SECRET: 401.
 ```
 
 Do not trigger a real push send from a public ticket comment. Production send evidence must avoid posting browser subscription JSON, provider keys, recipient identifiers, or private account identifiers.
