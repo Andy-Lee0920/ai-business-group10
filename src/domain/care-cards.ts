@@ -7,6 +7,7 @@ import type {
   DisplaySafetyLevel,
   ReminderFallbackState,
 } from '../types/care-cards.types';
+import type { SplitCandidate } from './line-split';
 
 const CARD_TYPE_KEYWORDS: Record<CardType, readonly string[]> = {
   injection: [
@@ -68,6 +69,13 @@ export function inferCardType(
   }
 
   return suggestedCardType ?? 'general_action';
+}
+
+export function mustInlineQuote(candidate: Pick<SplitCandidate, 'suggestedCardType' | 'assignedTo'>): boolean {
+  return (
+    candidate.assignedTo === 'my_action'
+    && (candidate.suggestedCardType === 'injection' || candidate.suggestedCardType === 'medication')
+  );
 }
 
 /**

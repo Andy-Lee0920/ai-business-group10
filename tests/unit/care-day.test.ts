@@ -11,6 +11,7 @@ import {
   computeDisplaySafetyLevel,
   computeReminderFallbackState,
   inferCardType,
+  mustInlineQuote,
 } from '../../src/domain/care-cards';
 
 const NOW = new Date('2026-05-10T09:00:00.000Z');
@@ -51,6 +52,14 @@ describe('care action card domain', () => {
     expect(inferCardType('프로게스테론 복용', 'my_action')).toBe('medication');
     expect(inferCardType('물 한 잔 마시기', 'my_action')).toBe('general_action');
     expect(inferCardType('고날에프', 'my_action', 'record')).toBe('record');
+  });
+
+  it('requires inline source quote only for user-owned injection and medication candidates', () => {
+    expect(mustInlineQuote({ suggestedCardType: 'injection', assignedTo: 'my_action' })).toBe(true);
+    expect(mustInlineQuote({ suggestedCardType: 'medication', assignedTo: 'my_action' })).toBe(true);
+    expect(mustInlineQuote({ suggestedCardType: 'injection', assignedTo: 'partner_action' })).toBe(false);
+    expect(mustInlineQuote({ suggestedCardType: 'clinic_visit', assignedTo: 'my_action' })).toBe(false);
+    expect(mustInlineQuote({ suggestedCardType: 'medication', assignedTo: 'excluded' })).toBe(false);
   });
 
   it('computes display-only safety priority without mutating cards', () => {

@@ -28,6 +28,10 @@ function optionalDate(value: unknown) {
   return /^\d{4}-\d{2}-\d{2}$/u.test(value) ? value : null;
 }
 
+function optionalOffset(value: unknown) {
+  return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : null;
+}
+
 function isAssignedTo(value: unknown): value is AssignedTo {
   return typeof value === 'string' && ASSIGNED_TO_VALUES.includes(value as AssignedTo);
 }
@@ -40,8 +44,13 @@ function toConfirmItems(value: unknown): ConfirmItem[] | null {
     const candidate = item as Record<string, unknown>;
     if (typeof candidate.sourceText !== 'string' || !candidate.sourceText.trim()) return null;
     if (!isAssignedTo(candidate.assignedTo)) return null;
+    const sourceOffsetStart = optionalOffset(candidate.sourceOffsetStart);
+    const sourceOffsetEnd = optionalOffset(candidate.sourceOffsetEnd);
+    const hasValidSourceOffset = sourceOffsetStart !== null && sourceOffsetEnd !== null && sourceOffsetEnd >= sourceOffsetStart;
     return {
       sourceText: candidate.sourceText.trim(),
+      sourceOffsetStart: hasValidSourceOffset ? sourceOffsetStart : null,
+      sourceOffsetEnd: hasValidSourceOffset ? sourceOffsetEnd : null,
       assignedTo: candidate.assignedTo,
       orderIndex,
       userSelectedCardType: isCardType(candidate.userSelectedCardType) ? candidate.userSelectedCardType : null,

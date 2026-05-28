@@ -42,13 +42,21 @@ describe('/api/capture', () => {
     const createCapture = vi.fn().mockResolvedValue({ visitInputId: 'visit-1', draftId: 'draft-1' });
     mockedCreateStore.mockResolvedValue({ coupleId: 'couple-1', createCapture, confirm: vi.fn() } satisfies CaptureStore);
 
-    const response = await capturePost(jsonRequest('/api/capture', { rawText: '1. 주사\n2. 병원 방문' }));
-    const payload = (await response.json()) as { visitInputId: string; draftId: string; candidates: Array<{ sourceText: string }> };
+    const rawText = '1. 주사\n2. 병원 방문';
+    const response = await capturePost(jsonRequest('/api/capture', { rawText }));
+    const payload = (await response.json()) as {
+      visitInputId: string;
+      draftId: string;
+      candidates: Array<{ sourceText: string; sourceOffsetStart: number; sourceOffsetEnd: number }>;
+    };
 
     expect(response.status).toBe(200);
-    expect(createCapture).toHaveBeenCalledWith('1. 주사\n2. 병원 방문');
+    expect(createCapture).toHaveBeenCalledWith(rawText);
     expect(payload).toMatchObject({ visitInputId: 'visit-1', draftId: 'draft-1' });
     expect(payload.candidates.map((candidate) => candidate.sourceText)).toEqual(['주사', '병원 방문']);
+    for (const candidate of payload.candidates) {
+      expect(rawText.slice(candidate.sourceOffsetStart, candidate.sourceOffsetEnd)).toBe(candidate.sourceText);
+    }
   });
 });
 
@@ -64,7 +72,7 @@ describe('/api/confirm', () => {
         draftId: 'draft-1',
         visitInputId: 'visit-1',
         items: [
-          { sourceText: '오비드렐 주사 밤 10시', assignedTo: 'my_action' },
+          { sourceText: '오비드렐 주사 밤 10시', sourceOffsetStart: 0, sourceOffsetEnd: 13, assignedTo: 'my_action' },
           { sourceText: '남편이 준비 도와주기', assignedTo: 'partner_action' },
           { sourceText: '중복 메모', assignedTo: 'excluded' },
         ],
@@ -76,7 +84,7 @@ describe('/api/confirm', () => {
       draftId: 'draft-1',
       visitInputId: 'visit-1',
       items: [
-        expect.objectContaining({ sourceText: '오비드렐 주사 밤 10시', assignedTo: 'my_action', orderIndex: 0 }),
+        expect.objectContaining({ sourceText: '오비드렐 주사 밤 10시', sourceOffsetStart: 0, sourceOffsetEnd: 13, assignedTo: 'my_action', orderIndex: 0 }),
         expect.objectContaining({ sourceText: '남편이 준비 도와주기', assignedTo: 'partner_action', orderIndex: 1 }),
         expect.objectContaining({ sourceText: '중복 메모', assignedTo: 'excluded', orderIndex: 2 }),
       ],

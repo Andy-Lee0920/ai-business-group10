@@ -5,11 +5,13 @@ import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-sup
 import { createCaptureStore } from '../../../../src/lib/capture-confirm-store';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
 import { filterMedicalAdviceCandidates } from '../../../../src/domain/schedule-extraction-safety';
+import { mapSourceOffsets } from '../../../../src/domain/line-split';
+import type { CardType } from '../../../../src/types/care-cards.types';
 import type { ScheduleType } from '../../../../src/types/slc.types';
 
 type DbError = { message: string };
 type ExtractedCandidate = {
-  type: string;
+  type: ScheduleType;
   title: string;
   scheduled_at: string | null;
   dose: string | null;
@@ -17,6 +19,19 @@ type ExtractedCandidate = {
 };
 type InsertedCandidate = ExtractedCandidate & { id: string };
 type SplitCandidateRow = { id: string };
+type SuggestedExtractedCardType = Extract<CardType, 'injection' | 'medication' | 'clinic_visit'>;
+type SplitCandidateInsertRow = {
+  couple_id: string;
+  draft_id: string;
+  visit_input_id: string;
+  source_text: string;
+  source_offset_start: number | null;
+  source_offset_end: number | null;
+  assigned_to: 'my_action';
+  suggested_card_type: SuggestedExtractedCardType;
+  confidence: 'needs_confirmation';
+  order_index: number;
+};
 type TextAnalyzeBody = { rawText?: unknown };
 type OnboardAnalyzeClient = {
   auth: { getUser(): Promise<{ data: { user: { id: string } | null }; error: DbError | null }> };
@@ -24,7 +39,7 @@ type OnboardAnalyzeClient = {
     invoke(name: 'schedule-extract', options: { body: { mode: 'text'; rawText: string; patientId: string } }): Promise<{ data: { candidates?: ExtractedCandidate[] } | null; error: DbError | null }>;
   };
   from(table: 'split_candidates'): {
-    insert(rows: Array<Record<string, unknown>>): { select(columns: string): Promise<{ data: SplitCandidateRow[] | null; error: DbError | null }> };
+    insert(rows: SplitCandidateInsertRow[]): { select(columns: string): Promise<{ data: SplitCandidateRow[] | null; error: DbError | null }> };
   };
 };
 
@@ -62,11 +77,14 @@ export async function POST(request: NextRequest) {
   const store = await createCaptureStore(request);
   if (store instanceof Response) return store;
   const capture = await store.createCapture(rawText);
-  const rows = safeCandidates.map((candidate, index) => ({
+  const offsets = mapSourceOffsets(rawText, safeCandidates.map((candidate) => candidate.title));
+  const rows = safeCandidates.map((candidate, index): SplitCandidateInsertRow => ({
     couple_id: store.coupleId,
     draft_id: capture.draftId,
     visit_input_id: capture.visitInputId,
     source_text: candidate.title,
+    source_offset_start: offsets[index]?.offsetStart ?? null,
+    source_offset_end: offsets[index]?.offsetEnd ?? null,
     assigned_to: 'my_action',
     suggested_card_type: toSuggestedCardType(candidate.type),
     confidence: 'needs_confirmation',
@@ -351,7 +369,7 @@ function normalizeScheduleType(value: unknown): ScheduleType | null {
   return value === 'injection' || value === 'medication' || value === 'clinic' ? value : null;
 }
 
-function toSuggestedCardType(type: string) {
+function toSuggestedCardType(type: ScheduleType): SuggestedExtractedCardType {
   if (type === 'clinic') return 'clinic_visit';
   return type;
 }

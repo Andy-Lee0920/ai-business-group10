@@ -4,6 +4,8 @@ import { splitLines } from './line-split';
 
 export type ProtocolDraftItem = {
   sourceText: string;
+  sourceOffsetStart: number | null;
+  sourceOffsetEnd: number | null;
   suggestedCardType: CardType;
   scheduledAt: string | null;
   careDate: string | null;
@@ -13,13 +15,15 @@ export type ProtocolDraftItem = {
 };
 
 export function createProtocolDraft(rawInstruction: string, baseDate = new Date()): ProtocolDraftItem[] {
-  return splitLines(rawInstruction).map((sourceText, orderIndex) => {
-    const suggestedCardType = inferCardType(sourceText, 'my_action');
-    const scheduledAt = extractScheduledAt(sourceText, baseDate);
-    const careDate = extractCareDate(sourceText, baseDate) ?? scheduledAt?.slice(0, 10) ?? null;
-    const uncertaintyReason = getUncertaintyReason(sourceText, suggestedCardType, scheduledAt);
+  return splitLines(rawInstruction).map(({ text, offsetStart, offsetEnd }, orderIndex) => {
+    const suggestedCardType = inferCardType(text, 'my_action');
+    const scheduledAt = extractScheduledAt(text, baseDate);
+    const careDate = extractCareDate(text, baseDate) ?? scheduledAt?.slice(0, 10) ?? null;
+    const uncertaintyReason = getUncertaintyReason(text, suggestedCardType, scheduledAt);
     return {
-      sourceText,
+      sourceText: text,
+      sourceOffsetStart: offsetStart,
+      sourceOffsetEnd: offsetEnd,
       suggestedCardType,
       scheduledAt,
       careDate,

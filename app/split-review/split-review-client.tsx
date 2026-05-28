@@ -8,6 +8,8 @@ import { validateDescription } from '../../src/utils/description-guard';
 
 type Candidate = {
   sourceText: string;
+  sourceOffsetStart?: number | null;
+  sourceOffsetEnd?: number | null;
   assignedTo: AssignedTo | null;
   orderIndex: number;
   suggestedCardType?: CardType | null;
@@ -56,6 +58,8 @@ export function SplitReviewClient() {
     if (!state) return;
     const items = state.candidates.map((candidate) => ({
       sourceText: candidate.sourceText,
+      sourceOffsetStart: candidate.sourceOffsetStart ?? null,
+      sourceOffsetEnd: candidate.sourceOffsetEnd ?? null,
       assignedTo: candidate.assignedTo ?? 'my_action',
       suggestedCardType: candidate.suggestedCardType ?? null,
       scheduledAt: candidate.scheduledAt ?? null,
