@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { dispatchDueEmailReminders, dispatchDuePushReminders, type ReminderDispatchStore, type ReminderMailer, type ReminderPushDispatchStore, type ReminderPusher } from '../../src/services/reminder-dispatch-service';
+import { ReminderPushDeliveryFailure, dispatchDueEmailReminders, dispatchDuePushReminders, type ReminderDispatchStore, type ReminderMailer, type ReminderPushDispatchStore, type ReminderPusher } from '../../src/services/reminder-dispatch-service';
 
 const NOW = new Date('2026-05-11T11:30:00.000Z');
 
@@ -36,7 +36,7 @@ function createPushStore(overrides: Partial<ReminderPushDispatchStore> = {}): Re
     claimPushDispatch: vi.fn().mockResolvedValue({ claimed: true, dispatchId: 'dispatch-1' }),
     markPushDispatchSent: vi.fn().mockResolvedValue(undefined),
     markPushDispatchFailed: vi.fn().mockResolvedValue(undefined),
-    deletePushSubscription: vi.fn().mockResolvedValue(undefined),
+    revokePushSubscription: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -138,36 +138,116 @@ describe('dispatchDuePushReminders', () => {
     expect(result).toEqual({ candidates: 2, sent: 2, skipped: 0, failed: 0 });
   });
 
-  it('removes expired browser push subscriptions and still sends to remaining subscriptions', async () => {
-    const expiredSubscription = { endpoint: 'https://push.example.test/expired', keys: { p256dh: 'old-key', auth: 'old-auth' } };
-    const activeSubscription = { endpoint: 'https://push.example.test/active', keys: { p256dh: 'new-key', auth: 'new-auth' } };
+  it('revokes 410/404 browser push subscriptions and records subscription_revoked when delivery cannot continue', async () => {
+    const revokedSubscription = { endpoint: 'https://push.example.test/revoked', keys: { p256dh: 'old-key', auth: 'old-auth' } };
     const store = createPushStore({
       findDuePushCandidates: vi.fn(async (window) => window.channel === 'web_push_t60' ? [{
         cardId: 'card-1',
         title: '오늘 21시 고날에프 1회',
         scheduledAt: '2026-05-11T12:00:00.000Z',
         recipientEmail: 'user@example.com',
-        pushSubscriptions: [expiredSubscription, activeSubscription],
+        pushSubscriptions: [revokedSubscription],
       }] : []),
-      deletePushSubscription: vi.fn().mockResolvedValue(undefined),
-    } as Partial<ReminderPushDispatchStore>);
+      revokePushSubscription: vi.fn().mockResolvedValue(undefined),
+    });
     const pusher = createPusher({
-      send: vi.fn(async ({ subscription }) => {
-        if (subscription.endpoint === expiredSubscription.endpoint) {
-          const error = new Error('push subscription expired') as Error & { statusCode: number };
-          error.statusCode = 410;
-          throw error;
-        }
-        return { providerMessageId: 'push-active' };
-      }),
+      send: vi.fn().mockRejectedValue(new ReminderPushDeliveryFailure('subscription_revoked')),
     });
 
     const result = await dispatchDuePushReminders({ store, pusher, now: NOW, appUrl: 'https://project-oznp0.vercel.app' });
 
-    expect(store.deletePushSubscription).toHaveBeenCalledWith({ endpoint: expiredSubscription.endpoint });
-    expect(store.markPushDispatchSent).toHaveBeenCalledWith({ dispatchId: 'dispatch-1', providerMessageId: 'push-active' });
-    expect(store.markPushDispatchFailed).not.toHaveBeenCalled();
-    expect(result).toEqual({ candidates: 1, sent: 1, skipped: 0, failed: 0 });
+    expect(store.revokePushSubscription).toHaveBeenCalledWith({
+      endpoint: revokedSubscription.endpoint,
+      revokedAt: expect.any(String),
+    });
+    expect(store.markPushDispatchFailed).toHaveBeenCalledWith({
+      dispatchId: 'dispatch-1',
+      failureReason: 'subscription_revoked',
+    });
+    expect(store.markPushDispatchSent).not.toHaveBeenCalled();
+    expect(result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
+  });
+
+  it('records 5xx push service failures without revoking the subscription', async () => {
+    const store = createPushStore({
+      findDuePushCandidates: vi.fn(async (window) => window.channel === 'web_push_t60' ? [{
+        cardId: 'card-1',
+        title: '오늘 21시 고날에프 1회',
+        scheduledAt: '2026-05-11T12:00:00.000Z',
+        recipientEmail: 'user@example.com',
+        pushSubscriptions: [{ endpoint: 'https://push.example.test/active', keys: { p256dh: 'key', auth: 'auth' } }],
+      }] : []),
+    });
+    const pusher = createPusher({
+      send: vi.fn().mockRejectedValue(new ReminderPushDeliveryFailure('push_service_5xx_503')),
+    });
+
+    const result = await dispatchDuePushReminders({ store, pusher, now: NOW, appUrl: 'https://project-oznp0.vercel.app' });
+
+    expect(store.revokePushSubscription).not.toHaveBeenCalled();
+    expect(store.markPushDispatchFailed).toHaveBeenCalledWith({
+      dispatchId: 'dispatch-1',
+      failureReason: 'push_service_5xx_503',
+    });
+    expect(result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
+  });
+
+  it('does not retry a failed 5xx dispatch before the next reminder window attempts normally', async () => {
+    const dueCandidate = {
+      cardId: 'card-1',
+      title: '오늘 21시 고날에프 1회',
+      scheduledAt: '2026-05-11T12:00:00.000Z',
+      recipientEmail: 'user@example.com',
+      pushSubscriptions: [{ endpoint: 'https://push.example.test/active', keys: { p256dh: 'key', auth: 'auth' } }],
+    };
+    const store = createPushStore({
+      findDuePushCandidates: vi.fn(async (window) => {
+        if (window.channel === 'web_push_t60' && window.startsAt === '2026-05-11T11:55:00.000Z') return [dueCandidate];
+        if (window.channel === 'web_push_t15' && window.startsAt === '2026-05-11T11:55:00.000Z') return [dueCandidate];
+        return [];
+      }),
+      claimPushDispatch: vi.fn(async (input) => ({ claimed: true, dispatchId: `dispatch-${input.channel}` })),
+    });
+    const pusher = createPusher({
+      send: vi.fn()
+        .mockRejectedValueOnce(new ReminderPushDeliveryFailure('push_service_5xx_503'))
+        .mockResolvedValueOnce({ providerMessageId: 'push-t15' }),
+    });
+
+    const failedT60 = await dispatchDuePushReminders({
+      store,
+      pusher,
+      now: new Date('2026-05-11T11:00:00.000Z'),
+      appUrl: 'https://project-oznp0.vercel.app',
+    });
+    const sentT15 = await dispatchDuePushReminders({
+      store,
+      pusher,
+      now: new Date('2026-05-11T11:45:00.000Z'),
+      appUrl: 'https://project-oznp0.vercel.app',
+    });
+
+    expect(pusher.send).toHaveBeenCalledTimes(2);
+    expect(store.claimPushDispatch).toHaveBeenCalledWith({
+      cardId: 'card-1',
+      scheduledAt: '2026-05-11T12:00:00.000Z',
+      channel: 'web_push_t60',
+    });
+    expect(store.claimPushDispatch).toHaveBeenCalledWith({
+      cardId: 'card-1',
+      scheduledAt: '2026-05-11T12:00:00.000Z',
+      channel: 'web_push_t15',
+    });
+    expect(store.markPushDispatchFailed).toHaveBeenCalledWith({
+      dispatchId: 'dispatch-web_push_t60',
+      failureReason: 'push_service_5xx_503',
+    });
+    expect(store.markPushDispatchSent).toHaveBeenCalledWith({
+      dispatchId: 'dispatch-web_push_t15',
+      providerMessageId: 'push-t15',
+    });
+    expect(failedT60).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
+    expect(sentT15).toEqual({ candidates: 1, sent: 1, skipped: 0, failed: 0 });
   });
 
 });

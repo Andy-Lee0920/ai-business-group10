@@ -1,5 +1,5 @@
 import type { ReminderCandidate, ReminderPushWindow } from '../domain/reminder-dispatch';
-import type { ReminderDispatchStore, ReminderDispatchWindow, ReminderPushCandidate, ReminderPushDispatchStore, ReminderPushSubscription } from '../services/reminder-dispatch-service';
+import type { ReminderDispatchStore, ReminderDispatchWindow, ReminderPushCandidate, ReminderPushDispatchStore, ReminderPushFailureReason, ReminderPushSubscription } from '../services/reminder-dispatch-service';
 
 type DbError = { code?: string; message: string };
 type RpcResult<T> = { data: T[] | null; error: DbError | null };
@@ -13,14 +13,10 @@ type UpdateChain = {
   update(value: Record<string, unknown>): UpdateChain;
   eq(column: string, value: string): Promise<unknown> | UpdateChain;
 };
-type DeleteChain = {
-  delete(): DeleteChain;
-  eq(column: string, value: string): Promise<unknown>;
-};
 type ReminderSupabaseClient = {
   rpc<T>(name: string, args?: Record<string, unknown>): Promise<RpcResult<T>>;
   from(table: 'reminder_dispatches'): InsertChain<{ id: string }> & UpdateChain;
-  from(table: 'push_subscriptions'): DeleteChain;
+  from(table: 'push_subscriptions'): UpdateChain;
 };
 
 type DueReminderRow = {
@@ -96,14 +92,21 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore, Rem
     await this.markDispatchSent(input);
   }
 
-  async markPushDispatchFailed(input: { dispatchId: string; error: string }) {
-    await this.markDispatchFailed(input);
+  async markPushDispatchFailed(input: { dispatchId: string; failureReason: ReminderPushFailureReason }) {
+    await this.markDispatchFailed({
+      dispatchId: input.dispatchId,
+      error: input.failureReason,
+      failureReason: input.failureReason,
+    });
   }
 
-  async deletePushSubscription(input: { endpoint: string }) {
+  async revokePushSubscription(input: { endpoint: string; revokedAt: string }) {
     await this.supabase
       .from('push_subscriptions')
-      .delete()
+      .update({
+        revoked_at: input.revokedAt,
+        updated_at: input.revokedAt,
+      })
       .eq('endpoint', input.endpoint);
   }
 
@@ -147,13 +150,16 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore, Rem
       .eq('id', input.dispatchId);
   }
 
-  private async markDispatchFailed(input: { dispatchId: string; error: string }) {
+  private async markDispatchFailed(input: { dispatchId: string; error: string; failureReason?: ReminderPushFailureReason }) {
+    const now = new Date().toISOString();
     await this.supabase
       .from('reminder_dispatches')
       .update({
         status: 'failed',
         error_message: input.error.slice(0, 500),
-        updated_at: new Date().toISOString(),
+        failed_at: now,
+        failure_reason: input.failureReason ?? null,
+        updated_at: now,
       })
       .eq('id', input.dispatchId);
   }

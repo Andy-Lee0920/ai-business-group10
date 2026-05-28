@@ -10,12 +10,28 @@ vi.mock('../../src/lib/server-supabase-admin', () => ({
 
 const setVapidDetailsMock = vi.hoisted(() => vi.fn());
 const sendNotificationMock = vi.hoisted(() => vi.fn());
+const TestWebPushError = vi.hoisted(() => class TestWebPushError extends Error {
+  readonly statusCode: number;
+  readonly headers: Headers;
+  readonly body: string;
+  readonly endpoint: string;
+
+  constructor(message: string, statusCode: number, endpoint: string) {
+    super(message);
+    this.name = 'WebPushError';
+    this.statusCode = statusCode;
+    this.headers = new Headers();
+    this.body = '';
+    this.endpoint = endpoint;
+  }
+});
 
 vi.mock('web-push', () => ({
   default: {
     setVapidDetails: setVapidDetailsMock,
     sendNotification: sendNotificationMock,
   },
+  WebPushError: TestWebPushError,
 }));
 
 const mockedCreateSupabase = vi.mocked(createSupabaseServiceRoleClient);
@@ -94,8 +110,16 @@ function createSupabaseMock(options: { rows?: { web_push_t60?: PushRow[]; web_pu
     update: vi.fn(() => updateChain),
     eq: vi.fn(() => updateChain),
   };
-  const from = vi.fn((table: string) => (table === 'reminder_dispatches' ? { ...insertChain, ...updateChain } : null));
-  return { rpc, from, insertChain, updateChain };
+  const pushUpdateChain = {
+    update: vi.fn(() => pushUpdateChain),
+    eq: vi.fn(() => pushUpdateChain),
+  };
+  const from = vi.fn((table: string) => {
+    if (table === 'reminder_dispatches') return { ...insertChain, ...updateChain };
+    if (table === 'push_subscriptions') return pushUpdateChain;
+    return null;
+  });
+  return { rpc, from, insertChain, updateChain, pushUpdateChain };
 }
 
 describe('/api/reminders/send-due', () => {
@@ -186,6 +210,84 @@ describe('/api/reminders/send-due', () => {
     expect(sendNotificationMock).toHaveBeenCalledTimes(1);
     expect(firstPayload.result).toEqual({ candidates: 1, sent: 1, skipped: 0, failed: 0 });
     expect(secondPayload.result).toEqual({ candidates: 1, sent: 0, skipped: 1, failed: 0 });
+  });
+
+  it('revokes 410 push subscriptions and records a subscription_revoked dispatch failure', async () => {
+    const supabase = createSupabaseMock({
+      rows: {
+        web_push_t60: [defaultPushRow],
+        web_push_t15: [],
+      },
+    });
+    mockedCreateSupabase.mockReturnValue(supabase as never);
+    sendNotificationMock.mockRejectedValueOnce(new TestWebPushError('Gone', 410, defaultPushRow.push_subscriptions[0].endpoint));
+
+    const response = await POST(bearerRequest());
+    const payload = (await response.json()) as { result: { candidates: number; sent: number; skipped: number; failed: number } };
+
+    expect(response.status).toBe(200);
+    expect(supabase.pushUpdateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+      revoked_at: expect.any(String),
+      updated_at: expect.any(String),
+    }));
+    expect(supabase.pushUpdateChain.eq).toHaveBeenCalledWith('endpoint', defaultPushRow.push_subscriptions[0].endpoint);
+    expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'failed',
+      failed_at: expect.any(String),
+      failure_reason: 'subscription_revoked',
+      error_message: 'subscription_revoked',
+    }));
+    expect(payload.result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
+  });
+
+  it('records 503 push service failures without revoking the push subscription', async () => {
+    const supabase = createSupabaseMock({
+      rows: {
+        web_push_t60: [defaultPushRow],
+        web_push_t15: [],
+      },
+    });
+    mockedCreateSupabase.mockReturnValue(supabase as never);
+    sendNotificationMock.mockRejectedValueOnce(new TestWebPushError('Service unavailable', 503, defaultPushRow.push_subscriptions[0].endpoint));
+
+    const response = await POST(bearerRequest());
+    const payload = (await response.json()) as { result: { candidates: number; sent: number; skipped: number; failed: number } };
+
+    expect(response.status).toBe(200);
+    expect(supabase.pushUpdateChain.update).not.toHaveBeenCalled();
+    expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'failed',
+      failed_at: expect.any(String),
+      failure_reason: 'push_service_5xx_503',
+      error_message: 'push_service_5xx_503',
+    }));
+    expect(payload.result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
+  });
+
+  it('records non-WebPush network failures without revoking the push subscription', async () => {
+    const supabase = createSupabaseMock({
+      rows: {
+        web_push_t60: [defaultPushRow],
+        web_push_t15: [],
+      },
+    });
+    mockedCreateSupabase.mockReturnValue(supabase as never);
+    const networkError = new Error('socket reset');
+    Object.defineProperty(networkError, 'code', { value: 'ECONNRESET' });
+    sendNotificationMock.mockRejectedValueOnce(networkError);
+
+    const response = await POST(bearerRequest());
+    const payload = (await response.json()) as { result: { candidates: number; sent: number; skipped: number; failed: number } };
+
+    expect(response.status).toBe(200);
+    expect(supabase.pushUpdateChain.update).not.toHaveBeenCalled();
+    expect(supabase.updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'failed',
+      failed_at: expect.any(String),
+      failure_reason: 'network_error_ECONNRESET',
+      error_message: 'network_error_ECONNRESET',
+    }));
+    expect(payload.result).toEqual({ candidates: 1, sent: 0, skipped: 0, failed: 1 });
   });
 
   it('rejects missing Authorization with a structured non-PII log', async () => {
