@@ -7,10 +7,8 @@ import type { PartnerActionViewItem } from '../../src/types/partner-view.types';
 
 const item: PartnerActionViewItem = {
   safe_id: 'safe-1',
-  title: '오비드렐 250',
   scheduled_at: '2026-05-19T12:00:00.000Z',
   card_type: 'injection',
-  description: '오비드렐 상세 안내',
   display_state: 'current',
   sync_revision: 1,
   partner_role: '확인 역할',
@@ -34,6 +32,7 @@ describe('Partner Brief contract', () => {
 
     expect(markup).toContain('오늘 함께 확인할 일이 있어요.');
     expect(markup).toContain('준비 공간만 함께 확인해 주세요.');
+    expect(JSON.stringify(item)).not.toContain('오비드렐');
     expect(markup).not.toContain('오비드렐');
     expect(markup).not.toContain('250');
   });

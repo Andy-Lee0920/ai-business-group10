@@ -45,15 +45,16 @@ describe('Care OS architecture vertical contracts', () => {
   });
 
   it('projects partner data by patient-owned sharing scope', () => {
-    const items = [partnerItem({ title: '21:00 오비드렐 트리거 확인', description: '냉장 보관 후 복부 오른쪽', card_type: 'injection' })];
+    const items = [partnerItem({ card_type: 'injection' })];
 
     const basic = projectPartnerItemsBySharingScope(items, 'basic');
     const care = projectPartnerItemsBySharingScope(items, 'care');
     const emotional = projectPartnerItemsBySharingScope(items, 'emotional');
 
     expect(JSON.stringify(basic)).not.toMatch(/오비드렐|냉장|복부/u);
-    expect(basic[0]).toMatchObject({ title: '오늘 케어 일정', description: null, visibility: 'partner_safe' });
-    expect(JSON.stringify(care)).toMatch(/오비드렐/u);
+    expect(basic[0]).toMatchObject({ visibility: 'partner_safe' });
+    expect(care[0]).not.toHaveProperty('title');
+    expect(care[0]).not.toHaveProperty('description');
     expect(JSON.stringify(emotional)).toMatch(/정서 상태를 먼저 살펴 주세요/u);
   });
 
@@ -112,10 +113,8 @@ describe('Care OS architecture vertical contracts', () => {
 function partnerItem(overrides: Partial<PartnerActionViewItem>): PartnerActionViewItem {
   return {
     safe_id: 'safe-1',
-    title: '21:00 오비드렐 트리거 확인',
     scheduled_at: '2026-05-12T12:00:00.000Z',
     card_type: 'injection',
-    description: '냉장 보관 후 복부 오른쪽',
     display_state: 'current',
     sync_revision: 1,
     partner_role: '확인자',

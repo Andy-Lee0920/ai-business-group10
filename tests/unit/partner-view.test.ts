@@ -67,12 +67,11 @@ describe('partner view serialization contract', () => {
     const [item] = serializePartnerViewCards([card()]);
 
     expect(Object.keys(item).sort()).toEqual([...PARTNER_VIEW_ITEM_FIELDS].sort());
+    expect(item.safe_id).toMatch(/^[a-f0-9]{16}$/);
     expect(item).toEqual({
-      safe_id: expect.any(String),
-      title: '고날에프 주사',
+      safe_id: item.safe_id,
       scheduled_at: '2026-05-10T12:30:00.000Z',
       card_type: 'injection',
-      description: '오늘 21시 고날에프 1회',
       display_state: 'current',
       sync_revision: 1,
       partner_role: '확인자',
@@ -85,12 +84,11 @@ describe('partner view serialization contract', () => {
   it('projects completed cards as completed without adding private fields', () => {
     const [item] = serializePartnerViewCards([card({ status: 'completed', revision: 3 })]);
 
+    expect(item.safe_id).toMatch(/^[a-f0-9]{16}$/);
     expect(item).toEqual({
-      safe_id: expect.any(String),
-      title: '고날에프 주사',
+      safe_id: item.safe_id,
       scheduled_at: '2026-05-10T12:30:00.000Z',
       card_type: 'injection',
-      description: '오늘 21시 고날에프 1회',
       display_state: 'completed',
       sync_revision: 3,
       partner_role: '확인자',
@@ -115,6 +113,6 @@ describe('partner view serialization contract', () => {
   it('has public type contracts for the serializer and whitelist', () => {
     expectTypeOf(serializePartnerViewCards).returns.toEqualTypeOf<PartnerActionViewItem[]>();
     expectTypeOf(serializePartnerViewCards).parameter(0).toMatchTypeOf<readonly CareActionCard[]>();
-    expectTypeOf(PARTNER_VIEW_ITEM_FIELDS).toEqualTypeOf<readonly ['safe_id', 'title', 'scheduled_at', 'card_type', 'description', 'display_state', 'sync_revision', 'partner_role', 'partner_action', 'avoid_prompt', 'visibility']>();
+    expectTypeOf(PARTNER_VIEW_ITEM_FIELDS).toEqualTypeOf<readonly ['safe_id', 'scheduled_at', 'card_type', 'display_state', 'sync_revision', 'partner_role', 'partner_action', 'avoid_prompt', 'visibility']>();
   });
 });

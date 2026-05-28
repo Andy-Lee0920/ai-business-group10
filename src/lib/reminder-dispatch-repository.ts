@@ -26,6 +26,7 @@ type ReminderSupabaseClient = {
 type DueReminderRow = {
   card_id: string;
   title: string;
+  card_type: 'injection' | 'medication';
   scheduled_at: string;
   recipient_email: string;
 };
@@ -33,6 +34,7 @@ type DueReminderRow = {
 type DuePushReminderRow = {
   card_id: string;
   title: string;
+  card_type: 'injection' | 'medication';
   scheduled_at: string;
   push_subscriptions: unknown;
 };
@@ -50,6 +52,7 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore, Rem
     return (result.data ?? []).map((row) => ({
       cardId: row.card_id,
       title: row.title,
+      cardType: row.card_type,
       scheduledAt: row.scheduled_at,
       recipientEmail: row.recipient_email,
     }));
@@ -67,6 +70,7 @@ export class SupabaseReminderDispatchStore implements ReminderDispatchStore, Rem
     return (result.data ?? []).map((row) => ({
       cardId: row.card_id,
       title: row.title,
+      cardType: row.card_type,
       scheduledAt: row.scheduled_at,
       recipientEmail: '',
       pushSubscriptions: normalizePushSubscriptions(row.push_subscriptions),

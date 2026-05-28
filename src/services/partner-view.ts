@@ -41,17 +41,13 @@ function toPartnerItem(card: CareActionCard): PartnerActionViewItem {
   const displayState = displayStateForStatus(card.status);
   const roleProjection = translateCareCardToPartnerRole({
     card_type: card.card_type,
-    title: card.title,
-    description: card.description,
     display_state: displayState,
   });
 
   return {
     safe_id: safePartnerItemId(card.id),
-    title: card.title,
     scheduled_at: card.scheduled_at,
     card_type: card.card_type,
-    description: card.description,
     display_state: displayState,
     sync_revision: card.revision,
     ...roleProjection,

@@ -2,10 +2,8 @@ import type { CardType } from './care-cards.types';
 
 export const PARTNER_VIEW_ITEM_FIELDS = [
   'safe_id',
-  'title',
   'scheduled_at',
   'card_type',
-  'description',
   'display_state',
   'sync_revision',
   'partner_role',
@@ -24,10 +22,8 @@ export type PartnerDisplayState =
 
 export type PartnerActionViewItem = {
   safe_id: string;
-  title: string;
   scheduled_at: string | null;
   card_type: CardType;
-  description: string | null;
   display_state: PartnerDisplayState;
   sync_revision: number;
   partner_role: string;

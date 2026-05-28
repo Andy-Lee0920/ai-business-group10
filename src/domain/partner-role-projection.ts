@@ -4,8 +4,6 @@ export type PartnerVisibility = 'partner_safe' | 'private_summary';
 
 export type PartnerRoleProjectionInput = {
   card_type: CardType;
-  title: string;
-  description: string | null;
   display_state?: string;
 };
 

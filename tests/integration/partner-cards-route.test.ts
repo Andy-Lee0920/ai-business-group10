@@ -22,7 +22,7 @@ describe('partner cards API route', () => {
       {
         data: [
           {
-            id: '11111111-1111-1111-1111-111111111111',
+            safe_id: 'safe-injection',
             title: '고날에프 주사',
             scheduled_at: '2026-05-10T12:30:00.000Z',
             card_type: 'injection',
@@ -46,7 +46,6 @@ describe('partner cards API route', () => {
     expect(response.headers.get('x-fevio-sync-strategy')).toBe('polling');
     expect(rpcCalls.at(-1)).toMatchObject({ name: 'get_partner_action_view' });
     expect(payload.items[0]).toMatchObject({
-      title: '고날에프 주사',
       display_state: 'completed',
       sync_revision: 7,
       partner_role: '확인자',
@@ -55,6 +54,8 @@ describe('partner cards API route', () => {
       visibility: 'partner_safe',
     });
     expect(JSON.stringify(payload)).not.toContain('source_text');
+    expect(JSON.stringify(payload)).not.toContain('고날에프');
+    expect(JSON.stringify(payload)).not.toContain('오늘 21시');
     expect(JSON.stringify(payload)).not.toContain('token_hash');
   });
 
@@ -66,7 +67,7 @@ describe('partner cards API route', () => {
       {
         data: [
           {
-            id: '22222222-2222-2222-2222-222222222222',
+            safe_id: 'safe-basic',
             title: '21:00 오비드렐 트리거 확인',
             scheduled_at: '2026-05-10T12:30:00.000Z',
             card_type: 'injection',
@@ -87,7 +88,8 @@ describe('partner cards API route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
-    expect(payload.items[0]).toMatchObject({ title: '오늘 케어 일정', description: null });
+    expect(payload.items[0]).not.toHaveProperty('title');
+    expect(payload.items[0]).not.toHaveProperty('description');
     expect(JSON.stringify(payload)).not.toMatch(/오비드렐|냉장|복부/u);
   });
 
@@ -97,7 +99,7 @@ describe('partner cards API route', () => {
       {
         data: [
           {
-            id: '33333333-3333-3333-3333-333333333333',
+            safe_id: 'safe-emotional',
             title: '다음 피검 일정',
             scheduled_at: '2026-05-20T00:30:00.000Z',
             card_type: 'clinic_confirmation',

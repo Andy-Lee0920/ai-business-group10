@@ -43,13 +43,25 @@ describe('reminder infrastructure contract', () => {
 
   it('extends reminder dispatch storage for web push T-60/T-15 channels and a raw-memo-free push candidate RPC', () => {
     const migration = readFileSync('supabase/migrations/202605190002_web_push_reminder_dispatches.sql', 'utf8');
+    const medicationMigration = readFileSync('supabase/migrations/202605290001_medication_push_reminder_candidates.sql', 'utf8');
+    const pushFunction = medicationMigration.slice(
+      medicationMigration.indexOf('create function public.get_due_web_push_reminder_candidates'),
+      medicationMigration.indexOf('grant execute on function public.get_due_web_push_reminder_candidates'),
+    );
+    const emailFunction = medicationMigration.slice(
+      medicationMigration.indexOf('create function public.get_due_email_reminder_candidates'),
+      medicationMigration.indexOf('grant execute on function public.get_due_email_reminder_candidates'),
+    );
     expect(migration).toContain("channel in ('email', 'web_push_t60', 'web_push_t15')");
     expect(migration).toContain('alter column recipient_email drop not null');
     expect(migration).toContain('get_due_web_push_reminder_candidates');
     expect(migration).toContain('p_channel text');
     expect(migration).toContain('jsonb_agg(ps.subscription)');
-    expect(migration).toContain("c.card_type = 'injection'");
-    expect(migration).not.toMatch(/source_text|raw_text|clinic_memo/iu);
+    expect(pushFunction).toContain("c.card_type in ('injection', 'medication')");
+    expect(emailFunction).toContain("c.card_type = 'injection'");
+    expect(medicationMigration).toContain('card_type text');
+    expect(medicationMigration).toContain('get_due_email_reminder_candidates');
+    expect(`${migration}\n${medicationMigration}`).not.toMatch(/source_text|raw_text|clinic_memo/iu);
   });
 
   it('keeps legacy email dispatch storage documented while MVP uses web push candidates', () => {
@@ -58,5 +70,25 @@ describe('reminder infrastructure contract', () => {
     expect(migration).toContain('get_due_email_reminder_candidates');
     expect(migration).toContain("c.card_type = 'injection'");
     expect(migration).not.toMatch(/source_text|raw_text/iu);
+  });
+
+  it('replaces direct partner action RPC output with the safe partner view contract', () => {
+    const migration = readFileSync('supabase/migrations/202605290002_safe_partner_action_view.sql', 'utf8');
+    const returnsTable = migration.slice(migration.indexOf('returns table'), migration.indexOf('language sql'));
+
+    expect(migration).toContain('drop function if exists public.get_partner_action_view(text)');
+    expect(returnsTable).toContain('safe_id text');
+    expect(returnsTable).toContain('scheduled_at timestamptz');
+    expect(returnsTable).toContain('card_type text');
+    expect(returnsTable).toContain('display_state text');
+    expect(returnsTable).toContain('sharing_scope text');
+    expect(returnsTable).not.toMatch(/title|description|source_text|raw_memo/iu);
+    expect(migration).toContain('grant execute on function public.get_partner_action_view(text) to anon, authenticated');
+    expect(migration).toContain('resolve_partner_action_card_id');
+    expect(migration).toContain('grant execute on function public.resolve_partner_action_card_id(text, text) to service_role');
+    expect(migration).not.toContain('grant execute on function public.resolve_partner_action_card_id(text, text) to anon, authenticated');
+    expect(migration).toContain('record_partner_assist_by_safe_id');
+    expect(migration).toContain('returns table(card_safe_id text, partner_assist_at timestamptz)');
+    expect(migration).toContain("left(encode(digest(c.id::text, 'sha256'), 'hex'), 16)");
   });
 });

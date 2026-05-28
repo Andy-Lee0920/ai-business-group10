@@ -14,6 +14,7 @@ function candidate(overrides: Partial<ReminderCandidate> = {}): ReminderCandidat
   return {
     cardId: 'card-1',
     title: '오늘 21시 고날에프 1회',
+    cardType: 'injection',
     scheduledAt: '2026-05-11T12:00:00.000Z',
     recipientEmail: 'user@example.com',
     ...overrides,
@@ -79,5 +80,15 @@ describe('reminder dispatch domain', () => {
     expect(email.text).toContain('2026. 5. 11. 오후 9:00');
     expect(email.text).toContain('https://project-oznp0.vercel.app/home');
     expect(email.text).not.toMatch(/투여하세요|복용하세요|판단|source_text|raw memo|원문/u);
+  });
+
+  it('branches medication email subject without injection copy', () => {
+    const email = buildReminderEmail({
+      candidate: candidate({ cardType: 'medication', title: '듀파스톤 복용' }),
+      appUrl: 'https://project-oznp0.vercel.app',
+    });
+
+    expect(email.subject).toBe('[Fevio] 확인할 복약 시간이 가까워졌어요');
+    expect(email.subject).not.toContain('주사');
   });
 });

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { canPartnerPerformAction, type PartnerPermissionAction } from '../../../../../src/domain/care-os-architecture';
-import { hashPartnerShareToken, safePartnerItemId } from '../../../../../src/services/partner-view';
+import { hashPartnerShareToken } from '../../../../../src/services/partner-view';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 
 type AssistBody = {
@@ -10,12 +10,8 @@ type AssistBody = {
 };
 
 type PartnerAssistRpcRow = {
-  card_id: string;
+  card_safe_id: string;
   partner_assist_at: string;
-};
-
-type PartnerActionViewRow = {
-  id?: string | null;
 };
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -35,38 +31,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const { token } = await params;
   const supabase = await createCookieBackedSupabaseClient();
   const tokenHash = hashPartnerShareToken(token);
-  const resolvedCardId = isUuid(cardId)
-    ? cardId
-    : await resolveCardIdFromSafeId(supabase, tokenHash, cardId);
-
-  if (!resolvedCardId) return NextResponse.json({ error: 'partner_card_not_found' }, { status: 404 });
-
-  const { data, error } = await supabase.rpc('record_partner_assist', {
+  const { data, error } = await supabase.rpc('record_partner_assist_by_safe_id', {
     p_token_hash: tokenHash,
-    p_card_id: resolvedCardId,
+    p_safe_id: cardId,
     p_actual_time: actualTime,
   });
 
   if (error) return NextResponse.json({ error: 'partner_assist_unavailable' }, { status: 404 });
   const row = Array.isArray(data) ? (data[0] as PartnerAssistRpcRow | undefined) : undefined;
-  return NextResponse.json({ cardId: row?.card_id ?? resolvedCardId, partnerAssistAt: row?.partner_assist_at ?? actualTime }, { status: 202 });
-}
-
-async function resolveCardIdFromSafeId(
-  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
-  tokenHash: string,
-  safeId: string,
-) {
-  const { data, error } = await supabase.rpc('get_partner_action_view', { p_token_hash: tokenHash });
-  if (error || !Array.isArray(data)) return null;
-  const row = (data as PartnerActionViewRow[]).find((candidate) => {
-    return typeof candidate.id === 'string' && safePartnerItemId(candidate.id) === safeId;
-  });
-  return row?.id ?? null;
-}
-
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(value);
+  return NextResponse.json({ cardId, partnerAssistAt: row?.partner_assist_at ?? actualTime }, { status: 202 });
 }
 
 function normalizeAction(value: unknown): PartnerPermissionAction | null {

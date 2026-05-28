@@ -103,6 +103,7 @@ describe('SLC persona heuristics', () => {
             candidate: {
               cardId: 'card-1',
               title: '오비트렐 · 250mcg · 22:00',
+              cardType: 'injection',
               scheduledAt: '2026-05-14T13:00:00.000Z',
               recipientEmail: 'patient@example.com',
             },

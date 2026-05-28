@@ -1,6 +1,7 @@
 export type ReminderCandidate = {
   cardId: string;
   title: string;
+  cardType: 'injection' | 'medication';
   scheduledAt: string;
   recipientEmail: string;
 };
@@ -79,7 +80,9 @@ export function buildReminderEmail({
 }): ReminderEmail {
   const homeUrl = new URL('/home', normalizeBaseUrl(appUrl)).toString();
   const scheduledLabel = formatKoreanTime(candidate.scheduledAt);
-  const subject = '[Fevio] 확인할 주사 시간이 가까워졌어요';
+  const subject = candidate.cardType === 'injection'
+    ? '[Fevio] 확인할 주사 시간이 가까워졌어요'
+    : '[Fevio] 확인할 복약 시간이 가까워졌어요';
   const text = [
     'Fevio에서 확인할 시간이 가까운 케어 항목을 알려드려요.',
     '',

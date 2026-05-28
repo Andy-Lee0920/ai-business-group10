@@ -39,6 +39,7 @@ describe('partner view payload integration contract', () => {
       avoid_prompt: expect.stringContaining('재촉하지 않기'),
       visibility: 'partner_safe',
     });
+    expect(JSON.stringify(payload)).not.toMatch(/고날에프|오늘 21시/u);
   });
 
   it('keeps private emotion records out of the partner payload unless explicitly shared', () => {
@@ -63,9 +64,7 @@ describe('partner view payload integration contract', () => {
 
     expect(payload.items).toHaveLength(1);
     expect(payload.items[0]).toMatchObject({
-      title: '공유된 감정 신호',
       card_type: 'record',
-      description: '오늘은 마음이 많이 긴장된 날이에요. 해결책보다 조용한 도움을 먼저 건네 주세요.',
       partner_role: '기록 동반자',
       visibility: 'private_summary',
     });
@@ -90,8 +89,6 @@ describe('partner view payload integration contract', () => {
 
     expect(payload.items).toHaveLength(1);
     expect(payload.items[0]).toMatchObject({
-      title: '공유된 IVF 기록',
-      description: '2026-05-15 난자 채취 단계예요. 결과를 단정하지 말고 이동·회복·다음 확인을 함께 챙겨 주세요.',
       partner_role: '기록 동반자',
       visibility: 'private_summary',
     });

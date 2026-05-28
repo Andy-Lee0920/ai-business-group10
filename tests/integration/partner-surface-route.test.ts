@@ -45,8 +45,8 @@ describe('partner surface API route', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(response.headers.get('x-fevio-sync-strategy')).toBe('swr-30s');
     expect(rpcCalls.map((call) => call.name)).toContain('get_partner_action_view');
-    expect(payload).toMatchObject({ urgencyTier: 'critical', intensity: 1, phase: 'injection' });
-    expect(payload.momentCopy).toContain('곁');
+    expect(payload).toMatchObject({ urgencyTier: 'routine', intensity: 0.5, phase: 'injection' });
+    expect(payload.momentCopy).toContain('함께');
     expect(serialized).not.toMatch(/trigger_shot|overrideReason|milestone|proximityDays|오비드렐/u);
   });
 

@@ -9,6 +9,7 @@ function createStore(overrides: Partial<ReminderDispatchStore> = {}): ReminderDi
       {
         cardId: 'card-1',
         title: '오늘 21시 고날에프 1회',
+        cardType: 'injection',
         scheduledAt: '2026-05-11T12:00:00.000Z',
         recipientEmail: 'user@example.com',
       },
@@ -28,6 +29,7 @@ function createPushStore(overrides: Partial<ReminderPushDispatchStore> = {}): Re
       {
         cardId: 'card-1',
         title: '오늘 21시 고날에프 1회',
+        cardType: 'injection',
         scheduledAt: '2026-05-11T12:00:00.000Z',
         recipientEmail: 'user@example.com',
         pushSubscriptions: [{ endpoint: 'https://push.example.test/1', keys: { p256dh: 'key', auth: 'auth' } }],
@@ -145,6 +147,7 @@ describe('dispatchDuePushReminders', () => {
       findDuePushCandidates: vi.fn(async (window) => window.channel === 'web_push_t60' ? [{
         cardId: 'card-1',
         title: '오늘 21시 고날에프 1회',
+        cardType: 'injection',
         scheduledAt: '2026-05-11T12:00:00.000Z',
         recipientEmail: 'user@example.com',
         pushSubscriptions: [expiredSubscription, activeSubscription],

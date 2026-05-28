@@ -1,5 +1,4 @@
 import type { CareSurfaceCondition, CareSurfaceSlot } from '../types/care-surface.types';
-import type { CardType } from '../types/care-cards.types';
 import type { PartnerActionViewItem } from '../types/partner-view.types';
 
 export type CareOsRole = 'patient' | 'partner';
@@ -71,8 +70,6 @@ export type RuleConflict = {
   reason: 'same slot, same specificity, same priority';
 };
 
-const MEDICAL_DETAIL_PATTERN = /오비드렐|고날에프|퓨리곤|데카펩틸|냉장|복부|용량|IU|mg|ml/iu;
-
 export function resolveCareCycleExperience({ cycleId, currentUserId, memberships }: { cycleId: string; currentUserId: string; memberships: readonly CareCycleMembership[] }): CareCycleExperience {
   const membership = memberships.find((candidate) => candidate.cycleId === cycleId && candidate.userId === currentUserId);
   if (!membership) throw new Error('care cycle membership not found');
@@ -103,8 +100,6 @@ export function projectPartnerItemsBySharingScope(items: readonly PartnerActionV
     if (scope === 'basic') {
       return {
         ...item,
-        title: basicTitleFor(item.card_type),
-        description: null,
         partner_action: '오늘의 큰 흐름만 함께 확인해 주세요.',
         avoid_prompt: '약 이름, 용량, 원문 메모를 묻지 않기',
         visibility: 'partner_safe',
@@ -119,7 +114,7 @@ export function projectPartnerItemsBySharingScope(items: readonly PartnerActionV
       };
     }
 
-    return { ...item, description: sanitizeCareDescription(item.description) };
+    return item;
   });
 }
 
@@ -183,15 +178,4 @@ export function detectCareSurfaceRuleConflicts(rules: readonly RuleConflictInput
       ruleIds: group.map((rule) => rule.id),
       reason: 'same slot, same specificity, same priority' as const,
     }));
-}
-
-function basicTitleFor(cardType: CardType) {
-  if (cardType === 'clinic_visit' || cardType === 'clinic_confirmation') return '오늘 병원 일정';
-  if (cardType === 'partner_support') return '오늘 함께할 일';
-  return '오늘 케어 일정';
-}
-
-function sanitizeCareDescription(description: string | null) {
-  if (!description) return null;
-  return MEDICAL_DETAIL_PATTERN.test(description) ? '병원에서 확인한 기준만 함께 봐요.' : description;
 }

@@ -8,12 +8,8 @@ import { CARD_TYPES, type CardType } from '../../../../../src/types/care-cards.t
 import type { CareSurfaceOverrideReason, TimelineCareDay } from '../../../../../src/types/treatment-timeline.types';
 import type { CareSurfacePhase, FevioSurfaceContext } from '../../../../../src/types/care-surface.types';
 
-const TRIGGER_PATTERN = /트리거|오비드렐|ovidrel|데카펩틸|decapeptyl|trigger/iu;
-
 type PartnerSurfaceRpcRow = {
-  title: string;
   card_type: string;
-  description: string | null;
   display_state: string;
 };
 
@@ -69,7 +65,7 @@ function deriveCareDay(rows: readonly PartnerSurfaceRpcRow[]): TimelineCareDay {
 }
 
 function deriveOverrideReason(rows: readonly PartnerSurfaceRpcRow[]): CareSurfaceOverrideReason {
-  return rows.some((row) => row.card_type === 'injection' && TRIGGER_PATTERN.test(`${row.title} ${row.description ?? ''}`)) ? 'trigger_shot' : 'none';
+  return 'none';
 }
 
 function phaseForCareDay(careDay: TimelineCareDay, overrideReason: CareSurfaceOverrideReason): CareSurfacePhase {

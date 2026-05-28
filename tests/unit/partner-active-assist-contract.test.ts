@@ -22,9 +22,12 @@ describe('Partner active assist contract', () => {
     expect(surface).toContain('도움 기록됨');
     expect(surface).toContain('canRecordAssist(item)');
     expect(surface).not.toContain("item.card_type === 'injection'");
-    expect(assistRoute).toContain('resolveCardIdFromSafeId');
-    expect(assistRoute).toContain('safePartnerItemId(candidate.id)');
-    expect(assistRoute).toContain('record_partner_assist');
+    expect(assistRoute).toContain('record_partner_assist_by_safe_id');
+    expect(assistRoute).not.toContain('resolveCardIdFromSafeId');
+    expect(assistRoute).not.toContain('resolve_partner_action_card_id');
+    expect(assistRoute).not.toContain("rpc('record_partner_assist'");
+    expect(assistRoute).not.toContain('isUuid');
+    expect(assistRoute).not.toContain('row?.card_id ?? resolvedCardId');
     expect(assistRoute).not.toContain('record_partner_assisted_injection');
   });
 });
