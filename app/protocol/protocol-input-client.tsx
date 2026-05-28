@@ -35,7 +35,9 @@ export function ProtocolInputClient() {
   }
 
   function editDraft(index: number, sourceText: string) {
-    setDrafts((current) => current.map((item) => (item.orderIndex === index ? { ...item, sourceText } : item)));
+    setDrafts((current) => current.map((item) => (
+      item.orderIndex === index ? { ...item, sourceText, sourceOffsetStart: null, sourceOffsetEnd: null } : item
+    )));
   }
 
   function moveToReview() {
@@ -44,6 +46,8 @@ export function ProtocolInputClient() {
       ...captureIds,
       candidates: drafts.map((item) => ({
         sourceText: item.sourceText,
+        sourceOffsetStart: item.sourceOffsetStart,
+        sourceOffsetEnd: item.sourceOffsetEnd,
         assignedTo: null,
         orderIndex: item.orderIndex,
         suggestedCardType: item.suggestedCardType,

@@ -5,6 +5,11 @@ type User = { id: string } | null;
 
 type InsertCall = { table: string; rows: Array<Record<string, unknown>> };
 type InvokeCall = { name: string; options: unknown };
+type OffsetCandidateRow = {
+  source_text?: unknown;
+  source_offset_start?: unknown;
+  source_offset_end?: unknown;
+};
 
 const state = vi.hoisted(() => ({
   user: null as User,
@@ -71,6 +76,21 @@ function request(body: unknown, init?: { url?: string; cookie?: string }) {
   });
 }
 
+function expectOffsetRoundTrip(rawText: unknown, row: OffsetCandidateRow) {
+  expect(typeof rawText).toBe('string');
+  expect(typeof row.source_text).toBe('string');
+  expect(typeof row.source_offset_start).toBe('number');
+  expect(typeof row.source_offset_end).toBe('number');
+  if (
+    typeof rawText === 'string'
+    && typeof row.source_text === 'string'
+    && typeof row.source_offset_start === 'number'
+    && typeof row.source_offset_end === 'number'
+  ) {
+    expect(rawText.slice(row.source_offset_start, row.source_offset_end)).toBe(row.source_text);
+  }
+}
+
 describe('/api/onboard/photo-analyze', () => {
   beforeEach(() => {
     state.user = null;
@@ -113,6 +133,7 @@ describe('/api/onboard/photo-analyze', () => {
       suggested_card_type: 'clinic_visit',
       confidence: 'needs_confirmation',
     });
+    expectOffsetRoundTrip(state.insertCalls[0].rows[0].raw_text, state.insertCalls[2].rows[0]);
   });
 
   it('allows presentation image extraction after privacy acceptance without persisting drafts', async () => {

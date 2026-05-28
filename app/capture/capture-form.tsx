@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { CtaButton, Notice } from '../../src/components/ui';
 
-type Candidate = { sourceText: string; orderIndex: number };
+type Candidate = { sourceText: string; sourceOffsetStart: number | null; sourceOffsetEnd: number | null; orderIndex: number };
 type CaptureResponse = { visitInputId: string; draftId: string; candidates: Candidate[]; error?: string };
 
 type CaptureFormProps = { initialRawText?: string; presentationMode?: boolean };

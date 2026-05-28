@@ -46,6 +46,8 @@ Confirm CTA 클릭
 
 ## `splitLines(input)` 규칙
 
+반환 타입은 `Array<{ text: string; offsetStart: number; offsetEnd: number }>`이다. `offsetStart` / `offsetEnd`는 `visit_inputs.raw_text`에 대한 JavaScript UTF-16 string offset이며, `raw_text.slice(offsetStart, offsetEnd) === text`를 만족해야 한다.
+
 1. `\r?\n` 줄바꿈 기준 1차 분리
 2. 마침표·물음표·느낌표(`[.!?。！？]`) 뒤 공백 기준 2차 분리
 3. 불릿 마커(`-`, `*`, `•`, 숫자, 한글) 제거
@@ -86,6 +88,8 @@ type AssignedTo =
 ```ts
 type ConfirmItem = {
   sourceText: string;
+  sourceOffsetStart?: number | null;
+  sourceOffsetEnd?: number | null;
   assignedTo: AssignedTo;
   orderIndex: number;
   userSelectedCardType?: CardType | null;

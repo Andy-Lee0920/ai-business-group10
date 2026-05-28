@@ -14,9 +14,11 @@ export async function POST(request: NextRequest) {
   if (store instanceof Response) return store;
 
   const saved = await store.createCapture(rawText);
-  const candidates = splitLines(rawText).map((sourceText, orderIndex) => ({
+  const candidates = splitLines(rawText).map(({ text, offsetStart, offsetEnd }, orderIndex) => ({
     id: `${saved.draftId}-${orderIndex}`,
-    sourceText,
+    sourceText: text,
+    sourceOffsetStart: offsetStart,
+    sourceOffsetEnd: offsetEnd,
     assignedTo: null,
     suggestedCardType: null,
     confidence: 'high' as const,

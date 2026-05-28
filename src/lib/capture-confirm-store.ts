@@ -22,6 +22,8 @@ type CaptureSupabaseClient = {
 
 export type ConfirmItem = {
   sourceText: string;
+  sourceOffsetStart?: number | null;
+  sourceOffsetEnd?: number | null;
   assignedTo: AssignedTo;
   orderIndex: number;
   userSelectedCardType?: CardType | null;
@@ -93,6 +95,8 @@ class SupabaseCaptureStore implements CaptureStore {
   async confirm(input: ConfirmInput) {
     const items = input.items.map((item) => ({
       source_text: item.sourceText,
+      source_offset_start: item.sourceOffsetStart ?? null,
+      source_offset_end: item.sourceOffsetEnd ?? null,
       assigned_to: item.assignedTo,
       suggested_card_type: item.suggestedCardType ?? null,
       card_type:
