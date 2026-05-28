@@ -9,6 +9,7 @@ import { generateDailyBrief } from '../../lib/brief/generateBrief';
 import { createCookieBackedSupabaseClient } from '../../lib/server-supabase';
 import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../lib/slc-fallback';
 import type { ClinicUpdate, ScheduleItem } from '../../types/slc.types';
+import type { SourceContext } from '../../types/care-cards.types';
 import type { IvfPhase } from '../../types/cycle-event.types';
 import { PresentationHomeDemo } from './presentation-home-demo';
 import { TodayScreen } from './today-screen';
@@ -48,7 +49,7 @@ async function renderSupabaseHomePage() {
   const [careCardsRes, clinicUpdatesRes] = await Promise.all([
     supabase
       .from('care_action_cards')
-      .select('id,couple_id,created_by,assignee_role,card_type,title,description,source_text,scheduled_at,care_date,status,confirmation_required,user_marked_important,partner_visible,revision,created_at')
+      .select('id,couple_id,created_by,assignee_role,card_type,title,description,source_text,source_input_id,scheduled_at,care_date,status,confirmation_required,user_marked_important,partner_visible,revision,created_at')
       .eq('created_by', user.id)
       .in('status', ['confirmed', 'completed'])
       .order('scheduled_at', { ascending: true, nullsFirst: false }),
@@ -60,13 +61,18 @@ async function renderSupabaseHomePage() {
       .order('created_at', { ascending: false }),
   ]);
 
+  const rawCards = (careCardsRes.data ?? []) as (CareActionHomeRow & { source_input_id?: string | null; source_text: string })[];
+
   const careCardItems = careCardsRes.error
     ? []
-    : projectCareActionCardsForHome((careCardsRes.data ?? []) as CareActionHomeRow[])
+    : projectCareActionCardsForHome(rawCards as CareActionHomeRow[])
       .filter((item) => {
         const scheduled = new Date(item.scheduled_at).getTime();
         return scheduled >= new Date(homeWindowStart).getTime() && scheduled <= new Date(homeWindowEnd).getTime();
       });
+
+  // Build source context map: fetch raw memo text for cards that originated from a capture
+  const sourceContextMap = await buildSourceContextMap(supabase, rawCards, careCardItems);
 
   if (careCardItems.length > 0) {
     const dailyBrief = await buildHomeBrief(careCardItems);
@@ -77,6 +83,7 @@ async function renderSupabaseHomePage() {
         userId={user.id}
         initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
         firstScheduleSkipped={firstScheduleSkipped}
+        sourceContextMap={sourceContextMap}
       />
     );
   }
@@ -124,4 +131,43 @@ async function buildHomeBrief(items: readonly ScheduleItem[]) {
     facts: factDict[confirmedPhase],
     recentCriticalEventTypes: [],
   });
+}
+
+async function buildSourceContextMap(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  rawCards: Array<{ id: string; source_input_id?: string | null; source_text: string }>,
+  visibleItems: readonly ScheduleItem[],
+): Promise<Record<string, SourceContext>> {
+  const visibleIds = new Set(visibleItems.map(i => i.id));
+  const inputIdByCardId = new Map<string, string>();
+
+  for (const card of rawCards) {
+    if (visibleIds.has(card.id) && card.source_input_id) {
+      inputIdByCardId.set(card.id, card.source_input_id);
+    }
+  }
+
+  if (inputIdByCardId.size === 0) return {};
+
+  const uniqueInputIds = [...new Set(inputIdByCardId.values())];
+  const { data: visitInputs } = await supabase
+    .from('visit_inputs')
+    .select('id,raw_text')
+    .in('id', uniqueInputIds);
+
+  if (!visitInputs || visitInputs.length === 0) return {};
+
+  const rawTextById = new Map(visitInputs.map((v: { id: string; raw_text: string }) => [v.id, v.raw_text]));
+  const map: Record<string, SourceContext> = {};
+
+  for (const card of rawCards) {
+    if (!visibleIds.has(card.id)) continue;
+    const inputId = inputIdByCardId.get(card.id);
+    if (!inputId) continue;
+    const rawText = rawTextById.get(inputId);
+    if (!rawText) continue;
+    map[card.id] = { sourceText: card.source_text, rawText };
+  }
+
+  return map;
 }
