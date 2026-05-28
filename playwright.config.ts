@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const ciBrowserChannel = process.env.CI ? { channel: 'chrome' as const } : {};
+
 const e2eEnv = {
   ...process.env,
   NEXT_PUBLIC_FEVIO_PRESENTATION_MODE: '1',
@@ -30,7 +32,7 @@ export default defineConfig({
   projects: [
     {
       name: 'mobile-chrome',
-      use: { ...devices['Pixel 7'] },
+      use: { ...devices['Pixel 7'], ...ciBrowserChannel },
     },
   ],
 });
