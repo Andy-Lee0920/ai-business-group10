@@ -1,0 +1,223 @@
+'use client';
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import type { ScheduleItem, ScheduleType } from '../../types/slc.types';
+
+interface ScheduleEditFormProps {
+  readonly item: ScheduleItem;
+}
+
+const TYPE_OPTIONS: Array<{ value: ScheduleType; label: string }> = [
+  { value: 'injection', label: '주사' },
+  { value: 'medication', label: '복용' },
+  { value: 'clinic', label: '병원 방문' },
+];
+
+export function ScheduleEditForm({ item }: ScheduleEditFormProps) {
+  const router = useRouter();
+  const [type, setType] = useState<ScheduleType>(item.type);
+  const [title, setTitle] = useState(item.title);
+  const [scheduledAt, setScheduledAt] = useState(() => toDateTimeLocal(item.scheduled_at));
+  const [dose, setDose] = useState(item.dose ?? '');
+  const [unit, setUnit] = useState(item.unit ?? '');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/schedule/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          title,
+          scheduledAt: new Date(scheduledAt).toISOString(),
+          dose,
+          unit,
+          medicationId: item.medication_id,
+        }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(payload.error ?? '일정을 저장하지 못했어요.');
+      router.push('/home');
+      router.refresh();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : '일정을 저장하지 못했어요.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <main style={pageStyle}>
+      <Link href="/home" style={backLinkStyle}>‹ 홈으로</Link>
+      <header style={{ margin: '18px 0 20px' }}>
+        <p style={{ margin: '0 0 5px', color: 'var(--slc-muted)', fontSize: 12, fontWeight: 900 }}>일정 수정</p>
+        <h1 style={{ margin: 0, color: 'var(--slc-text)', fontSize: 28, fontWeight: 900, letterSpacing: '-0.05em' }}>등록한 내용을 고칠게요</h1>
+        <p style={{ margin: '9px 0 0', color: 'var(--slc-muted)', fontSize: 13, lineHeight: 1.5 }}>병원 안내와 다르게 저장된 이름, 시간, 용량만 직접 수정해 주세요.</p>
+      </header>
+
+      <form data-testid="schedule-edit-form" onSubmit={onSubmit} style={formStyle}>
+        <label style={labelStyle}>
+          종류
+          <select value={type} onChange={(event) => setType(event.currentTarget.value as ScheduleType)} style={fieldStyle}>
+            {TYPE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+        </label>
+        <label style={labelStyle}>
+          이름
+          <input value={title} onChange={(event) => setTitle(event.currentTarget.value)} style={fieldStyle} required maxLength={80} />
+        </label>
+        <label style={labelStyle}>
+          시간
+          <input type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.currentTarget.value)} style={fieldStyle} required />
+        </label>
+        <div style={splitFieldRowStyle}>
+          <label style={labelStyle}>
+            용량
+            <input value={dose} onChange={(event) => setDose(event.currentTarget.value)} style={fieldStyle} placeholder="예: 150" />
+          </label>
+          <label style={labelStyle}>
+            단위
+            <input value={unit} onChange={(event) => setUnit(event.currentTarget.value)} style={fieldStyle} placeholder="예: IU" />
+          </label>
+        </div>
+        {error ? <p role="alert" style={{ margin: 0, color: 'var(--slc-coral)', fontSize: 13, fontWeight: 800 }}>{error}</p> : null}
+        <button type="submit" disabled={saving || deleting} style={submitStyle(saving)}>{saving ? '저장 중' : '수정 저장'}</button>
+      </form>
+      <button
+        type="button"
+        disabled={deleting || saving}
+        onClick={async () => {
+          if (!window.confirm('이 일정을 삭제할까요?')) return;
+          setDeleting(true);
+          try {
+            const res = await fetch(`/api/schedule/${item.id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const payload = await res.json().catch(() => ({})) as { error?: string };
+              setError(payload.error ?? '삭제하지 못했어요. 다시 시도해 주세요.');
+              return;
+            }
+            router.push('/home');
+            router.refresh();
+          } finally {
+            setDeleting(false);
+          }
+        }}
+        style={deleteStyle(deleting)}
+      >
+        {deleting ? '삭제 중' : '이 일정 삭제'}
+      </button>
+    </main>
+  );
+}
+
+function toDateTimeLocal(iso: string) {
+  const date = new Date(iso);
+  const offset = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+const pageStyle = {
+  width: '100%',
+  maxWidth: '100%',
+  minWidth: 0,
+  minHeight: '100dvh',
+  padding: 'var(--fevio-page-top) var(--fevio-page-gutter) var(--fevio-page-bottom)',
+  overflowX: 'hidden',
+  background: 'var(--slc-bg)',
+} as const;
+
+const backLinkStyle = {
+  color: 'var(--slc-muted)',
+  fontSize: 14,
+  fontWeight: 800,
+  textDecoration: 'none',
+} as const;
+
+const formStyle = {
+  width: '100%',
+  maxWidth: '100%',
+  minWidth: 0,
+  boxSizing: 'border-box',
+  display: 'grid',
+  gap: 12,
+  padding: 18,
+  borderRadius: 24,
+  background: 'var(--slc-surface)',
+  border: '1px solid var(--slc-border)',
+} as const;
+
+const labelStyle = {
+  minWidth: 0,
+  display: 'grid',
+  gap: 6,
+  color: 'var(--slc-muted)',
+  fontSize: 12,
+  fontWeight: 900,
+} as const;
+
+const splitFieldRowStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: 10,
+  minWidth: 0,
+} as const;
+
+const fieldStyle = {
+  display: 'block',
+  width: '100%',
+  maxWidth: '100%',
+  boxSizing: 'border-box',
+  minHeight: 46,
+  borderRadius: 15,
+  border: '1px solid var(--slc-border)',
+  background: 'var(--slc-bg)',
+  color: 'var(--slc-text)',
+  padding: '0 13px',
+  fontSize: 15,
+  fontWeight: 800,
+  fontFamily: 'inherit',
+} as const;
+
+function submitStyle(saving: boolean) {
+  return {
+    minHeight: 50,
+    border: 0,
+    borderRadius: 999,
+    background: 'var(--slc-coral)',
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 900,
+    fontFamily: 'inherit',
+    cursor: saving ? 'wait' : 'pointer',
+    opacity: saving ? 0.72 : 1,
+  } as const;
+}
+
+function deleteStyle(deleting: boolean) {
+  return {
+    display: 'block',
+    width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    minHeight: 48,
+    marginTop: 12,
+    border: '1px solid var(--slc-border)',
+    borderRadius: 999,
+    background: 'var(--slc-surface)',
+    color: 'var(--slc-coral)',
+    fontSize: 14,
+    fontWeight: 900,
+    fontFamily: 'inherit',
+    cursor: deleting ? 'wait' : 'pointer',
+    opacity: deleting ? 0.72 : 1,
+  } as const;
+}
+

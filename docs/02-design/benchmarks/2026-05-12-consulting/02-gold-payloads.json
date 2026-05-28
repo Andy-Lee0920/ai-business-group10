@@ -1,0 +1,104 @@
+{
+  "version": "2026-05-12",
+  "purpose": "Deterministic payloads for Fevio gold screen contracts. These are benchmark fixtures, not medical advice.",
+  "safetyRules": [
+    "Do not recommend dosage.",
+    "Do not diagnose symptoms.",
+    "Do not instruct what to do after a missed injection except to check hospital guidance/contact criteria.",
+    "Use hospital-confirmed facts only.",
+    "Avoid fear language such as 위험, 실패, 시간 초과."
+  ],
+  "screens": [
+    {
+      "id": "injection-patient",
+      "phase": "injection",
+      "role": "patient",
+      "layout": "RingDominantLayout",
+      "hero": {
+        "dominantObject": "careMomentRing",
+        "primaryCopy": "21:00",
+        "secondaryCopy": "고날에프 주사",
+        "fact": "병원에서 확인한 시간 기준",
+        "cta": "주사 준비 시작"
+      },
+      "firstFoldForbidden": ["denseGrid", "threeOrMoreCards", "partnerPulse", "genericProgressAsHero"],
+      "detailsAfterScroll": ["준비물", "보관 상태", "투약 시간", "파트너 공동 확인"]
+    },
+    {
+      "id": "injection-partner",
+      "phase": "injection",
+      "role": "partner",
+      "layout": "CoCheckMissionLayout",
+      "hero": {
+        "dominantObject": "missionBriefing",
+        "roleLabel": "확인자",
+        "title": "같이 확인할 것",
+        "cta": "함께 확인 완료"
+      },
+      "missionItems": ["준비물", "보관 상태", "투약 시간/부위"],
+      "avoid": ["용량을 추측하지 않기", "재촉하지 않기", "원문 메모를 캐묻지 않기"]
+    },
+    {
+      "id": "clinic-patient",
+      "phase": "clinic",
+      "role": "patient",
+      "layout": "ContextReviewLayout",
+      "hero": {
+        "eyebrow": "오늘 확인할 핵심",
+        "title": "다음 일정이 바뀌었는지 확인해요",
+        "facts": ["약/주사 확인", "지난 7일 케어 기록", "다음 안내 기록"],
+        "cta": "다음 안내 확인하기"
+      },
+      "contextReview": {
+        "contextChecks": [
+          "지난 방문 이후 맞은 주사와 바뀐 약",
+          "진료 후 확정된 다음 일정과 주의사항"
+        ],
+        "summary": ["수면", "복약", "통증", "컨디션"],
+        "captureAffordance": "다음 안내 사진으로 남기기"
+      }
+    },
+    {
+      "id": "clinic-partner",
+      "phase": "clinic",
+      "role": "partner",
+      "layout": "CompanionBriefingLayout",
+      "hero": {
+        "roleLabel": "동행자",
+        "title": "오늘은 함께 들어주는 역할이에요",
+        "fact": "출발 70분 전",
+        "cta": "동행 준비 완료"
+      },
+      "missionItems": ["출발 시간 확인", "챙길 것 확인", "지난 흐름 함께 확인"],
+      "avoid": ["진료실에서 대신 판단하지 않기", "결과를 재촉하지 않기"]
+    },
+    {
+      "id": "waiting-patient",
+      "phase": "waiting",
+      "role": "patient",
+      "layout": "SpaceDominantLayout",
+      "hero": {
+        "dominantObject": "quietSpace",
+        "title": "지금은 몸과 마음을 쉬어도 되는 시간이에요",
+        "fact": "판정일까지 D-5",
+        "cta": "오늘 상태 남기기"
+      },
+      "firstFoldForbidden": ["denseGrid", "progressDashboard", "multipleCtas", "urgencyLanguage"],
+      "detailsAfterScroll": ["다음 일정", "필수 알림", "선택적 감정 기록"]
+    },
+    {
+      "id": "waiting-partner",
+      "phase": "waiting",
+      "role": "partner",
+      "layout": "QuietSupportLayout",
+      "hero": {
+        "roleLabel": "조용한 지지자",
+        "title": "오늘은 조용히 곁에 있어주세요",
+        "fact": "필수 알림만 남겼어요",
+        "cta": "응원 한마디 보내기"
+      },
+      "missionItems": ["일정 보기", "응원 한마디 보내기", "병원 연락 기준 확인"],
+      "avoid": ["증상 묻기", "결과 예측하기", "괜찮을 거야로 덮기"]
+    }
+  ]
+}

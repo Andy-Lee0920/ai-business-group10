@@ -1,0 +1,42 @@
+{
+  "samples": [
+    {
+      "id": "clinic-note-ovidrel",
+      "expected": [
+        {
+          "type": "injection",
+          "title": "오비드렐",
+          "scheduled_at": "2026-05-19T21:00:00+09:00",
+          "dose": "250",
+          "unit": "mcg"
+        }
+      ]
+    },
+    {
+      "id": "clinic-note-mixed",
+      "expected": [
+        {
+          "type": "clinic",
+          "title": "병원 방문",
+          "scheduled_at": "2026-05-20T10:00:00+09:00",
+          "dose": null,
+          "unit": null
+        },
+        {
+          "type": "medication",
+          "title": "듀파스톤",
+          "scheduled_at": "2026-05-20T08:00:00+09:00",
+          "dose": "1",
+          "unit": "정"
+        },
+        {
+          "type": "injection",
+          "title": "세트로타이드",
+          "scheduled_at": "2026-05-20T22:00:00+09:00",
+          "dose": null,
+          "unit": null
+        }
+      ]
+    }
+  ]
+}

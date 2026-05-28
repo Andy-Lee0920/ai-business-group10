@@ -1,0 +1,82 @@
+# Design
+
+## Source of truth
+- Status: Active
+- Last refreshed: 2026-05-26
+- Primary product surfaces: onboarding, privacy gate, home/today, calendar, records, clinic update, settings, partner projection.
+- Evidence reviewed: `AGENTS.md`, `/Users/reliqbit_mac/Downloads/10조 피드백모음.xlsx`, `docs/01-product/mvp-target.md`, `docs/01-product/fevio-product-north-star.md`, `docs/02-design/designer-brief.md`, `docs/02-design/deck.md`, `docs/02-design/phase-distinct-layout-composition.md`, `app/globals.css`, `app/(authed)/layout.tsx`, `src/components/bottom-nav.tsx`, `src/features/today/today-screen.tsx`, `src/features/onboarding/onboarding-screen.tsx`.
+
+## Brand
+- Personality: calm, precise, operational, Korean-first, low-pressure.
+- Trust signals: privacy-before-data, user confirmation before saving care actions, visible AI/OCR confirmation boundary, restrained medical boundaries.
+- Avoid: generic SaaS dashboards, dense settings-like onboarding, alarmist urgency, raw implementation labels.
+- **No mascot, no character.** 임신앱 (아띠/마미톡 등) 의 cute animal/baby character 패턴을 차용하지 않는다. Retention hook 은 character 친근감이 아니라 botanical/abstract visual + 따뜻한 컴포지션·일러스트 완성도로 확보한다. Daily Brief, 캘린더 hero, 빈 상태, partner projection 모두 동일 원칙.
+
+## Product goals
+- Goals: turn clinic instructions into confirmed care actions; make today’s next execution obvious; support partner role sharing without exposing raw clinical text.
+- Non-goals: diagnosis, treatment planning, dose advice, medical-device behavior.
+- Success signals: user can understand today's injection, medication, visit, or missed confirmation in the first viewport; partner sees what to help with, not a copied patient screen; AI/OCR candidates stay non-executable until confirmed.
+
+## Personas and jobs
+- Primary personas: IVF patient managing injections/medications; partner reading a sanitized support projection.
+- User jobs: confirm what to do today, record completion, update after clinic, share only the partner role needed today, reset demo/personal data safely.
+- Key contexts of use: iPhone Safari, one-handed use, emotionally loaded care moments, clinic-message copy/paste or photo OCR.
+
+## Information architecture
+- Primary navigation: five-part bottom nav — Home, Calendar, Add, Records, Settings.
+- Core routes/screens: `/privacy`, `/onboarding`, `/home`, `/calendar`, `/add`, `/records`, `/clinic-update`, `/settings`, `/partner/[token]`.
+- Content hierarchy: one hero/primary action first, then compact supporting rows; avoid card grids as the first impression.
+
+## Design principles
+- Principle 1: one screen, one next execution; secondary information should recede.
+- Principle 2: input may be messy, confirmation must be clear; missing fields are asked only where needed.
+- Tradeoffs: prefer deterministic execution summaries over rich detail if space is constrained; countdowns and alerts must be accurate without making routine states feel pressured.
+
+## Visual language
+- Color: warm neutral background, onboarding CTA orange (`#F47D63 → #D95F4C`) for primary actions/attention, success green for completed states.
+- Typography: Korean-first, high-weight short headings, muted explanatory copy.
+- Spacing/layout rhythm: iPhone Safari frame uses shared `--fevio-page-*` and `--fevio-bottom-nav-*` tokens; no per-screen bottom padding guesses.
+- Shape/radius/elevation: soft rounded cards, low-density shadows, no hard enterprise field grids unless actively editing.
+- Motion: minimal, functional only.
+- Imagery/iconography: use `SLCIllustration`/registered PNG assets; no raw `<img>` in product UI.
+
+## Components
+- Existing components to reuse: `BottomNav`, `AmbientStoryBackground`, `SLCIllustration`, `ActionCard`, `ConfirmSheet`, `SettingsRow`.
+- New/changed components: mobile frame tokens and authed shell classes in `app/globals.css`.
+- Variants and states: missed, due, upcoming, completed, draft, pending-confirmation.
+- Token/component ownership: `app/globals.css` owns frame/safe-area tokens; feature screens consume variables instead of hardcoded iPhone padding.
+
+## Accessibility
+- Target standard: practical WCAG AA for text contrast and touch targets.
+- Keyboard/focus behavior: buttons/links keep semantic roles; bottom sheet uses `role="dialog"`.
+- Contrast/readability: coral text used sparingly; long Korean text should be 13–16px with sufficient line height.
+- Screen-reader semantics: nav has explicit label; icon-only controls need aria labels.
+- Reduced motion and sensory considerations: no required animation for comprehension.
+
+## Responsive behavior
+- Supported breakpoints/devices: iPhone Safari mobile first; desktop preview constrained to iPhone 17 Pro Max width (`--fevio-phone-frame-max`).
+- Layout adaptations: pages use shared gutters/top/bottom safe-area tokens; authenticated screens keep the same desktop phone chrome as onboarding; fixed overlays align to the same max frame.
+- Touch/hover differences: 48px minimum target preferred; hover is not required.
+
+## Interaction states
+- Loading: quiet skeleton or simple text; no technical errors.
+- Empty: explain what appears next, not system state.
+- Error: user-actionable Korean copy.
+- Success: short confirmation and route to the next meaningful screen.
+- Disabled: visible but calm, with opacity and preserved layout.
+- Offline/slow network: fail closed; do not persist unconfirmed care data.
+
+## Content voice
+- Tone: polite, practical, emotionally restrained.
+- Terminology: use 본인/파트너, 일정 후보, 오늘 실행, 함께 챙길 역할, 저장 전 확인; avoid internal labels.
+- Microcopy rules: fewer words than a spec; never imply medical judgment.
+
+## Implementation constraints
+- Framework/styling system: Next.js App Router, React inline styles plus CSS modules/global tokens.
+- Design-token constraints: use `--slc-coral-gradient` for primary CTA surfaces; use `--slc-coral` for compact active states/text/borders; use `--fevio-page-gutter`, `--fevio-page-top`, `--fevio-bottom-nav-height`, `--fevio-page-bottom`, and `--fevio-mobile-frame-max` for mobile frame alignment.
+- Performance constraints: no new visual dependency for shell layout.
+- Compatibility constraints: Safari dynamic viewport (`100dvh`) and `env(safe-area-inset-*)` are required.
+- Test/screenshot expectations: unit contract for shared frame tokens and desktop phone chrome continuity; Playwright smoke verifies no horizontal overflow on 390px and desktop iPhone frame width.
+
+## Open questions
+- [ ] Whether iPhone 17 non-Pro and Pro Max should have separate visual baselines / owner: product / impact: screenshot QA precision.

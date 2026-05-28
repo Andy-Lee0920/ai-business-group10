@@ -1,0 +1,43 @@
+.homeCardList {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.homeActionCard {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: var(--fevio-radius-card);
+  padding: 18px;
+}
+
+.homeCardCoral {
+  background: rgba(224, 122, 104, 0.12);
+  border-color: rgba(224, 122, 104, 0.44);
+  box-shadow: 0 16px 42px rgba(224, 122, 104, 0.18);
+}
+
+.homeUrgencyCopy {
+  color: #8C463A;
+  font-weight: 900;
+  margin: 0 0 8px;
+}
+
+:global(.adaptive-home-list) {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+:global(.adaptive-home-card) {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: var(--fevio-radius-card);
+  padding: 18px;
+}
+
+:global(.adaptive-home-urgency) {
+  color: #8C463A;
+  font-weight: 900;
+  margin: 0 0 8px;
+}

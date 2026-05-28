@@ -1,0 +1,23 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+describe('ClinicUpdateForm Clinic Guide integration', () => {
+  it('uses the shared Clinic Guide types and displays normalized medication candidate cards', () => {
+    const source = readFileSync('src/features/clinic-update/clinic-update-form.tsx', 'utf8');
+
+    expect(source).toContain("ClinicGuideMedicationNormalizeResponse");
+    expect(source).toContain("/api/clinic-guide/normalize");
+    expect(source).toContain("/api/clinic-guide/interview");
+    expect(source).toContain('ClinicGuideResponse');
+    expect(source).toContain('ClinicGuideAnswer');
+    expect(source).toContain('answerHistory');
+    expect(source).toContain('requiresUserConfirmation');
+    expect(source).toContain('정규화된 약 후보');
+    expect(source).toContain('setAiAvailable(false)');
+    expect(source).toContain('if (!available) return null');
+    expect(source).not.toContain('AI 정리가 잠시 불안정해요');
+    expect(source).toContain('저장은 최종 확인 후에만 진행돼요');
+    expect(source).toContain('resolveMedicationNames');
+    expect(source).not.toContain('form.addedMedicationIds.join');
+  });
+});

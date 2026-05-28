@@ -1,0 +1,492 @@
+# Fevio Product North Star
+
+> 병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.
+
+Fevio는 IVF 치료자가 병원 안내와 투약 일정을 놓치지 않도록, 파트너와 함께 확인하고 기록하는 치료 운영 앱이다.
+
+Fevio는 단순한 일정표, 약 알림, 감정 일기 앱이 아니다.
+Fevio는 병원 안내, 투약 시간, 주사 기록, 파트너 공유를 한 화면에서 확인하고 실행하게 해 치료 운영 부담을 줄이는 **state-driven IVF care operations app**이다.
+
+---
+
+## 1. One Sentence
+
+**Fevio는 IVF 치료자가 병원 안내와 투약 일정을 놓치지 않도록, 파트너와 함께 확인하고 기록하는 치료 운영 앱이다.**
+
+---
+
+## 2. Why Fevio Exists
+
+난임 치료는 부부의 일이지만, 실제 운영 부담은 한 사람에게 집중되기 쉽다.
+
+환자는 병원에서 들은 일정, 약 이름, 주사 시간, 검사 결과, 다음 방문일을 기억하고 집에 돌아와 다시 설명해야 한다. 파트너는 돕고 싶어도 무엇을 해야 할지 알기 어렵다. 이 정보 전달 구조는 실수, 불안, 반복 질문, 감정적 갈등으로 이어진다.
+
+Fevio는 이 문제를 “더 많은 설명”이나 “따뜻한 문장”으로 해결하지 않는다.
+Fevio는 병원 안내를 확인 가능한 실행 카드로 구조화하고, 그 상태를 각 역할에 맞는 행동 UI로 번역한다.
+
+환자에게는 기록, 확인, 입력, 공유 제어가 필요하다.  
+파트너에게는 준비, 동행, 관찰, 다음 행동 확인이 필요하다.
+
+같은 치료 상태라도 두 사람이 봐야 하는 화면은 달라야 한다.
+
+---
+
+## 3. Product Thesis
+
+### Fevio is not
+
+- 단순 생리/배란 추적 앱
+- 병원 예약 캘린더
+- 약 알림 앱
+- 감정 일기 앱
+- 환자 화면을 파트너에게 복사해서 보여주는 공유 앱
+- 의료 판단이나 치료 추천을 하는 AI 앱
+- 예쁜 화면만 보여주는 static mock demo
+
+### Fevio is
+
+- 병원 안내와 투약 일정을 놓치지 않게 하는 IVF 치료 운영 앱
+- 환자와 파트너가 하나의 care state를 함께 확인하는 앱
+- 역할과 공유 권한에 따라 실행 UI가 달라지는 앱
+- 설명보다 투약·방문·기록 실행을 돕는 utility-first 앱
+- 환자의 통제권과 프라이버시를 우선하는 앱
+- 실제 제품 코드로 이어질 수 있는 state-driven interactive prototype
+
+---
+
+## 4. Core Architecture Principle
+
+```text
+Care State
++ Role
++ Sharing Level
++ Utility State
++ Action Log
+= Role-aware Generative UI
+```
+
+Fevio의 Generative UI는 LLM이 자유롭게 화면을 즉흥 생성하는 구조가 아니다.
+
+Fevio의 UI는 관리된 컴포넌트 시스템 안에서 동적으로 생성된다.  
+입력은 care state, role, sharing permission, utility state이고, 출력은 환자와 파트너 각각에게 필요한 utility card 조합이다.
+
+즉, Fevio의 Generative UI는 **free-form generation**이 아니라 **governed, state-driven generation**이다.
+
+---
+
+## 5. The 7-Stage IVF Care Cycle
+
+Fevio의 top-level structure는 기존 3-scene이 아니라 IVF 7-stage care cycle이다.
+
+```text
+1. 사전 검사
+2. 배란 유도
+3. 난자 채취
+4. 수정 준비
+5. 배아 배양
+6. 배아 이식
+7. 임신 확인
+```
+
+기존의 “주사 / 병원 / 대기”는 top-level navigation이 아니다.  
+이 세 장면은 각 stage 안에 내장되는 `DominantMode`로 흡수된다.
+
+예시:
+
+```text
+Stage 2 배란 유도 → 주사 실행
+Stage 3 난자 채취 → 시술 회복
+Stage 5 배아 배양 → 결과 대기
+Stage 7 임신 확인 → 결과 확인
+```
+
+이 구조의 목적은 IVF를 모르는 사람도 치료가 하나의 긴 care cycle이라는 점을 이해하게 만드는 것이다.
+
+---
+
+## 6. One Care State, Role-Specific Operation
+
+Fevio의 핵심 선언은 다음 한 줄이다.
+
+```text
+병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.
+```
+
+하나의 앱에서 하나의 care cycle state를 공유하지만, 환자와 파트너가 보는 경험은 달라야 한다.
+
+환자는 자신의 치료 상태를 기록하고 통제한다.  
+파트너는 같은 상태를 바탕으로 지금 도울 수 있는 행동을 본다.
+
+이 차이가 Fevio의 role-aware UI의 본질이다.
+
+---
+
+## 7. Utility-Only Phone Content
+
+폰 안 화면은 발표 대본이 아니다.  
+폰 안 화면은 기능 블록이어야 한다.
+
+### 금지
+
+```text
+오늘은 배아 발달 결과를 기다리는 단계입니다.
+이 단계에서는 불안할 수 있지만 차분히 기다려야 합니다.
+파트너는 곁에서 정서적으로 지지하는 것이 중요합니다.
+```
+
+### 허용
+
+```text
+Day 5 결과 · 내일 오전
+배아 수
+동결 여부
+다음 연락일
+공유 범위
+hCG 검사일
+약 시간
+완료 확인
+```
+
+Stage 설명은 phone 내부가 아니라 selector 아래 1줄 context로만 제공한다.
+
+```text
+5/7 배아 배양 · 배아 발달을 기다리고 결과를 기록합니다
+오늘 모드: 결과 대기
+```
+
+Phone 내부는 utility card로만 구성한다.
+
+예시:
+
+```text
+EmbryoUpdateTimeline
+EmbryoResultCard
+NextUpdateReminder
+ResultVisibilityControl
+BetaHcgInputCard
+MedicationTracker
+InjectionLog
+RecoveryLog
+```
+
+---
+
+## 8. Partner Screen = Projection, Not Copy
+
+파트너 화면은 환자 화면의 복사본이 아니다.
+
+파트너 화면은 다음 요소의 projection이다.
+
+```text
+Shared Care State
++ Sharing Level
++ Permission
++ Patient Action
++ Partner Role
+```
+
+예시:
+
+Stage 7에서 환자가 “다음 일정만 공유”를 선택하면, 파트너는 hCG 수치를 볼 수 없다.  
+파트너는 다음 검사일, 약 지속 여부, 병원 안내만 본다.
+
+이것이 Fevio의 privacy-first 원칙이 UI 레벨에서 구현되는 방식이다.
+
+```ts
+function getVisiblePartnerCards({ scenario, state }) {
+  return scenario.partner.utilityCards.filter((card) => {
+    if (card.requiresSharingLevel === "emotional") {
+      return state.sharingLevel === "emotional";
+    }
+
+    if (card.requiresSharingLevel === "care") {
+      return (
+        state.sharingLevel === "care" ||
+        state.sharingLevel === "emotional"
+      );
+    }
+
+    return true;
+  });
+}
+```
+
+---
+
+## 9. Confirmation-First Care Action
+
+Fevio에서 care action은 기록만으로 확정되지 않는다.
+
+특히 주사, 약, 민감한 시술 관련 action은 다음 세 값을 분리해야 한다.
+
+```text
+administered_by ≠ recorded_by ≠ confirmed_by_patient
+```
+
+파트너가 주사를 놓았을 수 있다.  
+파트너가 그 사실을 기록했을 수 있다.  
+그러나 환자가 confirm하지 않으면 확정된 care action이 아니다.
+
+이 원칙은 Fevio의 trust ledger, user-confirmed care record, privacy-first care collaboration의 기초다.
+
+---
+
+## 10. Stage 4 Language Safety
+
+Stage 4의 UI label은 **“수정 준비”**로 고정한다.
+
+이 단계는 파트너의 참여가 중요할 수 있지만, 화면은 성적 부담이나 수치심을 만들면 안 된다.  
+Fevio는 이 단계를 성적 사건이 아니라 의료적 준비와 일정 확인, privacy-respecting collaboration으로 다룬다.
+
+### 금지 표현
+
+```text
+정자 추출
+파트너이 해야 하는 날
+성공적으로 채취
+남성 파트너의 과제
+```
+
+### 권장 표현
+
+```text
+수정 준비
+필요한 준비와 시간을 함께 확인합니다
+결과 알림을 함께 확인합니다
+조용한 협력
+```
+
+---
+
+## 11. Demo = Product Structure Skeleton
+
+Fevio demo는 static mock screen이 아니다.  
+최소한의 실제 상태 기반 interactive prototype이어야 한다.
+
+Demo는 지금 local state로 동작해도 된다.  
+하지만 데이터 구조는 Supabase-ready여야 한다.
+
+반드시 포함해야 하는 구조:
+
+```text
+DemoState
+demoReducer
+UtilityCardState
+ActionLog
+UtilityCardRenderer
+PartnerProjection
+```
+
+데모에서 stage를 바꾸면 utility card set이 바뀌어야 한다.  
+카드를 완료하면 상태가 바뀌어야 한다.  
+공유 범위를 바꾸면 파트너 화면이 달라져야 한다.  
+중앙 Shared Care State panel은 현재 stage, sharing level, 완료 action count를 반영해야 한다.
+
+---
+
+## 12. URL-Visible Demo State
+
+데모의 상태는 URL로 복구 가능해야 한다.
+
+```text
+/demo                         → Intro Landing
+/demo?mode=stage              → Stage 2 fallback
+/demo?mode=stage&stage=1~7    → 해당 stage demo
+```
+
+라우팅 원칙:
+
+```text
+Intro CTA: router.push("/demo?mode=stage&stage=2")
+Stage selector: router.replace("/demo?mode=stage&stage=N")
+```
+
+이 원칙은 발표 안정성, QA, deep link 공유를 위해 필요하다.
+
+---
+
+## 13. Intro Landing Principle
+
+Intro Landing은 장식용 landing page가 아니다.  
+IVF 7-stage care cycle을 처음 보는 사람에게 제품 구조를 설명하는 entry point다.
+
+Intro orbit visual은 다음 원칙을 따른다.
+
+```text
+IVF_STAGES 데이터를 재사용한다.
+7개 node는 clickable navigation이다.
+각 node 클릭 시 해당 stage demo로 진입한다.
+중앙에는 Fevio Care State Engine과 CTA를 둔다.
+CTA는 Stage 2 demo로 진입한다.
+Animation은 hover/glow 수준만 허용한다.
+```
+
+Intro footer copy:
+
+```text
+병원 안내를 오늘 실행으로, 파트너에게는 함께 챙길 역할로.
+```
+
+---
+
+## 14. Stage Selector Principle
+
+Stage selector는 IVF 전체 여정의 조작축이다.
+
+Desktop 발표 화면에서는 7개 숫자 pill을 한 줄에 고정 배치한다.
+
+```text
+[1][2][3][4][5][6][7]   2/7
+배란 유도 · 난자를 여러 개 키우고 주사 일정을 관리합니다
+오늘 모드: 주사 실행
+```
+
+원칙:
+
+```text
+pill 내부에는 숫자만 표시한다.
+stage 이름은 context line에 표시한다.
+desktop에서는 horizontal scroll을 쓰지 않는다.
+mobile에서는 fallback을 허용한다.
+```
+
+---
+
+## 15. Vercel-Visible = Done
+
+Fevio에서 “완료”의 기준은 코드 작성이나 테스트 통과가 아니다.
+
+> Vercel URL을 열었을 때 product surface가 실제로 보이고, 조작되고, 상태가 바뀌어야 done이다.
+
+테스트 통과와 typecheck 통과는 필요조건이다.  
+충분조건은 아니다.
+
+모든 issue의 acceptance criteria는 다음 형식을 가져야 한다.
+
+```text
+URL → Action → Visible Result
+```
+
+예시:
+
+```text
+/demo?mode=stage&stage=7 접속
+→ 공유 범위를 “다음 일정만”으로 변경
+→ Partner 화면에서 hCG 수치가 숨겨지고 다음 검사일만 표시됨
+```
+
+---
+
+## 16. North Star UX Rules
+
+### 1. 설명보다 실행
+
+사용자가 읽어야 할 문장을 줄이고, 바로 누를 수 있는 action을 제공한다.
+
+### 2. 환자에게 통제권
+
+민감 정보, 감정 기록, 결과 수치, 공유 범위는 환자가 결정한다.
+
+### 3. 파트너에게 구체적 행동
+
+파트너에게 “잘 도와주세요”라고 말하지 않는다.  
+대신 지금 할 수 있는 준비, 동행, 관찰, 확인 action을 보여준다.
+
+### 4. 같은 정보, 다른 역할 언어
+
+같은 care state라도 환자와 파트너가 보는 UI는 달라야 한다.
+
+### 5. 의료 판단 금지
+
+Fevio는 진단, 처방, 결과 해석, 성공률 예측을 하지 않는다.  
+Fevio는 병원 지시를 구조화하고, 사용자가 놓치지 않도록 돕는다.
+
+### 6. 과잉 위로 금지
+
+Fevio의 톤은 절제된 따뜻함이다.  
+감정을 과장하지 않고, 불안을 가볍게 다루지 않는다.
+
+### 7. 민감한 단계는 더 적게 말한다
+
+Stage 4, Stage 7처럼 민감한 단계일수록 문장을 줄이고, 공유 제어와 다음 행동을 명확히 한다.
+
+### 8. 가짜 화면 금지
+
+데모라도 버튼, 입력, 완료 상태, 공유 범위 변경은 실제 state에 반응해야 한다.
+
+---
+
+## 17. Non-Negotiables
+
+Fevio에서 절대 타협하지 않는 원칙:
+
+```text
+No static fake screen.
+No long explanatory phone copy.
+No partner copy-paste view.
+No medical judgment.
+No forced sharing.
+No careless wording around sensitive reproductive actions.
+No “done” without Vercel-visible product surface.
+```
+
+---
+
+## 18. Product Definition
+
+Fevio는 난임 치료를 한 사람의 기억과 전달 능력에 의존하는 과정에서, 부부가 함께 관리할 수 있는 shared care state로 전환한다.
+
+환자는 자신의 치료 상태를 기록하고 통제한다.  
+파트너는 같은 상태를 바탕으로 지금 도울 수 있는 행동을 본다.  
+앱은 IVF 7단계 사이클 내내 병원 안내, 투약 시간, 주사 기록, 파트너 역할을 실행 가능한 utility UI로 정리한다.
+
+**Fevio is a state-driven IVF care operations app for confirmed clinic instructions, medication execution, and partner role sharing.**
+
+---
+
+## 19. Relationship to PRD
+
+이 문서는 PRD를 대체하지 않는다.  
+PRD는 Fevio가 해결해야 할 문제, 사용자, 기능 범위, MVP를 정의한다.  
+이 문서는 Fevio가 어떤 제품 철학과 아키텍처 원칙으로 그 문제를 해결할지 정의한다.
+
+PRD가 정의한 핵심 문제는 다음과 같다.
+
+```text
+일정 관리의 복잡성
+치료 프로토콜의 복잡성
+부부 간 정보 비대칭
+감정적 소진
+```
+
+PRD가 정의한 핵심 기능은 다음과 같다.
+
+```text
+치료 일정 관리
+약/주사 관리
+부부 공유 기능
+시술 기록 관리
+온보딩 플로우
+알림 실패 대응
+데이터 민감성 및 보안 정책
+```
+
+이 North Star는 위 기능을 단순 feature list가 아니라 다음 구조로 통합한다.
+
+```text
+State-driven care cycle
+Role-aware utility UI
+Privacy-first partner projection
+Confirmation-first care action
+Vercel-visible product surface
+```
+
+따라서 모든 기능은 다음 질문을 통과해야 한다.
+
+```text
+이 기능은 shared care state를 더 정확하게 만드는가?
+이 기능은 환자의 통제권을 보존하는가?
+이 기능은 파트너에게 구체적 행동을 주는가?
+이 기능은 의료 판단 없이 실행을 돕는가?
+이 기능은 Vercel에서 실제로 보이고 조작되는가?
+```

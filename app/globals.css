@@ -1,0 +1,244 @@
+ :root {
+  --slc-bg: #FAF7F2;
+  --slc-surface: #FFFDFC;
+  --slc-surface-warm: #F7EFE9;
+  --slc-coral: #C95F4B;
+  --slc-coral-light: #F4DCD5;
+  --slc-coral-dark: #A94E3F;
+  --slc-coral-gradient: linear-gradient(135deg, #E97861 0%, #C95F4B 100%);
+  --slc-border: #E9DED6;
+  --slc-text: #2F2926;
+  --slc-muted: #8A7F78;
+  --slc-success: #6E8F72;
+  --slc-warning: #B8793E;
+  --slc-card: #FFFFFF;
+  --fevio-sage: #6F8F6E;
+  --fevio-sage-dark: #3D5C3C;
+  --fevio-lavender: #B9AED6;
+  --fevio-cream: #F6F4F1;
+  --fevio-sky: #F0F9FF;
+  --fevio-soft-gray: #F3F4F6;
+  --fevio-border: #E5E7EB;
+  --fevio-text-secondary: #6B7280;
+  --fevio-text-tertiary: #9CA3AF;
+  --fevio-ink: #20231F;
+  --fevio-muted: #686F64;
+  --fevio-coral: #E07A68;
+  --fevio-card: #FFFFFF;
+  --fevio-radius-card: 22px;
+  --fevio-radius-card-tight: 16px;
+  --fevio-radius-control: 999px;
+  --fevio-shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --fevio-border-subtle: rgba(56, 72, 62, 0.18);
+  --fevio-shadow-card: 0 20px 60px rgba(50, 61, 46, 0.12);
+  --fevio-material-ultra-thin-blur: 20px;
+  --fevio-material-thin-blur: 30px;
+  --fevio-material-regular-blur: 40px;
+  --fevio-material-thick-blur: 50px;
+  --fevio-material-ultra-thick-blur: 60px;
+  --fevio-glass-edge: rgba(255, 255, 255, 0.42);
+  --fevio-touch-target: 48px;
+  --fevio-grain-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  --fevio-phone-frame-max: 440px;
+  --fevio-phone-frame-height: 956px;
+  --fevio-phone-radius: 53px;
+  --fevio-phone-bezel-width: 5px;
+  --fevio-phone-safe-top: 59px;
+  --fevio-phone-safe-bottom: 34px;
+  --fevio-dynamic-island-top-offset: 11px;
+  --fevio-dynamic-island-width: 125.67px;
+  --fevio-dynamic-island-height: 36.67px;
+  --fevio-dynamic-island-radius: 18.33px;
+  --fevio-mobile-frame-max: var(--fevio-phone-frame-max);
+  --fevio-page-gutter: clamp(16px, 5.13vw, 24px);
+  --fevio-page-top: max(52px, calc(env(safe-area-inset-top, 0px) + 18px));
+  --fevio-bottom-nav-height: calc(78px + env(safe-area-inset-bottom, 0px));
+  --fevio-page-bottom: calc(var(--fevio-bottom-nav-height) + 22px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 232, 219, 0.86), transparent 34rem),
+    radial-gradient(circle at 80% 4%, rgba(220, 235, 219, 0.82), transparent 34rem),
+    radial-gradient(circle at 50% 110%, rgba(185, 174, 214, 0.42), transparent 32rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(244, 238, 229, 0.8)),
+    #f7f4ee;
+  color: var(--fevio-ink);
+  font-family: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 100dvh;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--fevio-cream);
+  padding: max(18px, env(safe-area-inset-top, 0px)) 14px max(24px, env(safe-area-inset-bottom, 0px));
+}
+
+.authed-content {
+  width: 100%;
+  max-width: 100%;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.fevio-authed-frame {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--slc-bg);
+}
+
+.fevio-authed-main {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  scroll-padding-bottom: var(--fevio-page-bottom);
+}
+
+.fevio-authed-frame[data-bottom-nav="true"] .fevio-authed-main {
+  padding-bottom: var(--fevio-bottom-nav-height);
+}
+
+@media (min-width: 700px) {
+  /* ── presentation-mode=0 : 폰 프레임 시뮬레이션 ── */
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body[data-iphone-frame="1"] {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(255, 232, 218, 0.86), transparent 34rem),
+      radial-gradient(circle at 84% 6%, rgba(255, 246, 238, 0.82), transparent 34rem),
+      radial-gradient(circle at 50% 110%, rgba(248, 238, 231, 0.72), transparent 32rem),
+      linear-gradient(180deg, #fff8f2 0%, #f8eee7 100%);
+  }
+
+  body[data-iphone-frame="1"] nextjs-portal {
+    display: none !important;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame {
+    position: relative;
+    width: min(100vw, var(--fevio-phone-frame-max));
+    max-width: var(--fevio-phone-frame-max);
+    height: min(var(--fevio-phone-frame-height), calc(100dvh - 48px));
+    min-height: 0;
+    margin: 24px auto;
+    padding-top: 0;
+    scroll-padding-top: var(--fevio-phone-safe-top);
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    border: var(--fevio-phone-bezel-width) solid #050706;
+    border-radius: var(--fevio-phone-radius);
+    box-shadow:
+      0 4px 16px rgba(49, 45, 42, 0.08),
+      0 12px 40px rgba(49, 45, 42, 0.12),
+      0 30px 86px rgba(95, 82, 70, 0.14),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+      0 0 0 1px rgba(255, 255, 255, 0.08);
+    scrollbar-width: none;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell {
+    overflow-y: auto;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame {
+    overflow-y: hidden;
+    background: var(--slc-bg);
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-main {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: clip;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell::-webkit-scrollbar,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-main::-webkit-scrollbar {
+    display: none;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell::before,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame::before {
+    z-index: 80;
+    display: block;
+    width: var(--fevio-dynamic-island-width);
+    height: var(--fevio-dynamic-island-height);
+    margin: 0;
+    border-radius: var(--fevio-dynamic-island-radius);
+    background: #000;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 10px 18px rgba(0, 0, 0, 0.28);
+    content: "";
+    pointer-events: none;
+    transform: translateX(-50%);
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .app-shell::before {
+    position: fixed;
+    top: calc(24px + var(--fevio-dynamic-island-top-offset));
+    left: 50%;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame::before {
+    position: absolute;
+    top: var(--fevio-dynamic-island-top-offset);
+    left: 50%;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-bottom-nav {
+    position: absolute !important;
+    bottom: 0 !important;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-bottom-sheet-layer,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-community-sheet-layer,
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-confirm-sheet-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+  }
+
+  :where(body[data-presentation-mode="0"], body[data-iphone-frame="1"]) .fevio-authed-frame .fevio-post-clinic-banner {
+    position: absolute !important;
+  }
+}

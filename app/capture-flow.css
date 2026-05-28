@@ -1,0 +1,143 @@
+.capture-form,
+.split-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.field-label {
+  color: var(--fevio-ink);
+  font-weight: 800;
+}
+
+textarea {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(32, 35, 31, 0.14);
+  border-radius: 18px;
+  color: var(--fevio-ink);
+  line-height: 1.6;
+  min-height: 190px;
+  padding: 14px;
+  resize: vertical;
+  width: 100%;
+}
+
+textarea:focus-visible {
+  outline: 3px solid rgba(111, 143, 110, 0.32);
+  outline-offset: 3px;
+}
+
+.helper-row {
+  color: var(--fevio-muted);
+  display: grid;
+  font-size: 0.9rem;
+  gap: 6px;
+}
+
+.split-item {
+  background: rgba(111, 143, 110, 0.08);
+  border: 1px solid rgba(111, 143, 110, 0.18);
+  border-radius: 18px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.split-item p {
+  line-height: 1.6;
+  margin: 0;
+}
+
+.description-warning {
+  background: rgba(224, 122, 104, 0.1);
+  border: 1px solid rgba(224, 122, 104, 0.28);
+  border-radius: 16px;
+  color: #8d3326;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.description-warning p {
+  margin: 0;
+}
+
+.description-warning__heading,
+.description-warning__badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.chip-grid--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.chip-grid .fevio-selection-chip {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.chip-grid--compact .fevio-selection-chip {
+  align-items: center;
+  text-align: center;
+}
+
+.fevio-selection-chip small {
+  color: var(--fevio-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.capture-camera {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(185, 174, 214, 0.22), transparent 38%),
+    rgba(255, 255, 255, 0.62);
+  box-shadow: 0 16px 40px rgba(50, 61, 46, 0.09);
+  backdrop-filter: blur(var(--fevio-material-thin-blur));
+}
+
+.capture-camera strong {
+  display: block;
+  color: var(--fevio-ink);
+  font-size: 1.08rem;
+  letter-spacing: -0.035em;
+}
+
+.capture-camera p,
+.capture-camera small {
+  display: block;
+  margin: 5px 0 0;
+  color: var(--fevio-muted);
+  font-size: 0.88rem;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.capture-camera__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.capture-camera__button {
+  width: 100%;
+}

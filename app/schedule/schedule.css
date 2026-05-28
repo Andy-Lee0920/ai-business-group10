@@ -1,0 +1,101 @@
+.schedule-page {
+  width: 100%;
+}
+
+.schedule-card {
+  margin: 0 auto;
+  max-width: var(--fevio-phone-frame-max);
+}
+
+.schedule-eyebrow {
+  margin: 0 0 8px;
+  color: var(--fevio-sage-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.schedule-card h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1.1;
+}
+
+.schedule-lede {
+  color: var(--fevio-muted);
+  line-height: 1.7;
+}
+
+.schedule-form {
+  display: grid;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.schedule-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.schedule-fieldset legend,
+.schedule-date-input span,
+.schedule-memo-input span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--fevio-ink);
+  font-weight: 700;
+}
+
+.schedule-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.schedule-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.schedule-date-input,
+.schedule-memo-input {
+  display: grid;
+  gap: 8px;
+}
+
+.schedule-date-input input,
+.schedule-memo-input textarea {
+  border: 1px solid var(--fevio-border-subtle);
+  border-radius: 18px;
+  color: var(--fevio-ink);
+  font: inherit;
+  min-height: 48px;
+  padding: 12px 14px;
+}
+
+.schedule-memo-input textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.schedule-date-input small,
+.schedule-memo-input small {
+  color: var(--fevio-muted);
+}
+
+.schedule-summary {
+  font-weight: 700;
+}
+
+.schedule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.schedule-actions button {
+  flex: 1 1 180px;
+}

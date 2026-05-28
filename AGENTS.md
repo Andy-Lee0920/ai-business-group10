@@ -149,6 +149,14 @@ Translate it into reusable tokens and components:
 
 Avoid generic SaaS UI. The interface should reduce panic, clarify ownership, and make the next safe action obvious.
 
+### Component grammar rules
+
+- 카드 중첩 금지: warm surface 카드 안에 또 warm surface 카드를 넣지 않는다.
+- border + box-shadow 동시 사용 금지: 둘 중 하나만 쓴다.
+- full-width primary CTA는 화면당 1개만 둔다.
+- pill(태그) 남발 금지: 한 화면에 3개 이상 두지 않는다.
+- 대형 일러스트는 기능 무관 stock asset을 메인 비주얼로 쓰지 않는다.
+
 ## Engineering posture
 
 Prefer:

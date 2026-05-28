@@ -1,0 +1,223 @@
+.surface {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+  --fevio-surface-intensity: 0.35;
+  --partner-bloom-opacity: calc(0.10 + var(--fevio-surface-intensity, 0.35) * 0.18);
+  --partner-shadow: calc(24px + var(--fevio-surface-intensity, 0.35) * 28px);
+}
+
+
+.roleHero,
+.contextCard,
+.actionCard,
+.avoidCard {
+  border-color: rgba(255, 255, 255, 0.56);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(185, 174, 214, var(--partner-bloom-opacity)), transparent 36%),
+    rgba(255, 255, 255, 0.84);
+  box-shadow:
+    0 18px var(--partner-shadow) rgba(50, 61, 46, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.roleHero {
+  display: grid;
+  gap: 14px;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(111, 143, 110, var(--partner-bloom-opacity)), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(246, 244, 241, 0.82));
+}
+
+.kickerRow,
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.identityMark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.partnerAvatar {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  filter: drop-shadow(0 10px 18px rgba(111, 143, 110, 0.14));
+}
+
+.signalCopy {
+  margin: -2px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(185, 174, 214, 0.22);
+  border-radius: 16px;
+  background: rgba(185, 174, 214, 0.10);
+  color: #5a5272;
+  font-size: 0.88rem;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.roleHero h2 {
+  margin: 0;
+  color: var(--fevio-ink);
+  font-size: clamp(1.9rem, 9vw, 2.55rem);
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+
+.roleName {
+  color: #41543f;
+  font-size: 1.12rem;
+  letter-spacing: -0.035em;
+}
+
+.roleHero p,
+.contextCard p {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-weight: 760;
+  line-height: 1.65;
+}
+
+.microLabel {
+  color: var(--fevio-sage);
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.contextCard {
+  display: grid;
+  gap: 8px;
+}
+
+.contextCard h3,
+.actionCard h3,
+.avoidCard h3 {
+  margin: 0;
+  color: var(--fevio-ink);
+  font-size: 1.22rem;
+  letter-spacing: -0.045em;
+}
+
+.sectionTitleRow span {
+  color: #75679b;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.actionStack {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.actionItem {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid rgba(111, 143, 110, 0.14);
+  border-radius: 18px;
+  background: rgba(111, 143, 110, 0.08);
+}
+
+.actionItem > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(111, 143, 110, 0.16);
+  color: #41543f;
+  font-weight: 950;
+}
+
+.actionItem strong {
+  display: block;
+  color: #41543f;
+  line-height: 1.45;
+}
+
+.actionItem small {
+  display: block;
+  margin-top: 5px;
+  color: var(--fevio-muted);
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.assistButton {
+  margin-top: 10px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--slc-coral);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 950;
+  padding: 8px 14px;
+}
+
+.assistButton:disabled {
+  background: var(--slc-success, #6f8f6e);
+  cursor: default;
+  opacity: 0.82;
+}
+
+.avoidCard {
+  display: grid;
+  gap: 12px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(224, 122, 104, 0.12), transparent 36%),
+    rgba(255, 255, 255, 0.84);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chipRow span {
+  border: 1px solid rgba(224, 122, 104, 0.24);
+  border-radius: 999px;
+  background: rgba(224, 122, 104, 0.1);
+  color: #8c463a;
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.35;
+  padding: 8px 10px;
+}
+
+.supportingList {
+  display: grid;
+  gap: 10px;
+}
+
+.supportingItem {
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border: 1px solid rgba(32, 35, 31, 0.07);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.supportingItem span {
+  color: var(--fevio-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.supportingItem strong {
+  color: var(--fevio-ink);
+}

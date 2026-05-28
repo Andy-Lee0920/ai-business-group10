@@ -1,0 +1,30 @@
+[
+  {
+    "id": "trigger-shot-production-smoke",
+    "context": {
+      "careDay": "injection_day",
+      "overrideReason": "trigger_shot",
+      "cardCount": 1,
+      "partnerStatus": "connected"
+    },
+    "expected": {
+      "hero": "CareMomentRing",
+      "intensity": 1,
+      "appliedRules": ["trigger-shot-hero"]
+    }
+  },
+  {
+    "id": "no-card-quiet-smoke",
+    "context": {
+      "careDay": "waiting_day",
+      "overrideReason": "none",
+      "cardCount": 0,
+      "partnerStatus": "unknown"
+    },
+    "expected": {
+      "primary_card": null,
+      "intensity": 0.15,
+      "appliedRules": ["no-cards-suppress-primary"]
+    }
+  }
+]

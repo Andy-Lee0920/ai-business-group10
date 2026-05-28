@@ -1,0 +1,31 @@
+## Ralph session: test-coverage-baseline (2026-05-28)
+
+### Task
+Set up Vitest coverage reporting baseline per .omc/specs/deep-interview-test-coverage-baseline.md
+
+### Files changed
+- package.json — added test:coverage script; pinned @vitest/coverage-v8@4.1.5 in devDependencies
+- vitest.config.ts — added coverage block inside test (provider: v8, reporter: text, include: src/**/*, reportOnFailure: true)
+- package-lock.json — updated by npm install
+
+### Baseline numbers (2026-05-28)
+- Statements: 46.4% (1794/3866)
+- Branches: 37.12% (1269/3418)
+- Functions: 47.97% (545/1136)
+- Lines: 48.25% (1553/3218)
+
+### Key learnings
+1. vitest 4.x removed the `all: true` coverage option. The `include` glob pattern alone is sufficient — files matching src/**/*.{ts,tsx} appear in the report even if not imported by any test (at 0%). No separate `all: true` flag needed.
+2. `coverage` block must be inside `test`, not at the root defineConfig level. Root-level coverage causes TS2769 "does not exist in type ViteUserConfigExport".
+3. npm install @vitest/coverage-v8 fails with "Cannot read properties of null (reading 'edgesOut')" on this repo — use --legacy-peer-deps flag.
+4. Pin @vitest/coverage-v8 to exact version matching vitest (both 4.1.5). Caret range installs 4.1.7 which causes peer dep mismatch.
+5. reportOnFailure: true is needed because 2 pre-existing test failures suppress the coverage table by default. The failures are: (a) CRLF mismatch in ADR file tests on Windows, (b) syntax error in deploy-regression-guard.test.ts. These are pre-existing, not introduced by this session.
+
+### Pre-existing test failures (not introduced by this session)
+- tests/unit/cycle-event-result-adr.test.ts — expects LF line endings but ADR files have CRLF on Windows
+- tests/unit/deploy-regression-guard.test.ts — SyntaxError: Invalid or unexpected token (0 tests run)
+
+### Next steps (per spec — deferred for separate effort)
+- UI Component Unit Tests: src/components (13 files, most at <40% coverage)
+- Feature-Level Unit Tests: src/features (41 files, many at 0%)
+- Integration Test Expansion: RLS/security boundary coverage

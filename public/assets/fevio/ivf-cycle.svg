@@ -1,0 +1,7 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">IVF cycle</title><desc id="desc">A restrained cycle timeline for private IVF records.</desc>
+  <circle cx="15" cy="24" r="5" fill="#FFFFFF" stroke="#6F8F6E" stroke-width="2"/>
+  <circle cx="24" cy="15" r="5" fill="#FFFFFF" stroke="#B9AED6" stroke-width="2"/>
+  <circle cx="33" cy="24" r="5" fill="#FFFFFF" stroke="#E07A68" stroke-width="2"/>
+  <path d="M19 21l3-3M28 18l3 3M28 30a11 11 0 0 1-8 0" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
+</svg>

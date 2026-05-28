@@ -1,0 +1,111 @@
+.privacyShell {
+  background:
+    radial-gradient(circle at 84% 4%, rgba(185, 174, 214, 0.18), transparent 34%),
+    linear-gradient(180deg, #fbfaf7 0%, var(--fevio-cream) 100%);
+}
+
+.privacyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 36px rgba(50, 61, 46, 0.09);
+}
+
+.privacyHeader {
+  display: grid;
+  gap: 8px;
+}
+
+.privacyEyebrow {
+  width: fit-content;
+  margin: 0;
+  color: var(--fevio-sage);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.privacyTitle {
+  max-width: 9em;
+  margin: 0;
+  font-size: clamp(1.85rem, 7.4vw, 2.35rem);
+  line-height: 1.08;
+  letter-spacing: -0.064em;
+}
+
+.privacyLead {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 0.96rem;
+  font-weight: 650;
+  line-height: 1.62;
+  letter-spacing: -0.024em;
+}
+
+.consentList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.consentList li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid rgba(32, 35, 31, 0.06);
+  border-radius: 16px;
+  background: rgba(111, 143, 110, 0.07);
+  list-style: none;
+}
+
+.consentList strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--fevio-ink);
+  font-size: 0.94rem;
+  letter-spacing: -0.025em;
+}
+
+.consentList p {
+  margin: 0;
+  color: var(--fevio-muted);
+  font-size: 0.83rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.detailPanel {
+  border: 1px solid rgba(32, 35, 31, 0.07);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.detailPanel summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  color: var(--fevio-muted);
+  font-size: 0.88rem;
+  font-weight: 850;
+  list-style-position: inside;
+}
+
+.detailBody {
+  display: grid;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
+.detailBody :global(.fevio-notice) {
+  margin-top: 0;
+}
+
+.privacyActions {
+  margin-top: 2px;
+}
