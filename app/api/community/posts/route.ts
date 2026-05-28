@@ -11,11 +11,14 @@ interface CommunityPostBody {
   subCategory?: unknown;
   audienceScope?: unknown;
   audienceRole?: unknown;
+  photoUrls?: unknown;
 }
 
 type CoupleMemberRow = { couple_id: string; role: 'primary' | 'partner' };
 type CommunityIdentityRow = { id: string; couple_id: string; role: 'primary' | 'partner'; nickname: string };
 type ModerationRuleRow = { rule_type: 'keyword' | 'regex'; pattern: string; severity: 'low' | 'medium' | 'high'; active: boolean };
+type CommunityPostRow = Record<string, unknown> & { photo_urls?: string[] | null };
+const COMMUNITY_PHOTOS_BUCKET = 'community-post-photos';
 
 export async function GET(request: NextRequest) {
   const supabase = await createCookieBackedSupabaseClient();
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
   const subCategory = normalizeSubCategory(url.searchParams.get('subCategory'));
   let query = supabase
     .from('community_posts')
-    .select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, is_official, created_at, community_identity_id')
+    .select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, is_official, photo_urls, created_at, community_identity_id')
     .eq('moderation_status', 'approved')
     .is('deleted_at', null)
     .order('is_official', { ascending: false })
@@ -37,7 +40,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query;
 
   if (error) return NextResponse.json({ error: 'community_posts_unavailable' }, { status: 500 });
-  return NextResponse.json({ posts: data ?? [] });
+  return NextResponse.json({ posts: await signCommunityPostRows(supabase, (data ?? []) as CommunityPostRow[]) });
 }
 
 export async function POST(request: NextRequest) {
@@ -49,8 +52,11 @@ export async function POST(request: NextRequest) {
   const text = typeof body.body === 'string' ? body.body.trim() : '';
   const subCategory = normalizeSubCategory(body.subCategory);
   const audienceScope = normalizeAudienceScope(body.audienceScope) ?? 'everyone';
+  const requestedPhotoUrls = extractRequestedPhotoUrls(body.photoUrls);
+  const photoUrls = normalizeCommunityPhotoUrls(body.photoUrls, user.id);
   if (body.audienceRole !== undefined) return NextResponse.json({ error: 'audience_role_server_owned' }, { status: 400 });
   if (!text || !subCategory) return NextResponse.json({ error: 'invalid_post' }, { status: 400 });
+  if (requestedPhotoUrls.length !== photoUrls.length) return NextResponse.json({ error: 'invalid_photo_urls' }, { status: 400 });
 
   const actor = await resolveCommunityActor(supabase, user.id);
   if (!actor) return NextResponse.json({ error: 'community_actor_not_found' }, { status: 403 });
@@ -75,16 +81,18 @@ export async function POST(request: NextRequest) {
       body: text,
       mood: typeof body.mood === 'string' && body.mood.trim() ? body.mood.trim() : null,
       sub_category: subCategory,
+      photo_urls: photoUrls,
       audience: actor.role === 'partner' ? 'partner_feed' : 'primary_feed',
       audience_scope: audienceScope,
       audience_role: audienceScope === 'same_role' ? actor.role : null,
       moderation_status: 'pending',
     })
-    .select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, created_at')
+    .select('id, body, mood, sub_category, photo_urls, audience, audience_scope, audience_role, moderation_status, created_at')
     .single();
 
   if (error) return NextResponse.json({ error: 'community_post_insert_failed' }, { status: 500 });
-  return NextResponse.json({ post, moderation: { ...moderation, status: 'pending' } }, { status: 201 });
+  const [signedPost] = await signCommunityPostRows(supabase, [post as CommunityPostRow]);
+  return NextResponse.json({ post: signedPost, moderation: { ...moderation, status: 'pending' } }, { status: 201 });
 }
 
 async function resolveCommunityActor(
@@ -134,4 +142,42 @@ function normalizeAudienceScope(value: unknown): CommunityAudienceScope | null {
 
 function normalizeSubCategory(value: unknown): CommunitySubCategory | null {
   return value === 'pain' || value === 'worry' || value === 'today' || value === 'tip' ? value : null;
+}
+
+function normalizeCommunityPhotoUrls(value: unknown, userId: string): string[] {
+  const prefix = `${userId}/`;
+  return extractRequestedPhotoUrls(value)
+    .map((candidate) => candidate.trim())
+    .filter((candidate) => candidate.startsWith(prefix))
+    .filter((candidate) => !candidate.includes('..') && !candidate.includes('//'))
+    .filter((candidate) => /\.(jpe?g|png|webp|heic|heif)$/iu.test(candidate))
+    .slice(0, 4);
+}
+
+function extractRequestedPhotoUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0).slice(0, 5);
+}
+
+async function signCommunityPostRows(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  rows: CommunityPostRow[],
+) {
+  return Promise.all(rows.map(async (row) => ({
+    ...row,
+    photo_urls: await signCommunityPhotoUrls(supabase, row.photo_urls),
+  })));
+}
+
+async function signCommunityPhotoUrls(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  value: unknown,
+) {
+  const paths = Array.isArray(value) ? value.filter((url): url is string => typeof url === 'string') : [];
+  const signed = await Promise.all(paths.slice(0, 4).map(async (path) => {
+    if (/^(https?:)?\/\//u.test(path) || path.startsWith('/')) return path;
+    const { data } = await supabase.storage.from(COMMUNITY_PHOTOS_BUCKET).createSignedUrl(path, 60 * 30);
+    return data?.signedUrl ?? null;
+  }));
+  return signed.filter((url): url is string => Boolean(url));
 }

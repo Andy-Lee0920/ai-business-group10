@@ -64,6 +64,7 @@ describe('SLC color token contract', () => {
 
   it('keeps records journal/shared-record preview labels away from coral', () => {
     const records = [
+      readFileSync('src/domain/records-surface-contract.ts', 'utf8'),
       readFileSync('src/features/records/records-screen.tsx', 'utf8'),
       readFileSync('src/features/records/journal/journal-preview.tsx', 'utf8'),
       readFileSync('src/features/records/community/community-preview.tsx', 'utf8'),
@@ -71,8 +72,8 @@ describe('SLC color token contract', () => {
 
     expect(records).toContain('커플저널');
     expect(records).toContain('오늘의 기분');
-    expect(records).toContain("커플저널</span>");
-    expect(records).toContain("공유 기록</span>");
+    expect(records).toContain("journal: '커플저널'");
+    expect(records).toContain("community: '공유 기록'");
     expect(records).not.toContain("치료 실행 기록</span>");
     expect(records).not.toContain("파트너 확인 메모</span>");
     expect(records).not.toContain("공유 기록</p>");

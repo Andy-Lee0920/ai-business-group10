@@ -14,6 +14,7 @@ describe('records/community RLS matrix coverage', () => {
       'community_reports',
       'moderation_filter_rules',
       'couple-journal-photos',
+      'community-post-photos',
       'service_role_audit_logs',
     ]) {
       expect(matrix).toContain(`\`${name}\``);
@@ -23,6 +24,7 @@ describe('records/community RLS matrix coverage', () => {
   it('records actor, server exception, and test evidence expectations for the new surfaces', () => {
     expect(matrix).toContain('partner-authored journal entries force `pain_score NULL`');
     expect(matrix).toContain('ADR 0020 scope (`everyone` or role-matched `same_role`)');
+    expect(matrix).toContain('photo_urls` powers moderated card-style shared records');
     expect(matrix).toContain('service-role only; no authenticated direct grants');
     expect(matrix).toContain('records-community-schema-rls.test.ts');
     expect(matrix).toContain('service-role audit contract');

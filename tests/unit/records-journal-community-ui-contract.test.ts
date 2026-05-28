@@ -21,6 +21,7 @@ describe('records journal/community UI contract', () => {
         isOfficial: false,
         createdAt: '2026-05-20T08:10:00.000Z',
         authorNickname: '오비드렐메이트',
+        photoUrls: ['/assets/slc/clinic-update-banner.png'],
         audienceScope: 'everyone',
         audienceRole: null,
         empathyCount: 2,
@@ -52,6 +53,7 @@ describe('records journal/community UI contract', () => {
         isOfficial: false,
         createdAt: '2026-05-20T08:10:00.000Z',
         authorNickname: '오비드렐메이트',
+        photoUrls: ['/assets/slc/clinic-update-banner.png'],
         audienceScope: 'everyone',
         audienceRole: null,
         empathyCount: 2,
@@ -64,13 +66,18 @@ describe('records journal/community UI contract', () => {
 
     expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('data-testid="community-post-form"');
     expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('fevio-community-sheet-layer');
+    expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('type="file"');
+    expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('community-photo-strip');
+    expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('community-photo-upload-error');
+    expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('.remove(paths)');
     expect(readFileSync('src/features/records/community/community-preview.tsx', 'utf8')).toContain('aria-label="닫기"');
-    expect(communityMarkup).toContain('병원 안내를 확인한 기록');
+    expect(communityMarkup).toContain('사진으로 남기는 확인 기록');
     expect(communityMarkup).toContain('오비드렐 시간 확인 팁을 남겨요.');
+    expect(communityMarkup).toContain('data-testid="community-photo-strip"');
     expect(communityMarkup).toContain('검수 중');
     expect(communityMarkup).toContain('전체 공개');
     expect(communityMarkup).toContain('오비드렐메이트');
-    expect(communityMarkup).toContain('공감 2');
+    expect(communityMarkup).toContain('댓글 0');
   });
 
   it('does not expose internal seed artifacts or role jargon in the community feed', () => {
@@ -117,7 +124,7 @@ describe('records journal/community UI contract', () => {
     expect(markup).not.toContain('same role post');
     expect(markup).not.toContain('prod approved community smoke');
     expect(markup).not.toContain('같은 롤');
-    expect(markup).toContain('아직 공유된 확인 기록이 없어요');
+    expect(markup).toContain('아직 사진 기록이 없어요');
     expect(source).toContain('비슷한 단계 사용자');
     expect(source).not.toContain('같은 롤만');
   });

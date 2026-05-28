@@ -5,8 +5,10 @@ import { describe, expect, it } from 'vitest';
 const migrationsDir = 'supabase/migrations';
 const migrationName = '202605200001_records_community_foundation.sql';
 const dualScopeMigrationName = '202605200003_records_dual_scope_and_journal_gate.sql';
+const communityPhotoMigrationName = '202605270001_community_post_photos.sql';
 const migrationPath = join(migrationsDir, migrationName);
 const dualScopeMigrationPath = join(migrationsDir, dualScopeMigrationName);
+const communityPhotoMigrationPath = join(migrationsDir, communityPhotoMigrationName);
 
 function migration() {
   return readFileSync(migrationPath, 'utf8');
@@ -14,6 +16,10 @@ function migration() {
 
 function dualScopeMigration() {
   return readFileSync(dualScopeMigrationPath, 'utf8');
+}
+
+function communityPhotoMigration() {
+  return readFileSync(communityPhotoMigrationPath, 'utf8');
 }
 
 describe('records/community schema and RLS foundation', () => {
@@ -96,5 +102,19 @@ describe('records/community schema and RLS foundation', () => {
     expect(sql).toContain('community_post_empathies_insert_visible_post');
     expect(sql).toContain('current_user_has_approved_partner_link_for_couple');
     expect(sql).toContain('couple_journal_entries_insert_partner_linked');
+  });
+
+  it('adds moderated community photo cards without making the bucket public', () => {
+    expect(readdirSync(migrationsDir)).toContain(communityPhotoMigrationName);
+    const sql = communityPhotoMigration();
+
+    expect(sql).toContain('add column if not exists photo_urls');
+    expect(sql).toContain("'community-post-photos'");
+    expect(sql).toContain('public = false');
+    expect(sql).toContain('community_post_photos_insert_own_user');
+    expect(sql).toContain("bucket_id = 'community-post-photos'");
+    expect(sql).toContain("(storage.foldername(name))[1] = auth.uid()::text");
+    expect(sql).toContain('community_post_photos_read_visible_post');
+    expect(sql).toContain('public.can_read_community_post(id)');
   });
 });

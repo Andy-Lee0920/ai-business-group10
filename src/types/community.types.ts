@@ -20,6 +20,7 @@ export interface CommunityPostDraft {
   mood: string | null;
   subCategory: CommunitySubCategory;
   audienceScope: CommunityAudienceScope;
+  photoUrls: string[];
 }
 
 export interface CommunityPostListItem {
@@ -34,6 +35,7 @@ export interface CommunityPostListItem {
   isOfficial: boolean;
   createdAt: string;
   authorNickname?: string | null;
+  photoUrls?: string[];
   empathyCount?: number;
   empathyActive?: boolean;
   comments?: CommunityCommentListItem[];

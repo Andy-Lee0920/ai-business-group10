@@ -91,7 +91,7 @@ Daily Brief 안에 inline 으로 노출되는 stage-level 보편 약 정보. "�
 
 ### Community post
 
-커뮤니티 자유게시판(SNS-style feed) 의 사용자 작성 글. audience scope 둘 중 작성자가 선택: `everyone`(당사자 + 파트너 양쪽 read) 또는 `same_role`(작성자의 `couple_members.role` 피드에만 read). UI default = `everyone`. 사진 없음. 의료 점수 없음. closed beta에서는 deterministic keyword filter + admin manual review 통과 후 노출. See ADR 0015, 0016, 0020.
+커뮤니티 자유게시판(SNS-style feed) 의 사용자 작성 글. audience scope 둘 중 작성자가 선택: `everyone`(당사자 + 파트너 양쪽 read) 또는 `same_role`(작성자의 `couple_members.role` 피드에만 read). UI default = `everyone`. `photo_urls` 는 공유 기록 카드 사진에만 쓰며 raw clinic document, 개인정보, 병원명 노출 이미지는 UI copy와 moderation에서 금지한다. 의료 점수 없음. closed beta에서는 deterministic keyword filter + admin manual review 통과 후 노출. See ADR 0015, 0016, 0020.
 
 ### Community identity
 

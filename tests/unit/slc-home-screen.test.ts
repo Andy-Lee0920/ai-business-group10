@@ -54,6 +54,11 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('position:sticky');
     expect(markup).toContain('height:90dvh');
     expect(markup).toContain('확인할 항목은 아래에 접어뒀어요');
+    expect(markup).toContain('오늘 필요한 실행만 먼저 보고');
+    expect(markup).toContain('data-testid="home-care-ops-promise"');
+    expect(markup).toContain('오늘 실행 기준');
+    expect(markup).toContain('원문 확인 후 저장');
+    expect(markup).toContain('파트너 역할만');
     expect(markup).toContain('오늘 확인할 항목');
     expect(markup.indexOf('듀파스톤')).toBeLessThan(markup.indexOf('차병원 방문'));
     expect(markup).not.toContain('오늘의 배아');
@@ -195,6 +200,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('공유 상태');
     expect(markup).toContain('함께 챙길 역할만 공유해요');
     expect(markup).toContain('원문 없이 준비, 동행, 확인처럼 실행에 필요한 역할만 보냅니다.');
+    expect(markup).toContain('병원 원문, 검사 결과, 감정 기록은 자동 공유하지 않아요.');
   });
 });
 

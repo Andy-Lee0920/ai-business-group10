@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import type { CoupleJournalEntry, JournalMood } from '../../../types/journal.types';
 import { createFevioBrowserAuthClient } from '../../../lib/browser-auth-client';
+import { RECORDS_SURFACE_COPY } from '../../../domain/records-surface-contract';
 
 interface JournalPreviewProps {
   entries: CoupleJournalEntry[];
@@ -59,21 +60,21 @@ export function JournalPreview({ entries, upcomingCount, isPartnerLinked, couple
   }
 
   return (
-    <section aria-label="커플저널" style={{ padding: '0 0 14px' }}>
+    <section aria-label={RECORDS_SURFACE_COPY.journal.sectionLabel} style={{ padding: '0 0 14px' }}>
       {!isPartnerLinked ? (
         <article data-testid="couple-journal-locked" style={lockedStyle}>
-          <span style={sectionEyebrowStyle}>커플저널</span>
-          <h2 style={sectionTitleStyle}>파트너 연결 후 둘만의 기록을 시작할 수 있어요</h2>
-          <p style={sectionBodyStyle}>커플저널은 둘만 보는 shared space라서 파트너 연결이 완료된 뒤 작성할 수 있어요. 기존 기록은 연결 상태가 바뀌어도 보존됩니다.</p>
-          <a href="/more#partner-invite" style={inviteLinkStyle}>파트너 초대하기</a>
+          <span style={sectionEyebrowStyle}>{RECORDS_SURFACE_COPY.journal.sectionLabel}</span>
+          <h2 style={sectionTitleStyle}>{RECORDS_SURFACE_COPY.journal.lockedTitle}</h2>
+          <p style={sectionBodyStyle}>{RECORDS_SURFACE_COPY.journal.lockedBody}</p>
+          <a href="/more#partner-invite" style={inviteLinkStyle}>{RECORDS_SURFACE_COPY.journal.inviteCta}</a>
         </article>
       ) : null}
       {compactLocked ? null : <article data-testid="couple-journal-preview" style={feedStyle}>
         <div style={feedHeaderStyle}>
           <div>
-            <span style={sectionEyebrowStyle}>커플저널</span>
-            <h2 style={sectionTitleStyle}>둘만의 기록</h2>
-            <p style={sectionBodyStyle}>남은 일정 {upcomingCount}개를 보며 오늘의 기분과 사진을 함께 남깁니다.</p>
+            <span style={sectionEyebrowStyle}>{RECORDS_SURFACE_COPY.journal.sectionLabel}</span>
+            <h2 style={sectionTitleStyle}>{RECORDS_SURFACE_COPY.journal.title}</h2>
+            <p style={sectionBodyStyle}>{RECORDS_SURFACE_COPY.journal.body(upcomingCount)}</p>
           </div>
           {isPartnerLinked ? <button type="button" data-testid="records-compose-button" onClick={() => setIsComposerOpen(true)} style={floatingButtonStyle}>＋</button> : null}
         </div>
@@ -81,23 +82,23 @@ export function JournalPreview({ entries, upcomingCount, isPartnerLinked, couple
         {isPartnerLinked && isComposerOpen ? (
           <form data-testid="couple-journal-form" onSubmit={submitJournalEntry} style={formStyle}>
           <label style={labelStyle}>
-            오늘 기록
-            <textarea name="body" required placeholder="오늘 병원 안내를 어떻게 확인했나요?" style={textareaStyle} />
+            {RECORDS_SURFACE_COPY.journal.fieldBody}
+            <textarea name="body" required placeholder={RECORDS_SURFACE_COPY.journal.bodyPlaceholder} style={textareaStyle} />
           </label>
           <div style={formGridStyle}>
             <label style={labelStyle}>
-              기분
+              {RECORDS_SURFACE_COPY.journal.moodField}
               <select name="mood" defaultValue="calm" style={inputStyle}>
                 {MOODS.map((mood) => <option key={mood.value} value={mood.value}>{mood.label}</option>)}
               </select>
             </label>
             <label style={labelStyle}>
-              통증 점수
+              {RECORDS_SURFACE_COPY.journal.painField}
               <input name="painScore" type="number" min="0" max="10" inputMode="numeric" placeholder="0-10" style={inputStyle} />
             </label>
           </div>
           <label style={labelStyle}>
-            사진
+            {RECORDS_SURFACE_COPY.journal.photoField}
             <input
               name="photos"
               type="file"
@@ -112,13 +113,13 @@ export function JournalPreview({ entries, upcomingCount, isPartnerLinked, couple
               {selectedFiles.map((file) => <span key={`${file.name}-${file.size}`} style={thumbnailPillStyle}>{file.name}</span>)}
             </div>
           ) : null}
-          <button type="submit" disabled={isSaving} style={buttonStyle}>{isSaving ? '저장 중' : '부부간 기록 남기기'}</button>
+          <button type="submit" disabled={isSaving} style={buttonStyle}>{isSaving ? RECORDS_SURFACE_COPY.journal.saving : RECORDS_SURFACE_COPY.journal.submit}</button>
         </form>
         ) : null}
 
         <div style={listStyle}>
           {journalEntries.length === 0 ? (
-            <p style={emptyStyle}>{isPartnerLinked ? '둘만의 첫 기록을 남겨보세요.' : '파트너 연결 후 기록을 남길 수 있어요.'}</p>
+            <p style={emptyStyle}>{isPartnerLinked ? RECORDS_SURFACE_COPY.journal.emptyLinked : RECORDS_SURFACE_COPY.journal.emptyLocked}</p>
           ) : journalEntries.map((entry) => (
             <article key={entry.id} style={entryStyle}>
               <div style={entryMetaStyle}>{formatDate(entry.createdAt)} · {entry.authorRole === 'partner' ? '파트너' : '나'}</div>

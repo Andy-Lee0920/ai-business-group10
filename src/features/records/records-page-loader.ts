@@ -21,6 +21,7 @@ export interface RecordsScreenLoaderProps {
 }
 
 type CoupleMemberRow = { couple_id: string; role: 'primary' | 'partner' };
+const COMMUNITY_PHOTOS_BUCKET = 'community-post-photos';
 
 export async function resolveRecordsDataSource(): Promise<RecordsDataSource> {
   const requestHeaders = await headers();
@@ -50,6 +51,7 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
           body: '주사 시간은 알림과 병원 안내를 같이 확인하면 덜 헷갈렸어요.',
           mood: null,
           subCategory: 'tip',
+          photoUrls: ['/assets/slc/clinic-update-banner.png'],
           audience: 'primary_feed',
           audienceScope: 'everyone',
           audienceRole: null,
@@ -85,7 +87,7 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
       ? supabase.from('couple_journal_entries').select('id, body, mood, pain_score, photo_urls, author_role, created_at')
         .eq('couple_id', actor.couple_id).is('deleted_at', null).order('created_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
-    supabase.from('community_posts').select('id, body, mood, sub_category, audience, audience_scope, audience_role, moderation_status, is_official, created_at, community_identities(nickname)')
+    supabase.from('community_posts').select('id, body, mood, sub_category, photo_urls, audience, audience_scope, audience_role, moderation_status, is_official, created_at, community_identities(nickname)')
       .is('deleted_at', null).order('is_official', { ascending: false }).order('created_at', { ascending: false }),
   ]);
 
@@ -95,7 +97,7 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
     completions: completionsRes.data ?? [],
     clinicUpdates: clinicRes.data ?? [],
     journalEntries: (journalRes.data ?? []).map(toJournalEntry),
-    communityPosts: (communityRes.data ?? []).map(toCommunityPost),
+    communityPosts: await Promise.all((communityRes.data ?? []).map((row) => toCommunityPost(supabase, row))),
     communityAudience,
     actorRole,
     isPartnerLinked,
@@ -152,7 +154,10 @@ function toJournalEntry(row: Record<string, unknown>): CoupleJournalEntry {
   };
 }
 
-function toCommunityPost(row: Record<string, unknown>): CommunityPostListItem {
+async function toCommunityPost(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  row: Record<string, unknown>,
+): Promise<CommunityPostListItem> {
   const audienceScope = normalizeAudienceScope(row.audience_scope);
   return {
     id: String(row.id),
@@ -166,7 +171,21 @@ function toCommunityPost(row: Record<string, unknown>): CommunityPostListItem {
     isOfficial: row.is_official === true,
     createdAt: String(row.created_at),
     authorNickname: extractCommunityNickname(row.community_identities),
+    photoUrls: await signCommunityPhotoUrls(supabase, row.photo_urls),
   };
+}
+
+async function signCommunityPhotoUrls(
+  supabase: Awaited<ReturnType<typeof createCookieBackedSupabaseClient>>,
+  value: unknown,
+) {
+  const paths = Array.isArray(value) ? value.filter((url): url is string => typeof url === 'string') : [];
+  const signed = await Promise.all(paths.slice(0, 4).map(async (path) => {
+    if (/^(https?:)?\/\//u.test(path) || path.startsWith('/')) return path;
+    const { data } = await supabase.storage.from(COMMUNITY_PHOTOS_BUCKET).createSignedUrl(path, 60 * 30);
+    return data?.signedUrl ?? null;
+  }));
+  return signed.filter((url): url is string => Boolean(url));
 }
 
 function normalizeAudienceScope(value: unknown): CommunityAudienceScope {

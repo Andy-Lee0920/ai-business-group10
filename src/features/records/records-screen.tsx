@@ -5,6 +5,7 @@ import type { CoupleJournalEntry } from '../../types/journal.types';
 import type { CommunityActorRole, CommunityAudience, CommunityPostListItem } from '../../types/community.types';
 import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { slcAssets } from '../../design/slc-assets';
+import { RECORDS_SURFACE_COPY, countRecordsActivity, defaultRecordsTab, type RecordsTab } from '../../domain/records-surface-contract';
 import { CommunityPreview } from './community/community-preview';
 import { JournalPreview } from './journal/journal-preview';
 
@@ -21,23 +22,20 @@ interface RecordsScreenProps {
   initialTab?: RecordsTab;
 }
 
-type RecordsTab = 'journal' | 'community';
-
-export function RecordsScreen({
-  items,
-  completions,
-  clinicUpdates = [],
-  journalEntries = [],
-  communityPosts = [],
-  communityAudience = 'primary_feed',
-  actorRole: _actorRole = 'primary',
-  isPartnerLinked = false,
-  coupleId = null,
-  initialTab,
-}: RecordsScreenProps) {
-  const recentActivityCount = completions.length + clinicUpdates.length + journalEntries.length + communityPosts.length;
+export function RecordsScreen(props: RecordsScreenProps) {
+  const {
+    items,
+    journalEntries = [],
+    communityPosts = [],
+    communityAudience = 'primary_feed',
+    actorRole: _actorRole = 'primary',
+    isPartnerLinked = false,
+    coupleId = null,
+    initialTab,
+  } = props;
+  const recentActivityCount = countRecordsActivity({ journalEntries, communityPosts });
   const upcomingCount = items.filter((item) => item.status !== 'completed').length;
-  const [activeTab, setActiveTab] = useState<RecordsTab>(initialTab ?? (isPartnerLinked ? 'journal' : 'community'));
+  const [activeTab, setActiveTab] = useState<RecordsTab>(initialTab ?? defaultRecordsTab(isPartnerLinked));
 
   return (
     <AmbientStoryBackground
@@ -47,9 +45,9 @@ export function RecordsScreen({
     >
       <header style={headerStyle}>
         <div>
-          <p style={eyebrowStyle}>함께 남기는 기록</p>
-          <h1 style={titleStyle}>기록</h1>
-          <p style={leadStyle}>파트너 기록과 확인한 공유 기록을 한 화면에서 전환해요. 최근 활동 {recentActivityCount}건</p>
+          <p style={eyebrowStyle}>{RECORDS_SURFACE_COPY.header.eyebrow}</p>
+          <h1 style={titleStyle}>{RECORDS_SURFACE_COPY.header.title}</h1>
+          <p style={leadStyle}>{RECORDS_SURFACE_COPY.header.lead(recentActivityCount)}</p>
         </div>
       </header>
 
@@ -61,7 +59,7 @@ export function RecordsScreen({
           onClick={() => setActiveTab('journal')}
           style={activeTab === 'journal' ? activeTabStyle : tabStyle}
         >
-          커플저널
+          {RECORDS_SURFACE_COPY.tabs.journal}
         </button>
         <button
           type="button"
@@ -70,7 +68,7 @@ export function RecordsScreen({
           onClick={() => setActiveTab('community')}
           style={activeTab === 'community' ? activeTabStyle : tabStyle}
         >
-          공유 기록
+          {RECORDS_SURFACE_COPY.tabs.community}
         </button>
       </nav>
 

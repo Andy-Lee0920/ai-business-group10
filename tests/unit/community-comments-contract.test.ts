@@ -34,6 +34,7 @@ describe('community comments contract', () => {
         isOfficial: false,
         createdAt: '2026-05-20T08:10:00.000Z',
         authorNickname: '오비드렐메이트',
+        photoUrls: ['/assets/slc/clinic-update-banner.png'],
         comments: [{
           id: 'comment-1',
           postId: 'post-1',
@@ -48,7 +49,8 @@ describe('community comments contract', () => {
       initialTab: 'community',
     }));
 
-    expect(markup).toContain('댓글 남기기');
+    expect(markup).toContain('댓글 1');
+    expect(markup).not.toContain('댓글을 남겨주세요.');
     expect(markup).toContain('저도 도움됐어요.');
     expect(markup).toContain('댓글 검수 중');
   });

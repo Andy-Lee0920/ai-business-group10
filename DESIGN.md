@@ -2,9 +2,9 @@
 
 ## Source of truth
 - Status: Active
-- Last refreshed: 2026-05-26
+- Last refreshed: 2026-05-28
 - Primary product surfaces: onboarding, privacy gate, home/today, calendar, records, clinic update, settings, partner projection.
-- Evidence reviewed: `AGENTS.md`, `/Users/reliqbit_mac/Downloads/10조 피드백모음.xlsx`, `docs/01-product/mvp-target.md`, `docs/01-product/fevio-product-north-star.md`, `docs/02-design/designer-brief.md`, `docs/02-design/deck.md`, `docs/02-design/phase-distinct-layout-composition.md`, `app/globals.css`, `app/(authed)/layout.tsx`, `src/components/bottom-nav.tsx`, `src/features/today/today-screen.tsx`, `src/features/onboarding/onboarding-screen.tsx`.
+- Evidence reviewed: `AGENTS.md`, `/Users/reliqbit_mac/Downloads/10조 피드백모음.xlsx`, 2026-05-28 customer experience synthesis, `docs/01-product/mvp-target.md`, `docs/01-product/fevio-product-north-star.md`, `docs/02-design/designer-brief.md`, `docs/02-design/deck.md`, `docs/02-design/phase-distinct-layout-composition.md`, `app/globals.css`, `app/(authed)/layout.tsx`, `src/components/bottom-nav.tsx`, `src/features/today/today-screen.tsx`, `src/features/onboarding/onboarding-screen.tsx`.
 
 ## Brand
 - Personality: calm, precise, operational, Korean-first, low-pressure.
@@ -13,13 +13,13 @@
 - **No mascot, no character.** 임신앱 (아띠/마미톡 등) 의 cute animal/baby character 패턴을 차용하지 않는다. Retention hook 은 character 친근감이 아니라 botanical/abstract visual + 따뜻한 컴포지션·일러스트 완성도로 확보한다. Daily Brief, 캘린더 hero, 빈 상태, partner projection 모두 동일 원칙.
 
 ## Product goals
-- Goals: turn clinic instructions into confirmed care actions; make today’s next execution obvious; support partner role sharing without exposing raw clinical text.
-- Non-goals: diagnosis, treatment planning, dose advice, medical-device behavior.
-- Success signals: user can understand today's injection, medication, visit, or missed confirmation in the first viewport; partner sees what to help with, not a copied patient screen; AI/OCR candidates stay non-executable until confirmed.
+- Goals: turn clinic instructions, messages, photos, and notes into confirmed care actions; make today’s injection/medication/visit/confirmation obvious; reduce manual calendar entry; support partner role sharing without exposing raw clinical text.
+- Non-goals: diagnosis, treatment planning, dose advice, medical-device behavior, generic calendar replacement, forced emotional care.
+- Success signals: user can understand today's injection, medication, visit, or missed confirmation in the first viewport; partner sees what to help with, not a copied patient screen; AI/OCR candidates stay non-executable until confirmed; the product feels worth paying for because photo/text capture, source comparison, important reminders, and partner role sharing save real work.
 
 ## Personas and jobs
 - Primary personas: IVF patient managing injections/medications; partner reading a sanitized support projection.
-- User jobs: confirm what to do today, record completion, update after clinic, share only the partner role needed today, reset demo/personal data safely.
+- User jobs: see only today’s injection/medication/visit/confirmation without digging through clinic memos or messages; reduce manual entry of names/times/doses/visits; compare AI/OCR candidates against the source before saving; receive accurate but low-pressure alerts for time-sensitive care; share only the partner role needed today; control sensitive results, emotions, raw clinic text, and detailed medical records; understand the current IVF stage in plain terms.
 - Key contexts of use: iPhone Safari, one-handed use, emotionally loaded care moments, clinic-message copy/paste or photo OCR.
 
 ## Information architecture
@@ -30,7 +30,9 @@
 ## Design principles
 - Principle 1: one screen, one next execution; secondary information should recede.
 - Principle 2: input may be messy, confirmation must be clear; missing fields are asked only where needed.
-- Tradeoffs: prefer deterministic execution summaries over rich detail if space is constrained; countdowns and alerts must be accurate without making routine states feel pressured.
+- Principle 3: partner surfaces are role projections, not medical-information mirrors.
+- Principle 4: the app is a focused treatment-period tool; avoid engagement loops that make quiet days feel like failure.
+- Tradeoffs: prefer deterministic execution summaries over rich detail if space is constrained; countdowns and alerts must be accurate without making routine states feel pressured; source verification beats automation confidence when trust is at stake.
 
 ## Visual language
 - Color: warm neutral background, onboarding CTA orange (`#F47D63 → #D95F4C`) for primary actions/attention, success green for completed states.
@@ -68,8 +70,8 @@
 
 ## Content voice
 - Tone: polite, practical, emotionally restrained.
-- Terminology: use 본인/파트너, 일정 후보, 오늘 실행, 함께 챙길 역할, 저장 전 확인; avoid internal labels.
-- Microcopy rules: fewer words than a spec; never imply medical judgment.
+- Terminology: use 본인/파트너, 일정 후보, 오늘 실행, 함께 챙길 역할, 원문 확인, 저장 전 확인; avoid internal labels.
+- Microcopy rules: fewer words than a spec; never imply medical judgment; do not pressure users to journal feelings or keep returning on quiet days.
 
 ## Implementation constraints
 - Framework/styling system: Next.js App Router, React inline styles plus CSS modules/global tokens.

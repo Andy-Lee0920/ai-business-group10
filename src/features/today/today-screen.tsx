@@ -40,6 +40,7 @@ import {
   type PushReminderSubscriptionStatus,
 } from "../../lib/pwa-push-client";
 import { pickHeroSurface } from "../../lib/brief/priority";
+import { FEVIO_CUSTOMER_EXPERIENCE_JOBS } from "../../product/north-star";
 import styles from "./today-screen.module.css";
 
 interface TodayScreenProps {
@@ -70,6 +71,28 @@ const HOME_SOFT_CORAL_DEEP = "#CF5847";
 const HOME_SOFT_CORAL_LIGHT = "#FDE8DF";
 const HOME_SOFT_WARM_MUTED = "#786B63";
 const HOME_SOFT_BORDER = "rgba(219, 202, 190, 0.58)";
+const HOME_EXPERIENCE_RULES = [
+  {
+    anchor: FEVIO_CUSTOMER_EXPERIENCE_JOBS[0],
+    label: "오늘 할 일만",
+    detail: "주사·약·내원·확인",
+  },
+  {
+    anchor: FEVIO_CUSTOMER_EXPERIENCE_JOBS[3],
+    label: "원문 확인 후 저장",
+    detail: "AI 후보는 확정 전",
+  },
+  {
+    anchor: FEVIO_CUSTOMER_EXPERIENCE_JOBS[4],
+    label: "중요 시간 알림",
+    detail: "조용하지만 강하게",
+  },
+  {
+    anchor: FEVIO_CUSTOMER_EXPERIENCE_JOBS[5],
+    label: "파트너 역할만",
+    detail: "원문·민감 기록 제외",
+  },
+] as const;
 
 type Cheer = {
   topEmoji: string;
@@ -485,6 +508,7 @@ export function TodayScreen({
         }}
       >
         <HomeSheetIntro />
+        <HomeCareOpsPromise />
         <DayTabs
           selectedDay={selectedDay}
           onSelect={setSelectedDay}
@@ -709,8 +733,38 @@ function HomeSheetIntro() {
       <div>
         <p style={sectionEyebrowStyle}>실행 목록</p>
         <h2 style={sheetIntroTitleStyle}>확인할 항목은 아래에 접어뒀어요</h2>
+        <p style={sheetIntroBodyStyle}>
+          오늘 필요한 실행만 먼저 보고, 병원 원문은 확인 단계에서 직접
+          저장해요.
+        </p>
       </div>
     </div>
+  );
+}
+
+function HomeCareOpsPromise() {
+  return (
+    <section
+      aria-label="오늘 실행 기준"
+      data-testid="home-care-ops-promise"
+      style={careOpsPromiseStyle}
+    >
+      <p style={sectionEyebrowStyle}>오늘 실행 기준</p>
+      <div style={careOpsGridStyle}>
+        {HOME_EXPERIENCE_RULES.map((rule) => (
+          <div
+            key={rule.label}
+            data-experience-job-index={FEVIO_CUSTOMER_EXPERIENCE_JOBS.indexOf(
+              rule.anchor,
+            )}
+            style={careOpsRuleStyle}
+          >
+            <strong style={careOpsRuleLabelStyle}>{rule.label}</strong>
+            <span style={careOpsRuleDetailStyle}>{rule.detail}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -753,7 +807,7 @@ function ClinicNoteSummary({
       <p style={mutedParagraphStyle}>
         {item
           ? `${formatScheduleTime(item.scheduled_at)} · ${formatScheduleTitle(item)}`
-          : "AI가 정리한 후보도 병원 안내 기준으로 다시 확인해요."}
+          : "AI/OCR 후보는 원문과 비교한 뒤 저장할 때만 오늘 실행이 됩니다."}
       </p>
       <div style={clinicNoteFooterStyle}>
         <span>{hasClinicUpdates ? "업데이트 기록 있음" : "최근 업데이트 없음"}</span>
@@ -772,6 +826,7 @@ function PartnerSyncCard() {
       <h2 style={sectionTitleStyle}>함께 챙길 역할만 공유해요</h2>
       <p style={mutedParagraphStyle}>
         원문 없이 준비, 동행, 확인처럼 실행에 필요한 역할만 보냅니다.
+        병원 원문, 검사 결과, 감정 기록은 자동 공유하지 않아요.
       </p>
       <Link href="/settings" style={smallTextLinkStyle}>
         공유 설정
@@ -864,6 +919,62 @@ const sheetIntroTitleStyle = {
   fontWeight: 900,
   lineHeight: 1.22,
   letterSpacing: 0,
+} as const;
+
+const sheetIntroBodyStyle = {
+  margin: "8px 0 0",
+  color: "var(--slc-muted)",
+  fontSize: 13,
+  fontWeight: 750,
+  lineHeight: 1.5,
+  letterSpacing: 0,
+  wordBreak: "keep-all",
+} as const;
+
+const careOpsPromiseStyle = {
+  display: "grid",
+  gap: 10,
+  padding: "14px 14px 15px",
+  borderRadius: 18,
+  background:
+    "linear-gradient(145deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 247, 241, 0.54) 100%)",
+  border: "1px solid rgba(226, 203, 190, 0.48)",
+  boxShadow: "0 10px 28px rgba(92, 62, 43, 0.035)",
+} as const;
+
+const careOpsGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: 8,
+} as const;
+
+const careOpsRuleStyle = {
+  minHeight: 58,
+  display: "grid",
+  alignContent: "center",
+  gap: 3,
+  padding: "10px 11px",
+  borderRadius: 15,
+  background: "rgba(255, 255, 255, 0.68)",
+  border: "1px solid rgba(224, 205, 193, 0.44)",
+} as const;
+
+const careOpsRuleLabelStyle = {
+  color: "var(--slc-text)",
+  fontSize: 13,
+  fontWeight: 930,
+  lineHeight: 1.2,
+  letterSpacing: 0,
+  wordBreak: "keep-all",
+} as const;
+
+const careOpsRuleDetailStyle = {
+  color: HOME_SOFT_WARM_MUTED,
+  fontSize: 11,
+  fontWeight: 800,
+  lineHeight: 1.25,
+  letterSpacing: 0,
+  wordBreak: "keep-all",
 } as const;
 
 const nextActionTitleStyle = {

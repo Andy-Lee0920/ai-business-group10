@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { FEVIO_PRODUCT_NORTH_STAR, IVF_CARE_CYCLE_STAGES } from '../../src/product/north-star';
+import { FEVIO_CUSTOMER_EXPERIENCE_JOBS, FEVIO_PRODUCT_NORTH_STAR, IVF_CARE_CYCLE_STAGES } from '../../src/product/north-star';
 
 const northStarDoc = () => readFileSync('docs/01-product/fevio-product-north-star.md', 'utf8');
 
@@ -26,5 +26,16 @@ describe('Fevio Product North Star contract', () => {
     expect(FEVIO_PRODUCT_NORTH_STAR.nonNegotiables).toContain('No partner copy-paste view.');
     expect(FEVIO_PRODUCT_NORTH_STAR.nonNegotiables).toContain('No unconfirmed AI output as an executable care action.');
     expect(FEVIO_PRODUCT_NORTH_STAR.primaryQuestion).toContain('IVF 치료 실행 누락');
+  });
+
+  it('locks the customer experience jobs to care-operation value, not generic calendar or emotion app value', () => {
+    const jobs = FEVIO_CUSTOMER_EXPERIENCE_JOBS.join('\n');
+
+    expect(FEVIO_CUSTOMER_EXPERIENCE_JOBS).toHaveLength(10);
+    expect(jobs).toContain('오늘 해야 할 주사, 약, 내원, 확인할 일');
+    expect(jobs).toContain('최종 확인과 저장은 사용자가 한다');
+    expect(jobs).toContain('오늘 도울 역할만 공유한다');
+    expect(jobs).toContain('단순 캘린더가 아니라');
+    expect(jobs).not.toContain('감정 케어를 강요한다');
   });
 });

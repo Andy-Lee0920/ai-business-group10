@@ -24,7 +24,7 @@ Closed beta = 10–30명 사용자. 운영 작업(디버깅, 고객 지원, seed
    - service-role 키는 클라이언트/브라우저-노출 코드에서 사용 금지 (server-only).
 2. **Admin write scope**: admin은 moderation reject(`moderation_status='rejected'`), seed post 작성, audit-justified support 작업만 허용. hard delete 금지 (사용자 신뢰 손상, `deleted_at` soft delete만).
 3. **사용자 고지**: closed beta onboarding 또는 약관에 "운영팀이 데이터에 접근할 수 있음, 신고/모더레이션/운영 지원 목적으로 한정, 모든 접근은 기록됨"을 명시. 별도 동의 step은 없음(PG-A) — 명시 carry-over만 한다.
-4. **Privacy Gate carry-over**: 기존 Privacy Gate 한 번의 통과가 `couple_journal_entries` + `community_posts/comments/empathies` write 권한을 모두 부여. community 첫 진입 화면에 정책 안내(닉네임 노출 / 사진 미공유 / 모더레이션 검수 / 신고 가능)는 *문구로만* 표시한다.
+4. **Privacy Gate carry-over**: 기존 Privacy Gate 한 번의 통과가 `couple_journal_entries` + `community_posts/comments/empathies` write 권한을 모두 부여. community 첫 진입 화면에 정책 안내(닉네임 노출 / 사진 검수 / 개인정보·병원명 노출 금지 / 모더레이션 검수 / 신고 가능)는 *문구로만* 표시한다.
 5. **Seed posts**:
    - `community_identities`의 예약 row `Fevio 운영팀`이 author.
    - audience(`primary_feed`, `partner_feed`) 양쪽에 별도 작성.

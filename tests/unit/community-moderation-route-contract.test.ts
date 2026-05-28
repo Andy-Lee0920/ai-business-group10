@@ -18,6 +18,11 @@ describe('community moderation route contract', () => {
     expect(source).toContain("moderation_status: 'pending'");
     expect(source).toContain('audienceScope');
     expect(source).toContain('normalizeAudienceScope');
+    expect(source).toContain('photoUrls');
+    expect(source).toContain('normalizeCommunityPhotoUrls');
+    expect(source).toContain('invalid_photo_urls');
+    expect(source).toContain('photo_urls: photoUrls');
+    expect(source).toContain('signCommunityPhotoUrls');
     expect(source).toContain("audience_scope: audienceScope");
     expect(source).toContain("audience_role: audienceScope === 'same_role' ? actor.role : null");
     expect(source).not.toContain('normalizeAudience(value');
