@@ -72,9 +72,9 @@ describe('SLC home screen vertical slices', () => {
     ]);
 
     expect(markup).toContain('data-testid="home-reminder-toggle"');
-    expect(markup).toContain('data-reminder-state="on"');
-    expect(markup).toContain('aria-pressed="true"');
-    expect(markup).toContain('lucide-bell');
+    expect(markup).toContain('data-reminder-state="off"');
+    expect(markup).toContain('aria-pressed="false"');
+    expect(markup).toContain('lucide-bell-off');
     expect(markup).toContain('width:44px;height:44px');
     expect(markup).not.toContain('알림 켬');
     expect(markup).not.toContain('알림 끔');

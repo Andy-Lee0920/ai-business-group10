@@ -7,12 +7,21 @@ export type PushReminderSubscriptionStatus =
   | 'requesting'
   | 'subscribed'
   | 'unsupported'
+  | 'ios_install_required'
   | 'missing_vapid_key'
   | 'permission_denied'
   | 'server_error';
 
+export const PUSH_PERMISSION_DENIED_STORAGE_KEY = 'fevio_push_permission_denied';
+
 export async function enablePushReminderSubscription(): Promise<PushReminderSubscriptionStatus> {
   if (!supportsWebPush()) return 'unsupported';
+  if (getPwaInstallGuidance() === 'ios_add_to_home_screen') return 'ios_install_required';
+
+  if (hasRememberedPermissionDenial() || Notification.permission === 'denied') {
+    rememberPermissionDenial();
+    return 'permission_denied';
+  }
 
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
   if (!publicKey) return 'missing_vapid_key';
@@ -20,7 +29,11 @@ export async function enablePushReminderSubscription(): Promise<PushReminderSubs
   const permission = Notification.permission === 'default'
     ? await Notification.requestPermission()
     : Notification.permission;
-  if (permission !== 'granted') return 'permission_denied';
+  if (permission !== 'granted') {
+    rememberPermissionDenial();
+    return 'permission_denied';
+  }
+  clearRememberedPermissionDenial();
 
   await navigator.serviceWorker.register('/sw.js');
   const registration = await navigator.serviceWorker.ready;
@@ -45,6 +58,30 @@ function supportsWebPush() {
     && 'serviceWorker' in navigator
     && 'PushManager' in window
     && 'Notification' in window;
+}
+
+function hasRememberedPermissionDenial() {
+  try {
+    return window.localStorage.getItem(PUSH_PERMISSION_DENIED_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function rememberPermissionDenial() {
+  try {
+    window.localStorage.setItem(PUSH_PERMISSION_DENIED_STORAGE_KEY, '1');
+  } catch {
+    // Permission denial remains sticky in the browser even if localStorage is unavailable.
+  }
+}
+
+function clearRememberedPermissionDenial() {
+  try {
+    window.localStorage.removeItem(PUSH_PERMISSION_DENIED_STORAGE_KEY);
+  } catch {
+    // localStorage access can fail in restricted browser modes.
+  }
 }
 
 function urlBase64ToUint8Array(base64String: string) {
