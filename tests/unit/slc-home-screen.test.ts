@@ -64,7 +64,7 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).not.toContain('오늘의 배아');
   });
 
-  it('uses the home header action for reminder settings instead of duplicating schedule add', () => {
+  it('uses the home header action for re-subscribe instead of duplicating schedule add', () => {
     vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
 
     const markup = render([
@@ -75,10 +75,28 @@ describe('SLC home screen vertical slices', () => {
     expect(markup).toContain('data-reminder-state="off"');
     expect(markup).toContain('aria-pressed="false"');
     expect(markup).toContain('lucide-bell-off');
-    expect(markup).toContain('width:44px;height:44px');
+    expect(markup).toContain('알림 다시 받기');
+    expect(markup).toContain('알림 경로를 새로 연결해요');
     expect(markup).not.toContain('알림 켬');
     expect(markup).not.toContain('알림 끔');
     expect(markup.indexOf('data-testid="home-reminder-toggle"')).toBeLessThan(markup.indexOf('aria-label="일정 추가"'));
+  });
+
+  it('keeps an active push subscription out of the re-subscribe state', () => {
+    vi.setSystemTime(new Date('2026-05-14T09:00:00.000Z'));
+
+    const markup = renderToStaticMarkup(React.createElement(TodayScreen, {
+      initialItems: [
+        item({ id: 'later-medication', type: 'medication', title: '듀파스톤', scheduled_at: '2026-05-14T11:00:00.000Z' }),
+      ],
+      initialClinicUpdates: [],
+      userId: 'patient-1',
+      hasActivePushSubscription: true,
+    }));
+
+    expect(markup).not.toContain('data-testid="home-reminder-toggle"');
+    expect(markup).not.toContain('aria-label="홈 알림 끄기"');
+    expect(markup).not.toContain('알림 다시 받기');
   });
 
   it('promotes the current injection through the full-bleed hero CTA and keeps reference images available', () => {

@@ -4,7 +4,7 @@ type PushTestWindow = Window & {
   __pushPermissionRequestCalls: number;
 };
 
-test('home inline CTA creates one push_subscriptions row after active user click', async ({ page }) => {
+test('home re-subscribe CTA creates one push_subscriptions row after active user click', async ({ page }) => {
   const postedSubscriptions: string[] = [];
   await installMockPushBrowser(page, 'granted');
   await page.route('**/api/push/subscribe', async (route) => {
@@ -19,6 +19,8 @@ test('home inline CTA creates one push_subscriptions row after active user click
   await page.goto('/home?care=injection');
   const toggle = page.getByTestId('home-reminder-toggle');
   await expect(toggle).toHaveAttribute('data-reminder-state', 'off');
+  await expect(toggle).toContainText('알림 다시 받기');
+  await expect(page.getByText('알림 경로를 새로 연결해요')).toBeVisible();
 
   await toggle.click();
 

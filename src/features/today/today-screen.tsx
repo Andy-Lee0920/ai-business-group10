@@ -44,6 +44,7 @@ interface TodayScreenProps {
   userId: string;
   initialClinicUpdates?: ClinicUpdate[];
   firstScheduleSkipped?: boolean;
+  hasActivePushSubscription?: boolean;
 }
 
 type DayOffset = 0 | 1 | 2;
@@ -281,6 +282,7 @@ export function TodayScreen({
   userId: _userId,
   initialClinicUpdates = [],
   firstScheduleSkipped = false,
+  hasActivePushSubscription = false,
 }: TodayScreenProps) {
   const [items, setItems] = useState<ScheduleItem[]>(initialItems);
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
@@ -408,7 +410,7 @@ export function TodayScreen({
           transition: "background 0.4s ease",
         }}
       >
-        <Header />
+        <Header hasActivePushSubscription={hasActivePushSubscription} />
         <HeroZone
           dailyBrief={dailyBrief}
           priority={priority.heroSurface}
@@ -2011,7 +2013,7 @@ function heroCtaStyle(accentColor: string) {
   };
 }
 
-function Header() {
+function Header({ hasActivePushSubscription }: { hasActivePushSubscription: boolean }) {
   const today = new Date();
   return (
     <header
@@ -2046,7 +2048,7 @@ function Header() {
           오늘 실행
         </h1>
       </div>
-      <PushPermissionCta />
+      <PushPermissionCta hasActivePushSubscription={hasActivePushSubscription} />
     </header>
   );
 }
