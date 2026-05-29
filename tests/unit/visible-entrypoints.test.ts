@@ -26,6 +26,8 @@ describe('Vercel-visible entrypoints', () => {
     expect(prescription).toContain('/api/onboard/photo-analyze');
     expect(prescription).toContain('/api/onboard/text-analyze');
     expect(prescription).toContain('/api/onboard/candidates/confirm');
+    expect(prescription).toContain('fallbackPayload');
+    expect(prescription).toContain('shouldAnalyzeManualPrescriptionFallback');
     expect(prescription).toContain('확인 후 저장');
   });
 });

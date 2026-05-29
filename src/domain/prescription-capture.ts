@@ -16,6 +16,7 @@ export type PrescriptionMedicationCardInput = {
 export type PrescriptionMedicationCardDraft = {
   card_type: Extract<CardType, 'medication' | 'injection'>;
   title: string;
+  description: string;
   source_text: string;
   scheduled_at: string;
   prescription_photo_url: string;
@@ -34,6 +35,7 @@ export function buildPrescriptionMedicationCard(input: PrescriptionMedicationCar
   return {
     card_type: cardType,
     title,
+    description: normalized.dose,
     source_text: `${title}\n처방 사진: ${normalized.photoUrl}`,
     scheduled_at: scheduledAtForToday(normalized.time),
     prescription_photo_url: normalized.photoUrl,
@@ -42,6 +44,14 @@ export function buildPrescriptionMedicationCard(input: PrescriptionMedicationCar
     confirmation_required: false,
     partner_visible: normalized.administeredBy === 'partner' || cardType === 'injection',
   };
+}
+
+export function shouldAnalyzeManualPrescriptionFallback(input: {
+  hasPhoto: boolean;
+  candidateCount: number;
+  manualText: string;
+}) {
+  return input.hasPhoto && input.candidateCount === 0 && input.manualText.trim().length > 0;
 }
 
 function normalizePrescriptionInput(input: PrescriptionMedicationCardInput): PrescriptionMedicationCardInput {

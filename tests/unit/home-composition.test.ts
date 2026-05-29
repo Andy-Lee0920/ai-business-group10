@@ -105,7 +105,7 @@ describe('home composition', () => {
   });
 });
 
-import { computeHomeContextV2 } from '../../src/domain/home-composition';
+import { computeHomeContextV2, deriveHomeBriefContext } from '../../src/domain/home-composition';
 import type { TreatmentMilestone } from '../../src/types/treatment-timeline.types';
 
 describe('home composition v2 timeline bridge', () => {
@@ -143,5 +143,33 @@ describe('home composition v2 timeline bridge', () => {
 
     expect(context).toMatchObject({ careDay: 'waiting_day', phaseCareDay: 'waiting_day', surfaceCareDay: 'waiting_day', overrideReason: 'none' });
     expect(context.cards[0]?.cardType).toBe('injection');
+  });
+
+  it('derives the daily brief phase from the active treatment milestone instead of the foreground card type', () => {
+    const context = computeHomeContextV2([
+      {
+        id: 'progesterone',
+        couple_id: 'couple-1',
+        created_by: 'user-1',
+        assignee_role: 'primary_user',
+        card_type: 'injection',
+        title: '프로게스테론 주사',
+        description: null,
+        source_text: '프로게스테론 주사',
+        scheduled_at: '2026-05-10T09:00:00.000Z',
+        care_date: '2026-05-10',
+        status: 'confirmed',
+        confirmation_required: false,
+        user_marked_important: false,
+        partner_visible: false,
+        revision: 1,
+      },
+    ], [milestone], now);
+
+    expect(deriveHomeBriefContext(context, [milestone], now)).toMatchObject({
+      confirmedPhase: 'two_week_wait',
+      phaseCareDay: 'waiting_day',
+      dayIndexInPhase: 3,
+    });
   });
 });

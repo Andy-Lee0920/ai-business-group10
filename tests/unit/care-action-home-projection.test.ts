@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { projectCareActionCardsForHome } from '../../src/domain/care-action-home-projection';
+import {
+  filterLegacyTodayItemsForHomeWindow,
+  projectCareActionCardsForHome,
+  projectCareActionCardsToLegacyTodayItems,
+} from '../../src/domain/care-action-home-projection';
 import type { CareActionCard } from '../../src/types/care-cards.types';
 
 const BASE_CARD: CareActionCard & { created_at: string } = {
@@ -65,5 +69,32 @@ describe('care_action_cards → TodayScreen projection', () => {
     ]);
 
     expect(projected?.scheduled_at).toBe('2026-05-20T00:00:00.000+09:00');
+  });
+
+  it('preserves user-confirmed dose and unit from canonical card description for today execution rows', () => {
+    const [projected] = projectCareActionCardsForHome([
+      card({ id: 'med-dose', card_type: 'medication', title: '듀파스톤 복용', description: '10 mg' }),
+    ]);
+
+    expect(projected).toMatchObject({
+      id: 'med-dose',
+      type: 'medication',
+      title: '듀파스톤 복용',
+      dose: '10',
+      unit: 'mg',
+    });
+  });
+
+  it('names the TodayScreen legacy adapter and keeps the home window filter separate', () => {
+    const projected = projectCareActionCardsToLegacyTodayItems([
+      card({ id: 'today', scheduled_at: '2026-05-19T12:00:00.000Z' }),
+      card({ id: 'outside', scheduled_at: '2026-05-23T12:00:00.000Z' }),
+    ]);
+
+    expect(filterLegacyTodayItemsForHomeWindow(
+      projected,
+      '2026-05-19T00:00:00.000Z',
+      '2026-05-21T23:59:59.999Z',
+    ).map((item) => item.id)).toEqual(['today']);
   });
 });

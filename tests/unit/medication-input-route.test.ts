@@ -125,6 +125,7 @@ describe('/api/medication', () => {
       source_input_id: 'visit-1',
       card_type: 'injection',
       title: '주사 · 오비드렐 · 250mcg · 22:00 · 매일 · 꼭 챙겨야 해요',
+      description: '250mcg',
       scheduled_at: expect.any(String),
       status: 'confirmed',
       user_marked_important: true,
@@ -157,7 +158,7 @@ describe('/api/medication', () => {
 
     expect(response.status).toBe(200);
     expect(visitTable.insert).toHaveBeenCalledWith({ couple_id: 'couple-1', raw_text: '질정 · 크리논 · 1회 · 23:00 · 오늘만' });
-    expect(cardTable.insert).toHaveBeenCalledWith(expect.objectContaining({ card_type: 'medication', title: '질정 · 크리논 · 1회 · 23:00 · 오늘만' }));
+    expect(cardTable.insert).toHaveBeenCalledWith(expect.objectContaining({ card_type: 'medication', title: '질정 · 크리논 · 1회 · 23:00 · 오늘만', description: '1회' }));
     expect(payload).toMatchObject({ cardId: 'card-vaginal', title: '질정 · 크리논 · 1회 · 23:00 · 오늘만' });
   });
 

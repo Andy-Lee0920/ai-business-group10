@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isPresentationRequest } from '../../../src/config';
-import { assertSensitiveWriteAllowed } from '../../../src/domain/auth-privacy';
-import { bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } from '../../../src/lib/couple-bootstrap-admin';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
-import type { CardType } from '../../../src/types/care-cards.types';
+import {
+  createSensitiveCareActionCard,
+  isMissingSupabasePublicConfigError,
+  isPrivacyGateRequiredError,
+  type SensitiveCareWriteSupabaseClient,
+} from '../../../src/lib/sensitive-care-write';
 
 type MedicationType = 'medication' | 'injection' | 'vaginal' | 'general_action';
 type RepeatPattern = 'once' | 'daily' | 'clinic_instruction';
@@ -16,20 +19,6 @@ type MedicationBody = {
   repeat?: unknown;
   important?: unknown;
 };
-type DbError = { message: string };
-type SingleResult<T> = { data: T | null; error: DbError | null };
-type RpcResult<T> = { data: T[] | T | null; error: DbError | null };
-type SelectChain<T> = { select(columns: string): SelectChain<T>; single(): Promise<SingleResult<T>> };
-type MedicationSupabaseClient = {
-  auth: { getUser(): Promise<{ data: { user: { id: string; email?: string | null } | null }; error: DbError | null }> };
-  rpc<T>(name: string, args?: Record<string, unknown>): Promise<RpcResult<T>>;
-  from(table: 'visit_inputs' | 'care_action_cards'): {
-    insert<T>(value: Record<string, unknown>): SelectChain<T>;
-  };
-};
-type BootstrapRow = { couple_id: string; privacy_gate_accepted_at: string | null };
-type VisitInputRow = { id: string };
-type CardRow = { id: string; status: string };
 
 const TYPES: MedicationType[] = ['medication', 'injection', 'vaginal', 'general_action'];
 const REPEAT_LABELS: Record<RepeatPattern, string> = {
@@ -57,54 +46,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = (await createCookieBackedSupabaseClient()) as unknown as MedicationSupabaseClient;
-    const user = await getAuthenticatedUser(supabase);
-    const bootstrap = await bootstrapSensitiveContext(supabase, user);
-    try {
-      assertSensitiveWriteAllowed({ privacyGateAcceptedAt: bootstrap.privacy_gate_accepted_at });
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('Privacy Gate must be accepted')) {
-        return NextResponse.json({ error: error.message }, { status: 403 });
-      }
-      throw error;
-    }
-
-    const visitInput = await supabase
-      .from('visit_inputs')
-      .insert<VisitInputRow>({ couple_id: bootstrap.couple_id, raw_text: sourceText })
-      .select('id')
-      .single();
-    if (visitInput.error || !visitInput.data) throw new Error(visitInput.error?.message ?? 'visit_inputs insert failed');
-
-    const card = await supabase
-      .from('care_action_cards')
-      .insert<CardRow>({
-        couple_id: bootstrap.couple_id,
-        created_by: user.id,
-        source_input_id: visitInput.data.id,
+    const supabase = (await createCookieBackedSupabaseClient()) as unknown as SensitiveCareWriteSupabaseClient;
+    const card = await createSensitiveCareActionCard(supabase, {
+      sourceText,
+      card: {
         assignee_role: 'primary_user',
         card_type: input.type === 'vaginal' ? 'medication' : input.type,
         title: sourceText,
+        description: input.dose,
         source_text: sourceText,
         scheduled_at: scheduledAtForToday(input.time),
         status: 'confirmed',
         confirmation_required: false,
         user_marked_important: input.important,
         partner_visible: true,
-      })
-      .select('id,status')
-      .single();
-    if (card.error || !card.data) throw new Error(card.error?.message ?? 'care_action_cards insert failed');
+      },
+    });
 
     return NextResponse.json({
-      cardId: card.data.id,
-      status: card.data.status,
+      cardId: card.cardId,
+      status: card.status,
       persisted: true,
       createdCardCount: 1,
       title: sourceText,
     });
   } catch (error) {
-    if (isMissingConfigError(error) && isDemoRequest(request)) {
+    if (isPrivacyGateRequiredError(error)) return NextResponse.json({ error: error.message }, { status: 403 });
+    if (isMissingSupabasePublicConfigError(error) && isDemoRequest(request)) {
       return NextResponse.json({
         cardId: `demo-medication-${Date.now()}`,
         status: 'confirmed',
@@ -148,29 +116,6 @@ function buildSourceText(input: { type: MedicationType; name: string; dose: stri
   return [methodLabel, input.name, input.dose, input.time, REPEAT_LABELS[input.repeat], input.important ? '꼭 챙겨야 해요' : null].filter(Boolean).join(' · ');
 }
 
-async function getAuthenticatedUser(supabase: MedicationSupabaseClient) {
-  const userResult = await supabase.auth.getUser();
-  if (userResult.error || !userResult.data.user) throw new Error(userResult.error?.message ?? 'Authentication required.');
-  return userResult.data.user;
-}
-
-async function bootstrapSensitiveContext(supabase: MedicationSupabaseClient, user: { id: string; email?: string | null }) {
-  const bootstrap = await supabase.rpc<BootstrapRow>('init_couple_for_user');
-  if (!bootstrap.error) {
-    const row = firstRow(bootstrap.data);
-    if (!row) throw new Error('Couple shell missing.');
-    return row;
-  }
-
-  if (!isInitCoupleAmbiguityError(bootstrap.error)) throw new Error(bootstrap.error.message);
-  const shell = await bootstrapCoupleForUserWithServiceRole(user);
-  return { couple_id: shell.couple_id, privacy_gate_accepted_at: shell.privacy_gate_accepted_at };
-}
-
-function firstRow<T>(value: T[] | T | null) {
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
 function scheduledAtForToday(time: string) {
   const [hours = '00', minutes = '00'] = time.split(':');
   const date = new Date();
@@ -180,8 +125,4 @@ function scheduledAtForToday(time: string) {
 
 function isDemoRequest(request: NextRequest) {
   return request.headers.get('cookie')?.split(';').some((part) => part.trim() === DEMO_COOKIE) ?? false;
-}
-
-function isMissingConfigError(error: unknown) {
-  return error instanceof Error && error.message.includes('Missing Supabase public config');
 }

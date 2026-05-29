@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildPrescriptionMedicationCard } from '../../src/domain/prescription-capture';
+import { buildPrescriptionMedicationCard, shouldAnalyzeManualPrescriptionFallback } from '../../src/domain/prescription-capture';
 import { POST as prescriptionCapture } from '../../app/api/prescription/capture/route';
 import { createCookieBackedSupabaseClient } from '../../src/lib/server-supabase';
 
@@ -45,6 +45,7 @@ describe('Prescription Capture', () => {
     expect(card).toMatchObject({
       card_type: 'injection',
       title: '주사 · 프로게스테론 · 1mL · 21:30',
+      description: '1mL',
       prescription_photo_url: 'https://storage.example/prescriptions/a.jpg',
       prescription_capture_status: 'photo_attached',
       administered_by: 'partner',
@@ -93,6 +94,7 @@ describe('Prescription Capture', () => {
       prescription_capture_status: 'photo_attached',
       administered_by: 'partner',
       partner_visible: true,
+      description: '1mL',
     }));
     expect(payload).toMatchObject({ cardId: 'card-prescription', persisted: true });
   });
@@ -107,5 +109,28 @@ describe('Prescription Capture', () => {
     expect(migration).toContain('injection_logs');
     expect(migration).not.toContain('grant select, insert, update on public.care_action_cards to anon');
     expect(matrix).toContain('prescription_capture_status');
+  });
+
+  it('falls back to manual text analysis only when a photo produced no candidates and the user entered text', () => {
+    expect(shouldAnalyzeManualPrescriptionFallback({
+      hasPhoto: true,
+      candidateCount: 0,
+      manualText: '프로게스테론 1mL 21:30',
+    })).toBe(true);
+    expect(shouldAnalyzeManualPrescriptionFallback({
+      hasPhoto: true,
+      candidateCount: 1,
+      manualText: '프로게스테론 1mL 21:30',
+    })).toBe(false);
+    expect(shouldAnalyzeManualPrescriptionFallback({
+      hasPhoto: true,
+      candidateCount: 0,
+      manualText: '   ',
+    })).toBe(false);
+    expect(shouldAnalyzeManualPrescriptionFallback({
+      hasPhoto: false,
+      candidateCount: 0,
+      manualText: '프로게스테론 1mL 21:30',
+    })).toBe(false);
   });
 });

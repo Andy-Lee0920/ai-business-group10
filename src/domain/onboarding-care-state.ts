@@ -1,3 +1,5 @@
+import type { TreatmentMilestoneKind } from '../types/treatment-timeline.types';
+
 export type IvfStage =
   | 'baseline_testing'
   | 'ovarian_stimulation'
@@ -58,6 +60,67 @@ export const IVF_STAGE_LABELS: Record<IvfStage, { index: number; label: string; 
   embryo_transfer: { index: 6, label: '배아 이식', shortLabel: '이식 후' },
   pregnancy_test: { index: 7, label: '임신 확인', shortLabel: '피검' },
 };
+
+export type IvfStageExplanation = {
+  headline: string;
+  body: string;
+  boundary: string;
+};
+
+export const IVF_STAGE_EXPLANATIONS: Record<IvfStage, IvfStageExplanation> = {
+  baseline_testing: {
+    headline: '검사와 첫 방문 내용을 확인하는 단계예요.',
+    body: '초음파, 채혈, 초진 예약처럼 병원이 확인하라고 한 일정만 먼저 정리해요.',
+    boundary: '검사 결과 해석이나 치료 판단은 하지 않아요.',
+  },
+  ovarian_stimulation: {
+    headline: '난포를 키우는 동안 약·주사 시간을 지키는 단계예요.',
+    body: '약 이름, 용량, 시간, 다음 내원처럼 놓치면 안 되는 실행 항목을 앞에 둬요.',
+    boundary: '용량 변경이나 주사법 판단은 병원 안내를 기준으로 직접 확인해야 해요.',
+  },
+  egg_retrieval: {
+    headline: '난자를 채취하는 시술 전후 일정을 확인하는 단계예요.',
+    body: '내원 시간, 금식, 이동, 회복 준비처럼 병원에서 확정한 행동만 보여줘요.',
+    boundary: '채취 결과나 예후를 단정하지 않아요.',
+  },
+  fertilization: {
+    headline: '수정 결과 연락을 기다리며 다음 안내를 확인하는 단계예요.',
+    body: '연락 예정일과 병원이 요청한 확인 사항을 조용히 남겨둬요.',
+    boundary: '수정 가능성이나 결과를 예측하지 않아요.',
+  },
+  embryo_culture: {
+    headline: '배아 배양 결과 연락을 기다리는 단계예요.',
+    body: '배양, 동결, 다음 연락처럼 사용자가 확인할 일정과 메모만 정리해요.',
+    boundary: '배아 등급이나 결과 의미를 해석하지 않아요.',
+  },
+  embryo_transfer: {
+    headline: '배아 이식 전후 안내를 지키는 단계예요.',
+    body: '이식 시간, 복약, 휴식, 다음 확인일처럼 확정된 실행 항목을 정리해요.',
+    boundary: '착상 여부나 성공 가능성을 말하지 않아요.',
+  },
+  pregnancy_test: {
+    headline: '피검 또는 결과 확인 일정을 기다리는 단계예요.',
+    body: '결과 확인 시간과 공유 범위를 사용자가 정한 대로만 보여줘요.',
+    boundary: '증상으로 결과를 판단하거나 결과 확인을 재촉하지 않아요.',
+  },
+};
+
+export const TREATMENT_MILESTONE_STAGE: Record<TreatmentMilestoneKind, IvfStage> = {
+  initial_visit: 'baseline_testing',
+  stimulation_start: 'ovarian_stimulation',
+  trigger_shot: 'ovarian_stimulation',
+  egg_retrieval: 'egg_retrieval',
+  embryo_transfer: 'embryo_transfer',
+  result_day: 'pregnancy_test',
+};
+
+export function explainIvfStage(stage: IvfStage): IvfStageExplanation {
+  return IVF_STAGE_EXPLANATIONS[stage];
+}
+
+export function explainTreatmentMilestone(milestone: TreatmentMilestoneKind): IvfStageExplanation {
+  return explainIvfStage(TREATMENT_MILESTONE_STAGE[milestone]);
+}
 
 const KEYWORD_STAGE_RULES: Array<{ pattern: RegExp; stage: IvfStage }> = [
   { pattern: /피검|hcg|임신|베타/iu, stage: 'pregnancy_test' },

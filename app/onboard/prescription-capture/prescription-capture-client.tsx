@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, type CSSProperties } from 'react';
+import { shouldAnalyzeManualPrescriptionFallback } from '../../../src/domain/prescription-capture';
 
 type CandidateType = 'medication' | 'injection' | 'clinic';
 type Candidate = {
@@ -33,8 +34,16 @@ export function PrescriptionCaptureClient() {
     setError(null);
     setComplete(null);
     try {
-      const payload = photo ? await uploadAndAnalyzePhoto(photo) : await analyzeText(buildManualText(rawText, manualName, manualDose, manualTime));
-      const nextCandidates = payload.candidates ?? [];
+      const manualText = buildManualText(rawText, manualName, manualDose, manualTime);
+      const payload = photo ? await uploadAndAnalyzePhoto(photo) : await analyzeText(manualText);
+      const fallbackPayload = shouldAnalyzeManualPrescriptionFallback({
+        hasPhoto: Boolean(photo),
+        candidateCount: (payload.candidates ?? []).length,
+        manualText,
+      })
+        ? await analyzeText(manualText)
+        : payload;
+      const nextCandidates = fallbackPayload.candidates ?? [];
       if (nextCandidates.length === 0) {
         setError('확인할 일정을 찾지 못했어요. 병원 안내 내용을 조금 더 자세히 적어주세요.');
         return;

@@ -20,15 +20,13 @@ import type {
 import { ctaLabel } from "../../types/slc.types";
 import { SLC_SAFE_COPY } from "../../domain/slc-copy";
 import { resolveClinicFollowUpPrompt } from "../../domain/slc-clinic-followup";
+import { type HomeFocus } from "../../domain/slc-home-focus";
 import {
-  resolveHomeFocus,
-  type HomeFocus,
-} from "../../domain/slc-home-focus";
-import {
-  formatKstDateLabel,
-  formatKstTime,
-  isInKstDay,
-} from "../../domain/kst-date";
+  resolveTodayExecutionSurface,
+  type DayOffset,
+  type HeroStory,
+} from "../../domain/today-execution-surface";
+import { formatKstDateLabel, formatKstTime } from "../../domain/kst-date";
 import { resolveMedicationReferenceAsset } from "../../domain/medication-reference-assets";
 import {
   isInInjectionCountdownWindow,
@@ -39,7 +37,6 @@ import {
   getPwaInstallGuidance,
   type PushReminderSubscriptionStatus,
 } from "../../lib/pwa-push-client";
-import { pickHeroSurface } from "../../lib/brief/priority";
 import { FEVIO_CUSTOMER_EXPERIENCE_JOBS } from "../../product/north-star";
 import styles from "./today-screen.module.css";
 
@@ -50,19 +47,6 @@ interface TodayScreenProps {
   initialClinicUpdates?: ClinicUpdate[];
   firstScheduleSkipped?: boolean;
 }
-
-type DayOffset = 0 | 1 | 2;
-type HeroStory =
-  | {
-      kind: "countdown";
-      item: ScheduleItem;
-      nextInjection: ScheduleItem | null;
-      focus: HomeFocus;
-    }
-  | { kind: "overdue_backlog"; item: ScheduleItem }
-  | { kind: "today_pending"; item: ScheduleItem; focus: HomeFocus }
-  | { kind: "tomorrow"; item: ScheduleItem; focus: HomeFocus }
-  | { kind: "quiet"; focus: HomeFocus };
 
 const DAY_LABELS = ["오늘", "내일", "모레"] as const;
 const HOME_REMINDER_SETTING_KEY = "fevio_home_reminder_enabled";
@@ -292,7 +276,7 @@ export function TodayScreen({
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
   const [confirmPortal, setConfirmPortal] = useState<HTMLElement | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayOffset>(0);
-  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
   const [pushSubscriptionStatus, setPushSubscriptionStatus] =
     useState<PushReminderSubscriptionStatus>("idle");
   const [pwaInstallGuidance, setPwaInstallGuidance] = useState<
@@ -309,8 +293,8 @@ export function TodayScreen({
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(HOME_REMINDER_SETTING_KEY);
-      if (stored === "off") setReminderEnabled(false);
       if (stored === "on") setReminderEnabled(true);
+      if (stored === "off") setReminderEnabled(false);
     } catch {
       // localStorage access can fail in restricted browser modes.
     } finally {
@@ -334,34 +318,16 @@ export function TodayScreen({
     }
   }, [reminderEnabled, reminderPreferenceLoaded]);
 
-  useEffect(() => {
-    const id = setInterval(() => setItems((prev) => [...prev]), 1_000);
-    return () => clearInterval(id);
-  }, []);
-
-  const visibleItems = useMemo(
-    () => items.filter((item) => isOnDay(item.scheduled_at, selectedDay)),
+  const { visibleItems, heroStory, priority } = useMemo(
+    () => resolveTodayExecutionSurface({ items, selectedDay, now: new Date() }),
     [items, selectedDay],
   );
 
-  const homeFocus = useMemo(
-    () => resolveHomeFocus(visibleItems),
-    [visibleItems],
-  );
-  const heroStory = useMemo(
-    () =>
-      resolveHeroStory(
-        selectedDay === 0 ? items : visibleItems,
-        homeFocus,
-        selectedDay,
-        initialClinicUpdates,
-      ),
-    [items, visibleItems, homeFocus, selectedDay, initialClinicUpdates],
-  );
-  const priority = useMemo(
-    () => pickHeroSurface({ now: new Date(), cards: items }),
-    [items],
-  );
+  useEffect(() => {
+    const intervalMs = heroStory.kind === "countdown" ? 1_000 : 60_000;
+    const id = setInterval(() => setItems((prev) => [...prev]), intervalMs);
+    return () => clearInterval(id);
+  }, [heroStory.kind]);
   const heroVisual = useMemo(() => resolveHeroVisual(heroStory), [heroStory]);
   const clinicFollowUpItem = useMemo(
     () =>
@@ -1196,28 +1162,6 @@ function resolvePostClinicBannerState(items: ScheduleItem[]) {
   };
 }
 
-function resolveNextInjection(
-  primaryItem: ScheduleItem | null,
-  items: ScheduleItem[],
-) {
-  if (!primaryItem) return null;
-  const primaryTime = new Date(primaryItem.scheduled_at).getTime();
-  return (
-    items
-      .filter(
-        (item) =>
-          item.type === "injection" &&
-          item.id !== primaryItem.id &&
-          new Date(item.scheduled_at).getTime() > primaryTime,
-      )
-      .sort(
-        (left, right) =>
-          new Date(left.scheduled_at).getTime() -
-          new Date(right.scheduled_at).getTime(),
-      )[0] ?? null
-  );
-}
-
 function HeroZone({
   dailyBrief,
   priority,
@@ -1468,95 +1412,6 @@ function CheerCard({
       {/* <span aria-hidden="true" style={{ fontSize: 20, lineHeight: 1 }}>{visual.cheer.bottomEmoji}</span> */}
     </div>
   );
-}
-
-function resolveHeroStory(
-  items: ScheduleItem[],
-  focus: HomeFocus,
-  selectedDay: DayOffset,
-  initialClinicUpdates: ClinicUpdate[],
-): HeroStory {
-  const pending = items
-    .filter((item) => item.status !== "completed")
-    .slice()
-    .sort(
-      (left, right) =>
-        new Date(left.scheduled_at).getTime() -
-        new Date(right.scheduled_at).getTime(),
-    );
-  const countdown =
-    selectedDay === 0
-      ? pending.find(
-          (item) =>
-            item.type === "injection" &&
-            isOnDay(item.scheduled_at, 0) &&
-            isInInjectionCountdownWindow(item.scheduled_at),
-        )
-      : null;
-  if (countdown) {
-    return {
-      kind: "countdown",
-      item: countdown,
-      nextInjection: resolveNextInjection(countdown, items),
-      focus: { ...focus, kind: "medication_due", primaryItem: countdown },
-    };
-  }
-
-  if (selectedDay === 0) {
-    const missedItems = pending.filter(
-      (item) =>
-        item.status === "missed" ||
-        (isOnDay(item.scheduled_at, 0) &&
-          new Date(item.scheduled_at).getTime() < Date.now() &&
-          item.status !== "completed"),
-    );
-    if (missedItems.length > 0) {
-      return { kind: "overdue_backlog", item: missedItems[0] };
-    }
-  }
-
-  const selectedFocusItem =
-    focus.primaryItem && isOnDay(focus.primaryItem.scheduled_at, selectedDay)
-      ? focus.primaryItem
-      : null;
-  const selectedPending =
-    selectedFocusItem ??
-    pending.find((item) => isOnDay(item.scheduled_at, selectedDay));
-  if (selectedPending) {
-    const selectedFocus = selectedFocusItem
-      ? focus
-      : resolveHomeFocus([selectedPending]);
-    return {
-      kind: "today_pending",
-      item: selectedPending,
-      focus: { ...selectedFocus, primaryItem: selectedPending },
-    };
-  }
-
-  const hasCompletedToday = items.some(
-    (item) => item.status === "completed" && isOnDay(item.scheduled_at, 0),
-  );
-  const tomorrowPending = pending.find((item) => isOnDay(item.scheduled_at, 1));
-  if (selectedDay === 0 && hasCompletedToday && tomorrowPending) {
-    return {
-      kind: "tomorrow",
-      item: tomorrowPending,
-      focus: buildTomorrowFocus(tomorrowPending),
-    };
-  }
-
-  return { kind: "quiet", focus };
-}
-
-function buildTomorrowFocus(item: ScheduleItem): HomeFocus {
-  const isClinic = item.type === "clinic";
-  return {
-    kind: isClinic ? "clinic_tomorrow" : "medication_upcoming",
-    badgeLabel: "내일",
-    heading: isClinic ? "내일 병원 준비를 확인해요" : "다음 일정이 준비되어 있어요",
-    description: `${formatScheduleTime(item.scheduled_at)} · ${isClinic ? "방문 시간만 미리 확인해요." : "준비해두세요."}`,
-    primaryItem: item,
-  };
 }
 
 function QuietHeroContent({
@@ -2431,10 +2286,6 @@ function ClinicUpdatePrompt({ item }: { item: ScheduleItem }) {
       />
     </div>
   );
-}
-
-function isOnDay(iso: string, offset: DayOffset) {
-  return isInKstDay(iso, offset);
 }
 
 function reminderToggleStyle(enabled: boolean) {

@@ -1,8 +1,9 @@
 import { computeCareDay, computeDisplaySafetyLevel, computeReminderFallbackState, reminderFallbackCopy } from './care-cards';
 import { computeCareDayV2 } from './treatment-timeline';
 import type { CareActionCard, CareDay, DisplaySafetyLevel } from '../types/care-cards.types';
+import type { IvfPhase } from '../types/cycle-event.types';
 import type { RoleBasedHomeIntent } from './care-os-architecture';
-import type { CareSurfaceOverrideReason, TimelineCareDay, TreatmentMilestone } from '../types/treatment-timeline.types';
+import type { CareSurfaceOverrideReason, TimelineCareDay, TreatmentMilestone, TreatmentMilestoneKind } from '../types/treatment-timeline.types';
 
 export type HomeActionCard = {
   id: string;
@@ -29,6 +30,14 @@ export type HomeContext = {
   partnerConnected?: boolean;
 };
 
+export type HomeBriefPhase = IvfPhase | 'onboarding';
+
+export type HomeBriefContext = {
+  confirmedPhase: HomeBriefPhase;
+  phaseCareDay: TimelineCareDay | 'onboarding';
+  dayIndexInPhase: number;
+};
+
 export function computeHomeContext(cards: readonly CareActionCard[], now: Date): HomeContext {
   const confirmedCards = cards.filter((card) => card.status === 'confirmed');
   const careDay = computeCareDay({ hasEverCaptured: cards.length > 0, cards: confirmedCards, now });
@@ -40,7 +49,6 @@ export function computeHomeContext(cards: readonly CareActionCard[], now: Date):
     cards: confirmedCards.map((card) => toHomeActionCard(card, now)).sort(compareHomeCards),
   };
 }
-
 
 export function computeHomeContextV2(
   cards: readonly CareActionCard[],
@@ -61,6 +69,57 @@ export function computeHomeContextV2(
     primaryMessage: getPrimaryMessage(surface.surfaceCareDay),
     cards: surface.foregroundCards.map((card) => toHomeActionCard(card, now)).sort(compareHomeCards),
   };
+}
+
+export function deriveHomeBriefContext(
+  context: Pick<HomeContext, 'careDay' | 'phaseCareDay' | 'proximityDays'>,
+  milestones: readonly TreatmentMilestone[],
+  now: Date,
+): HomeBriefContext {
+  if (context.careDay === 'onboarding') {
+    return { confirmedPhase: 'onboarding', phaseCareDay: 'onboarding', dayIndexInPhase: 0 };
+  }
+
+  const today = now.toISOString().slice(0, 10);
+  const activeMilestone = findActiveMilestone(milestones, today);
+  if (activeMilestone) {
+    const dayIndexInPhase = daysBetween(activeMilestone.confirmed_at, today);
+    return {
+      confirmedPhase: briefPhaseForMilestone(activeMilestone.milestone, dayIndexInPhase),
+      phaseCareDay: context.phaseCareDay ?? context.careDay,
+      dayIndexInPhase,
+    };
+  }
+
+  return {
+    confirmedPhase: briefPhaseForCareDay(context.phaseCareDay ?? context.careDay),
+    phaseCareDay: context.phaseCareDay ?? context.careDay,
+    dayIndexInPhase: context.proximityDays ?? 0,
+  };
+}
+
+function findActiveMilestone(milestones: readonly TreatmentMilestone[], today: string): TreatmentMilestone | null {
+  return milestones
+    .filter((milestone) => milestone.confirmed_at <= today)
+    .sort((left, right) => right.confirmed_at.localeCompare(left.confirmed_at))[0] ?? null;
+}
+
+function briefPhaseForMilestone(kind: TreatmentMilestoneKind, daysSince: number): IvfPhase {
+  if (kind === 'initial_visit') return 'consultation';
+  if (kind === 'stimulation_start') return 'stimulation';
+  if (kind === 'trigger_shot') return 'trigger_wait';
+  if (kind === 'egg_retrieval') return daysSince === 0 ? 'retrieval_scheduled' : 'retrieval_done';
+  if (kind === 'embryo_transfer') return daysSince === 0 ? 'transfer_scheduled' : 'two_week_wait';
+  if (kind === 'result_day') return daysSince === 0 ? 'beta_wait' : 'result_protection';
+  return 'consultation';
+}
+
+function briefPhaseForCareDay(careDay: CareDay): IvfPhase {
+  if (careDay === 'injection_day') return 'stimulation';
+  if (careDay === 'clinic_day') return 'follicle_monitoring';
+  if (careDay === 'two_week_wait_day') return 'two_week_wait';
+  if (careDay === 'result_protection_day') return 'result_protection';
+  return 'consultation';
 }
 
 function isCardOnIsoDay(card: CareActionCard, today: string) {
@@ -99,6 +158,12 @@ function safetyRank(level: DisplaySafetyLevel) {
 
 function timeRank(value: string | null) {
   return value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER;
+}
+
+function daysBetween(start: string, end: string) {
+  const startMs = Date.parse(`${start}T00:00:00.000Z`);
+  const endMs = Date.parse(`${end}T00:00:00.000Z`);
+  return Math.max(0, Math.round((endMs - startMs) / 86_400_000));
 }
 
 function getPrimaryMessage(careDay: CareDay) {

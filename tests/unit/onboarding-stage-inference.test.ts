@@ -3,6 +3,8 @@ import {
   buildInitialCareCycleState,
   careDayForOnboardingStage,
   defaultSharingLevelByStage,
+  explainIvfStage,
+  explainTreatmentMilestone,
   getEffectiveStage,
   inferStageFromCareItem,
 } from '../../src/domain/onboarding-care-state';
@@ -70,5 +72,17 @@ describe('onboarding care state inference', () => {
     expect(defaultSharingLevelByStage('pregnancy_test')).toBe('basic');
     expect(defaultSharingLevelByStage('ovarian_stimulation')).toBe('care');
     expect(defaultSharingLevelByStage('fertilization')).toBe('basic');
+  });
+
+  it('explains core IVF terms without medical prediction or treatment advice', () => {
+    const retrieval = explainIvfStage('egg_retrieval');
+    const culture = explainIvfStage('embryo_culture');
+    const transfer = explainTreatmentMilestone('embryo_transfer');
+
+    expect(retrieval.headline).toContain('난자');
+    expect(culture.headline).toContain('배아 배양');
+    expect(transfer.headline).toContain('배아 이식');
+    expect(`${retrieval.boundary}\n${culture.boundary}\n${transfer.boundary}`).toMatch(/단정하지 않아요|해석하지 않아요|말하지 않아요/u);
+    expect(`${retrieval.body}\n${culture.body}\n${transfer.body}`).not.toMatch(/성공 가능성|착상될|용량 변경/u);
   });
 });

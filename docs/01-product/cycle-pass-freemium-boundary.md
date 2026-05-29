@@ -32,9 +32,9 @@ Cycle Pass may unlock deeper, non-safety-critical surfaces:
 
 **Result Protection Mode is always free.** A negative result must never trigger a paywall, upsell, subscription check, promotional gate, or “unlock to review what happened” moment.
 
-## Provider decision
+## Provider boundary
 
-Provider decision: HITL. Payment provider, entitlement source, refunds, and hospital code redemption are deliberately deferred. Code should call the `isCyclePassActive()` stub and keep provider assumptions out of product logic until this decision is made.
+Provider decision: HITL. Payment provider, refunds, and hospital code redemption remain outside product logic until chosen. The app stores only a bounded `cycle_pass_entitlements` unlock with `active_from`/`active_until`, `status`, `source`, and an optional provider/reference hash. Code calls `isCyclePassActive()` with that entitlement snapshot and must not read raw payment identifiers. Authenticated clients may read their own entitlement only; creation, extension, and revocation stay behind service-role provider/admin validation.
 
 ## Presentation rationale
 

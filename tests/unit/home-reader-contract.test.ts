@@ -11,7 +11,10 @@ describe('/home canonical reader contract', () => {
     expect(careIndex).toBeGreaterThanOrEqual(0);
     expect(legacyIndex).toBeGreaterThanOrEqual(0);
     expect(careIndex).toBeLessThan(legacyIndex);
-    expect(homeLoader).toContain('projectCareActionCardsForHome');
+    expect(homeLoader).toContain('projectCareActionCardsToLegacyTodayItems');
+    expect(homeLoader).toContain('readLegacyScheduleItemsFallback');
+    expect(homeLoader).toContain("from('treatment_milestones')");
+    expect(homeLoader).toContain('computeHomeContextV2');
   });
 
   it('lets canonical care_action_cards satisfy the authed layout existing-care guard', () => {

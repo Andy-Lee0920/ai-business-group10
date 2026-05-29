@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CtaButton, Notice } from '../../../src/components/ui';
+import { explainTreatmentMilestone } from '../../../src/domain/onboarding-care-state';
 import type { TreatmentMilestoneKind } from '../../../src/types/treatment-timeline.types';
 import styles from '../onboarding.module.css';
 
@@ -25,6 +26,7 @@ export function MilestoneInputForm() {
   const [notes, setNotes] = useState('');
   const [state, setState] = useState<SaveState>('idle');
   const [message, setMessage] = useState<string | null>(null);
+  const stageExplanation = explainTreatmentMilestone(milestone);
 
   async function submit() {
     setState('saving');
@@ -59,6 +61,13 @@ export function MilestoneInputForm() {
       <select id="timeline-milestone" value={milestone} onChange={(event) => setMilestone(event.target.value as TreatmentMilestoneKind)}>
         {MILESTONES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
+
+      <aside className={styles.timelinePreview} aria-label="현재 단계 설명">
+        <strong>현재 단계 한 줄 설명</strong>
+        <span>{stageExplanation.headline}</span>
+        <span>{stageExplanation.body}</span>
+        <small>{stageExplanation.boundary}</small>
+      </aside>
 
       <label className="field-label" htmlFor="timeline-confirmed-at">확인한 날짜</label>
       <input id="timeline-confirmed-at" lang="ko-KR" type="date" value={confirmedAt} onChange={(event) => setConfirmedAt(event.target.value)} />
