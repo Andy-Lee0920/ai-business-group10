@@ -10,6 +10,17 @@ The goal is not to list every changed file mechanically. The goal is to explain 
 
 Use this skill once per day, or whenever the team wants to understand recent repository changes.
 
+Git history analysis targets the **main branch only**. Do not analyze feature branches or open PRs unless explicitly instructed.
+
+## Branch Workflow
+
+Before running the daily task:
+
+1. Pull the latest `main` branch.
+2. Create a new branch from `main` (e.g. `docs/git-history-YYYY-MM-DD`).
+3. Run the analysis and write the digest on that branch.
+4. Commit, push, and open a pull request targeting `main`.
+
 ## Inputs
 
 The agent may read:
