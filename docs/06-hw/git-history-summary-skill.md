@@ -19,7 +19,17 @@ Before running the daily task:
 1. Pull the latest `main` branch.
 2. Create a new branch from `main` (e.g. `docs/git-history-YYYY-MM-DD`).
 3. Run the analysis and write the digest on that branch.
-4. Commit, push, and open a pull request targeting `main`.
+4. Commit the digest files on that branch.
+5. Merge locally into `main` and push:
+
+```bash
+git checkout main
+git pull origin main
+git merge docs/git-history-YYYY-MM-DD
+git push origin main
+```
+
+If `main` has branch protection rules that block direct push, fall back to opening a pull request targeting `main` instead.
 
 ## Inputs
 
