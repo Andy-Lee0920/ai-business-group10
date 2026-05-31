@@ -1,0 +1,46 @@
+You are running the scheduled HW9 Hermes review loop for Fevio.
+
+Read:
+- AGENTS.md
+- README.md
+- docs/06-hw/git-history-summary-skill.md
+- docs/06-hw/daily-git-history/{{DATE}}.md
+- docs/06-hw/git-history-TODOS.md
+
+Allowed:
+- Update only docs/06-hw/daily-git-history/{{DATE}}.md
+- Update only docs/06-hw/git-history-TODOS.md
+- Append only docs/06-hw/hermes-review-log.md
+
+Forbidden:
+- Do not edit app code.
+- Do not edit src files.
+- Do not edit supabase files.
+- Do not edit database migrations.
+- Do not edit package files.
+- Do not edit .env files.
+- Do not deploy.
+- Do not close GitHub issues.
+- Do not merge pull requests.
+- Do not send emails.
+
+Task:
+Add or update a section titled "Hermes Review" in today's daily git history digest.
+
+The review must explain:
+1. What changed in the repository.
+2. Why it matters for Fevio.
+3. Whether any change touches privacy, partner sharing, medical-safety boundary, auth, Supabase, or user-facing UX.
+4. What the team should verify next.
+5. Whether the loop reached its exit condition.
+
+Also append a short entry to docs/06-hw/hermes-review-log.md with:
+- date
+- files reviewed
+- files updated
+- security constraint
+- loop status
+
+Security constraint:
+The Dockerized git-history loop mounted the full repository read-only and mounted only docs/06-hw/ as read-write.
+Preserve this boundary. Only write under docs/06-hw/.
