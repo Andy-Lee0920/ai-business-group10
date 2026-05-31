@@ -14,22 +14,27 @@ Git history analysis targets the **main branch only**. Do not analyze feature br
 
 ## Branch Workflow
 
+Default schedule: run once per day at **09:00 Asia/Seoul** from the local Windows Task Scheduler, using `scripts/hw6/register-windows-daily-hermes-task.ps1`.
+
 Before running the daily task:
 
 1. Pull the latest `main` branch.
 2. Create a new branch from `main` (e.g. `docs/git-history-YYYY-MM-DD`).
 3. Run the analysis and write the digest on that branch.
 4. Commit the digest files on that branch.
-5. Merge locally into `main` and push:
+5. Push the branch and open a pull request targeting `main`.
+6. Enable auto-merge only after the generated digest, Hermes review section, and changed-file scope guard pass.
 
 ```bash
 git checkout main
 git pull origin main
-git merge docs/git-history-YYYY-MM-DD
-git push origin main
+git checkout -b docs/git-history-YYYY-MM-DD
+# run the daily digest and Hermes review loop
+git push -u origin docs/git-history-YYYY-MM-DD
+gh pr create --base main --head docs/git-history-YYYY-MM-DD
 ```
 
-If `main` has branch protection rules that block direct push, fall back to opening a pull request targeting `main` instead.
+Do not directly push the generated digest to `main`.
 
 ## Inputs
 
@@ -53,7 +58,7 @@ The agent may:
 - Summarize commits
 - Group changes by product area
 - Write a daily digest under docs/06-hw/daily-git-history/
-- Add follow-up items to docs/06-hw/daily-git-history/git-history-TODOS.md
+- Add follow-up items to docs/06-hw/git-history-TODOS.md
 
 ## Forbidden Actions
 
