@@ -5,10 +5,10 @@ const page = readFileSync('app/(authed)/policy-support/page.tsx', 'utf8');
 
 describe('policy support page shell', () => {
   it('renders the four policy support screens from one entrypoint', () => {
-    expect(page).toContain("'input'");
-    expect(page).toContain("'result'");
-    expect(page).toContain("'checklist'");
-    expect(page).toContain("'contact'");
+    expect(page).toMatch(/["']input["']/u);
+    expect(page).toMatch(/["']result["']/u);
+    expect(page).toMatch(/["']checklist["']/u);
+    expect(page).toMatch(/["']contact["']/u);
     expect(page).toContain('정보 입력');
     expect(page).toContain('가능성');
     expect(page).toContain('체크리스트');

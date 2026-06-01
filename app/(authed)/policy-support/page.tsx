@@ -73,7 +73,7 @@ const checklistGroups = [
     title: "원외약제비가 있다면",
     items: [
       "처방전 보관",
-      "약제비 영수증 보관",
+      "약제비 증빙 자료 보관",
       "청구 가능 기간과 제출처 확인",
     ],
   },
@@ -274,7 +274,7 @@ function ContactScreen() {
         <Badge tone="sage">민감정보 제외</Badge>
         <p style={noticeTextStyle}>
           주민등록번호, 상세 진단명, 배우자 개인정보, 병원명, 검사 수치,
-          진단서나 영수증 이미지는 메일 초안에 넣지 않았어요.
+          진단서나 비용 증빙 이미지는 메일 초안에 넣지 않았어요.
         </p>
       </section>
     </>
