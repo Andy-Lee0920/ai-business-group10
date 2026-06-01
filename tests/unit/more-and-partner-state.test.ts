@@ -17,9 +17,9 @@ const partnerTokenPage = readFileSync('app/partner/[token]/page.tsx', 'utf8');
 
 describe('More and partner read-only state contract', () => {
   it('keeps More to six SLC helper menu items plus invite, notification, logout', () => {
-    expect(MORE_MENU_ITEMS).toHaveLength(5);
+    expect(MORE_MENU_ITEMS).toHaveLength(6);
     expect(MORE_MENU_ITEMS.map((item) => item.label)).toEqual([
-      '일정 추가', '병원 후 업데이트', '파트너 초대', '알림 설정', '개인정보 및 의료정보 안내',
+      '일정 추가', '병원 후 업데이트', '지역 지원금 확인', '파트너 초대', '알림 설정', '개인정보 및 의료정보 안내',
     ]);
     expect(MORE_MENU_ITEMS.map((item) => item.label)).not.toContain('오늘 홈');
     expect(MORE_MENU_ITEMS.map((item) => item.label)).not.toContain('기록 보기');
@@ -47,6 +47,7 @@ describe('More and partner read-only state contract', () => {
     expect(settingsPage).toContain('buildPresentationPartnerLinks()');
     expect(moreScreen).toContain('href="/settings/privacy"');
     expect(MORE_MENU_ITEMS.map((item) => item.href)).toContain('/settings/privacy');
+    expect(MORE_MENU_ITEMS.map((item) => item.href)).toContain('/policy-support');
     expect(MORE_MENU_ITEMS.map((item) => item.href)).not.toContain('/privacy');
   });
 

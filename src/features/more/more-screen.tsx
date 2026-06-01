@@ -296,6 +296,7 @@ function SettingsSection({ title, id, children }: { title: string; id?: string; 
 function menuIcon(label: string) {
   if (label.includes('일정')) return '＋';
   if (label.includes('병원')) return '🏥';
+  if (label.includes('지원금')) return '🏛';
   if (label.includes('알림')) return '🔔';
   if (label.includes('개인정보')) return '🛡';
   return '•';
