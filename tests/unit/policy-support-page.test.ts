@@ -45,4 +45,11 @@ describe('policy support page shell', () => {
     expect(page).toContain('setParams({ ...params');
     expect(page).not.toContain('buildPolicySupportHref');
   });
+
+  it('evaluates selected district through structured policy seed data', () => {
+    expect(page).toContain('getPolicySeed("서울특별시", params.district)');
+    expect(page).toContain('mapPolicySeedToStructuredPolicy(seed, params.district)');
+    expect(page).not.toContain('const mockPolicy');
+    expect(page).not.toContain('familycare@gangnam.example.kr');
+  });
 });

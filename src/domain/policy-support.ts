@@ -1,3 +1,5 @@
+import type { PolicyStructuredSeed } from "../types/policy-support.types";
+
 export type PolicySupportTreatmentType =
   | "fresh_embryo"
   | "frozen_embryo"
@@ -22,6 +24,7 @@ export type PolicySupportUserContext = {
   district: string;
   treatmentType: PolicySupportTreatmentType;
   treatmentStartDate: string;
+  evaluationDate?: string;
   hasDiagnosisCertificate: boolean | "unknown";
   hasDecisionNotice: boolean | "unknown";
   supportAttemptCount: number | "unknown";
@@ -38,8 +41,14 @@ export type PolicyStructuredPolicy = {
   supportedTreatmentTypes: readonly PolicySupportTreatmentType[];
   requireDiagnosisCertificate: boolean;
   requireDecisionNoticeBeforeTreatment: boolean;
+  applyBeforeTreatment?: boolean;
   budgetStatus: "available" | "exhausted" | "unknown";
+  budgetNotice?: string | null;
   maxSupportAttempts: number | "unknown";
+  externalDrugCovered?: boolean | null;
+  onlineApplyAvailable?: boolean;
+  policyConfidence?: number;
+  requiredDocuments?: readonly string[];
   supportItems: readonly PolicySupportItem[];
   sources: readonly PolicySource[];
 };
@@ -59,6 +68,7 @@ export type PolicyConditionCheck = {
   item: string;
   status: PolicyConditionStatus;
   note: string;
+  daysUntilTreatment?: number;
 };
 
 export type PolicySupportResult = {
@@ -106,7 +116,8 @@ export function evaluatePolicySupport(
     checkDecisionNotice(user, policy),
     checkBudget(policy),
     checkSupportAttempts(user, policy),
-    checkExternalDrugCost(user),
+    checkExternalDrugCost(user, policy),
+    checkPolicyConfidence(policy),
   ];
 
   const overallStatus = getOverallStatus(conditionChecks);
@@ -128,6 +139,131 @@ export function evaluatePolicySupport(
 
 export function getTreatmentLabel(type: PolicySupportTreatmentType): string {
   return TREATMENT_LABELS[type];
+}
+
+export function mapPolicySeedToStructuredPolicy(
+  seed: PolicyStructuredSeed,
+  requestedDistrict: string,
+): PolicyStructuredPolicy {
+  const district = seed.sigungu ?? requestedDistrict;
+
+  return {
+    province: seed.sido,
+    district,
+    healthCenter:
+      seed.health_center_name === "관할 보건소"
+        ? `${district} 보건소`
+        : seed.health_center_name,
+    department: seed.dept_name ?? "모자보건 담당 부서",
+    phone: seed.contact_phone ?? "보건소 대표번호 확인 필요",
+    email: seed.contact_email ?? "이메일 확인 필요",
+    supportedTreatmentTypes: getSupportedTreatmentTypes(seed),
+    requireDiagnosisCertificate: seed.required_documents.some((document) =>
+      document.includes("난임진단서"),
+    ),
+    requireDecisionNoticeBeforeTreatment:
+      seed.require_decision_notice && seed.apply_before_treatment,
+    applyBeforeTreatment: seed.apply_before_treatment,
+    budgetStatus: seed.budget_exhausted ? "exhausted" : "available",
+    budgetNotice: seed.budget_notice,
+    maxSupportAttempts: "unknown",
+    externalDrugCovered: seed.drug_external_covered,
+    onlineApplyAvailable: seed.online_apply_available,
+    policyConfidence: seed.confidence,
+    requiredDocuments: seed.required_documents,
+    supportItems: buildSupportItems(seed),
+    sources: [
+      {
+        label: `${district} 난임부부 시술비 지원 안내`,
+        url: seed.source_url,
+        lastVerifiedAt: formatPolicyDate(seed.last_verified_at),
+      },
+    ],
+  };
+}
+
+function getSupportedTreatmentTypes(
+  seed: PolicyStructuredSeed,
+): PolicySupportTreatmentType[] {
+  const types: PolicySupportTreatmentType[] = [];
+
+  if (seed.ivf_fresh_limit !== null) types.push("fresh_embryo");
+  if (seed.ivf_frozen_limit !== null) types.push("frozen_embryo");
+  if (seed.iui_limit !== null) types.push("iui");
+
+  return types;
+}
+
+function buildSupportItems(seed: PolicyStructuredSeed): PolicySupportItem[] {
+  return [
+    {
+      label: "신선배아 상한",
+      value: formatWonLimit(seed.ivf_fresh_limit),
+    },
+    {
+      label: "동결배아 상한",
+      value: formatWonLimit(seed.ivf_frozen_limit),
+    },
+    {
+      label: "인공수정 상한",
+      value: formatWonLimit(seed.iui_limit),
+    },
+    {
+      label: "원외약제비",
+      value: formatCovered(seed.drug_external_covered),
+    },
+  ];
+}
+
+function formatWonLimit(value: number | null): string {
+  if (value === null) return "지원 정보 없음";
+  return `최대 ${value.toLocaleString("ko-KR")}원`;
+}
+
+function formatCovered(value: boolean | null): string {
+  if (value === true) return "지원 가능성 있음";
+  if (value === false) return "지원 제외 가능성";
+  return "보건소 확인 필요";
+}
+
+function formatPolicyDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}
+
+function getDaysUntilTreatment(user: PolicySupportUserContext): number | null {
+  if (!user.evaluationDate) return null;
+
+  const treatmentDate = parsePolicySupportDate(user.treatmentStartDate);
+  const evaluationDate = parsePolicySupportDate(user.evaluationDate);
+
+  if (!treatmentDate || !evaluationDate) return null;
+
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  return Math.round((treatmentDate.getTime() - evaluationDate.getTime()) / oneDayMs);
+}
+
+function parsePolicySupportDate(value: string): Date | null {
+  const isoMatch = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/.exec(value);
+  const koreanMatch = /(?<year>\d{4})년\s*(?<month>\d{1,2})월\s*(?<day>\d{1,2})일/.exec(value);
+  const match = isoMatch ?? koreanMatch;
+
+  if (!match?.groups) return null;
+
+  const year = Number(match.groups.year);
+  const month = Number(match.groups.month);
+  const day = Number(match.groups.day);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 function checkResidence(
@@ -226,10 +362,35 @@ function checkDecisionNotice(
   }
 
   if (user.hasDecisionNotice === false) {
+    const daysUntilTreatment = getDaysUntilTreatment(user);
+    const applyBeforeTreatment =
+      policy.applyBeforeTreatment ?? policy.requireDecisionNoticeBeforeTreatment;
+
+    if (applyBeforeTreatment && daysUntilTreatment !== null && daysUntilTreatment < 0) {
+      return {
+        item: "지원결정통지서",
+        status: "risk",
+        note: "시술 시작 전 발급 조건이 있는데 입력된 시술 시작일이 이미 지났을 수 있어요.",
+        daysUntilTreatment,
+      };
+    }
+
+    if (applyBeforeTreatment && daysUntilTreatment !== null && daysUntilTreatment <= 3) {
+      return {
+        item: "지원결정통지서",
+        status: "action_required",
+        note: `시술 시작까지 ${daysUntilTreatment}일 남아 있어 지원결정통지서 발급 가능 여부를 바로 확인해야 해요.`,
+        daysUntilTreatment,
+      };
+    }
+
     return {
       item: "지원결정통지서",
       status: "action_required",
-      note: "시술 시작 전 지원결정통지서 발급 가능 여부를 확인해야 해요.",
+      note: applyBeforeTreatment
+        ? "시술 시작 전 지원결정통지서 발급 가능 여부를 확인해야 해요."
+        : "지원결정통지서 발급 가능 여부를 확인해야 해요.",
+      ...(daysUntilTreatment !== null ? { daysUntilTreatment } : {}),
     };
   }
 
@@ -253,7 +414,7 @@ function checkBudget(policy: PolicyStructuredPolicy): PolicyConditionCheck {
     return {
       item: "예산",
       status: "risk",
-      note: "예산 소진 또는 접수 마감 가능성이 있어요.",
+      note: policy.budgetNotice ?? "예산 소진 또는 접수 마감 가능성이 있어요.",
     };
   }
 
@@ -293,8 +454,25 @@ function checkSupportAttempts(
 
 function checkExternalDrugCost(
   user: PolicySupportUserContext,
+  policy: PolicyStructuredPolicy,
 ): PolicyConditionCheck {
   if (user.externalDrugCostExpected === true) {
+    if (policy.externalDrugCovered === true) {
+      return {
+        item: "원외약제비",
+        status: "needs_check",
+        note: "정책상 원외약제비 지원 가능성이 있어 청구 서류와 제출 기한 확인이 필요해요.",
+      };
+    }
+
+    if (policy.externalDrugCovered === false) {
+      return {
+        item: "원외약제비",
+        status: "risk",
+        note: "현재 구조화 정책에서는 원외약제비 지원 제외 가능성이 표시되어 있어요.",
+      };
+    }
+
     return {
       item: "원외약제비",
       status: "needs_check",
@@ -314,6 +492,30 @@ function checkExternalDrugCost(
     item: "원외약제비",
     status: "needs_check",
     note: "원외약제비 발생 가능성이 있으면 청구 서류를 확인해야 해요.",
+  };
+}
+
+function checkPolicyConfidence(policy: PolicyStructuredPolicy): PolicyConditionCheck {
+  if (policy.policyConfidence === undefined) {
+    return {
+      item: "정책 데이터 신뢰도",
+      status: "needs_check",
+      note: "정책 데이터 검증 수준이 표시되지 않아 보건소 확인이 필요해요.",
+    };
+  }
+
+  if (policy.policyConfidence < 0.7) {
+    return {
+      item: "정책 데이터 신뢰도",
+      status: "needs_check",
+      note: "현재 정책 데이터는 폴백 또는 낮은 신뢰도 자료라 관할 보건소 확인이 필요해요.",
+    };
+  }
+
+  return {
+    item: "정책 데이터 신뢰도",
+    status: "confirmed",
+    note: "정책 데이터 출처와 확인일이 표시되어 있어요.",
   };
 }
 
