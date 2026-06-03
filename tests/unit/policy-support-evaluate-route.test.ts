@@ -26,6 +26,15 @@ describe('/api/policy-support/evaluate', () => {
     const payload = await response.json() as {
       persisted: boolean;
       source: string;
+      retrieval: {
+        mode: string;
+        evidence: Array<{ topic: string; sourceUrl: string; text: string }>;
+      };
+      inquiryPolish: {
+        source: string;
+        rejected: boolean;
+        draft: { bodyLines: string[] };
+      };
       policy: { health_center: string; sources: Array<{ url: string }> };
       result: {
         overallStatus: string;
@@ -37,6 +46,13 @@ describe('/api/policy-support/evaluate', () => {
     expect(response.status).toBe(200);
     expect(payload.persisted).toBe(false);
     expect(payload.source).toBe('policy_seed');
+    expect(payload.retrieval.mode).toBe('static_rag');
+    expect(payload.retrieval.evidence.length).toBeGreaterThan(0);
+    expect(payload.retrieval.evidence.some((item) => item.topic === '지원결정통지서')).toBe(true);
+    expect(payload.retrieval.evidence.every((item) => item.sourceUrl.startsWith('https://'))).toBe(true);
+    expect(payload.inquiryPolish.source).toBe('deterministic');
+    expect(payload.inquiryPolish.rejected).toBe(false);
+    expect(payload.inquiryPolish.draft.bodyLines.length).toBeGreaterThan(0);
     expect(payload.policy.health_center).toBe('강남구보건소');
     expect(payload.policy.sources[0]?.url).toContain('gangnam.go.kr');
     expect(payload.result.overallStatus).toBe('action_required');

@@ -4,9 +4,14 @@ import {
   evaluatePolicySupport,
   mapPolicySeedToStructuredPolicy,
   type MaritalStatus,
+  type PolicyStructuredPolicy,
   type PolicySupportTreatmentType,
   type PolicySupportUserContext,
 } from '../../../../src/domain/policy-support';
+import { polishPolicyInquiryDraft } from '../../../../src/domain/policy-support-polish';
+import { retrievePolicyEvidence, retrievePolicyEvidenceVector } from '../../../../src/domain/policy-support-rag';
+import { getOpenAiApiKey } from '../../../../src/lib/embedding';
+import { getSupabaseServiceRoleKey } from '../../../../src/lib/server-supabase';
 
 type PolicySupportEvaluateBody = {
   sido?: unknown;
@@ -17,6 +22,7 @@ type PolicySupportEvaluateBody = {
   marital_status?: unknown;
   has_infertility_diagnosis?: unknown;
   has_decision_notice?: unknown;
+  budget_status?: unknown;
   support_attempt_count?: unknown;
   drug_external_expected?: unknown;
 };
@@ -38,12 +44,49 @@ export async function POST(request: NextRequest) {
   }
 
   const seed = getPolicySeed(input.sido, input.sigungu);
-  const policy = mapPolicySeedToStructuredPolicy(seed, input.sigungu);
+  const policy = {
+    ...mapPolicySeedToStructuredPolicy(seed, input.sigungu),
+    budgetStatus: input.budgetStatus,
+  };
   const result = evaluatePolicySupport(input.userContext, policy);
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? '';
+  const supabaseKey = getSupabaseServiceRoleKey() ?? '';
+  const openAiApiKey = getOpenAiApiKey();
+
+  const { evidence, mode: retrievalMode } =
+    openAiApiKey && supabaseUrl && supabaseKey
+      ? await retrievePolicyEvidenceVector({
+          sido: policy.province,
+          sigungu: policy.district,
+          conditionChecks: result.conditionChecks,
+          supabaseUrl,
+          supabaseKey,
+          openAiApiKey,
+        })
+      : {
+          evidence: retrievePolicyEvidence({
+            sido: policy.province,
+            sigungu: policy.district,
+            conditionChecks: result.conditionChecks,
+          }),
+          mode: 'static_rag' as const,
+        };
+
+  const inquiryPolish = await polishPolicyInquiryDraft({
+    draft: result.inquiryDraft,
+    result,
+    evidence,
+  });
 
   return NextResponse.json({
     persisted: false,
     source: 'policy_seed',
+    retrieval: {
+      mode: retrievalMode,
+      evidence,
+    },
+    inquiryPolish,
     policy: {
       sido: policy.province,
       sigungu: policy.district,
@@ -63,6 +106,7 @@ function normalizeInput(
   | {
       sido: string;
       sigungu: string;
+      budgetStatus: PolicyStructuredPolicy['budgetStatus'];
       userContext: PolicySupportUserContext;
     }
   | { error: string } {
@@ -75,10 +119,12 @@ function normalizeInput(
   }
 
   const treatmentStartDate = normalizeTreatmentStartDate(body.treatment_start_date);
+  const budgetStatus = normalizeBudgetStatus(body.budget_status);
 
   return {
     sido,
     sigungu,
+    budgetStatus,
     userContext: {
       province: sido,
       district: sigungu,
@@ -132,6 +178,16 @@ function normalizeBooleanUnknown(value: unknown): boolean | 'unknown' {
   if (value === true || value === false) return value;
   if (value === 'true' || value === 'yes') return true;
   if (value === 'false' || value === 'no') return false;
+  return 'unknown';
+}
+
+function normalizeBudgetStatus(
+  value: unknown,
+): PolicyStructuredPolicy['budgetStatus'] {
+  if (value === 'available' || value === 'exhausted' || value === 'unknown') {
+    return value;
+  }
+
   return 'unknown';
 }
 
