@@ -9,7 +9,8 @@ import {
   type PolicySupportUserContext,
 } from '../../../../src/domain/policy-support';
 import { polishPolicyInquiryDraft } from '../../../../src/domain/policy-support-polish';
-import { retrievePolicyEvidence } from '../../../../src/domain/policy-support-rag';
+import { retrievePolicyEvidence, retrievePolicyEvidenceVector } from '../../../../src/domain/policy-support-rag';
+import { getOpenAiApiKey } from '../../../../src/lib/embedding';
 
 type PolicySupportEvaluateBody = {
   sido?: unknown;
@@ -47,11 +48,30 @@ export async function POST(request: NextRequest) {
     budgetStatus: input.budgetStatus,
   };
   const result = evaluatePolicySupport(input.userContext, policy);
-  const evidence = retrievePolicyEvidence({
-    sido: policy.province,
-    sigungu: policy.district,
-    conditionChecks: result.conditionChecks,
-  });
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? '';
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ?? '';
+  const openAiApiKey = getOpenAiApiKey();
+
+  const { evidence, mode: retrievalMode } =
+    openAiApiKey && supabaseUrl && supabaseKey
+      ? await retrievePolicyEvidenceVector({
+          sido: policy.province,
+          sigungu: policy.district,
+          conditionChecks: result.conditionChecks,
+          supabaseUrl,
+          supabaseKey,
+          openAiApiKey,
+        })
+      : {
+          evidence: retrievePolicyEvidence({
+            sido: policy.province,
+            sigungu: policy.district,
+            conditionChecks: result.conditionChecks,
+          }),
+          mode: 'static_rag' as const,
+        };
+
   const inquiryPolish = await polishPolicyInquiryDraft({
     draft: result.inquiryDraft,
     result,
@@ -62,7 +82,7 @@ export async function POST(request: NextRequest) {
     persisted: false,
     source: 'policy_seed',
     retrieval: {
-      mode: 'static_rag',
+      mode: retrievalMode,
       evidence,
     },
     inquiryPolish,

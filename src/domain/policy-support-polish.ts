@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk';
 import type { PolicyEvidence } from './policy-support-rag';
 import type { PolicyInquiryDraft, PolicySupportResult } from './policy-support';
 
@@ -49,16 +50,22 @@ export async function polishPolicyInquiryDraft(
   input: PolishPolicyInquiryInput,
   deps: PolishPolicyInquiryDependencies = {},
 ): Promise<PolicyInquiryPolishResult> {
-  const apiKey = deps.apiKey ?? process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
+  // ANTHROPIC_API_KEY 우선, 없으면 OPENROUTER_API_KEY
+  const anthropicKey = deps.apiKey ?? process.env.ANTHROPIC_API_KEY;
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+
+  if (!anthropicKey && !openRouterKey) {
     return { draft: input.draft, source: 'deterministic', rejected: false };
   }
 
   try {
-    const draft = await (deps.fetchPolishedDraft ?? fetchOpenRouterPolicyDraft)(
-      input,
-      apiKey,
-    );
+    const fetchDraft =
+      deps.fetchPolishedDraft ??
+      (anthropicKey
+        ? (i: PolishPolicyInquiryInput) => fetchClaudePolicyDraft(i, anthropicKey)
+        : (i: PolishPolicyInquiryInput) => fetchOpenRouterPolicyDraft(i, openRouterKey!));
+
+    const draft = await fetchDraft(input, anthropicKey ?? openRouterKey!);
 
     if (!isPolicyInquiryDraftSafe(draft)) {
       return { draft: input.draft, source: 'rejected_fallback', rejected: true };
@@ -76,6 +83,52 @@ export function isPolicyInquiryDraftSafe(draft: PolicyInquiryDraft): boolean {
   return ![...FORBIDDEN_PATTERNS, ...SENSITIVE_PATTERNS].some((pattern) =>
     pattern.test(text),
   );
+}
+
+async function fetchClaudePolicyDraft(
+  input: PolishPolicyInquiryInput,
+  apiKey: string,
+): Promise<PolicyInquiryDraft> {
+  const client = new Anthropic({ apiKey });
+
+  const evidenceSummary = input.evidence
+    .map((e) => `[${e.topic}] ${e.text} (출처: ${e.sourceLabel}, ${e.lastVerifiedAt})`)
+    .join('\n');
+
+  const attentionChecks = input.result.conditionChecks
+    .filter((c) => c.status !== 'confirmed')
+    .map((c) => `- ${c.item}: ${c.note}`)
+    .join('\n');
+
+  const message = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 700,
+    temperature: 0.2,
+    system: `당신은 난임부부 시술비 지원 행정 문의 이메일을 다듬는 보조자입니다.
+아래 규칙을 반드시 준수하세요:
+- 지원 가능 여부를 확정하지 말 것 ("지원 대상입니다", "100% 받을 수 있습니다" 등 금지)
+- 주민등록번호, 상세 진단명, 배우자 개인정보, 병원명, 검사 수치, 증빙 이미지 언급 금지
+- 보건소 최종 확인이 필요하다는 표현을 반드시 유지할 것
+- 제공된 결정론적 초안과 근거 텍스트만 사용할 것
+- 응답은 반드시 JSON만 출력: {"subject": "string", "bodyLines": ["string"]}`,
+    messages: [
+      {
+        role: 'user',
+        content: `결정론적 초안:\n수신: ${input.draft.recipient}\n제목: ${input.draft.subject}\n본문:\n${input.draft.bodyLines.join('\n')}
+
+확인이 필요한 조건:\n${attentionChecks || '없음'}
+
+검색된 정책 근거:\n${evidenceSummary || '없음'}
+
+위 초안을 근거 텍스트를 참고해 더 구체적으로 다듬어 주세요. JSON만 출력하세요.`,
+      },
+    ],
+  });
+
+  const content = message.content[0];
+  if (content.type !== 'text') throw new Error('claude_unexpected_content_type');
+
+  return parseDraftPayload(content.text, input.draft);
 }
 
 async function fetchOpenRouterPolicyDraft(
