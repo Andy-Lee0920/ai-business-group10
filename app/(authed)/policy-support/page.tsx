@@ -14,6 +14,10 @@ import {
   type PolicySupportTreatmentType,
   type PolicySupportUserContext,
 } from "../../../src/domain/policy-support";
+import {
+  retrievePolicyEvidence,
+  type PolicyEvidence,
+} from "../../../src/domain/policy-support-rag";
 
 type PolicySupportStep = "input" | "result" | "checklist" | "contact";
 
@@ -62,6 +66,15 @@ export default function PolicySupportPage() {
     () => evaluatePolicySupport(userContext, policy),
     [policy, userContext],
   );
+  const evidence = useMemo(
+    () =>
+      retrievePolicyEvidence({
+        sido: policy.province,
+        sigungu: policy.district,
+        conditionChecks: policyResult.conditionChecks,
+      }),
+    [policy, policyResult],
+  );
 
   return (
     <ScreenShell>
@@ -96,6 +109,7 @@ export default function PolicySupportPage() {
       ) : null}
       {activeStep === "result" ? (
         <ResultScreen
+          evidence={evidence}
           policy={policy}
           result={policyResult}
           setActiveStep={setActiveStep}
@@ -233,10 +247,12 @@ function InputScreen({
 }
 
 function ResultScreen({
+  evidence,
   policy,
   result,
   setActiveStep,
 }: {
+  evidence: readonly PolicyEvidence[];
   policy: PolicyStructuredPolicy;
   result: PolicySupportResult;
   setActiveStep: (step: PolicySupportStep) => void;
@@ -285,11 +301,33 @@ function ResultScreen({
           </span>
         ))}
       </section>
+      <EvidenceCard evidence={evidence} />
       <StepCta
         label="신청 체크리스트 보기"
         onClick={() => setActiveStep("checklist")}
       />
     </>
+  );
+}
+
+function EvidenceCard({ evidence }: { evidence: readonly PolicyEvidence[] }) {
+  if (evidence.length === 0) return null;
+
+  return (
+    <section style={cardStyle} aria-label="정책 근거">
+      <h2 style={cardTitleStyle}>정책 근거</h2>
+      <div style={evidenceListStyle}>
+        {evidence.slice(0, 4).map((item) => (
+          <article key={item.id} style={evidenceItemStyle}>
+            <strong style={evidenceTopicStyle}>{item.topic}</strong>
+            <p style={evidenceTextStyle}>{item.text}</p>
+            <span style={evidenceSourceStyle}>
+              {item.sourceLabel} · {item.lastVerifiedAt}
+            </span>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -873,6 +911,40 @@ const sourceStyle = {
   margin: "0 0 14px",
   overflowWrap: "anywhere",
   padding: "0 4px",
+} as const;
+
+const evidenceListStyle = {
+  display: "grid",
+  gap: 10,
+} as const;
+
+const evidenceItemStyle = {
+  background: "#FFF7F1",
+  border: "1px solid #F0D2C1",
+  borderRadius: 14,
+  display: "grid",
+  gap: 6,
+  padding: "12px",
+} as const;
+
+const evidenceTopicStyle = {
+  color: "#A64F25",
+  fontSize: 12,
+  fontWeight: 950,
+} as const;
+
+const evidenceTextStyle = {
+  color: "var(--slc-text)",
+  fontSize: 13,
+  fontWeight: 800,
+  lineHeight: 1.45,
+  margin: 0,
+} as const;
+
+const evidenceSourceStyle = {
+  color: "var(--slc-muted)",
+  fontSize: 11,
+  fontWeight: 850,
 } as const;
 
 const emailCardStyle = {

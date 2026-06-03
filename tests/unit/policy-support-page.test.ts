@@ -52,4 +52,12 @@ describe('policy support page shell', () => {
     expect(page).not.toContain('const mockPolicy');
     expect(page).not.toContain('familycare@gangnam.example.kr');
   });
+
+  it('renders static RAG evidence on the result screen', () => {
+    expect(page).toContain('retrievePolicyEvidence');
+    expect(page).toContain('function EvidenceCard');
+    expect(page).toContain('정책 근거');
+    expect(page).toContain('item.sourceLabel');
+    expect(page).toContain('item.lastVerifiedAt');
+  });
 });

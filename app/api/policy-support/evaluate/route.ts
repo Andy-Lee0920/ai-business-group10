@@ -7,6 +7,7 @@ import {
   type PolicySupportTreatmentType,
   type PolicySupportUserContext,
 } from '../../../../src/domain/policy-support';
+import { retrievePolicyEvidence } from '../../../../src/domain/policy-support-rag';
 
 type PolicySupportEvaluateBody = {
   sido?: unknown;
@@ -40,10 +41,19 @@ export async function POST(request: NextRequest) {
   const seed = getPolicySeed(input.sido, input.sigungu);
   const policy = mapPolicySeedToStructuredPolicy(seed, input.sigungu);
   const result = evaluatePolicySupport(input.userContext, policy);
+  const evidence = retrievePolicyEvidence({
+    sido: policy.province,
+    sigungu: policy.district,
+    conditionChecks: result.conditionChecks,
+  });
 
   return NextResponse.json({
     persisted: false,
     source: 'policy_seed',
+    retrieval: {
+      mode: 'static_rag',
+      evidence,
+    },
     policy: {
       sido: policy.province,
       sigungu: policy.district,

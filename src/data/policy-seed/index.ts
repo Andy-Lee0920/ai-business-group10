@@ -2,8 +2,23 @@ import type { PolicyStructuredSeed } from '../../types/policy-support.types';
 import { seoulBaseline } from './seoul-baseline';
 import { gangnamGu } from './gangnam-gu';
 import { mapoGu } from './mapo-gu';
+import { dongdaemunGu } from './dongdaemun-gu';
+import { geumcheonGu } from './geumcheon-gu';
+import { jongnoGu } from './jongno-gu';
+import { seongbukGu } from './seongbuk-gu';
+import { seongdongGu } from './seongdong-gu';
+import { songpaGu } from './songpa-gu';
 
-const DISTRICT_SEEDS: PolicyStructuredSeed[] = [gangnamGu, mapoGu];
+const DISTRICT_SEEDS: PolicyStructuredSeed[] = [
+  gangnamGu,
+  geumcheonGu,
+  dongdaemunGu,
+  mapoGu,
+  seongbukGu,
+  seongdongGu,
+  songpaGu,
+  jongnoGu,
+];
 
 export function getPolicySeed(sido: string, sigungu: string): PolicyStructuredSeed {
   const district = DISTRICT_SEEDS.find(
@@ -25,5 +40,15 @@ export function getPolicySeed(sido: string, sigungu: string): PolicyStructuredSe
   };
 }
 
-export { seoulBaseline, gangnamGu, mapoGu };
+export {
+  seoulBaseline,
+  gangnamGu,
+  geumcheonGu,
+  dongdaemunGu,
+  mapoGu,
+  seongbukGu,
+  seongdongGu,
+  songpaGu,
+  jongnoGu,
+};
 export type { PolicyStructuredSeed };
