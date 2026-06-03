@@ -1,4 +1,8 @@
 import type { PolicyStructuredSeed } from "../types/policy-support.types";
+import {
+  generatePolicyInquiryDraft,
+  generatePolicyInquiryQuestions,
+} from "./policy-support-inquiry";
 
 export type PolicySupportTreatmentType =
   | "fresh_embryo"
@@ -19,12 +23,15 @@ export type PolicyConditionStatus =
   | "risk"
   | "unknown";
 
+export type MaritalStatus = "married" | "defacto" | "unknown";
+
 export type PolicySupportUserContext = {
   province: string;
   district: string;
   treatmentType: PolicySupportTreatmentType;
   treatmentStartDate: string;
   evaluationDate?: string;
+  maritalStatus: MaritalStatus;
   hasDiagnosisCertificate: boolean | "unknown";
   hasDecisionNotice: boolean | "unknown";
   supportAttemptCount: number | "unknown";
@@ -38,6 +45,8 @@ export type PolicyStructuredPolicy = {
   department: string;
   phone: string;
   email: string;
+  targetMarried: boolean;
+  targetDefacto: boolean;
   supportedTreatmentTypes: readonly PolicySupportTreatmentType[];
   requireDiagnosisCertificate: boolean;
   requireDecisionNoticeBeforeTreatment: boolean;
@@ -111,6 +120,7 @@ export function evaluatePolicySupport(
 
   const conditionChecks: PolicyConditionCheck[] = [
     checkResidence(user, policy),
+    checkMaritalStatus(user, policy),
     checkTreatmentType(user, policy),
     checkDiagnosisCertificate(user, policy),
     checkDecisionNotice(user, policy),
@@ -121,6 +131,7 @@ export function evaluatePolicySupport(
   ];
 
   const overallStatus = getOverallStatus(conditionChecks);
+  const inquiryInput = { user, policy, conditionChecks };
 
   return {
     overallStatus,
@@ -129,8 +140,8 @@ export function evaluatePolicySupport(
     conditionChecks,
     supportItems: policy.supportItems,
     checklistGroups: buildChecklistGroups(user, policy),
-    inquiryQuestions: buildInquiryQuestions(user, policy),
-    inquiryDraft: buildInquiryDraft(user, policy),
+    inquiryQuestions: generatePolicyInquiryQuestions(inquiryInput),
+    inquiryDraft: generatePolicyInquiryDraft(inquiryInput),
     disclaimer:
       "Fevio는 지원 대상 여부를 확정하지 않아요. 최종 지원 여부와 금액은 관할 보건소의 확인과 지원결정통지서 발급으로 확인됩니다.",
     sources: policy.sources,
@@ -157,6 +168,8 @@ export function mapPolicySeedToStructuredPolicy(
     department: seed.dept_name ?? "모자보건 담당 부서",
     phone: seed.contact_phone ?? "보건소 대표번호 확인 필요",
     email: seed.contact_email ?? "이메일 확인 필요",
+    targetMarried: seed.target_married,
+    targetDefacto: seed.target_defacto,
     supportedTreatmentTypes: getSupportedTreatmentTypes(seed),
     requireDiagnosisCertificate: seed.required_documents.some((document) =>
       document.includes("난임진단서"),
@@ -282,6 +295,47 @@ function checkResidence(
     item: "거주 지역",
     status: "risk",
     note: `정책 지역은 ${policy.province} ${policy.district}입니다. 관할 보건소 확인이 필요합니다.`,
+  };
+}
+
+function checkMaritalStatus(
+  user: PolicySupportUserContext,
+  policy: PolicyStructuredPolicy,
+): PolicyConditionCheck {
+  if (user.maritalStatus === "married") {
+    if (!policy.targetMarried) {
+      return {
+        item: "혼인 상태",
+        status: "risk",
+        note: "현재 정책에서 법적 혼인 대상 지원 여부를 확인하지 못했어요. 보건소 확인이 필요합니다.",
+      };
+    }
+    return {
+      item: "혼인 상태",
+      status: "confirmed",
+      note: "법적 혼인으로 입력되어 있어요.",
+    };
+  }
+
+  if (user.maritalStatus === "defacto") {
+    if (!policy.targetDefacto) {
+      return {
+        item: "혼인 상태",
+        status: "risk",
+        note: "현재 정책에서 사실혼 대상 지원 여부를 확인하지 못했어요. 보건소 직접 확인이 필요합니다.",
+      };
+    }
+    return {
+      item: "혼인 상태",
+      status: "needs_check",
+      note: "사실혼으로 입력되어 있어요. 지원 가능 여부와 제출 서류를 보건소에서 확인해야 해요.",
+    };
+  }
+
+  return {
+    item: "혼인 상태",
+    status: "needs_check",
+    note: "혼인 상태를 확인해야 해요. 법적 혼인 또는 사실혼 여부가 지원 조건에 영향을 줄 수 있어요.",
   };
 }
 
@@ -622,47 +676,21 @@ function buildChecklistGroups(
   return groups;
 }
 
-function buildInquiryQuestions(
-  user: PolicySupportUserContext,
-  policy: PolicyStructuredPolicy,
-): string[] {
-  return [
-    `현재 ${policy.district} 난임부부 시술비 지원 예산이 남아 있나요?`,
-    `${formatDate(user.treatmentStartDate)} 시작 예정인 ${getTreatmentLabel(user.treatmentType)} 시술 전에 지원결정통지서 발급이 가능한가요?`,
-    "신청 시 필요한 서류와 온라인 신청 가능 여부를 확인하고 싶습니다.",
-    "원외약제비가 발생하면 어떤 서류로 청구할 수 있나요?",
-  ];
-}
-
-function buildInquiryDraft(
-  user: PolicySupportUserContext,
-  policy: PolicyStructuredPolicy,
-): PolicyInquiryDraft {
-  return {
-    recipient: policy.email,
-    subject: "난임부부 시술비 지원 신청 가능 여부 문의드립니다",
-    bodyLines: [
-      "안녕하세요.",
-      `${user.province} ${user.district} 거주자로, ${getTreatmentLabel(user.treatmentType)} 시술을 ${formatDate(user.treatmentStartDate)}경 시작 예정입니다.`,
-      "난임부부 시술비 지원 신청과 관련해 예산 잔여 여부, 지원결정통지서 발급 가능 여부, 필요 서류, 원외약제비 청구 가능 여부를 확인하고 싶습니다.",
-      "답변 받을 이메일: user@example.com",
-      "감사합니다.",
-    ],
-  };
-}
-
 function buildUnknownResult(user: PolicySupportUserContext): PolicySupportResult {
+  const conditionChecks: PolicyConditionCheck[] = [
+    {
+      item: "지역 정책",
+      status: "unknown",
+      note: `${user.province} ${user.district} 정책 데이터가 아직 준비되지 않았어요.`,
+    },
+  ];
+  const inquiryInput = { user, policy: null, conditionChecks };
+
   return {
     overallStatus: "unknown",
     statusLabel: "지역 정책 정보 없음",
     summary: "해당 지역 정책 정보를 찾지 못했어요. 관할 보건소 직접 확인이 필요합니다.",
-    conditionChecks: [
-      {
-        item: "지역 정책",
-        status: "unknown",
-        note: `${user.province} ${user.district} 정책 데이터가 아직 준비되지 않았어요.`,
-      },
-    ],
+    conditionChecks,
     supportItems: [],
     checklistGroups: [
       {
@@ -670,22 +698,10 @@ function buildUnknownResult(user: PolicySupportUserContext): PolicySupportResult
         items: ["관할 보건소 연락처 확인", "지원결정통지서 발급 가능 여부 확인"],
       },
     ],
-    inquiryQuestions: ["관할 보건소에서 현재 신청 가능한 난임부부 시술비 지원 정책이 있나요?"],
-    inquiryDraft: {
-      recipient: "",
-      subject: "난임부부 시술비 지원 정책 문의드립니다",
-      bodyLines: [
-        "안녕하세요.",
-        `${user.province} ${user.district} 거주자로 난임부부 시술비 지원 정책 확인을 요청드립니다.`,
-        "감사합니다.",
-      ],
-    },
+    inquiryQuestions: generatePolicyInquiryQuestions(inquiryInput),
+    inquiryDraft: generatePolicyInquiryDraft(inquiryInput),
     disclaimer:
       "Fevio는 지원 대상 여부를 확정하지 않아요. 최종 지원 여부와 금액은 관할 보건소의 확인과 지원결정통지서 발급으로 확인됩니다.",
     sources: [],
   };
-}
-
-function formatDate(value: string): string {
-  return value;
 }

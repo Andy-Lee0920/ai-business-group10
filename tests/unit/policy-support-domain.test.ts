@@ -12,6 +12,7 @@ const baseUser = {
   district: '강남구',
   treatmentType: 'fresh_embryo',
   treatmentStartDate: '2026년 6월 10일',
+  maritalStatus: 'married',
   hasDiagnosisCertificate: true,
   hasDecisionNotice: false,
   supportAttemptCount: 'unknown',
@@ -25,6 +26,8 @@ const basePolicy = {
   department: '건강관리과 모자보건팀',
   phone: '02-3423-7104',
   email: 'familycare@gangnam.example.kr',
+  targetMarried: true,
+  targetDefacto: true,
   supportedTreatmentTypes: ['fresh_embryo', 'frozen_embryo', 'iui'],
   requireDiagnosisCertificate: true,
   requireDecisionNoticeBeforeTreatment: true,
@@ -183,6 +186,45 @@ describe('policy support evaluator', () => {
       status: 'unknown',
     });
     expect(result.inquiryQuestions[0]).toContain('관할 보건소');
+  });
+
+  it('confirms married status when policy targets married couples', () => {
+    const result = evaluatePolicySupport(
+      { ...baseUser, maritalStatus: 'married', hasDecisionNotice: true },
+      { ...basePolicy, targetMarried: true },
+    );
+
+    expect(result.conditionChecks).toContainEqual({
+      item: '혼인 상태',
+      status: 'confirmed',
+      note: '법적 혼인으로 입력되어 있어요.',
+    });
+  });
+
+  it('flags defacto status as needs_check when policy supports it', () => {
+    const result = evaluatePolicySupport(
+      { ...baseUser, maritalStatus: 'defacto', hasDecisionNotice: true },
+      { ...basePolicy, targetDefacto: true },
+    );
+
+    expect(result.conditionChecks).toContainEqual({
+      item: '혼인 상태',
+      status: 'needs_check',
+      note: '사실혼으로 입력되어 있어요. 지원 가능 여부와 제출 서류를 보건소에서 확인해야 해요.',
+    });
+  });
+
+  it('flags defacto status as risk when policy does not support it', () => {
+    const result = evaluatePolicySupport(
+      { ...baseUser, maritalStatus: 'defacto', hasDecisionNotice: true },
+      { ...basePolicy, targetDefacto: false },
+    );
+
+    expect(result.conditionChecks).toContainEqual({
+      item: '혼인 상태',
+      status: 'risk',
+      note: '현재 정책에서 사실혼 대상 지원 여부를 확인하지 못했어요. 보건소 직접 확인이 필요합니다.',
+    });
   });
 
   it('keeps generated copy away from final eligibility claims', () => {
