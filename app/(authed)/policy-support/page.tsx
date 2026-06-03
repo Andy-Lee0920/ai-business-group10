@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge, ScreenShell } from "../../../src/components/ui";
+import { getPolicySeed } from "../../../src/data/policy-seed";
 import {
   evaluatePolicySupport,
-  getTreatmentLabel,
+  mapPolicySeedToStructuredPolicy,
+  type MaritalStatus,
   type PolicyConditionStatus,
   type PolicyStructuredPolicy,
   type PolicySupportResult,
@@ -19,6 +21,7 @@ type PolicySupportInputState = {
   district?: string;
   treatment?: string;
   start?: string;
+  marital?: string;
   diagnosis?: string;
   notice?: string;
   budget?: string;
@@ -37,39 +40,13 @@ const DEFAULT_PARAMS = {
   district: "강남구",
   treatment: "fresh_embryo",
   start: "2026년 6월 10일",
+  marital: "married",
   diagnosis: "yes",
   notice: "no",
   budget: "unknown",
   attempts: "unknown",
   drug: "unknown",
 } as const satisfies Required<PolicySupportInputState>;
-
-const mockPolicy = {
-  province: "서울특별시",
-  district: "강남구",
-  healthCenter: "강남구보건소",
-  department: "건강관리과 모자보건팀",
-  phone: "02-3423-7104",
-  email: "familycare@gangnam.example.kr",
-  supportedTreatmentTypes: ["fresh_embryo", "frozen_embryo", "iui"],
-  requireDiagnosisCertificate: true,
-  requireDecisionNoticeBeforeTreatment: true,
-  budgetStatus: "unknown",
-  maxSupportAttempts: "unknown",
-  supportItems: [
-    { label: "예상 지원 항목", value: "신선배아 시술비 일부" },
-    { label: "지원 가능성이 있는 항목", value: "일부 비급여 및 원외약제비" },
-    { label: "확인 필요", value: "배아동결비, 약제비 청구 방식" },
-    { label: "제외 가능성", value: "통지서 전 발생 비용" },
-  ],
-  sources: [
-    {
-      label: "강남구 난임부부 시술비 지원 안내",
-      url: "https://example.go.kr/ivf-support/gangnam",
-      lastVerifiedAt: "2026년 6월 1일",
-    },
-  ],
-} as const satisfies PolicyStructuredPolicy;
 
 export default function PolicySupportPage() {
   const [activeStep, setActiveStep] = useState<PolicySupportStep>("input");
@@ -166,6 +143,17 @@ function InputScreen({
               { value: "fresh_embryo", label: "신선배아", description: "체외수정" },
               { value: "frozen_embryo", label: "동결배아", description: "체외수정" },
               { value: "iui", label: "인공수정", description: "IUI" },
+            ]}
+          />
+          <ChoiceGroup
+            label="혼인 상태"
+            name="marital"
+            params={params}
+            setParams={setParams}
+            options={[
+              { value: "married", label: "법적 혼인", description: "혼인관계증명서 있음" },
+              { value: "defacto", label: "사실혼", description: "보건소 확인 필요" },
+              { value: "unknown", label: "모름", description: "확인 필요" },
             ]}
           />
           <ChoiceGroup
@@ -539,6 +527,8 @@ function buildUserContext(
     district: params.district,
     treatmentType: params.treatment as PolicySupportTreatmentType,
     treatmentStartDate: params.start,
+    evaluationDate: getTodayKstIsoDate(),
+    maritalStatus: parseMaritalStatus(params.marital),
     hasDiagnosisCertificate: parseYesNoUnknown(params.diagnosis),
     hasDecisionNotice: parseYesNoUnknown(params.notice),
     supportAttemptCount:
@@ -550,9 +540,15 @@ function buildUserContext(
 function buildPolicy(
   params: Required<PolicySupportInputState>,
 ): PolicyStructuredPolicy {
+  const seed = getPolicySeed("서울특별시", params.district);
+  const policy = mapPolicySeedToStructuredPolicy(seed, params.district);
+
   return {
-    ...mockPolicy,
-    budgetStatus: params.budget as PolicyStructuredPolicy["budgetStatus"],
+    ...policy,
+    budgetStatus:
+      params.budget === "unknown"
+        ? policy.budgetStatus
+        : (params.budget as PolicyStructuredPolicy["budgetStatus"]),
   };
 }
 
@@ -560,6 +556,20 @@ function parseYesNoUnknown(value: string): boolean | "unknown" {
   if (value === "yes") return true;
   if (value === "no") return false;
   return "unknown";
+}
+
+function parseMaritalStatus(value: string): MaritalStatus {
+  if (value === "married" || value === "defacto") return value;
+  return "unknown";
+}
+
+function getTodayKstIsoDate(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Seoul",
+  }).format(new Date());
 }
 
 function isAttentionStatus(status: PolicyConditionStatus): boolean {

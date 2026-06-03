@@ -1,3 +1,9 @@
+import type { PolicyStructuredSeed } from "../types/policy-support.types";
+import {
+  generatePolicyInquiryDraft,
+  generatePolicyInquiryQuestions,
+} from "./policy-support-inquiry";
+
 export type PolicySupportTreatmentType =
   | "fresh_embryo"
   | "frozen_embryo"
@@ -17,11 +23,15 @@ export type PolicyConditionStatus =
   | "risk"
   | "unknown";
 
+export type MaritalStatus = "married" | "defacto" | "unknown";
+
 export type PolicySupportUserContext = {
   province: string;
   district: string;
   treatmentType: PolicySupportTreatmentType;
   treatmentStartDate: string;
+  evaluationDate?: string;
+  maritalStatus: MaritalStatus;
   hasDiagnosisCertificate: boolean | "unknown";
   hasDecisionNotice: boolean | "unknown";
   supportAttemptCount: number | "unknown";
@@ -35,11 +45,19 @@ export type PolicyStructuredPolicy = {
   department: string;
   phone: string;
   email: string;
+  targetMarried: boolean;
+  targetDefacto: boolean;
   supportedTreatmentTypes: readonly PolicySupportTreatmentType[];
   requireDiagnosisCertificate: boolean;
   requireDecisionNoticeBeforeTreatment: boolean;
+  applyBeforeTreatment?: boolean;
   budgetStatus: "available" | "exhausted" | "unknown";
+  budgetNotice?: string | null;
   maxSupportAttempts: number | "unknown";
+  externalDrugCovered?: boolean | null;
+  onlineApplyAvailable?: boolean;
+  policyConfidence?: number;
+  requiredDocuments?: readonly string[];
   supportItems: readonly PolicySupportItem[];
   sources: readonly PolicySource[];
 };
@@ -59,6 +77,7 @@ export type PolicyConditionCheck = {
   item: string;
   status: PolicyConditionStatus;
   note: string;
+  daysUntilTreatment?: number;
 };
 
 export type PolicySupportResult = {
@@ -101,15 +120,18 @@ export function evaluatePolicySupport(
 
   const conditionChecks: PolicyConditionCheck[] = [
     checkResidence(user, policy),
+    checkMaritalStatus(user, policy),
     checkTreatmentType(user, policy),
     checkDiagnosisCertificate(user, policy),
     checkDecisionNotice(user, policy),
     checkBudget(policy),
     checkSupportAttempts(user, policy),
-    checkExternalDrugCost(user),
+    checkExternalDrugCost(user, policy),
+    checkPolicyConfidence(policy),
   ];
 
   const overallStatus = getOverallStatus(conditionChecks);
+  const inquiryInput = { user, policy, conditionChecks };
 
   return {
     overallStatus,
@@ -118,8 +140,8 @@ export function evaluatePolicySupport(
     conditionChecks,
     supportItems: policy.supportItems,
     checklistGroups: buildChecklistGroups(user, policy),
-    inquiryQuestions: buildInquiryQuestions(user, policy),
-    inquiryDraft: buildInquiryDraft(user, policy),
+    inquiryQuestions: generatePolicyInquiryQuestions(inquiryInput),
+    inquiryDraft: generatePolicyInquiryDraft(inquiryInput),
     disclaimer:
       "Fevio는 지원 대상 여부를 확정하지 않아요. 최종 지원 여부와 금액은 관할 보건소의 확인과 지원결정통지서 발급으로 확인됩니다.",
     sources: policy.sources,
@@ -128,6 +150,133 @@ export function evaluatePolicySupport(
 
 export function getTreatmentLabel(type: PolicySupportTreatmentType): string {
   return TREATMENT_LABELS[type];
+}
+
+export function mapPolicySeedToStructuredPolicy(
+  seed: PolicyStructuredSeed,
+  requestedDistrict: string,
+): PolicyStructuredPolicy {
+  const district = seed.sigungu ?? requestedDistrict;
+
+  return {
+    province: seed.sido,
+    district,
+    healthCenter:
+      seed.health_center_name === "관할 보건소"
+        ? `${district} 보건소`
+        : seed.health_center_name,
+    department: seed.dept_name ?? "모자보건 담당 부서",
+    phone: seed.contact_phone ?? "보건소 대표번호 확인 필요",
+    email: seed.contact_email ?? "이메일 확인 필요",
+    targetMarried: seed.target_married,
+    targetDefacto: seed.target_defacto,
+    supportedTreatmentTypes: getSupportedTreatmentTypes(seed),
+    requireDiagnosisCertificate: seed.required_documents.some((document) =>
+      document.includes("난임진단서"),
+    ),
+    requireDecisionNoticeBeforeTreatment:
+      seed.require_decision_notice && seed.apply_before_treatment,
+    applyBeforeTreatment: seed.apply_before_treatment,
+    budgetStatus: seed.budget_exhausted ? "exhausted" : "available",
+    budgetNotice: seed.budget_notice,
+    maxSupportAttempts: "unknown",
+    externalDrugCovered: seed.drug_external_covered,
+    onlineApplyAvailable: seed.online_apply_available,
+    policyConfidence: seed.confidence,
+    requiredDocuments: seed.required_documents,
+    supportItems: buildSupportItems(seed),
+    sources: [
+      {
+        label: `${district} 난임부부 시술비 지원 안내`,
+        url: seed.source_url,
+        lastVerifiedAt: formatPolicyDate(seed.last_verified_at),
+      },
+    ],
+  };
+}
+
+function getSupportedTreatmentTypes(
+  seed: PolicyStructuredSeed,
+): PolicySupportTreatmentType[] {
+  const types: PolicySupportTreatmentType[] = [];
+
+  if (seed.ivf_fresh_limit !== null) types.push("fresh_embryo");
+  if (seed.ivf_frozen_limit !== null) types.push("frozen_embryo");
+  if (seed.iui_limit !== null) types.push("iui");
+
+  return types;
+}
+
+function buildSupportItems(seed: PolicyStructuredSeed): PolicySupportItem[] {
+  return [
+    {
+      label: "신선배아 상한",
+      value: formatWonLimit(seed.ivf_fresh_limit),
+    },
+    {
+      label: "동결배아 상한",
+      value: formatWonLimit(seed.ivf_frozen_limit),
+    },
+    {
+      label: "인공수정 상한",
+      value: formatWonLimit(seed.iui_limit),
+    },
+    {
+      label: "원외약제비",
+      value: formatCovered(seed.drug_external_covered),
+    },
+  ];
+}
+
+function formatWonLimit(value: number | null): string {
+  if (value === null) return "지원 정보 없음";
+  return `최대 ${value.toLocaleString("ko-KR")}원`;
+}
+
+function formatCovered(value: boolean | null): string {
+  if (value === true) return "지원 가능성 있음";
+  if (value === false) return "지원 제외 가능성";
+  return "보건소 확인 필요";
+}
+
+function formatPolicyDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}
+
+function getDaysUntilTreatment(user: PolicySupportUserContext): number | null {
+  if (!user.evaluationDate) return null;
+
+  const treatmentDate = parsePolicySupportDate(user.treatmentStartDate);
+  const evaluationDate = parsePolicySupportDate(user.evaluationDate);
+
+  if (!treatmentDate || !evaluationDate) return null;
+
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  return Math.round((treatmentDate.getTime() - evaluationDate.getTime()) / oneDayMs);
+}
+
+function parsePolicySupportDate(value: string): Date | null {
+  const isoMatch = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/.exec(value);
+  const koreanMatch = /(?<year>\d{4})년\s*(?<month>\d{1,2})월\s*(?<day>\d{1,2})일/.exec(value);
+  const match = isoMatch ?? koreanMatch;
+
+  if (!match?.groups) return null;
+
+  const year = Number(match.groups.year);
+  const month = Number(match.groups.month);
+  const day = Number(match.groups.day);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 function checkResidence(
@@ -146,6 +295,47 @@ function checkResidence(
     item: "거주 지역",
     status: "risk",
     note: `정책 지역은 ${policy.province} ${policy.district}입니다. 관할 보건소 확인이 필요합니다.`,
+  };
+}
+
+function checkMaritalStatus(
+  user: PolicySupportUserContext,
+  policy: PolicyStructuredPolicy,
+): PolicyConditionCheck {
+  if (user.maritalStatus === "married") {
+    if (!policy.targetMarried) {
+      return {
+        item: "혼인 상태",
+        status: "risk",
+        note: "현재 정책에서 법적 혼인 대상 지원 여부를 확인하지 못했어요. 보건소 확인이 필요합니다.",
+      };
+    }
+    return {
+      item: "혼인 상태",
+      status: "confirmed",
+      note: "법적 혼인으로 입력되어 있어요.",
+    };
+  }
+
+  if (user.maritalStatus === "defacto") {
+    if (!policy.targetDefacto) {
+      return {
+        item: "혼인 상태",
+        status: "risk",
+        note: "현재 정책에서 사실혼 대상 지원 여부를 확인하지 못했어요. 보건소 직접 확인이 필요합니다.",
+      };
+    }
+    return {
+      item: "혼인 상태",
+      status: "needs_check",
+      note: "사실혼으로 입력되어 있어요. 지원 가능 여부와 제출 서류를 보건소에서 확인해야 해요.",
+    };
+  }
+
+  return {
+    item: "혼인 상태",
+    status: "needs_check",
+    note: "혼인 상태를 확인해야 해요. 법적 혼인 또는 사실혼 여부가 지원 조건에 영향을 줄 수 있어요.",
   };
 }
 
@@ -226,10 +416,35 @@ function checkDecisionNotice(
   }
 
   if (user.hasDecisionNotice === false) {
+    const daysUntilTreatment = getDaysUntilTreatment(user);
+    const applyBeforeTreatment =
+      policy.applyBeforeTreatment ?? policy.requireDecisionNoticeBeforeTreatment;
+
+    if (applyBeforeTreatment && daysUntilTreatment !== null && daysUntilTreatment < 0) {
+      return {
+        item: "지원결정통지서",
+        status: "risk",
+        note: "시술 시작 전 발급 조건이 있는데 입력된 시술 시작일이 이미 지났을 수 있어요.",
+        daysUntilTreatment,
+      };
+    }
+
+    if (applyBeforeTreatment && daysUntilTreatment !== null && daysUntilTreatment <= 3) {
+      return {
+        item: "지원결정통지서",
+        status: "action_required",
+        note: `시술 시작까지 ${daysUntilTreatment}일 남아 있어 지원결정통지서 발급 가능 여부를 바로 확인해야 해요.`,
+        daysUntilTreatment,
+      };
+    }
+
     return {
       item: "지원결정통지서",
       status: "action_required",
-      note: "시술 시작 전 지원결정통지서 발급 가능 여부를 확인해야 해요.",
+      note: applyBeforeTreatment
+        ? "시술 시작 전 지원결정통지서 발급 가능 여부를 확인해야 해요."
+        : "지원결정통지서 발급 가능 여부를 확인해야 해요.",
+      ...(daysUntilTreatment !== null ? { daysUntilTreatment } : {}),
     };
   }
 
@@ -253,7 +468,7 @@ function checkBudget(policy: PolicyStructuredPolicy): PolicyConditionCheck {
     return {
       item: "예산",
       status: "risk",
-      note: "예산 소진 또는 접수 마감 가능성이 있어요.",
+      note: policy.budgetNotice ?? "예산 소진 또는 접수 마감 가능성이 있어요.",
     };
   }
 
@@ -293,8 +508,25 @@ function checkSupportAttempts(
 
 function checkExternalDrugCost(
   user: PolicySupportUserContext,
+  policy: PolicyStructuredPolicy,
 ): PolicyConditionCheck {
   if (user.externalDrugCostExpected === true) {
+    if (policy.externalDrugCovered === true) {
+      return {
+        item: "원외약제비",
+        status: "needs_check",
+        note: "정책상 원외약제비 지원 가능성이 있어 청구 서류와 제출 기한 확인이 필요해요.",
+      };
+    }
+
+    if (policy.externalDrugCovered === false) {
+      return {
+        item: "원외약제비",
+        status: "risk",
+        note: "현재 구조화 정책에서는 원외약제비 지원 제외 가능성이 표시되어 있어요.",
+      };
+    }
+
     return {
       item: "원외약제비",
       status: "needs_check",
@@ -314,6 +546,30 @@ function checkExternalDrugCost(
     item: "원외약제비",
     status: "needs_check",
     note: "원외약제비 발생 가능성이 있으면 청구 서류를 확인해야 해요.",
+  };
+}
+
+function checkPolicyConfidence(policy: PolicyStructuredPolicy): PolicyConditionCheck {
+  if (policy.policyConfidence === undefined) {
+    return {
+      item: "정책 데이터 신뢰도",
+      status: "needs_check",
+      note: "정책 데이터 검증 수준이 표시되지 않아 보건소 확인이 필요해요.",
+    };
+  }
+
+  if (policy.policyConfidence < 0.7) {
+    return {
+      item: "정책 데이터 신뢰도",
+      status: "needs_check",
+      note: "현재 정책 데이터는 폴백 또는 낮은 신뢰도 자료라 관할 보건소 확인이 필요해요.",
+    };
+  }
+
+  return {
+    item: "정책 데이터 신뢰도",
+    status: "confirmed",
+    note: "정책 데이터 출처와 확인일이 표시되어 있어요.",
   };
 }
 
@@ -420,47 +676,21 @@ function buildChecklistGroups(
   return groups;
 }
 
-function buildInquiryQuestions(
-  user: PolicySupportUserContext,
-  policy: PolicyStructuredPolicy,
-): string[] {
-  return [
-    `현재 ${policy.district} 난임부부 시술비 지원 예산이 남아 있나요?`,
-    `${formatDate(user.treatmentStartDate)} 시작 예정인 ${getTreatmentLabel(user.treatmentType)} 시술 전에 지원결정통지서 발급이 가능한가요?`,
-    "신청 시 필요한 서류와 온라인 신청 가능 여부를 확인하고 싶습니다.",
-    "원외약제비가 발생하면 어떤 서류로 청구할 수 있나요?",
-  ];
-}
-
-function buildInquiryDraft(
-  user: PolicySupportUserContext,
-  policy: PolicyStructuredPolicy,
-): PolicyInquiryDraft {
-  return {
-    recipient: policy.email,
-    subject: "난임부부 시술비 지원 신청 가능 여부 문의드립니다",
-    bodyLines: [
-      "안녕하세요.",
-      `${user.province} ${user.district} 거주자로, ${getTreatmentLabel(user.treatmentType)} 시술을 ${formatDate(user.treatmentStartDate)}경 시작 예정입니다.`,
-      "난임부부 시술비 지원 신청과 관련해 예산 잔여 여부, 지원결정통지서 발급 가능 여부, 필요 서류, 원외약제비 청구 가능 여부를 확인하고 싶습니다.",
-      "답변 받을 이메일: user@example.com",
-      "감사합니다.",
-    ],
-  };
-}
-
 function buildUnknownResult(user: PolicySupportUserContext): PolicySupportResult {
+  const conditionChecks: PolicyConditionCheck[] = [
+    {
+      item: "지역 정책",
+      status: "unknown",
+      note: `${user.province} ${user.district} 정책 데이터가 아직 준비되지 않았어요.`,
+    },
+  ];
+  const inquiryInput = { user, policy: null, conditionChecks };
+
   return {
     overallStatus: "unknown",
     statusLabel: "지역 정책 정보 없음",
     summary: "해당 지역 정책 정보를 찾지 못했어요. 관할 보건소 직접 확인이 필요합니다.",
-    conditionChecks: [
-      {
-        item: "지역 정책",
-        status: "unknown",
-        note: `${user.province} ${user.district} 정책 데이터가 아직 준비되지 않았어요.`,
-      },
-    ],
+    conditionChecks,
     supportItems: [],
     checklistGroups: [
       {
@@ -468,22 +698,10 @@ function buildUnknownResult(user: PolicySupportUserContext): PolicySupportResult
         items: ["관할 보건소 연락처 확인", "지원결정통지서 발급 가능 여부 확인"],
       },
     ],
-    inquiryQuestions: ["관할 보건소에서 현재 신청 가능한 난임부부 시술비 지원 정책이 있나요?"],
-    inquiryDraft: {
-      recipient: "",
-      subject: "난임부부 시술비 지원 정책 문의드립니다",
-      bodyLines: [
-        "안녕하세요.",
-        `${user.province} ${user.district} 거주자로 난임부부 시술비 지원 정책 확인을 요청드립니다.`,
-        "감사합니다.",
-      ],
-    },
+    inquiryQuestions: generatePolicyInquiryQuestions(inquiryInput),
+    inquiryDraft: generatePolicyInquiryDraft(inquiryInput),
     disclaimer:
       "Fevio는 지원 대상 여부를 확정하지 않아요. 최종 지원 여부와 금액은 관할 보건소의 확인과 지원결정통지서 발급으로 확인됩니다.",
     sources: [],
   };
-}
-
-function formatDate(value: string): string {
-  return value;
 }

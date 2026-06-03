@@ -1,19 +1,3 @@
-export type TreatmentType = 'ivf_fresh' | 'ivf_frozen' | 'iui' | 'unknown';
-
-export type EligibilityStatus =
-  | 'confirmed'
-  | 'needs_check'
-  | 'action_required'
-  | 'risk'
-  | 'not_applicable'
-  | 'unknown';
-
-export type OverallStatus =
-  | 'eligible_likely'
-  | 'action_required'
-  | 'uncertain'
-  | 'likely_ineligible';
-
 export type PolicyStructuredSeed = {
   sido: string;
   sigungu: string | null;
@@ -52,57 +36,3 @@ export type PolicyStructuredSeed = {
   confidence: number; // 0–1
 };
 
-export type UserTreatmentContext = {
-  sido: string;
-  sigungu: string;
-  treatment_type: TreatmentType;
-  treatment_start_date: string | null; // ISO date
-  has_infertility_diagnosis: boolean;
-  has_decision_notice: boolean;
-  support_attempt_count: number;
-  drug_external_occurred: boolean | null;
-};
-
-export type CheckResult = {
-  id: string;
-  item: string;
-  status: EligibilityStatus;
-  note: string;
-  days_until_treatment?: number;
-  limit?: number;
-};
-
-export type ChecklistItem = {
-  id: string;
-  label: string;
-  sub: string;
-  priority: 'urgent' | 'normal' | 'done';
-  done: boolean;
-  deadline?: string; // ISO date
-};
-
-export type EligibilityResult = {
-  overall_status: OverallStatus;
-  overall_label: string;
-  policy_source: {
-    health_center: string;
-    dept: string | null;
-    contact_email: string | null;
-    contact_phone: string | null;
-    source_url: string;
-    last_verified_at: string;
-    confidence: number;
-  };
-  checks: CheckResult[];
-  support_amounts: {
-    ivf_fresh_limit: number | null;
-    ivf_frozen_limit: number | null;
-    iui_limit: number | null;
-    drug_external_covered: boolean | null;
-    non_covered_possible: string[];
-    non_covered_excluded: string[];
-  };
-  checklist: ChecklistItem[];
-  inquiry_purposes: string[];
-  disclaimer: string;
-};
