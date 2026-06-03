@@ -7,6 +7,7 @@ import {
   type PolicySupportTreatmentType,
   type PolicySupportUserContext,
 } from '../../../../src/domain/policy-support';
+import { polishPolicyInquiryDraft } from '../../../../src/domain/policy-support-polish';
 import { retrievePolicyEvidence } from '../../../../src/domain/policy-support-rag';
 
 type PolicySupportEvaluateBody = {
@@ -46,6 +47,11 @@ export async function POST(request: NextRequest) {
     sigungu: policy.district,
     conditionChecks: result.conditionChecks,
   });
+  const inquiryPolish = await polishPolicyInquiryDraft({
+    draft: result.inquiryDraft,
+    result,
+    evidence,
+  });
 
   return NextResponse.json({
     persisted: false,
@@ -54,6 +60,7 @@ export async function POST(request: NextRequest) {
       mode: 'static_rag',
       evidence,
     },
+    inquiryPolish,
     policy: {
       sido: policy.province,
       sigungu: policy.district,
