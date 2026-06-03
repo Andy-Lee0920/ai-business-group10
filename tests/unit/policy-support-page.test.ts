@@ -18,7 +18,7 @@ describe('policy support page shell', () => {
   it('keeps the policy support copy framed as possibility and public-health-center confirmation', () => {
     expect(page).toContain('보건소 최종 확인 필요');
     expect(page).toContain('지원 대상 여부를 확정하지 않아요');
-    expect(page).toContain('evaluatePolicySupport');
+    expect(page).toContain('/api/policy-support/evaluate');
     expect(page).toContain('시술 시작 전 확인');
     expect(page).toContain('지원결정통지서');
     expect(page).toContain('민감정보 제외');
@@ -46,15 +46,23 @@ describe('policy support page shell', () => {
     expect(page).not.toContain('buildPolicySupportHref');
   });
 
-  it('evaluates selected district through structured policy seed data', () => {
-    expect(page).toContain('getPolicySeed("서울특별시", params.district)');
-    expect(page).toContain('mapPolicySeedToStructuredPolicy(seed, params.district)');
+  it('evaluates selected district through the policy support API', () => {
+    expect(page).toContain('fetch("/api/policy-support/evaluate"');
+    expect(page).toContain('buildEvaluateRequest(selectedParams)');
+    expect(page).toContain('sigungu: params.district');
+    expect(page).toContain('budget_status: params.budget');
+    expect(page).not.toContain('getPolicySeed("서울특별시", params.district)');
+    expect(page).not.toContain('mapPolicySeedToStructuredPolicy(seed, params.district)');
+    expect(page).not.toContain('evaluatePolicySupport(');
     expect(page).not.toContain('const mockPolicy');
     expect(page).not.toContain('familycare@gangnam.example.kr');
   });
 
-  it('renders static RAG evidence on the result screen', () => {
-    expect(page).toContain('retrievePolicyEvidence');
+  it('renders API-backed static RAG evidence and polished inquiry draft', () => {
+    expect(page).toContain('apiResponse.retrieval.evidence');
+    expect(page).toContain('inquiryPolish.draft');
+    expect(page).toContain('formatPolishSource(inquiryPolish.source)');
+    expect(page).not.toContain('retrievePolicyEvidence');
     expect(page).toContain('function EvidenceCard');
     expect(page).toContain('정책 근거');
     expect(page).toContain('item.sourceLabel');

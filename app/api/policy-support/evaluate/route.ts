@@ -4,6 +4,7 @@ import {
   evaluatePolicySupport,
   mapPolicySeedToStructuredPolicy,
   type MaritalStatus,
+  type PolicyStructuredPolicy,
   type PolicySupportTreatmentType,
   type PolicySupportUserContext,
 } from '../../../../src/domain/policy-support';
@@ -19,6 +20,7 @@ type PolicySupportEvaluateBody = {
   marital_status?: unknown;
   has_infertility_diagnosis?: unknown;
   has_decision_notice?: unknown;
+  budget_status?: unknown;
   support_attempt_count?: unknown;
   drug_external_expected?: unknown;
 };
@@ -40,7 +42,10 @@ export async function POST(request: NextRequest) {
   }
 
   const seed = getPolicySeed(input.sido, input.sigungu);
-  const policy = mapPolicySeedToStructuredPolicy(seed, input.sigungu);
+  const policy = {
+    ...mapPolicySeedToStructuredPolicy(seed, input.sigungu),
+    budgetStatus: input.budgetStatus,
+  };
   const result = evaluatePolicySupport(input.userContext, policy);
   const evidence = retrievePolicyEvidence({
     sido: policy.province,
@@ -80,6 +85,7 @@ function normalizeInput(
   | {
       sido: string;
       sigungu: string;
+      budgetStatus: PolicyStructuredPolicy['budgetStatus'];
       userContext: PolicySupportUserContext;
     }
   | { error: string } {
@@ -92,10 +98,12 @@ function normalizeInput(
   }
 
   const treatmentStartDate = normalizeTreatmentStartDate(body.treatment_start_date);
+  const budgetStatus = normalizeBudgetStatus(body.budget_status);
 
   return {
     sido,
     sigungu,
+    budgetStatus,
     userContext: {
       province: sido,
       district: sigungu,
@@ -149,6 +157,16 @@ function normalizeBooleanUnknown(value: unknown): boolean | 'unknown' {
   if (value === true || value === false) return value;
   if (value === 'true' || value === 'yes') return true;
   if (value === 'false' || value === 'no') return false;
+  return 'unknown';
+}
+
+function normalizeBudgetStatus(
+  value: unknown,
+): PolicyStructuredPolicy['budgetStatus'] {
+  if (value === 'available' || value === 'exhausted' || value === 'unknown') {
+    return value;
+  }
+
   return 'unknown';
 }
 

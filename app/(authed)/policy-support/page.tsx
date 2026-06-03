@@ -1,23 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Badge, ScreenShell } from "../../../src/components/ui";
-import { getPolicySeed } from "../../../src/data/policy-seed";
 import {
-  evaluatePolicySupport,
-  mapPolicySeedToStructuredPolicy,
   type MaritalStatus,
   type PolicyConditionStatus,
-  type PolicyStructuredPolicy,
+  type PolicyInquiryDraft,
+  type PolicySource,
   type PolicySupportResult,
   type PolicySupportTreatmentType,
-  type PolicySupportUserContext,
 } from "../../../src/domain/policy-support";
-import {
-  retrievePolicyEvidence,
-  type PolicyEvidence,
-} from "../../../src/domain/policy-support-rag";
+import { type PolicyEvidence } from "../../../src/domain/policy-support-rag";
 
 type PolicySupportStep = "input" | "result" | "checklist" | "contact";
 
@@ -31,6 +25,32 @@ type PolicySupportInputState = {
   budget?: string;
   attempts?: string;
   drug?: string;
+};
+
+type PolicySupportApiPolicy = {
+  sido: string;
+  sigungu: string;
+  health_center: string;
+  department: string;
+  phone: string;
+  email: string;
+  sources: readonly PolicySource[];
+};
+
+type PolicySupportApiResponse = {
+  persisted: false;
+  source: "policy_seed";
+  retrieval: {
+    mode: "static_rag";
+    evidence: readonly PolicyEvidence[];
+  };
+  inquiryPolish: {
+    draft: PolicyInquiryDraft;
+    source: "deterministic" | "llm" | "rejected_fallback" | "fallback";
+    rejected: boolean;
+  };
+  policy: PolicySupportApiPolicy;
+  result: PolicySupportResult;
 };
 
 const STEPS = [
@@ -57,24 +77,51 @@ export default function PolicySupportPage() {
   const [selectedParams, setSelectedParams] = useState<
     Required<PolicySupportInputState>
   >(DEFAULT_PARAMS);
-  const userContext = useMemo(
-    () => buildUserContext(selectedParams),
-    [selectedParams],
-  );
-  const policy = useMemo(() => buildPolicy(selectedParams), [selectedParams]);
-  const policyResult = useMemo(
-    () => evaluatePolicySupport(userContext, policy),
-    [policy, userContext],
-  );
-  const evidence = useMemo(
-    () =>
-      retrievePolicyEvidence({
-        sido: policy.province,
-        sigungu: policy.district,
-        conditionChecks: policyResult.conditionChecks,
-      }),
-    [policy, policyResult],
-  );
+  const [apiResponse, setApiResponse] =
+    useState<PolicySupportApiResponse | null>(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationError, setEvaluationError] = useState<string | null>(null);
+
+  const handleStepChange = (step: PolicySupportStep) => {
+    if (step !== "input" && !apiResponse) return;
+    setActiveStep(step);
+  };
+
+  const handleEvaluate = async () => {
+    setIsEvaluating(true);
+    setEvaluationError(null);
+
+    try {
+      const response = await fetch("/api/policy-support/evaluate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(buildEvaluateRequest(selectedParams)),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | PolicySupportApiResponse
+        | { error?: string }
+        | null;
+
+      if (!response.ok || !isPolicySupportApiResponse(payload)) {
+        throw new Error(
+          payload && "error" in payload && payload.error
+            ? payload.error
+            : "지원금 정보를 확인하지 못했습니다.",
+        );
+      }
+
+      setApiResponse(payload);
+      setActiveStep("result");
+    } catch (error) {
+      setEvaluationError(
+        error instanceof Error
+          ? error.message
+          : "지원금 정보를 확인하지 못했습니다.",
+      );
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
 
   return (
     <ScreenShell>
@@ -91,8 +138,9 @@ export default function PolicySupportPage() {
           <button
             key={step.key}
             aria-current={activeStep === step.key ? "step" : undefined}
-            onClick={() => setActiveStep(step.key)}
-            style={stepLinkStyle(activeStep === step.key)}
+            disabled={step.key !== "input" && !apiResponse}
+            onClick={() => handleStepChange(step.key)}
+            style={stepLinkStyle(activeStep === step.key, step.key !== "input" && !apiResponse)}
             type="button"
           >
             {step.label}
@@ -102,24 +150,26 @@ export default function PolicySupportPage() {
 
       {activeStep === "input" ? (
         <InputScreen
+          evaluationError={evaluationError}
+          isEvaluating={isEvaluating}
+          onEvaluate={handleEvaluate}
           params={selectedParams}
-          setActiveStep={setActiveStep}
           setParams={setSelectedParams}
         />
       ) : null}
-      {activeStep === "result" ? (
+      {activeStep === "result" && apiResponse ? (
         <ResultScreen
-          evidence={evidence}
-          policy={policy}
-          result={policyResult}
+          evidence={apiResponse.retrieval.evidence}
+          policy={apiResponse.policy}
+          result={apiResponse.result}
           setActiveStep={setActiveStep}
         />
       ) : null}
-      {activeStep === "checklist" ? (
-        <ChecklistScreen result={policyResult} setActiveStep={setActiveStep} />
+      {activeStep === "checklist" && apiResponse ? (
+        <ChecklistScreen result={apiResponse.result} setActiveStep={setActiveStep} />
       ) : null}
-      {activeStep === "contact" ? (
-        <ContactScreen policy={policy} result={policyResult} />
+      {activeStep === "contact" && apiResponse ? (
+        <ContactScreen response={apiResponse} />
       ) : null}
 
       <section style={noticeStyle} aria-label="안전 안내">
@@ -134,12 +184,16 @@ export default function PolicySupportPage() {
 }
 
 function InputScreen({
+  evaluationError,
+  isEvaluating,
+  onEvaluate,
   params,
-  setActiveStep,
   setParams,
 }: {
+  evaluationError: string | null;
+  isEvaluating: boolean;
+  onEvaluate: () => void;
   params: Required<PolicySupportInputState>;
-  setActiveStep: (step: PolicySupportStep) => void;
   setParams: (params: Required<PolicySupportInputState>) => void;
 }) {
   return (
@@ -238,9 +292,15 @@ function InputScreen({
           />
         </div>
       </section>
+      {evaluationError ? (
+        <p role="alert" style={errorTextStyle}>
+          {evaluationError}
+        </p>
+      ) : null}
       <StepCta
-        label="지원 가능성 확인하기"
-        onClick={() => setActiveStep("result")}
+        disabled={isEvaluating}
+        label={isEvaluating ? "확인 중" : "지원 가능성 확인하기"}
+        onClick={onEvaluate}
       />
     </>
   );
@@ -253,7 +313,7 @@ function ResultScreen({
   setActiveStep,
 }: {
   evidence: readonly PolicyEvidence[];
-  policy: PolicyStructuredPolicy;
+  policy: PolicySupportApiPolicy;
   result: PolicySupportResult;
   setActiveStep: (step: PolicySupportStep) => void;
 }) {
@@ -266,7 +326,7 @@ function ResultScreen({
         <h2 style={statusTitleStyle}>{result.summary}</h2>
         <p style={statusBodyStyle}>
           다만 통지서 발급 가능 여부와 예산 잔여 여부는{" "}
-          {policy.healthCenter} 확인이 필요합니다.
+          {policy.health_center} 확인이 필요합니다.
         </p>
       </section>
 
@@ -359,16 +419,16 @@ function ChecklistScreen({
 }
 
 function ContactScreen({
-  policy,
-  result,
+  response,
 }: {
-  policy: PolicyStructuredPolicy;
-  result: PolicySupportResult;
+  response: PolicySupportApiResponse;
 }) {
+  const { inquiryPolish, policy, result } = response;
+
   return (
     <>
       <section style={cardStyle} aria-label="관할 보건소">
-        <h2 style={cardTitleStyle}>{policy.healthCenter}</h2>
+        <h2 style={cardTitleStyle}>{policy.health_center}</h2>
         <p style={cardBodyStyle}>{policy.department}</p>
         <div style={fieldGridStyle}>
           <ReadOnlyField label="전화" value={policy.phone} />
@@ -380,12 +440,13 @@ function ContactScreen({
 
       <section style={emailCardStyle} aria-label="문의 메일 초안">
         <h2 style={cardTitleStyle}>문의 메일 초안</h2>
-        <p style={emailMetaStyle}>받는 사람: {result.inquiryDraft.recipient}</p>
+        <p style={emailMetaStyle}>받는 사람: {inquiryPolish.draft.recipient}</p>
         <p style={emailMetaStyle}>
-          제목: {result.inquiryDraft.subject}
+          제목: {inquiryPolish.draft.subject}
         </p>
+        <p style={emailMetaStyle}>AI 보정: {formatPolishSource(inquiryPolish.source)}</p>
         <div style={emailBodyStyle}>
-          {result.inquiryDraft.bodyLines.map((line) => (
+          {inquiryPolish.draft.bodyLines.map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
@@ -549,44 +610,41 @@ function MiniStatus({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StepCta({ label, onClick }: { label: string; onClick: () => void }) {
+function StepCta({
+  disabled = false,
+  label,
+  onClick,
+}: {
+  disabled?: boolean;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <button onClick={onClick} style={primaryButtonStyle} type="button">
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      style={primaryButtonStyle(disabled)}
+      type="button"
+    >
       {label}
     </button>
   );
 }
 
-function buildUserContext(
-  params: Required<PolicySupportInputState>,
-): PolicySupportUserContext {
+function buildEvaluateRequest(params: Required<PolicySupportInputState>) {
   return {
-    province: "서울특별시",
-    district: params.district,
-    treatmentType: params.treatment as PolicySupportTreatmentType,
-    treatmentStartDate: params.start,
-    evaluationDate: getTodayKstIsoDate(),
-    maritalStatus: parseMaritalStatus(params.marital),
-    hasDiagnosisCertificate: parseYesNoUnknown(params.diagnosis),
-    hasDecisionNotice: parseYesNoUnknown(params.notice),
-    supportAttemptCount:
+    sido: "서울특별시",
+    sigungu: params.district,
+    treatment_type: params.treatment as PolicySupportTreatmentType,
+    treatment_start_date: params.start,
+    evaluation_date: getTodayKstIsoDate(),
+    marital_status: parseMaritalStatus(params.marital),
+    has_infertility_diagnosis: parseYesNoUnknown(params.diagnosis),
+    has_decision_notice: parseYesNoUnknown(params.notice),
+    budget_status: params.budget,
+    support_attempt_count:
       params.attempts === "unknown" ? "unknown" : Number(params.attempts),
-    externalDrugCostExpected: parseYesNoUnknown(params.drug),
-  };
-}
-
-function buildPolicy(
-  params: Required<PolicySupportInputState>,
-): PolicyStructuredPolicy {
-  const seed = getPolicySeed("서울특별시", params.district);
-  const policy = mapPolicySeedToStructuredPolicy(seed, params.district);
-
-  return {
-    ...policy,
-    budgetStatus:
-      params.budget === "unknown"
-        ? policy.budgetStatus
-        : (params.budget as PolicyStructuredPolicy["budgetStatus"]),
+    drug_external_expected: parseYesNoUnknown(params.drug),
   };
 }
 
@@ -599,6 +657,27 @@ function parseYesNoUnknown(value: string): boolean | "unknown" {
 function parseMaritalStatus(value: string): MaritalStatus {
   if (value === "married" || value === "defacto") return value;
   return "unknown";
+}
+
+function formatPolishSource(
+  source: PolicySupportApiResponse["inquiryPolish"]["source"],
+): string {
+  if (source === "llm") return "AI 문장 보정 적용";
+  if (source === "rejected_fallback") return "안전 문구 기준으로 기본 초안 사용";
+  if (source === "fallback") return "기본 초안 사용";
+  return "기본 초안";
+}
+
+function isPolicySupportApiResponse(
+  payload: PolicySupportApiResponse | { error?: string } | null,
+): payload is PolicySupportApiResponse {
+  return Boolean(
+    payload &&
+      "result" in payload &&
+      "policy" in payload &&
+      "retrieval" in payload &&
+      "inquiryPolish" in payload,
+  );
 }
 
 function getTodayKstIsoDate(): string {
@@ -651,14 +730,14 @@ const stepNavStyle = {
   marginBottom: 14,
 } as const;
 
-function stepLinkStyle(active: boolean) {
+function stepLinkStyle(active: boolean, disabled: boolean) {
   return {
     alignItems: "center",
     background: active ? "#D4622A" : "rgba(255, 255, 255, 0.86)",
     border: active ? "1px solid #D4622A" : "1px solid #F1D7C8",
     borderRadius: 12,
     color: active ? "#fff" : "#9A5A36",
-    cursor: "pointer",
+    cursor: disabled ? "not-allowed" : "pointer",
     display: "flex",
     fontFamily: "inherit",
     fontSize: 12,
@@ -667,6 +746,7 @@ function stepLinkStyle(active: boolean) {
     minHeight: 42,
     padding: "8px 6px",
     textAlign: "center",
+    opacity: disabled ? 0.52 : 1,
   } as const;
 }
 
@@ -972,19 +1052,30 @@ const emailBodyStyle = {
   padding: "14px",
 } as const;
 
-const primaryButtonStyle = {
-  alignItems: "center",
-  background: "var(--slc-coral-gradient)",
-  border: "none",
-  borderRadius: 999,
-  color: "#fff",
-  cursor: "pointer",
-  display: "flex",
-  fontFamily: "inherit",
-  fontSize: 16,
+const errorTextStyle = {
+  color: "#A64F25",
+  fontSize: 13,
   fontWeight: 900,
-  justifyContent: "center",
-  marginTop: 18,
-  minHeight: 52,
-  width: "100%",
+  lineHeight: 1.45,
+  margin: "8px 4px 0",
 } as const;
+
+function primaryButtonStyle(disabled: boolean) {
+  return {
+    alignItems: "center",
+    background: "var(--slc-coral-gradient)",
+    border: "none",
+    borderRadius: 999,
+    color: "#fff",
+    cursor: disabled ? "not-allowed" : "pointer",
+    display: "flex",
+    fontFamily: "inherit",
+    fontSize: 16,
+    fontWeight: 900,
+    justifyContent: "center",
+    marginTop: 18,
+    minHeight: 52,
+    opacity: disabled ? 0.72 : 1,
+    width: "100%",
+  } as const;
+}
