@@ -11,6 +11,7 @@ import {
 import { polishPolicyInquiryDraft } from '../../../../src/domain/policy-support-polish';
 import { retrievePolicyEvidence, retrievePolicyEvidenceVector } from '../../../../src/domain/policy-support-rag';
 import { getOpenAiApiKey } from '../../../../src/lib/embedding';
+import { getSupabaseServiceRoleKey } from '../../../../src/lib/server-supabase';
 
 type PolicySupportEvaluateBody = {
   sido?: unknown;
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
   const result = evaluatePolicySupport(input.userContext, policy);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? '';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ?? '';
+  const supabaseKey = getSupabaseServiceRoleKey() ?? '';
   const openAiApiKey = getOpenAiApiKey();
 
   const { evidence, mode: retrievalMode } =

@@ -126,7 +126,7 @@ export const STATIC_POLICY_RAG_CHUNKS = [
     sido: '서울특별시',
     sigungu: null,
     topic: '원외약제비',
-    text: '원외약제비는 처방전, 약제비 영수증, 제출 기한 등 사후 청구 서류 확인이 필요하다. 자치구별 지원 가능 여부가 다를 수 있어 보건소 확인 질문으로 남긴다.',
+    text: '원외약제비는 처방전, 약제비 증빙 서류, 제출 기한 등 사후 청구 서류 확인이 필요하다. 자치구별 지원 가능 여부가 다를 수 있어 보건소 확인 질문으로 남긴다.',
     sourceLabel: '서울시/자치구 보건소 안내 종합',
     sourceUrl: 'https://seoul-agi.seoul.go.kr/ifc-csp',
     lastVerifiedAt: '2026-06-03',

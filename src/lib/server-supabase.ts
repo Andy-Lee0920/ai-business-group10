@@ -43,6 +43,10 @@ export function requireSupabaseServiceRoleKey(source: Record<string, string | un
   return key;
 }
 
+export function getSupabaseServiceRoleKey(source: Record<string, string | undefined> = process.env): string | undefined {
+  return source.SUPABASE_SERVICE_ROLE_KEY?.trim() || undefined;
+}
+
 export function createSupabaseServiceRoleClient() {
   const publicConfig = requireSupabasePublicConfig();
   return createClient(publicConfig.url, requireSupabaseServiceRoleKey(), {
