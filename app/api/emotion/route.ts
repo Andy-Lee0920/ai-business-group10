@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isPresentationRequest } from '../../../src/config';
 import { assertSensitiveWriteAllowed } from '../../../src/domain/auth-privacy';
 import { bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } from '../../../src/lib/couple-bootstrap-admin';
+import { createConfirmedCareAction, type CanonicalCareActionRow, type CanonicalCareActionWriterClient } from '../../../src/lib/canonical-care-action-writer';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 
 type EmotionMood = 'overwhelmed' | 'lonely' | 'anxious' | 'tired' | 'okay';
@@ -26,13 +27,14 @@ type SelectChain<T> = { select(columns: string): SelectChain<T>; single(): Promi
 type EmotionSupabaseClient = {
   auth: { getUser(): Promise<{ data: { user: { id: string; email?: string | null } | null }; error: DbError | null }> };
   rpc<T>(name: string, args?: Record<string, unknown>): Promise<RpcResult<T>>;
-  from(table: 'visit_inputs' | 'care_action_cards'): {
+  from(table: 'visit_inputs'): {
     insert<T>(value: Record<string, unknown>): SelectChain<T>;
   };
+  from(table: 'care_action_cards'): ReturnType<CanonicalCareActionWriterClient<CardRow>['from']>;
 };
 type BootstrapRow = { couple_id: string; privacy_gate_accepted_at: string | null };
 type VisitInputRow = { id: string };
-type CardRow = { id: string; status: string };
+type CardRow = CanonicalCareActionRow;
 
 const DEMO_COOKIE = 'fevio_privacy_accepted=1';
 const MOODS: Record<EmotionMood, { label: string; partnerLabel: string }> = {
@@ -82,30 +84,25 @@ export async function POST(request: NextRequest) {
       .single();
     if (visitInput.error || !visitInput.data) throw new Error(visitInput.error?.message ?? 'visit_inputs insert failed');
 
-    const card = await supabase
-      .from('care_action_cards')
-      .insert<CardRow>({
-        couple_id: bootstrap.couple_id,
-        created_by: user.id,
-        source_input_id: visitInput.data.id,
-        assignee_role: 'primary_user',
-        card_type: 'record',
-        title: safeCard.title,
-        description: safeCard.description,
-        source_text: sourceText,
-        scheduled_at: null,
-        status: 'confirmed',
-        confirmation_required: false,
-        user_marked_important: false,
-        partner_visible: input.shareWithPartner,
-      })
-      .select('id,status')
-      .single();
-    if (card.error || !card.data) throw new Error(card.error?.message ?? 'care_action_cards insert failed');
+    const card = await createConfirmedCareAction(supabase, {
+      couple_id: bootstrap.couple_id,
+      created_by: user.id,
+      source_input_id: visitInput.data.id,
+      assignee_role: 'primary_user',
+      card_type: 'record',
+      title: safeCard.title,
+      description: safeCard.description,
+      source_text: sourceText,
+      scheduled_at: null,
+      status: 'confirmed',
+      confirmation_required: false,
+      user_marked_important: false,
+      partner_visible: input.shareWithPartner,
+    });
 
     return NextResponse.json({
-      cardId: card.data.id,
-      status: card.data.status,
+      cardId: card.id,
+      status: card.status,
       persisted: true,
       createdCardCount: 1,
       partnerVisible: input.shareWithPartner,

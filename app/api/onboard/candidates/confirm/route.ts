@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { isPresentationRequest } from '../../../../../src/config';
 import { createCookieBackedSupabaseClient } from '../../../../../src/lib/server-supabase';
 import { maskTechnicalError } from '../../../../../src/domain/slc-copy';
+import { createConfirmedCareActions, type CanonicalCareActionCreate, type CanonicalCareActionRow, type CanonicalCareActionWriterClient } from '../../../../../src/lib/canonical-care-action-writer';
 import type { ScheduleItem, ScheduleType } from '../../../../../src/types/slc.types';
 
 type DbError = { message: string };
@@ -22,15 +23,11 @@ interface SplitCandidatesTable {
   };
 }
 
-interface CareActionCardsTable {
-  insert(rows: Array<Record<string, unknown>>): { select(): Promise<{ data: ScheduleItem[] | null; error: DbError | null }> };
-}
-
-interface OnboardConfirmClient {
+interface OnboardConfirmClient extends CanonicalCareActionWriterClient<CanonicalCareActionRow> {
   auth: { getUser(): Promise<{ data: { user: { id: string } | null }; error: DbError | null }> };
   rpc(name: 'mark_first_capture_completed', args: { p_couple_id: string }): Promise<{ data: unknown; error: DbError | null }>;
   from(table: 'split_candidates'): SplitCandidatesTable;
-  from(table: 'care_action_cards'): CareActionCardsTable;
+  from(table: 'care_action_cards'): ReturnType<CanonicalCareActionWriterClient<CanonicalCareActionRow>['from']>;
 }
 
 export async function POST(request: NextRequest) {
@@ -61,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   const editById = new Map(candidateEdits.map((edit) => [edit.id, edit]));
   const candidateById = new Map((ownedCandidates ?? []).map((candidate) => [candidate.id, candidate]));
-  const rows = confirmedIds
+  const rows: CanonicalCareActionCreate[] = confirmedIds
     .map((id) => {
       const candidate = candidateById.get(id);
       const edit = editById.get(id);
@@ -87,9 +84,12 @@ export async function POST(request: NextRequest) {
 
   let items: ScheduleItem[] = [];
   if (rows.length) {
-    const { data, error } = await supabase.from('care_action_cards').insert(rows).select();
-    if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
-    items = (data ?? []).map(toSavedScheduleItem);
+    try {
+      const data = await createConfirmedCareActions(supabase, rows);
+      items = data.map(toSavedScheduleItem);
+    } catch (error) {
+      return NextResponse.json({ error: maskTechnicalError(error instanceof Error ? error.message : 'care_action_cards insert failed') }, { status: 500 });
+    }
     const coupleId = rows[0]?.couple_id;
     if (typeof coupleId === 'string') {
       const { error: captureStateError } = await supabase.rpc('mark_first_capture_completed', { p_couple_id: coupleId });
@@ -172,7 +172,7 @@ function toCareCardType(type: ScheduleType) {
   return type;
 }
 
-function toSavedScheduleItem(card: ScheduleItem): ScheduleItem {
+function toSavedScheduleItem(card: CanonicalCareActionRow): ScheduleItem {
   const row = card as unknown as Record<string, unknown>;
   const cardType = row.card_type === 'clinic_visit' || row.card_type === 'clinic_confirmation' ? 'clinic' : row.card_type;
   return {

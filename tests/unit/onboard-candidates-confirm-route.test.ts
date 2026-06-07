@@ -9,6 +9,7 @@ const state = vi.hoisted(() => ({
   user: null as User,
   ownedCandidates: [] as Candidate[],
   insertedRows: [] as Array<Record<string, unknown>>,
+  existingCareCards: [] as Array<Record<string, unknown>>,
   rpcCalls: [] as Array<{ name: string; args: Record<string, unknown> }>,
 }));
 
@@ -33,6 +34,12 @@ vi.mock('../../src/lib/server-supabase', () => ({
         };
       }
       return {
+        select: () => ({
+          in: async (_column: string, ids: string[]) => ({
+            data: state.existingCareCards.filter((card) => ids.includes(String(card.split_candidate_id))),
+            error: null,
+          }),
+        }),
         insert: (rows: Array<Record<string, unknown>>) => ({
           select: async () => {
             state.insertedRows = rows;
@@ -56,6 +63,7 @@ describe('/api/onboard/candidates/confirm', () => {
     state.user = null;
     state.ownedCandidates = [];
     state.insertedRows = [];
+    state.existingCareCards = [];
     state.rpcCalls = [];
     isPresentationRequest.mockReturnValue(false);
   });
@@ -169,6 +177,49 @@ describe('/api/onboard/candidates/confirm', () => {
         source_text: '고날에프',
       }),
     ]);
+  });
+
+  it('does not create a duplicate executable card for an already-confirmed split candidate', async () => {
+    state.user = { id: 'patient-1' };
+    state.ownedCandidates = [
+      { id: 'candidate-1', couple_id: 'couple-1', draft_id: 'draft-1', visit_input_id: 'visit-1', source_text: '오비드렐', suggested_card_type: 'injection' },
+    ];
+    state.existingCareCards = [
+      {
+        id: 'existing-card-1',
+        couple_id: 'couple-1',
+        created_by: 'patient-1',
+        source_input_id: 'visit-1',
+        split_candidate_id: 'candidate-1',
+        assignee_role: 'primary_user',
+        card_type: 'injection',
+        title: '오비드렐',
+        description: '250 mcg',
+        source_text: '오비드렐',
+        scheduled_at: '2026-05-19T12:00:00.000Z',
+        care_date: null,
+        status: 'confirmed',
+        confirmation_required: false,
+        user_marked_important: true,
+        partner_visible: false,
+        created_at: 'now',
+      },
+    ];
+    const { POST } = await import('../../app/api/onboard/candidates/confirm/route');
+
+    const response = await POST(request({
+      confirmedIds: ['candidate-1'],
+      rejectedIds: [],
+      candidateEdits: [
+        { id: 'candidate-1', type: 'injection', title: '오비드렐', scheduled_at: '2026-05-19T12:00:00.000Z', dose: '250', unit: 'mcg' },
+      ],
+    }));
+    const payload = await response.json() as { savedCount: number; items: Array<{ id: string }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.savedCount).toBe(1);
+    expect(payload.items[0]).toMatchObject({ id: 'existing-card-1' });
+    expect(state.insertedRows).toHaveLength(0);
   });
 
   it('lets the user confirm partner ownership so the canonical card is partner-visible', async () => {
