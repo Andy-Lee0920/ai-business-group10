@@ -3,6 +3,7 @@ import { isPresentationRequest } from '../../../../src/config';
 import { assertSensitiveWriteAllowed } from '../../../../src/domain/auth-privacy';
 import { buildPrescriptionMedicationCard, type PrescriptionAdministeredBy, type PrescriptionCaptureType } from '../../../../src/domain/prescription-capture';
 import { bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } from '../../../../src/lib/couple-bootstrap-admin';
+import { createConfirmedCareAction, type CanonicalCareActionRow, type CanonicalCareActionWriterClient } from '../../../../src/lib/canonical-care-action-writer';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
 
 type PrescriptionCaptureBody = {
@@ -21,11 +22,12 @@ type SelectChain<T> = { select(columns: string): SelectChain<T>; single(): Promi
 type PrescriptionSupabaseClient = {
   auth: { getUser(): Promise<{ data: { user: { id: string; email?: string | null } | null }; error: DbError | null }> };
   rpc<T>(name: string, args?: Record<string, unknown>): Promise<RpcResult<T>>;
-  from(table: 'visit_inputs' | 'care_action_cards'): { insert<T>(value: Record<string, unknown>): SelectChain<T> };
+  from(table: 'visit_inputs'): { insert<T>(value: Record<string, unknown>): SelectChain<T> };
+  from(table: 'care_action_cards'): ReturnType<CanonicalCareActionWriterClient<CardRow>['from']>;
 };
 type BootstrapRow = { couple_id: string; privacy_gate_accepted_at: string | null };
 type VisitInputRow = { id: string };
-type CardRow = { id: string; status: string };
+type CardRow = CanonicalCareActionRow;
 
 const DEMO_COOKIE = 'fevio_privacy_accepted=1';
 
@@ -71,22 +73,17 @@ export async function POST(request: NextRequest) {
       .single();
     if (visitInput.error || !visitInput.data) throw new Error(visitInput.error?.message ?? 'visit_inputs insert failed');
 
-    const card = await supabase
-      .from('care_action_cards')
-      .insert<CardRow>({
-        couple_id: bootstrap.couple_id,
-        created_by: user.id,
-        source_input_id: visitInput.data.id,
-        assignee_role: 'primary_user',
-        status: 'confirmed',
-        user_marked_important: draft.card_type === 'injection',
-        ...draft,
-      })
-      .select('id,status')
-      .single();
-    if (card.error || !card.data) throw new Error(card.error?.message ?? 'care_action_cards insert failed');
+    const card = await createConfirmedCareAction(supabase, {
+      couple_id: bootstrap.couple_id,
+      created_by: user.id,
+      source_input_id: visitInput.data.id,
+      assignee_role: 'primary_user',
+      status: 'confirmed',
+      user_marked_important: draft.card_type === 'injection',
+      ...draft,
+    });
 
-    return NextResponse.json({ cardId: card.data.id, status: card.data.status, persisted: true, createdCardCount: 1, title: draft.title }, { status: 201 });
+    return NextResponse.json({ cardId: card.id, status: card.status, persisted: true, createdCardCount: 1, title: draft.title }, { status: 201 });
   } catch (error) {
     if (isMissingConfigError(error) && isDemoRequest(request)) {
       return NextResponse.json({ cardId: `demo-prescription-${Date.now()}`, status: 'confirmed', persisted: false, createdCardCount: 1, title: draft.title }, { status: 201 });
