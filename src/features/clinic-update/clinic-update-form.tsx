@@ -16,7 +16,7 @@ type MedicationChangeAnswer = 'same' | 'changed' | 'unknown' | null;
 type NewMedicationIntent = 'yes' | 'no' | null;
 type SavedScheduleItem = { title: string; scheduledAt: string; unit: string | null };
 type ClinicUpdateSaveScheduleItem = { title: string; scheduledAt?: string; scheduled_at?: string; unit: string | null };
-type ClinicUpdateSaveResponse = { ok?: boolean; scheduleItems?: ClinicUpdateSaveScheduleItem[] };
+type ClinicUpdateSaveResponse = { ok?: boolean; reviewRequired?: boolean; candidates?: ApiCandidate[]; scheduleItems?: ClinicUpdateSaveScheduleItem[]; error?: string };
 type PhotoPhase = 'idle' | 'uploading' | 'uploaded' | 'analyzing' | 'ready' | 'not_found';
 type ExtractedCandidate = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null; decision: 'confirmed' | 'rejected' };
 type ApiCandidate = { id?: unknown; type?: unknown; title?: unknown; scheduled_at?: unknown; dose?: unknown; unit?: unknown };
@@ -370,13 +370,21 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
     setCaptureMessage('분석 중');
     setAiError(null);
     try {
-      const response = await fetch('/api/onboard/text-analyze', {
+      const response = await fetch('/api/clinic-update', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ rawText }),
+        body: JSON.stringify({
+          sameMedication: null,
+          addedMedicationIds: [],
+          medicationDays: null,
+          nextVisitAt: null,
+          triggerPlan: '',
+          memo: rawText,
+          newScheduleItems: [],
+        }),
       });
-      if (!response.ok) throw new Error('text_analyze_failed');
-      const payload = await response.json() as { candidates?: ApiCandidate[] };
+      if (!response.ok) throw new Error('manual_memo_bridge_failed');
+      const payload = await response.json() as ClinicUpdateSaveResponse;
       const candidates = normalizeExtractedCandidates(payload.candidates);
       if (!candidates.length) {
         handleCaptureNotFound();
@@ -451,6 +459,23 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
       }),
     });
     const payload = await response.json().catch(() => ({})) as ClinicUpdateSaveResponse;
+    if (!response.ok) {
+      setAiError(payload.error ?? '변경사항을 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+      setSaving(false);
+      return;
+    }
+    if (payload.reviewRequired) {
+      const candidates = normalizeExtractedCandidates(payload.candidates);
+      setSaving(false);
+      if (!candidates.length) {
+        setAiError('검토할 후보를 만들지 못했어요. 내용을 조금 더 구체적으로 입력해 주세요.');
+        return;
+      }
+      setExtractedCandidates(candidates);
+      setCaptureMessage('후보 준비');
+      setStep('diff_review');
+      return;
+    }
     const persistedScheduleItems = payload.scheduleItems?.length ? payload.scheduleItems : scheduleItems;
     setSavedScheduleItems(persistedScheduleItems.map(normalizeSavedScheduleItem));
     setSaving(false);
