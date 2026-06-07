@@ -3,6 +3,7 @@ import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-sup
 import { isMissingSlcTable } from '../../../../src/lib/slc-fallback';
 import type { InjectionSite } from '../../../../src/types/slc.types';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
+import { completeCanonicalCareActionCard, type CanonicalCareActionWriterClient } from '../../../../src/lib/canonical-care-action-writer';
 
 export async function POST(request: NextRequest) {
   const supabase = await createCookieBackedSupabaseClient();
@@ -13,20 +14,18 @@ export async function POST(request: NextRequest) {
   const { scheduleItemId, injectionSite } = body;
   const completedAt = new Date().toISOString();
 
-  const careCardResult = await supabase
-    .from('care_action_cards')
-    .update({ status: 'completed', completed_at: completedAt, updated_at: completedAt })
-    .eq('id', scheduleItemId)
-    .eq('created_by', user.id)
-    .select('id')
-    .maybeSingle();
-
-  if (careCardResult.error) {
-    if (!isMissingSlcTable(careCardResult.error)) {
-      return NextResponse.json({ error: maskTechnicalError(careCardResult.error.message) }, { status: 500 });
+  try {
+    const completedCareCard = await completeCanonicalCareActionCard(supabase as unknown as CanonicalCareActionWriterClient<{ id: string }>, {
+      cardId: scheduleItemId,
+      createdBy: user.id,
+      completedAt,
+    });
+    if (completedCareCard) return NextResponse.json({ ok: true, source: 'care_action_cards' });
+  } catch (error) {
+    const dbError = error instanceof Error ? error : { message: 'care_action_cards update failed' };
+    if (!isMissingSlcTable(dbError)) {
+      return NextResponse.json({ error: maskTechnicalError(dbError.message) }, { status: 500 });
     }
-  } else if (careCardResult.data) {
-    return NextResponse.json({ ok: true, source: 'care_action_cards' });
   }
 
   const { error: updateError } = await supabase

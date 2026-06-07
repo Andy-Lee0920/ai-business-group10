@@ -10,10 +10,19 @@ function createInsertTable(data: unknown) {
   return chain;
 }
 
+function createCareActionInsertTable(data: unknown) {
+  return {
+    select: vi.fn(() => ({ in: vi.fn().mockResolvedValue({ data: [], error: null }) })),
+    insert: vi.fn(() => ({
+      select: vi.fn().mockResolvedValue({ data: [data], error: null }),
+    })),
+  };
+}
+
 describe('sensitive care write seam', () => {
   it('authenticates, checks Privacy Gate, creates visit input, then creates one care action card', async () => {
     const visitTable = createInsertTable({ id: 'visit-1' });
-    const cardTable = createInsertTable({ id: 'card-1', status: 'confirmed' });
+    const cardTable = createCareActionInsertTable({ id: 'card-1', status: 'confirmed' });
     const from = vi.fn((table: string) => (table === 'visit_inputs' ? visitTable : cardTable));
     const supabase = {
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1', email: 'u@example.com' } }, error: null }) },

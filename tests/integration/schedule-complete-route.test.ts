@@ -77,6 +77,23 @@ describe('schedule complete route', () => {
     expect(insertCalls).toEqual([]);
   });
 
+
+  it('keeps the legacy schedule completion fallback when canonical care cards table is unavailable', async () => {
+    userResponses.push({ data: { user: { id: 'patient-1' } }, error: null });
+    updateResults.care_action_cards = [{ data: null, error: { message: 'missing table', code: 'PGRST205' } }];
+    const { POST } = await import('../../app/api/schedule/complete/route');
+
+    const response = await POST(postRequest({ scheduleItemId: 'legacy-item-1' }));
+
+    expect(response.status).toBe(200);
+    expect(updateCalls[0]).toMatchObject({ table: 'care_action_cards' });
+    expect(updateCalls[1]).toMatchObject({
+      table: 'schedule_items',
+      values: { status: 'completed', updated_at: expect.any(String) },
+      filters: [['id', 'legacy-item-1'], ['patient_id', 'patient-1']],
+    });
+  });
+
   it('falls back to the owned legacy schedule item and inserts a completion record with injection site', async () => {
     userResponses.push({ data: { user: { id: 'patient-1' } }, error: null });
     updateResults.care_action_cards = [{ data: null, error: null }];

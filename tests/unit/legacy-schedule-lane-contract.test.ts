@@ -18,7 +18,7 @@ describe('legacy schedule lane guard', () => {
   it('keeps onboard candidate confirmation on care_action_cards, not schedule_items', () => {
     const source = readFileSync(confirmRoute, 'utf8');
     expect(source).toContain("from('split_candidates')");
-    expect(source).toContain("from('care_action_cards')");
+    expect(source).toContain('createConfirmedCareActions');
     expect(source).not.toContain("from('schedule_items')");
   });
 });

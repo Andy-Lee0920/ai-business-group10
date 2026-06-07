@@ -1,5 +1,6 @@
 import { assertSensitiveWriteAllowed } from '../domain/auth-privacy';
-import type { CareActionCard, CareCardStatus } from '../types/care-cards.types';
+import type { CareActionCard } from '../types/care-cards.types';
+import { createConfirmedCareAction, type CanonicalCareActionRow, type CanonicalCareActionWriterClient } from './canonical-care-action-writer';
 import { bootstrapCoupleForUserWithServiceRole, isInitCoupleAmbiguityError } from './couple-bootstrap-admin';
 
 type DbError = { message: string };
@@ -10,17 +11,18 @@ type SelectChain<T> = { select(columns: string): SelectChain<T>; single(): Promi
 export type SensitiveCareWriteSupabaseClient = {
   auth: { getUser(): Promise<{ data: { user: { id: string; email?: string | null } | null }; error: DbError | null }> };
   rpc<T>(name: string, args?: Record<string, unknown>): Promise<RpcResult<T>>;
-  from(table: 'visit_inputs' | 'care_action_cards'): {
+  from(table: 'visit_inputs'): {
     insert<T>(value: Record<string, unknown>): SelectChain<T>;
   };
+  from(table: 'care_action_cards'): ReturnType<CanonicalCareActionWriterClient<CanonicalCareActionRow>['from']>;
 };
 
 type SensitiveCareUser = { id: string; email?: string | null };
 type BootstrapRow = { couple_id: string; privacy_gate_accepted_at: string | null };
 type VisitInputRow = { id: string };
-type CardRow = { id: string; status: CareCardStatus };
+type CardRow = CanonicalCareActionRow;
 
-export type SensitiveCareCardDraft = Pick<CareActionCard, 'assignee_role' | 'card_type' | 'title' | 'status'> &
+export type SensitiveCareCardDraft = Pick<CareActionCard, 'assignee_role' | 'card_type' | 'title'> & { status: 'confirmed' } &
   Partial<
     Pick<
       CareActionCard,
@@ -44,7 +46,7 @@ export type SensitiveCareWriteInput = {
 
 export type SensitiveCareWriteResult = {
   cardId: string;
-  status: CareCardStatus;
+  status: 'confirmed';
   coupleId: string;
   visitInputId: string;
 };
@@ -64,22 +66,20 @@ export async function createSensitiveCareActionCard(
     .single();
   if (visitInput.error || !visitInput.data) throw new Error(visitInput.error?.message ?? 'visit_inputs insert failed');
 
-  const card = await supabase
-    .from('care_action_cards')
-    .insert<CardRow>({
-      ...input.card,
-      source_text: input.card.source_text ?? input.sourceText,
-      couple_id: bootstrap.couple_id,
-      created_by: user.id,
-      source_input_id: visitInput.data.id,
-    })
-    .select('id,status')
-    .single();
-  if (card.error || !card.data) throw new Error(card.error?.message ?? 'care_action_cards insert failed');
+  const card = await createConfirmedCareAction(supabase, {
+    ...input.card,
+    source_text: input.card.source_text ?? input.sourceText,
+    couple_id: bootstrap.couple_id,
+    created_by: user.id,
+    source_input_id: visitInput.data.id,
+    confirmation_required: input.card.confirmation_required ?? false,
+    user_marked_important: input.card.user_marked_important ?? false,
+    partner_visible: input.card.partner_visible ?? false,
+  });
 
   return {
-    cardId: card.data.id,
-    status: card.data.status,
+    cardId: card.id,
+    status: card.status,
     coupleId: bootstrap.couple_id,
     visitInputId: visitInput.data.id,
   };
