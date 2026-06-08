@@ -69,6 +69,7 @@ export default async function PartnerPage() {
     supabase
       .from('care_action_cards')
       .select(PARTNER_CARE_CARD_SELECT)
+      .eq('created_by', link.patient_id)
       .eq('partner_visible', true)
       .in('status', ['confirmed', 'completed', 'revoked', 'superseded'])
       .gte('scheduled_at', todayStart.toISOString())

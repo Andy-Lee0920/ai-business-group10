@@ -176,6 +176,7 @@ ${partnerTokenPage}`).not.toContain(directImageTag);
 
   it('reads canonical partner-visible care cards for the authed partner page', () => {
     expect(partnerPage).toContain("from('care_action_cards')");
+    expect(partnerPage).toContain("eq('created_by', link.patient_id)");
     expect(partnerPage).toContain("eq('partner_visible', true)");
     expect(partnerPage).toContain('serializePartnerViewCards');
     expect(partnerPage).not.toContain("from('schedule_items')");
