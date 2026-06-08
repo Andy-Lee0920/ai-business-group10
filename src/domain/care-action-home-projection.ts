@@ -12,14 +12,22 @@ const CARD_TYPE_TO_SCHEDULE_TYPE: Partial<Record<CardType, ScheduleType>> = {
   clinic_confirmation: 'clinic',
 };
 
-export function projectCareActionCardsForHome(cards: readonly CareActionHomeRow[]): ScheduleItem[] {
+export const CARE_ACTION_SCHEDULE_SELECT = 'id,couple_id,created_by,assignee_role,card_type,title,description,source_text,scheduled_at,care_date,status,confirmation_required,user_marked_important,partner_visible,revision,created_at';
+
+export type CareActionScheduleRow = CareActionHomeRow;
+
+export function projectCareActionCardsForSchedule(cards: readonly CareActionScheduleRow[]): ScheduleItem[] {
   return cards
-    .map(projectCareActionCardForHome)
+    .map(projectCareActionCardForSchedule)
     .filter((item): item is ScheduleItem => item != null)
     .sort((left, right) => new Date(left.scheduled_at).getTime() - new Date(right.scheduled_at).getTime());
 }
 
-function projectCareActionCardForHome(card: CareActionHomeRow): ScheduleItem | null {
+export function projectCareActionCardsForHome(cards: readonly CareActionHomeRow[]): ScheduleItem[] {
+  return projectCareActionCardsForSchedule(cards);
+}
+
+export function projectCareActionCardForSchedule(card: CareActionScheduleRow): ScheduleItem | null {
   const type = CARD_TYPE_TO_SCHEDULE_TYPE[card.card_type];
   if (!type) return null;
 
@@ -45,6 +53,15 @@ function mapCareCardStatus(status: CareCardStatus): ScheduleStatus {
   if (status === 'completed') return 'completed';
   if (status === 'dismissed' || status === 'revoked' || status === 'superseded' || status === 'archived') return 'missed';
   return 'upcoming';
+}
+
+export function scheduleTypeToCareCardType(type: ScheduleType): Extract<CardType, 'injection' | 'medication' | 'clinic_visit'> {
+  if (type === 'clinic') return 'clinic_visit';
+  return type;
+}
+
+export function careDateFromScheduledAt(iso: string): string {
+  return iso.slice(0, 10);
 }
 
 function careDateToKstStartIso(careDate: string | null): string | null {

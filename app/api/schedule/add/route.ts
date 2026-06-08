@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rows = dates.map((date) => baseRow(body, user.id, kstDateTimeToIso(date, body.dailyTime)));
+    // Legacy compatibility write: this old schedule endpoint remains a projection lane until Slice 5 disposition.
     const { error, data } = await supabase
       .from('schedule_items')
       .insert(rows)
@@ -162,6 +163,7 @@ export async function POST(request: NextRequest) {
   }
 
   const row = baseRow(body, user.id, body.scheduledAt);
+  // Legacy compatibility write: this old schedule endpoint remains a projection lane until Slice 5 disposition.
   const { error, data } = await supabase
     .from('schedule_items')
     .insert(row)
