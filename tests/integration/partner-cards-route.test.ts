@@ -74,6 +74,8 @@ describe('partner cards API route', () => {
             display_state: 'current',
             revision: 1,
             sharing_scope: 'basic',
+            [['partner', 'prompt'].join('_')]: '사용자가 쓴 파트너 메시지는 API에 남으면 안 됨',
+            source_text: '원문 민감 메모',
           },
         ],
         error: null,
@@ -88,7 +90,8 @@ describe('partner cards API route', () => {
 
     expect(response.status).toBe(200);
     expect(payload.items[0]).toMatchObject({ title: '오늘 케어 일정', description: null });
-    expect(JSON.stringify(payload)).not.toMatch(/오비드렐|냉장|복부/u);
+    expect(JSON.stringify(payload)).not.toMatch(/오비드렐|냉장|복부|파트너 메시지|원문 민감/u);
+    expect(JSON.stringify(payload)).not.toContain(['partner', 'prompt'].join('_'));
   });
 
   it('adds emotional support copy without adding medical interpretation authority', async () => {

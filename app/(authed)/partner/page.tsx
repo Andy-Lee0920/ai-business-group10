@@ -6,21 +6,34 @@ import { slcAssets } from '../../../src/design/slc-assets';
 import { partnerStateCopy, type PartnerProjectionState } from '../../../src/features/partner/partner-state';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable } from '../../../src/lib/slc-fallback';
-import { buildPresentationClinicUpdates, buildPresentationCompletions, buildPresentationItems } from '../../../src/features/presentation/presentation-testbed';
+import { getPresentationPartnerView } from '../../../src/features/adaptive-home/presentation-scenarios';
+import { serializePartnerViewCards } from '../../../src/services/partner-view';
 import { cookies, headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
+type PartnerCareCardRow = Parameters<typeof serializePartnerViewCards>[0][number];
+type ClinicUpdatePresenceRow = { id: string };
+
+const PARTNER_CARE_CARD_SELECT = [
+  'id',
+  'assignee_role',
+  'card_type',
+  'title',
+  'description',
+  'scheduled_at',
+  'care_date',
+  'status',
+  'confirmation_required',
+  'user_marked_important',
+  'partner_visible',
+  'revision',
+].join(',');
+
 export default async function PartnerPage() {
   const requestHeaders = await headers();
   if (isPresentationRequest({ headers: requestHeaders })) {
-    return (
-      <PartnerView
-        items={buildPresentationItems()}
-        completions={buildPresentationCompletions()}
-        latestClinicUpdate={buildPresentationClinicUpdates()[0] ?? null}
-      />
-    );
+    return <PartnerView items={getPresentationPartnerView()} />;
   }
 
   const supabase = await createCookieBackedSupabaseClient();
@@ -52,22 +65,32 @@ export default async function PartnerPage() {
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
 
-  const [itemsRes, completionsRes, clinicRes] = await Promise.all([
-    supabase.from('schedule_items').select('*').eq('patient_id', link.patient_id)
+  const [cardsRes, clinicRes] = await Promise.all([
+    supabase
+      .from('care_action_cards')
+      .select(PARTNER_CARE_CARD_SELECT)
+      .eq('created_by', link.patient_id)
+      .eq('partner_visible', true)
+      .in('status', ['confirmed', 'completed', 'revoked', 'superseded'])
       .gte('scheduled_at', todayStart.toISOString())
       .lte('scheduled_at', todayEnd.toISOString())
       .order('scheduled_at', { ascending: true }),
-    supabase.from('completion_records').select('*').eq('patient_id', link.patient_id)
-      .gte('completed_at', todayStart.toISOString()),
-    supabase.from('clinic_updates').select('*').eq('patient_id', link.patient_id)
-      .order('created_at', { ascending: false }).limit(1),
+    supabase
+      .from('clinic_updates')
+      .select('id')
+      .eq('patient_id', link.patient_id)
+      .order('created_at', { ascending: false })
+      .limit(1),
   ]);
 
-  if (itemsRes.error || completionsRes.error || clinicRes.error) {
-    return <PartnerView items={[]} completions={[]} latestClinicUpdate={null} />;
+  if (cardsRes.error) {
+    if (isMissingSlcTable(cardsRes.error)) return <PartnerView items={[]} hasRecentClinicUpdate={false} />;
+    return <PartnerView items={[]} hasRecentClinicUpdate={false} />;
   }
 
-  return <PartnerView items={itemsRes.data ?? []} completions={completionsRes.data ?? []} latestClinicUpdate={clinicRes.data?.[0] ?? null} />;
+  const hasRecentClinicUpdate = !clinicRes.error && ((clinicRes.data ?? []) as ClinicUpdatePresenceRow[]).length > 0;
+  const items = serializePartnerViewCards(((cardsRes.data ?? []) as unknown) as PartnerCareCardRow[]);
+  return <PartnerView items={items} hasRecentClinicUpdate={hasRecentClinicUpdate} />;
 }
 
 function PartnerEmptyState({ state }: { state: Exclude<PartnerProjectionState, 'linked_no_schedule' | 'linked_with_schedule'> }) {

@@ -11,7 +11,23 @@ import {
 export { PARTNER_VIEW_ITEM_FIELDS };
 export type { PartnerActionViewItem, PartnerShareLinkRecord };
 
-export function serializePartnerViewCards(cards: readonly CareActionCard[]): PartnerActionViewItem[] {
+type PartnerSerializableCareActionCard = Pick<
+  CareActionCard,
+  | 'id'
+  | 'assignee_role'
+  | 'card_type'
+  | 'title'
+  | 'description'
+  | 'scheduled_at'
+  | 'care_date'
+  | 'status'
+  | 'confirmation_required'
+  | 'user_marked_important'
+  | 'partner_visible'
+  | 'revision'
+>;
+
+export function serializePartnerViewCards(cards: readonly PartnerSerializableCareActionCard[]): PartnerActionViewItem[] {
   return cards.filter(isPartnerVisible).map(toPartnerItem);
 }
 
@@ -33,11 +49,11 @@ export function isPartnerLinkUsable(link: PartnerShareLinkRecord | null | undefi
   return new Date(link.expires_at).getTime() > now.getTime();
 }
 
-function isPartnerVisible(card: CareActionCard) {
+function isPartnerVisible(card: PartnerSerializableCareActionCard) {
   return card.partner_visible && card.status !== 'archived' && card.status !== 'dismissed';
 }
 
-function toPartnerItem(card: CareActionCard): PartnerActionViewItem {
+function toPartnerItem(card: PartnerSerializableCareActionCard): PartnerActionViewItem {
   const displayState = displayStateForStatus(card.status);
   const roleProjection = translateCareCardToPartnerRole({
     card_type: card.card_type,
