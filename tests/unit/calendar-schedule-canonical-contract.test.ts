@@ -9,6 +9,7 @@ const editPage = readFileSync('app/(authed)/schedule/[id]/edit/page.tsx', 'utf8'
 const addPage = readFileSync('app/(authed)/add/page.tsx', 'utf8');
 const clinicUpdatePage = readFileSync('app/(authed)/clinic-update/page.tsx', 'utf8');
 const partnerPage = readFileSync('app/(authed)/partner/page.tsx', 'utf8');
+const partnerCareCardReader = readFileSync('src/features/partner/read-partner-care-cards.ts', 'utf8');
 
 describe('Slice 5 calendar/schedule canonical compatibility contract', () => {
   it('makes calendar and schedule reads prefer projected care_action_cards before legacy schedule_items fallback', () => {
@@ -65,7 +66,9 @@ describe('Slice 5 calendar/schedule canonical compatibility contract', () => {
     expect(clinicUpdatePage).toContain("from('schedule_items')");
     expect(clinicUpdatePage).toContain('id,patient_id,medication_id,type,title,scheduled_at,dose,unit,status,source,created_at');
     expect(clinicUpdatePage).toContain('mergeCanonicalScheduleItemsWithLegacyFallback');
-    expect(partnerPage).toContain("eq('created_by', link.patient_id)");
-    expect(partnerPage).toContain("eq('partner_visible', true)");
+    expect(partnerPage).toContain('getPartnerVisibleCareCards');
+    expect(partnerPage).toContain('linkedPatientId: link.patient_id');
+    expect(partnerCareCardReader).toContain("eq('created_by', input.linkedPatientId)");
+    expect(partnerCareCardReader).toContain("eq('partner_visible', true)");
   });
 });

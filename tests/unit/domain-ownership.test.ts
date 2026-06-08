@@ -6,7 +6,10 @@ const read = (path: string) => readFileSync(path, 'utf8');
 describe('domain ownership audit', () => {
   it('keeps real partner role projection connected to API and service surfaces', () => {
     expect(read('src/services/partner-view.ts')).toContain(
-      "from '../domain/partner-role-projection'",
+      "from '../features/partner/partner-care-card-projection'",
+    );
+    expect(read('src/features/partner/partner-care-card-projection.ts')).toContain(
+      "from '../../domain/partner-role-projection'",
     );
     expect(read('app/api/partner/[token]/cards/route.ts')).toContain(
       "from '../../../../../src/domain/partner-role-projection'",

@@ -7,28 +7,13 @@ import { partnerStateCopy, type PartnerProjectionState } from '../../../src/feat
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { SLC_ROLE_COOKIE, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { getPresentationPartnerView } from '../../../src/features/adaptive-home/presentation-scenarios';
-import { serializePartnerViewCards } from '../../../src/services/partner-view';
+import { getPartnerVisibleCareCards } from '../../../src/features/partner/read-partner-care-cards';
+import { serializePartnerViewCards } from '../../../src/features/partner/partner-care-card-projection';
 import { cookies, headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-type PartnerCareCardRow = Parameters<typeof serializePartnerViewCards>[0][number];
 type ClinicUpdatePresenceRow = { id: string };
-
-const PARTNER_CARE_CARD_SELECT = [
-  'id',
-  'assignee_role',
-  'card_type',
-  'title',
-  'description',
-  'scheduled_at',
-  'care_date',
-  'status',
-  'confirmation_required',
-  'user_marked_important',
-  'partner_visible',
-  'revision',
-].join(',');
 
 export default async function PartnerPage() {
   const requestHeaders = await headers();
@@ -66,15 +51,11 @@ export default async function PartnerPage() {
   todayEnd.setHours(23, 59, 59, 999);
 
   const [cardsRes, clinicRes] = await Promise.all([
-    supabase
-      .from('care_action_cards')
-      .select(PARTNER_CARE_CARD_SELECT)
-      .eq('created_by', link.patient_id)
-      .eq('partner_visible', true)
-      .in('status', ['confirmed', 'completed', 'revoked', 'superseded'])
-      .gte('scheduled_at', todayStart.toISOString())
-      .lte('scheduled_at', todayEnd.toISOString())
-      .order('scheduled_at', { ascending: true }),
+    getPartnerVisibleCareCards(supabase, {
+      linkedPatientId: link.patient_id,
+      windowStart: todayStart,
+      windowEnd: todayEnd,
+    }),
     supabase
       .from('clinic_updates')
       .select('id')
@@ -89,7 +70,7 @@ export default async function PartnerPage() {
   }
 
   const hasRecentClinicUpdate = !clinicRes.error && ((clinicRes.data ?? []) as ClinicUpdatePresenceRow[]).length > 0;
-  const items = serializePartnerViewCards(((cardsRes.data ?? []) as unknown) as PartnerCareCardRow[]);
+  const items = serializePartnerViewCards(cardsRes.data ?? []);
   return <PartnerView items={items} hasRecentClinicUpdate={hasRecentClinicUpdate} />;
 }
 
