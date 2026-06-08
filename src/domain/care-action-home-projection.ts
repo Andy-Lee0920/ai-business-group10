@@ -27,6 +27,28 @@ export function projectCareActionCardsForHome(cards: readonly CareActionHomeRow[
   return projectCareActionCardsForSchedule(cards);
 }
 
+export function mergeCanonicalScheduleItemsWithLegacyFallback(
+  canonicalItems: readonly ScheduleItem[],
+  legacyItems: readonly ScheduleItem[],
+): ScheduleItem[] {
+  const canonicalFingerprints = new Set(canonicalItems.map(scheduleEquivalenceFingerprint));
+  return [...canonicalItems, ...legacyItems.filter((item) => !canonicalFingerprints.has(scheduleEquivalenceFingerprint(item)))]
+    .sort((left, right) => new Date(left.scheduled_at).getTime() - new Date(right.scheduled_at).getTime());
+}
+
+function scheduleEquivalenceFingerprint(item: ScheduleItem): string {
+  return [
+    item.patient_id,
+    item.type,
+    normalizeScheduleTitle(item.title),
+    new Date(item.scheduled_at).getTime(),
+  ].join('|');
+}
+
+function normalizeScheduleTitle(title: string): string {
+  return title.trim().replace(/\s+/g, ' ').toLocaleLowerCase('ko-KR');
+}
+
 export function projectCareActionCardForSchedule(card: CareActionScheduleRow): ScheduleItem | null {
   const type = CARD_TYPE_TO_SCHEDULE_TYPE[card.card_type];
   if (!type) return null;

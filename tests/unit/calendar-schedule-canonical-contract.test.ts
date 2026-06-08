@@ -10,7 +10,7 @@ const addPage = readFileSync('app/(authed)/add/page.tsx', 'utf8');
 const clinicUpdatePage = readFileSync('app/(authed)/clinic-update/page.tsx', 'utf8');
 const partnerPage = readFileSync('app/(authed)/partner/page.tsx', 'utf8');
 
-describe('Slice 4 calendar/schedule canonical compatibility contract', () => {
+describe('Slice 5 calendar/schedule canonical compatibility contract', () => {
   it('makes calendar and schedule reads prefer projected care_action_cards before legacy schedule_items fallback', () => {
     for (const source of [calendarPage, scheduleRoute]) {
       const canonicalIndex = source.indexOf("from('care_action_cards')");
@@ -20,6 +20,7 @@ describe('Slice 4 calendar/schedule canonical compatibility contract', () => {
       expect(legacyIndex).toBeGreaterThanOrEqual(0);
       expect(canonicalIndex).toBeLessThan(legacyIndex);
       expect(source).toContain('projectCareActionCardsForSchedule');
+      expect(source).toContain('mergeCanonicalScheduleItemsWithLegacyFallback');
       expect(source).toContain(".eq('created_by', user.id)");
       expect(source).toContain(".in('status', ['confirmed', 'completed'])");
     }
@@ -56,8 +57,14 @@ describe('Slice 4 calendar/schedule canonical compatibility contract', () => {
   });
 
   it('preserves primary-user add/clinic-update current item compatibility and leaves partner read untouched', () => {
+    expect(addPage).toContain("from('care_action_cards')");
     expect(addPage).toContain("from('schedule_items')");
+    expect(addPage).toContain('id,patient_id,medication_id,type,title,scheduled_at,dose,unit,status,source,created_at');
+    expect(addPage).toContain('mergeCanonicalScheduleItemsWithLegacyFallback');
+    expect(clinicUpdatePage).toContain("from('care_action_cards')");
     expect(clinicUpdatePage).toContain("from('schedule_items')");
+    expect(clinicUpdatePage).toContain('id,patient_id,medication_id,type,title,scheduled_at,dose,unit,status,source,created_at');
+    expect(clinicUpdatePage).toContain('mergeCanonicalScheduleItemsWithLegacyFallback');
     expect(partnerPage).toContain("eq('created_by', link.patient_id)");
     expect(partnerPage).toContain("eq('partner_visible', true)");
   });

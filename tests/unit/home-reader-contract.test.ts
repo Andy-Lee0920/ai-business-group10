@@ -12,6 +12,7 @@ describe('/home canonical reader contract', () => {
     expect(legacyIndex).toBeGreaterThanOrEqual(0);
     expect(careIndex).toBeLessThan(legacyIndex);
     expect(homeLoader).toContain('projectCareActionCardsForHome');
+    expect(homeLoader).toContain('mergeCanonicalScheduleItemsWithLegacyFallback');
   });
 
   it('lets canonical care_action_cards satisfy the authed layout existing-care guard', () => {
@@ -20,6 +21,18 @@ describe('/home canonical reader contract', () => {
     expect(layout).toContain("from('care_action_cards')");
     expect(layout).toContain('existingCareCardResult');
     expect(layout).toContain('Boolean(existingScheduleResult.data) || Boolean(existingCareCardResult.data)');
+  });
+
+
+  it('keeps legacy schedule_items as a fallback lane instead of early-returning canonical-only home items', () => {
+    const canonicalIndex = homeLoader.indexOf('const careCardItems');
+    const legacyIndex = homeLoader.indexOf('const legacyItems');
+    const mergeIndex = homeLoader.indexOf('const mergedItems');
+
+    expect(canonicalIndex).toBeGreaterThanOrEqual(0);
+    expect(legacyIndex).toBeGreaterThan(canonicalIndex);
+    expect(mergeIndex).toBeGreaterThan(legacyIndex);
+    expect(homeLoader).not.toContain('if (careCardItems.length > 0)');
   });
 
 });

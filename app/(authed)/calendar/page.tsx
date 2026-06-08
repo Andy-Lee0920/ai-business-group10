@@ -4,7 +4,7 @@ import { CalendarScreen } from '../../../src/features/calendar/calendar-screen';
 import { buildPresentationItems } from '../../../src/features/presentation/presentation-testbed';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
-import { CARE_ACTION_SCHEDULE_SELECT, projectCareActionCardsForSchedule, type CareActionScheduleRow } from '../../../src/domain/care-action-home-projection';
+import { CARE_ACTION_SCHEDULE_SELECT, mergeCanonicalScheduleItemsWithLegacyFallback, projectCareActionCardsForSchedule, type CareActionScheduleRow } from '../../../src/domain/care-action-home-projection';
 import type { ScheduleItem } from '../../../src/types/slc.types';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +29,6 @@ export default async function CalendarPage() {
     ? []
     : projectCareActionCardsForSchedule((careCardsRes.data ?? []) as CareActionScheduleRow[])
       .filter((item) => isWithinRange(item.scheduled_at, start, end));
-  if (careCardItems.length > 0) return <CalendarScreen items={careCardItems} />;
 
   const itemsRes = await supabase
     .from('schedule_items')
@@ -39,9 +38,12 @@ export default async function CalendarPage() {
     .lte('scheduled_at', end.toISOString())
     .order('scheduled_at', { ascending: true });
 
-  if (isMissingSlcTable(itemsRes.error)) return <CalendarScreen items={fallbackScheduleItems(user.id)} />;
-  if (itemsRes.error) return <CalendarScreen items={[]} />;
-  return <CalendarScreen items={(itemsRes.data ?? []) as ScheduleItem[]} />;
+  if (isMissingSlcTable(itemsRes.error)) {
+    const fallbackItems = careCardItems.length > 0 ? careCardItems : fallbackScheduleItems(user.id);
+    return <CalendarScreen items={fallbackItems} />;
+  }
+  if (itemsRes.error) return <CalendarScreen items={careCardItems} />;
+  return <CalendarScreen items={mergeCanonicalScheduleItemsWithLegacyFallback(careCardItems, (itemsRes.data ?? []) as ScheduleItem[])} />;
 }
 
 function isWithinRange(iso: string, start: Date, end: Date) {
