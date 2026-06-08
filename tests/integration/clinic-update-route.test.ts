@@ -21,7 +21,9 @@ vi.mock('../../src/lib/server-supabase', () => ({
         return {
           error: null,
           select: () => ({
-            single: async () => ({ data: data[0] ?? null, error: null }),
+            ...(table === 'visit_inputs' || table === 'action_split_drafts'
+              ? { single: async () => ({ data: data[0] ?? null, error: null }) }
+              : {}),
             then: (resolve: (value: { data: Array<Record<string, unknown>>; error: null }) => unknown) => resolve({ data, error: null }),
           }),
         };
@@ -44,7 +46,7 @@ describe('clinic update route', () => {
     insertCalls.length = 0;
   });
 
-  it('persists a clinic update and emits clinic-update schedule items for Home and Records', async () => {
+  it('does not write structured care cards before explicit user confirmation', async () => {
     userResponses.push({ data: { user: { id: 'patient-1' } }, error: null });
     const { POST } = await import('../../app/api/clinic-update/route');
 
@@ -62,7 +64,7 @@ describe('clinic update route', () => {
           title: '다음 병원 방문',
           dose: null,
           unit: null,
-          scheduledAt: '2026-05-16T09:00:00.000',
+          scheduledAt: '2026-05-16T09:00:00.000+09:00',
         },
         {
           medicationId: 'gonal-f',
@@ -74,37 +76,133 @@ describe('clinic update route', () => {
         },
       ],
     }));
+    const payload = await response.json() as { error: string };
+
+    expect(response.status).toBe(409);
+    expect(payload.error).toBe('structured_confirmation_required');
+    expect(insertCalls).toHaveLength(0);
+  });
+
+  it('confirms structured clinic input into canonical care cards with provenance and no split candidates', async () => {
+    userResponses.push({ data: { user: { id: 'patient-1' } }, error: null });
+    const { POST } = await import('../../app/api/clinic-update/route');
+
+    const response = await POST(postRequest({
+      sameMedication: false,
+      addedMedicationIds: ['gonal-f'],
+      medicationDays: 2,
+      nextVisitAt: '2026-05-16T00:00:00.000Z',
+      triggerPlan: 'tomorrow',
+      memo: '다음 방문 전까지 유지',
+      confirmStructured: true,
+      newScheduleItems: [
+        {
+          medicationId: null,
+          type: 'clinic',
+          title: '다음 병원 방문',
+          dose: null,
+          unit: null,
+          scheduledAt: '2026-05-16T09:00:00.000+09:00',
+        },
+        {
+          medicationId: 'gonal-f',
+          type: 'medication',
+          title: '고날에프',
+          dose: null,
+          unit: 'IU',
+          scheduledAt: '2026-05-16T19:00:00.000+09:00',
+        },
+      ],
+    }));
+    const payload = await response.json() as { confirmed: boolean; visitInputId: string; scheduleItems: Array<{ title: string }> };
 
     expect(response.status).toBe(200);
-    expect(insertCalls[0]).toMatchObject({
-      table: 'clinic_updates',
-      values: {
-        patient_id: 'patient-1',
-        same_medication: false,
-        added_medication_ids: ['gonal-f'],
-        medication_days: 2,
-        next_visit_at: '2026-05-16T00:00:00.000Z',
-        trigger_plan: 'tomorrow',
-        memo: '다음 방문 전까지 유지',
-      },
+    expect(payload).toMatchObject({
+      confirmed: true,
+      visitInputId: 'visit_inputs-1',
+      scheduleItems: [
+        expect.objectContaining({ title: '다음 병원 방문' }),
+        expect.objectContaining({ title: '고날에프' }),
+      ],
     });
-    expect(insertCalls[1]).toMatchObject({ table: 'schedule_items' });
-    expect(insertCalls[1].values).toEqual([
+    expect(insertCalls.map((call) => call.table)).toEqual(['visit_inputs', 'action_split_drafts', 'care_action_cards']);
+    expect(insertCalls[0]).toMatchObject({ table: 'visit_inputs' });
+    expect(String((insertCalls[0].values as Record<string, unknown>).raw_text)).toContain('clinic_update_structured_confirm');
+    expect(insertCalls[1]).toMatchObject({
+      table: 'action_split_drafts',
+      values: { couple_id: 'couple-1', visit_input_id: 'visit_inputs-1', status: 'draft' },
+    });
+    expect(insertCalls[2]).toMatchObject({ table: 'care_action_cards' });
+    expect(insertCalls[2].values).toEqual([
       expect.objectContaining({
-        patient_id: 'patient-1',
-        medication_id: null,
-        type: 'clinic',
+        couple_id: 'couple-1',
+        created_by: 'patient-1',
+        source_input_id: 'visit_inputs-1',
+        split_candidate_id: null,
+        assignee_role: 'primary_user',
+        card_type: 'clinic_visit',
         title: '다음 병원 방문',
-        source: 'clinic_update',
+        scheduled_at: '2026-05-16T00:00:00.000Z',
+        status: 'confirmed',
+        confirmation_required: false,
+        partner_visible: false,
       }),
       expect.objectContaining({
-        patient_id: 'patient-1',
-        medication_id: 'gonal-f',
-        type: 'medication',
+        couple_id: 'couple-1',
+        created_by: 'patient-1',
+        source_input_id: 'visit_inputs-1',
+        split_candidate_id: null,
+        assignee_role: 'primary_user',
+        card_type: 'medication',
         title: '고날에프',
-        source: 'clinic_update',
+        description: 'IU',
+        status: 'confirmed',
+        confirmation_required: false,
+        partner_visible: false,
       }),
     ]);
+    expect(insertCalls.some((call) => call.table === 'split_candidates')).toBe(false);
+    expect(insertCalls.some((call) => call.table === 'schedule_items')).toBe(false);
+    expect(insertCalls.some((call) => call.table === 'clinic_updates')).toBe(false);
+  });
+
+  it('lets structured confirmation opt in to partner-visible policy fields without partner free text', async () => {
+    userResponses.push({ data: { user: { id: 'patient-1' } }, error: null });
+    const { POST } = await import('../../app/api/clinic-update/route');
+
+    const response = await POST(postRequest({
+      sameMedication: null,
+      addedMedicationIds: [],
+      medicationDays: 1,
+      nextVisitAt: null,
+      triggerPlan: '',
+      memo: '',
+      confirmStructured: true,
+      structuredPartnerVisible: true,
+      newScheduleItems: [
+        {
+          medicationId: null,
+          type: 'injection',
+          title: '오비드렐',
+          dose: '250',
+          unit: 'mcg',
+          scheduledAt: '2026-05-16T22:00:00.000+09:00',
+        },
+      ],
+    }));
+
+    expect(response.status).toBe(200);
+    expect(insertCalls.map((call) => call.table)).toEqual(['visit_inputs', 'action_split_drafts', 'care_action_cards']);
+    expect(insertCalls[2].values).toEqual([
+      expect.objectContaining({
+        assignee_role: 'both',
+        partner_visible: true,
+        card_type: 'injection',
+        title: '오비드렐',
+        description: '250 mcg',
+      }),
+    ]);
+    expect(JSON.stringify(insertCalls[2].values)).not.toContain(['partner', 'prompt'].join('_'));
   });
 
   it('routes ambiguous free memo to visit input, split draft, and split candidates without creating confirmed cards', async () => {
