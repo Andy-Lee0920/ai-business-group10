@@ -1,6 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { maskTechnicalError } from '../../../../src/domain/slc-copy';
+import {
+  CARE_ACTION_SCHEDULE_SELECT,
+  careDateFromScheduledAt,
+  projectCareActionCardForSchedule,
+  scheduleTypeToCareCardType,
+  type CareActionScheduleRow,
+} from '../../../../src/domain/care-action-home-projection';
 import { createCookieBackedSupabaseClient } from '../../../../src/lib/server-supabase';
+import { isMissingSlcTable } from '../../../../src/lib/slc-fallback';
 import type { ScheduleItem, ScheduleType } from '../../../../src/types/slc.types';
 
 type ScheduleUpdateBody = {
@@ -25,6 +33,27 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
+  const now = new Date().toISOString();
+  const { data: careCard, error: careCardError } = await supabase
+    .from('care_action_cards')
+    .update({
+      card_type: scheduleTypeToCareCardType(input.type),
+      title: input.title,
+      description: formatScheduleDescription(input.dose, input.unit),
+      scheduled_at: input.scheduledAt,
+      care_date: careDateFromScheduledAt(input.scheduledAt),
+      updated_at: now,
+    })
+    .eq('id', id)
+    .eq('created_by', user.id)
+    .select(CARE_ACTION_SCHEDULE_SELECT)
+    .maybeSingle<CareActionScheduleRow>();
+
+  const projectedCareCard = careCard ? projectCareActionCardForSchedule(careCard) : null;
+  if (projectedCareCard) return NextResponse.json({ item: projectedCareCard, source: 'care_action_cards' });
+  if (careCardError && !isMissingSlcTable(careCardError)) return NextResponse.json({ error: maskTechnicalError(careCardError.message) }, { status: 500 });
+
+  // Legacy compatibility fallback: old schedule rows remain editable until Slice 5 disposition.
   const { data, error } = await supabase
     .from('schedule_items')
     .update({
@@ -34,7 +63,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       unit: input.unit,
       scheduled_at: input.scheduledAt,
       medication_id: input.medicationId,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     })
     .eq('id', id)
     .eq('patient_id', user.id)
@@ -42,7 +71,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     .single<ScheduleItem>();
 
   if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
-  return NextResponse.json({ item: data });
+  return NextResponse.json({ item: data, source: 'legacy_schedule_items' });
 }
 
 function normalizeScheduleUpdate(body: ScheduleUpdateBody):
@@ -74,6 +103,19 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
+  const now = new Date().toISOString();
+  const { data: careCard, error: careCardError } = await supabase
+    .from('care_action_cards')
+    .update({ status: 'archived', updated_at: now })
+    .eq('id', id)
+    .eq('created_by', user.id)
+    .select('id')
+    .maybeSingle<{ id: string }>();
+
+  if (careCard) return NextResponse.json({ ok: true, source: 'care_action_cards' });
+  if (careCardError && !isMissingSlcTable(careCardError)) return NextResponse.json({ error: maskTechnicalError(careCardError.message) }, { status: 500 });
+
+  // Legacy compatibility fallback: delete old schedule rows while schedule_items still exists.
   const { error } = await supabase
     .from('schedule_items')
     .delete()
@@ -81,7 +123,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     .eq('patient_id', user.id);
 
   if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, source: 'legacy_schedule_items' });
 }
 
 function normalizeText(value: unknown) {
@@ -91,4 +133,9 @@ function normalizeText(value: unknown) {
 function normalizeNullableText(value: unknown) {
   const text = normalizeText(value);
   return text || null;
+}
+
+function formatScheduleDescription(dose: string | null, unit: string | null) {
+  const description = [dose, unit].filter(Boolean).join(' ').trim();
+  return description || null;
 }
