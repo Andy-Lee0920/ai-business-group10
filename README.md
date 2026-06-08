@@ -213,72 +213,36 @@ IVF_STAGE
 
 ---
 
-## 최근 이슈 기반 구현 맵
+## Current work status
 
-이 README는 2026-05-15 기준 GitHub 이슈 상태를 반영합니다. 이슈 종료는 자동 테스트만으로 하지 않고, Fevio의 URL-action-result 기준과 배포 smoke를 함께 확인합니다.
+Do not use this README as a live issue dashboard. GitHub issues and PRs are the source of truth for current work, stale branches, and Red → Green evidence.
 
-### Historical Green: 온보딩 입력 → 일정 후보 → 확인 저장
+Use these entry points instead:
 
-이 묶음은 초기 온보딩 저장 경로의 이력입니다. 현재 canonical migration에서는 confirmed executable care가 `care_action_cards` 중심으로 이동했고, `schedule_items`는 rollout compatibility fallback으로 남아 있습니다.
+- Active issues: <https://github.com/Andy-Lee0920/ai-business-group10/issues>
+- Active PRs: <https://github.com/Andy-Lee0920/ai-business-group10/pulls>
+- Canonical spec index: [`docs/SPEC_INDEX.md`](docs/SPEC_INDEX.md)
+- Current release gate: [`docs/01-product/slc-target.md`](docs/01-product/slc-target.md)
+- Historical/background docs: [`docs/archive/README.md`](docs/archive/README.md)
 
-| Issue | 상태 | 의미 |
-|---|---|---|
-| [#312](https://github.com/Andy-Lee0920/ai-business-group10/issues/312) | Closed | 초기 draft / legacy schedule lane 기반 마련 |
-| [#313](https://github.com/Andy-Lee0920/ai-business-group10/issues/313) | Closed | private `clinic-photos` storage와 photo upload API |
-| [#314](https://github.com/Andy-Lee0920/ai-business-group10/issues/314) | Closed | `schedule-extract` image mode Edge Function |
-| [#316](https://github.com/Andy-Lee0920/ai-business-group10/issues/316) | Closed | text paste → LLM extract → draft candidate API |
-| [#317](https://github.com/Andy-Lee0920/ai-business-group10/issues/317) | Closed | 초기 confirmed candidate 저장 경로; current canonical path는 `care_action_cards` |
-| [#318](https://github.com/Andy-Lee0920/ai-business-group10/issues/318) | Closed | 직접 입력 fallback form |
-| [#319](https://github.com/Andy-Lee0920/ai-business-group10/issues/319) | Closed | photo analyze API → Edge Function → draft insert |
-| [#320](https://github.com/Andy-Lee0920/ai-business-group10/issues/320) | Closed | photo processing 진행 UI와 direct_entry 전환 |
-| [#321](https://github.com/Andy-Lee0920/ai-business-group10/issues/321) | Closed | 후보 카드 인라인 편집·확인·거절 |
-| [#322](https://github.com/Andy-Lee0920/ai-business-group10/issues/322) | Closed | 문자 붙여넣기 분석 → candidate review |
-| [#323](https://github.com/Andy-Lee0920/ai-business-group10/issues/323) | Closed | sharing/complete 스텝과 `/home` 진입 |
-| [#330](https://github.com/Andy-Lee0920/ai-business-group10/issues/330) · [#331](https://github.com/Andy-Lee0920/ai-business-group10/issues/331) · [#332](https://github.com/Andy-Lee0920/ai-business-group10/issues/332) | Closed | schedule/storage/Edge Function 배포 검증 Red→Green |
-
-완성된 온보딩 저장 원칙:
+Important current migration context:
 
 ```text
 raw hospital instruction
-→ parsed schedule intent / draft candidates
+→ split draft candidates
 → user edits or fills missing fields
 → user confirms
 → confirmed care_action_cards
 → schedule_items fallback only where rollout compatibility still requires it
-→ home renders executable cards
+→ home / calendar / partner-safe surfaces render executable cards
 ```
 
-### 진행 중 Epic: Home storyline / care-state hero
+Rules for keeping README clean:
 
-| Issue | 상태 | 구현 방향 |
-|---|---|---|
-| [#341](https://github.com/Andy-Lee0920/ai-business-group10/issues/341) | Open Epic | 홈을 정적 카드 그리드가 아니라 4상태 스토리라인으로 재편 |
-| [#342](https://github.com/Andy-Lee0920/ai-business-group10/issues/342) | Open | 60분 윈도우 기반 SVG `InjectionCountdownArc` |
-| [#343](https://github.com/Andy-Lee0920/ai-business-group10/issues/343) | Open | 서버 컴포넌트 기준 주사/진료일/진료후/기본 hero 스위처 |
-| [#344](https://github.com/Andy-Lee0920/ai-business-group10/issues/344) | Open | 진료 후 `병원 다녀오셨나요?` 플로팅 배너 |
-| [#347](https://github.com/Andy-Lee0920/ai-business-group10/issues/347) | Open | 주사 1시간 전·15분 전 알림 Edge Function |
-
-Home 상태 우선순위:
-
-```text
-Injection countdown
-→ clinic day
-→ post-clinic follow-up
-→ quiet default
-```
-
-### 다음 IA / Navigation 묶음
-
-| Issue | 상태 | 구현 방향 |
-|---|---|---|
-| [#352](https://github.com/Andy-Lee0920/ai-business-group10/issues/352) | Open | BottomNav 3탭 → 홈/캘린더/+/기록/설정 5탭 |
-| [#353](https://github.com/Andy-Lee0920/ai-business-group10/issues/353) | Open | `/add`와 `/clinic-update`가 같은 입력 파이프라인 공유 (`mode='schedule' | 'memo'`) |
-| [#354](https://github.com/Andy-Lee0920/ai-business-group10/issues/354) | Open | `+` 바텀시트: 일정 추가 / 병원 메모 선택 |
-| [#355](https://github.com/Andy-Lee0920/ai-business-group10/issues/355) | Open | `/calendar` 월 뷰 → 날짜별 care card timeline |
-| [#356](https://github.com/Andy-Lee0920/ai-business-group10/issues/356) | Open | `/records` 영수증 단건 입력과 누적 합산 |
-| [#357](https://github.com/Andy-Lee0920/ai-business-group10/issues/357) | Open | `/more` → `/settings` 이관, 파트너 연결 통합 |
-
-현재 presentation testbed는 위 IA 전환의 시각/상태 검증을 위해 `/home`, `/calendar`, `/records`, `/more`를 로그인 없이 제공합니다. 실제 제품 레인에서는 같은 경로가 Auth/RLS 보호를 유지해야 합니다.
+- Keep stable product identity, setup, safety boundaries, and canonical doc links here.
+- Do not add per-issue progress tables or sprint/task logs here.
+- If an issue/PR becomes historical, summarize the durable decision in `docs/04-decisions/` or `docs/SPEC_INDEX.md` instead of appending status rows here.
+- For stale issue/PR cleanup, comment or close on GitHub with evidence; do not encode stale state into README.
 
 ---
 
