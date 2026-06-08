@@ -2,6 +2,79 @@
 
 > **시험관 시술(IVF)을 받는 환자와 파트너를 위한 케어 운영 앱**
 
+## 60-second developer map
+
+Fevio is a care-operation web app for IVF treatment. It turns clinic instructions, medication timing, confirmation-based care actions, and emotionally sensitive moments into a patient-controlled daily execution flow.
+
+If you are new, answer these first:
+
+| Question | Current answer |
+|---|---|
+| What is Fevio? | An IVF couple care-operation app: clinic instructions become confirmed care action cards, today's patient surface, and partner-safe support projections. |
+| Primary user | The patient / prospective mother. Preserve her control, privacy, safety, and execution flow first. |
+| Partner role | Support surface only. Partner views help coordinate care; they must not override patient control or force sharing. |
+| Active app directory | This repository root is the active Next.js + Supabase app. From the parent Fevio workspace, it is `Fertility-support/ai-business-group10`. |
+| Start before coding | Read `docs/SPEC_INDEX.md`, then `docs/01-product/original-note-hyunjoo.md`, `docs/01-product/prd-v1.0.md`, `docs/01-product/slc-target.md`, the active GitHub issue, and relevant ADRs in `docs/04-decisions/`. |
+| Canonical product spec today | `docs/01-product/prd-v1.0.md`, interpreted through the original user pain in `docs/01-product/original-note-hyunjoo.md` and current release gate in `docs/01-product/slc-target.md`. |
+| Historical/background docs | Use `docs/archive/README.md` and `docs/SPEC_INDEX.md` before treating old PRDs, benchmark assets, homework logs, presentation decks, or legacy SLC notes as current requirements. |
+
+### Empathy context
+
+IVF users face more than scheduling complexity. They carry emotional risk, high execution burden, and partner coordination gaps at the same time. A missed injection, confusing clinic memo, or poorly timed result cue can feel like a treatment-threatening mistake.
+
+Fevio's safety rules are product empathy, not abstract architecture:
+
+- **Confirmation-first care actions** protect safety and accuracy. AI/OCR/split output is a draft until the patient confirms it.
+- **Result Protection Mode** protects emotionally sensitive waiting/result moments from premature or harmful interpretation.
+- **Partner visibility** is a patient-controlled safety mechanism. The partner view is a sanitized support projection, not a copy of the patient record.
+- **Partner access must not override patient control.** No forced sharing, no raw clinic text in partner surfaces, and no partner-only authority over care actions.
+
+### Human quickstart
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Environment setup:
+
+- Fill `.env.local` from `.env.example`.
+- Real Supabase/Auth work needs project values managed through Supabase/Vercel or a secure password manager.
+- For backendless visual exploration, use presentation mode instead of shared secrets:
+
+```bash
+NEXT_PUBLIC_FEVIO_PRESENTATION_MODE=1 npm run dev
+```
+
+Seed/mock data pointers:
+
+- There is no single general-purpose local seed script for the full IVF care loop yet.
+- Presentation fixtures live in `src/features/presentation/presentation-testbed.tsx`, `src/features/adaptive-home/presentation-scenarios.ts`, and `app/demo/demo-scenarios.ts`.
+- Policy-support seed tooling is separate: `scripts/seed-policy-embeddings.mjs`.
+
+How to view surfaces locally:
+
+- Patient surfaces: `/home`, `/add`, `/clinic-update`, `/calendar`, `/records`, `/settings`.
+- Partner surfaces: authenticated partner route `/partner`; token projection route `/partner/[token]`; demo/presentation partner panels under `/demo`.
+- Presentation/testbed surfaces can be opened without Google OAuth when presentation mode is enabled.
+
+### Active migration caution
+
+The #440 migration is moving care-action surfaces toward canonical `care_action_cards` while preserving `schedule_items` compatibility during rollout.
+
+As of this branch:
+
+- `main` includes PR #445 (`5ac0f2149fc7d809d006adb070882e8793cedcac`).
+- Slice 5 / PR #447 is open and pending unless GitHub shows it merged after this branch was created.
+
+During active migration work:
+
+- Do not remove `schedule_items` fallback unless a specific migration slice proves no supported writer depends on it.
+- Do not add direct `care_action_cards` producer inserts from `/add` or `/clinic-update`; use the canonical writer/confirmation paths.
+- Do not weaken partner privacy: partner reads require `partner_visible=true` and explicit linked patient/couple scope.
+- Do not rename core concepts without mapping old term to new term. The current split draft table term is `split_candidates`; do not reintroduce runtime `care_action_candidates`.
+
 ## 누구를 위한 앱인가
 
 - **IVF 환자** — 복잡한 병원 지시사항을 매일 실행 가능한 형태로 정리하고 싶은 사람
@@ -70,7 +143,8 @@ Privacy Gate
 → LLM-assisted candidate extraction
 → Missing-field / manual review
 → User confirmation only
-→ Confirmed schedule_items / care action cards
+→ Confirmed split_candidates / care_action_cards
+→ schedule_items legacy fallback where required during rollout
 → Care context / care state
 → Role-aware home surface
 → Partner-safe projection
@@ -127,7 +201,7 @@ IVF_STAGE
 |---|---|---|
 | Privacy/Auth boundary | 개인정보 경계 → Google 로그인 → 온보딩 진입 | `app/privacy`, `app/auth/*`, `middleware.ts` |
 | Onboarding extraction | 사진/문자/직접 입력 → 후보 일정 → 사용자 확인 저장 | `app/onboarding`, `app/api/onboard/*`, `supabase/functions/schedule-extract` |
-| Candidate persistence | `schedule_candidates` draft → confirmed `schedule_items` | `supabase/migrations/*schedule_candidates*`, `app/api/onboard/candidates/confirm` |
+| Candidate persistence | `split_candidates` drafts → confirmed `care_action_cards`; `schedule_items` remains legacy fallback where required | `app/api/onboard/candidates/confirm`, `src/lib/canonical-care-action-writer.ts`, `docs/specs/spec-care-action-cards.md` |
 | Capture / Confirm | 병원 메모 → split candidate → confirmed card | `app/capture`, `app/split-review`, `app/api/capture`, `app/api/confirm` |
 | SLC Today Home | 오늘 일정·놓침·병원 방문에 따른 홈 surface | `app/(authed)/home`, `src/features/today/*`, `src/domain/slc-home-focus.ts` |
 | Records / More | 완료 기록, 병원 업데이트, 파트너 공유 관리 | `app/(authed)/records`, `app/(authed)/more` |
@@ -143,15 +217,17 @@ IVF_STAGE
 
 이 README는 2026-05-15 기준 GitHub 이슈 상태를 반영합니다. 이슈 종료는 자동 테스트만으로 하지 않고, Fevio의 URL-action-result 기준과 배포 smoke를 함께 확인합니다.
 
-### 최근 Green: 온보딩 입력 → 일정 후보 → 확인 저장
+### Historical Green: 온보딩 입력 → 일정 후보 → 확인 저장
+
+이 묶음은 초기 온보딩 저장 경로의 이력입니다. 현재 canonical migration에서는 confirmed executable care가 `care_action_cards` 중심으로 이동했고, `schedule_items`는 rollout compatibility fallback으로 남아 있습니다.
 
 | Issue | 상태 | 의미 |
 |---|---|---|
-| [#312](https://github.com/Andy-Lee0920/ai-business-group10/issues/312) | Closed | `schedule_candidates` draft 테이블과 `schedule_items.source='capture'` 기반 마련 |
+| [#312](https://github.com/Andy-Lee0920/ai-business-group10/issues/312) | Closed | 초기 draft / legacy schedule lane 기반 마련 |
 | [#313](https://github.com/Andy-Lee0920/ai-business-group10/issues/313) | Closed | private `clinic-photos` storage와 photo upload API |
 | [#314](https://github.com/Andy-Lee0920/ai-business-group10/issues/314) | Closed | `schedule-extract` image mode Edge Function |
 | [#316](https://github.com/Andy-Lee0920/ai-business-group10/issues/316) | Closed | text paste → LLM extract → draft candidate API |
-| [#317](https://github.com/Andy-Lee0920/ai-business-group10/issues/317) | Closed | confirmed candidate만 `schedule_items`로 확정 저장 |
+| [#317](https://github.com/Andy-Lee0920/ai-business-group10/issues/317) | Closed | 초기 confirmed candidate 저장 경로; current canonical path는 `care_action_cards` |
 | [#318](https://github.com/Andy-Lee0920/ai-business-group10/issues/318) | Closed | 직접 입력 fallback form |
 | [#319](https://github.com/Andy-Lee0920/ai-business-group10/issues/319) | Closed | photo analyze API → Edge Function → draft insert |
 | [#320](https://github.com/Andy-Lee0920/ai-business-group10/issues/320) | Closed | photo processing 진행 UI와 direct_entry 전환 |
@@ -167,7 +243,8 @@ raw hospital instruction
 → parsed schedule intent / draft candidates
 → user edits or fills missing fields
 → user confirms
-→ confirmed schedule_items only
+→ confirmed care_action_cards
+→ schedule_items fallback only where rollout compatibility still requires it
 → home renders executable cards
 ```
 
