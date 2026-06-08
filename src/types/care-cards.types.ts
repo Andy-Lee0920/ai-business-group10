@@ -44,6 +44,7 @@ export type CareActionCard = {
   title: string;
   description: string | null;
   source_text: string;
+  source_input_id?: string | null;
   scheduled_at: string | null;
   care_date: string | null;
   status: CareCardStatus;
@@ -55,6 +56,11 @@ export type CareActionCard = {
   prescription_capture_status?: 'photo_attached' | 'manual_fallback' | 'photo_failed' | null;
   administered_by?: 'self' | 'partner' | 'clinic' | null;
 };
+
+export interface SourceContext {
+  sourceText: string;
+  rawText: string;
+}
 
 export type CareContextInput = {
   hasEverCaptured: boolean;

@@ -1,24 +1,29 @@
 'use client';
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import type { ScheduleItem } from '../types/slc.types';
 import { ctaLabel, completedLabel } from '../types/slc.types';
+import type { SourceContext } from '../types/care-cards.types';
 import { getSchedulePresentation, type ScheduleBadgeTone } from '../domain/slc-home-focus';
 import { formatKstTime } from '../domain/kst-date';
 import { CountdownRing } from './countdown-ring';
 import { InjectionCountdownArc } from './injection-countdown-arc';
 import { secondsUntilInjection } from '../features/adaptive-home/injection-timing';
+import { SourceEvidenceDrawer } from './source-evidence-drawer';
 
 interface ActionCardProps {
   item: ScheduleItem;
   onCta: (item: ScheduleItem) => void;
   compact?: boolean;
   showCountdown?: boolean;
+  sourceContext?: SourceContext;
 }
 
 type CardEmphasis = 'primary' | 'warning' | 'secondary' | 'completed';
 
-export function ActionCard({ item, onCta, compact = false, showCountdown = true }: ActionCardProps) {
+export function ActionCard({ item, onCta, compact = false, showCountdown = true, sourceContext }: ActionCardProps) {
+  const [showSource, setShowSource] = useState(false);
   const presentation = getSchedulePresentation(item);
   const status = presentation.status;
   const isCompleted = status === 'completed';
@@ -33,38 +38,74 @@ export function ActionCard({ item, onCta, compact = false, showCountdown = true 
   const urgent = emphasis === 'primary';
 
   return (
-    <div data-card-emphasis={emphasis} style={cardStyle(emphasis, compact)}>
-      {showCountdown && isDueSoon && !isCompleted && (
-        <div style={{ position: 'absolute', top: urgent ? 20 : 16, right: urgent ? 20 : 16 }}>
-          <CountdownRing scheduledAt={item.scheduled_at} size={urgent ? 64 : 56} />
-        </div>
-      )}
-      {isWaiting && (
-        <div style={{ position: 'absolute', top: 14, right: 14, display: 'grid', justifyItems: 'center', gap: 2 }}>
-          <InjectionCountdownArc totalSeconds={3600} remainingSeconds={secondsUntilInjection(item.scheduled_at) % 3600} size={72} />
-          <span suppressHydrationWarning style={{ fontSize: 13, fontWeight: 900, color: 'var(--slc-text)', letterSpacing: '-0.04em', marginTop: -6 }}>
-            {formatWaitingClock(secondsUntilInjection(item.scheduled_at))}
+    <>
+      <div data-card-emphasis={emphasis} style={cardStyle(emphasis, compact)}>
+        {showCountdown && isDueSoon && !isCompleted && (
+          <div style={{ position: 'absolute', top: urgent ? 20 : 16, right: urgent ? 20 : 16 }}>
+            <CountdownRing scheduledAt={item.scheduled_at} size={urgent ? 64 : 56} />
+          </div>
+        )}
+        {isWaiting && (
+          <div style={{ position: 'absolute', top: 14, right: 14, display: 'grid', justifyItems: 'center', gap: 2 }}>
+            <InjectionCountdownArc totalSeconds={3600} remainingSeconds={secondsUntilInjection(item.scheduled_at) % 3600} size={72} />
+            <span suppressHydrationWarning style={{ fontSize: 13, fontWeight: 900, color: 'var(--slc-text)', letterSpacing: '-0.04em', marginTop: -6 }}>
+              {formatWaitingClock(secondsUntilInjection(item.scheduled_at))}
+            </span>
+          </div>
+        )}
+        <Link href={`/schedule/${item.id}/edit`} aria-label={`${title} 수정`} style={editLinkStyle}>수정</Link>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: urgent ? 7 : 6, paddingRight: (urgent && showCountdown) || isWaiting ? 90 : 0 }}>
+          <span data-testid="schedule-status-badge" data-tone={presentation.badgeTone} style={badgeStyle(presentation.badgeTone, emphasis)}>
+            {urgent ? urgentBadgeLabel(item) : presentation.badgeLabel}
           </span>
+          <span style={timeStyle(emphasis, compact)}>{timeStr}</span>
+          <span style={titleStyle(emphasis, compact)}>{title}</span>
+          {isCompleted ? (
+            <span style={{ fontSize: 14, color: '#B5A89E', fontWeight: 500 }}>{completedStr}</span>
+          ) : !isWaiting ? (
+            <button onClick={() => onCta(item)} style={ctaButtonStyle(emphasis, compact)}>
+              {cta}
+            </button>
+          ) : null}
+          {sourceContext && (
+            <button
+              type="button"
+              onClick={() => setShowSource(true)}
+              style={sourceButtonStyle}
+              aria-label="병원 안내 원문 확인"
+            >
+              📋 원문 확인
+            </button>
+          )}
         </div>
-      )}
-      <Link href={`/schedule/${item.id}/edit`} aria-label={`${title} 수정`} style={editLinkStyle}>수정</Link>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: urgent ? 7 : 6, paddingRight: (urgent && showCountdown) || isWaiting ? 90 : 0 }}>
-        <span data-testid="schedule-status-badge" data-tone={presentation.badgeTone} style={badgeStyle(presentation.badgeTone, emphasis)}>
-          {urgent ? urgentBadgeLabel(item) : presentation.badgeLabel}
-        </span>
-        <span style={timeStyle(emphasis, compact)}>{timeStr}</span>
-        <span style={titleStyle(emphasis, compact)}>{title}</span>
-        {isCompleted ? (
-          <span style={{ fontSize: 14, color: '#B5A89E', fontWeight: 500 }}>{completedStr}</span>
-        ) : !isWaiting ? (
-          <button onClick={() => onCta(item)} style={ctaButtonStyle(emphasis, compact)}>
-            {cta}
-          </button>
-        ) : null}
       </div>
-    </div>
+      {showSource && sourceContext && typeof document !== 'undefined' &&
+        createPortal(
+          <SourceEvidenceDrawer
+            sourceContext={sourceContext}
+            itemTitle={title}
+            onClose={() => setShowSource(false)}
+          />,
+          document.body,
+        )
+      }
+    </>
   );
 }
+
+const sourceButtonStyle: CSSProperties = {
+  alignSelf: 'flex-start',
+  marginTop: 4,
+  padding: '5px 10px',
+  borderRadius: 999,
+  border: '1px solid rgba(90, 139, 114, 0.28)',
+  background: 'rgba(90, 139, 114, 0.07)',
+  color: '#3D6B55',
+  fontSize: 12,
+  fontWeight: 800,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+};
 
 function formatWaitingClock(totalSeconds: number): string {
   const clamped = Math.max(0, totalSeconds);

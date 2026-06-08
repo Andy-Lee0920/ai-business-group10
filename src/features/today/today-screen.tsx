@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ActionCard } from "../../components/action-card";
 import { ConfirmSheet } from "../../components/confirm-sheet";
+import { SourceEvidenceDrawer } from "../../components/source-evidence-drawer";
 import { EmptyHomeActions } from "../../components/home/DailyBrief";
 import { ReflectionTurn } from "../../components/home/ReflectionTurn";
 import { InjectionCountdownArc } from "../../components/injection-countdown-arc";
@@ -16,6 +17,7 @@ import type {
   InjectionSite,
   ScheduleItem,
 } from "../../types/slc.types";
+import type { SourceContext } from "../../types/care-cards.types";
 import { ctaLabel } from "../../types/slc.types";
 import { SLC_SAFE_COPY } from "../../domain/slc-copy";
 import { resolveClinicFollowUpPrompt } from "../../domain/slc-clinic-followup";
@@ -44,6 +46,7 @@ interface TodayScreenProps {
   userId: string;
   initialClinicUpdates?: ClinicUpdate[];
   firstScheduleSkipped?: boolean;
+  sourceContextMap?: Record<string, SourceContext>;
 }
 
 type DayOffset = 0 | 1 | 2;
@@ -281,6 +284,7 @@ export function TodayScreen({
   userId: _userId,
   initialClinicUpdates = [],
   firstScheduleSkipped = false,
+  sourceContextMap = {},
 }: TodayScreenProps) {
   const [items, setItems] = useState<ScheduleItem[]>(initialItems);
   const [activeItem, setActiveItem] = useState<ScheduleItem | null>(null);
@@ -454,6 +458,7 @@ export function TodayScreen({
           items={operationalItems}
           selectedDay={selectedDay}
           firstScheduleSkipped={firstScheduleSkipped}
+          sourceContextMap={sourceContextMap}
         />
         <RecentRecordCard item={recentCompletedItem} />
         <ClinicNoteSummary
@@ -622,10 +627,12 @@ function TodayRail({
   items,
   selectedDay,
   firstScheduleSkipped,
+  sourceContextMap = {},
 }: {
   items: ScheduleItem[];
   selectedDay: DayOffset;
   firstScheduleSkipped: boolean;
+  sourceContextMap?: Record<string, SourceContext>;
 }) {
   return (
     <section aria-label="오늘의 처방/방문/확인 리스트" style={sectionCardStyle}>
@@ -653,6 +660,7 @@ function TodayRail({
               key={item.id}
               item={item}
               statusLabel={resolveScheduleStatusLabel(item)}
+              sourceContext={sourceContextMap[item.id]}
             />
           ))}
         </div>
@@ -1671,11 +1679,13 @@ function CompactHeroCard({
   item,
   onCta,
   eyebrow = "오늘 할 일",
+  sourceContext,
 }: {
   focus: HomeFocus;
   item: ScheduleItem;
   onCta: (item: ScheduleItem) => void;
   eyebrow?: string;
+  sourceContext?: SourceContext;
 }) {
   return (
     <div
@@ -1696,7 +1706,7 @@ function CompactHeroCard({
         <QuietHeroContent focus={focus} paddingTop={0} />
       </div>
       <MedicationReferenceImage item={item} />
-      <ActionCard item={item} onCta={onCta} compact showCountdown={false} />
+      <ActionCard item={item} onCta={onCta} compact showCountdown={false} sourceContext={sourceContext} />
     </div>
   );
 }
@@ -2150,82 +2160,118 @@ function NextItem({ item }: { item: ScheduleItem }) {
 function ScheduleFlowRow({
   item,
   statusLabel,
+  sourceContext,
 }: {
   item: ScheduleItem;
   statusLabel: "예정" | "완료" | "확인 필요";
+  sourceContext?: SourceContext;
 }) {
+  const [showSource, setShowSource] = useState(false);
   const timeStr = formatScheduleTime(item.scheduled_at);
   return (
-    <div
-      data-card-emphasis="secondary"
-      data-home-flow-row={item.type}
-      style={{
-        minHeight: 62,
-        display: "grid",
-        gridTemplateColumns: "54px 1fr auto auto",
-        alignItems: "center",
-        gap: 10,
-        padding: "12px 13px",
-        borderRadius: 20,
-        background: "rgba(255, 255, 255, 0.58)",
-        border: `1px solid ${HOME_SOFT_BORDER}`,
-        boxShadow: "0 8px 20px rgba(111, 77, 58, 0.035)",
-      }}
-    >
-      <span style={{ color: "var(--slc-text)", fontSize: 14, fontWeight: 900 }}>
-        {timeStr}
-      </span>
-      <span style={{ minWidth: 0 }}>
-        <strong
-          style={{
-            display: "block",
-            color: "var(--slc-text)",
-            fontSize: 15,
-            fontWeight: 900,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {formatScheduleRowTitle(item)}
-        </strong>
-        <small
-          style={{
-            display: "block",
-            color: "var(--slc-muted)",
-            fontSize: 12,
-            fontWeight: 700,
-            marginTop: 3,
-          }}
-        >
-          {scheduleTypeLabel(item.type)}
-        </small>
-      </span>
-      <span
+    <>
+      <div
+        data-card-emphasis="secondary"
+        data-home-flow-row={item.type}
         style={{
-          padding: "5px 10px",
-          borderRadius: 999,
-          background:
-            statusLabel === "완료"
-              ? "#F7EFE9"
-              : statusLabel === "확인 필요"
-                ? HOME_SOFT_CORAL_LIGHT
-                : "var(--slc-border)",
-          color:
-            statusLabel === "완료"
-              ? HOME_SOFT_WARM_MUTED
-              : statusLabel === "확인 필요"
-                ? HOME_SOFT_CORAL_DEEP
-                : "var(--slc-muted)",
-          fontSize: 11,
-          fontWeight: 900,
+          minHeight: 62,
+          display: "grid",
+          gridTemplateColumns: "54px 1fr auto auto",
+          alignItems: "center",
+          gap: 10,
+          padding: "12px 13px",
+          borderRadius: 20,
+          background: "rgba(255, 255, 255, 0.58)",
+          border: `1px solid ${HOME_SOFT_BORDER}`,
+          boxShadow: "0 8px 20px rgba(111, 77, 58, 0.035)",
         }}
       >
-        {statusLabel}
-      </span>
-      {/* prettier-ignore */}
-      <Link href={`/schedule/${item.id}/edit`} aria-label="일정 수정" style={{ color: HOME_SOFT_CORAL, fontSize: 22, lineHeight: 1, fontWeight: 900, textDecoration: "none" }}>›</Link>
-    </div>
+        <span style={{ color: "var(--slc-text)", fontSize: 14, fontWeight: 900 }}>
+          {timeStr}
+        </span>
+        <span style={{ minWidth: 0 }}>
+          <strong
+            style={{
+              display: "block",
+              color: "var(--slc-text)",
+              fontSize: 15,
+              fontWeight: 900,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {formatScheduleRowTitle(item)}
+          </strong>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+            <small
+              style={{
+                color: "var(--slc-muted)",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              {scheduleTypeLabel(item.type)}
+            </small>
+            {sourceContext && (
+              <button
+                type="button"
+                onClick={() => setShowSource(true)}
+                aria-label="병원 안내 원문 확인"
+                style={{
+                  padding: "2px 7px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(90, 139, 114, 0.28)",
+                  background: "rgba(90, 139, 114, 0.07)",
+                  color: "#3D6B55",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  lineHeight: 1.4,
+                }}
+              >
+                원문
+              </button>
+            )}
+          </span>
+        </span>
+        <span
+          style={{
+            padding: "5px 10px",
+            borderRadius: 999,
+            background:
+              statusLabel === "완료"
+                ? "#F7EFE9"
+                : statusLabel === "확인 필요"
+                  ? HOME_SOFT_CORAL_LIGHT
+                  : "var(--slc-border)",
+            color:
+              statusLabel === "완료"
+                ? HOME_SOFT_WARM_MUTED
+                : statusLabel === "확인 필요"
+                  ? HOME_SOFT_CORAL_DEEP
+                  : "var(--slc-muted)",
+            fontSize: 11,
+            fontWeight: 900,
+          }}
+        >
+          {statusLabel}
+        </span>
+        {/* prettier-ignore */}
+        <Link href={`/schedule/${item.id}/edit`} aria-label="일정 수정" style={{ color: HOME_SOFT_CORAL, fontSize: 22, lineHeight: 1, fontWeight: 900, textDecoration: "none" }}>›</Link>
+      </div>
+      {showSource && sourceContext && typeof document !== "undefined" &&
+        createPortal(
+          <SourceEvidenceDrawer
+            sourceContext={sourceContext}
+            itemTitle={formatScheduleTitle(item)}
+            onClose={() => setShowSource(false)}
+          />,
+          document.body,
+        )
+      }
+    </>
   );
 }
 
