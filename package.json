@@ -28,7 +28,8 @@
     "verify:push:issues": "node scripts/verify-live-push-issue-state.mjs",
     "verify:mvp:readiness": "node scripts/verify-mvp-visible-delta-readiness.mjs",
     "verify:push:devices": "node scripts/verify-live-push-device-readiness.mjs",
-    "verify:mvp:complete": "node scripts/verify-mvp-visible-delta-completion.mjs"
+    "verify:mvp:complete": "node scripts/verify-mvp-visible-delta-completion.mjs",
+    "e2e": "npm run test:e2e"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

@@ -71,8 +71,9 @@ describe('/api/schedule SLC read route', () => {
     expect(payload.error).toBe('unauthorized');
   });
 
-  it('prefers canonical care_action_cards and does not shadow them with legacy schedule_items', async () => {
+  it('prefers canonical care_action_cards while preserving unrelated legacy schedule_items', async () => {
     userResponses.push({ data: { user: { id: 'patient-1' } } });
+    const canonicalAt = todayAt(12);
     queryResults.care_action_cards = [{
       data: [{
         id: 'card-1',
@@ -83,7 +84,7 @@ describe('/api/schedule SLC read route', () => {
         title: '오비드렐 주사',
         description: null,
         source_text: '오비드렐 주사',
-        scheduled_at: todayAt(12),
+        scheduled_at: canonicalAt,
         care_date: null,
         status: 'confirmed',
         confirmation_required: false,
@@ -94,14 +95,49 @@ describe('/api/schedule SLC read route', () => {
       }],
       error: null,
     }];
+    queryResults.schedule_items = [{
+      data: [
+        {
+          id: 'legacy-duplicate',
+          patient_id: 'patient-1',
+          medication_id: null,
+          type: 'injection',
+          title: '오비드렐 주사',
+          dose: '250',
+          unit: 'mcg',
+          scheduled_at: canonicalAt,
+          status: 'upcoming',
+          source: 'manual',
+          created_at: todayAt(8),
+        },
+        {
+          id: 'legacy-unrelated',
+          patient_id: 'patient-1',
+          medication_id: null,
+          type: 'medication',
+          title: '듀파스톤 복용',
+          dose: null,
+          unit: null,
+          scheduled_at: todayAt(13),
+          status: 'upcoming',
+          source: 'manual',
+          created_at: todayAt(8),
+        },
+      ],
+      error: null,
+    }];
 
     const response = await GET();
     const payload = await response.json() as { source: string; items: Array<{ id: string; type: string; title: string }> };
 
     expect(response.status).toBe(200);
     expect(payload.source).toBe('care_action_cards');
-    expect(payload.items).toEqual([expect.objectContaining({ id: 'card-1', type: 'injection', title: '오비드렐 주사' })]);
-    expect(queryCalls.map((call) => call.table)).not.toContain('schedule_items');
+    expect(payload.items).toEqual([
+      expect.objectContaining({ id: 'card-1', type: 'injection', title: '오비드렐 주사' }),
+      expect.objectContaining({ id: 'legacy-unrelated', type: 'medication', title: '듀파스톤 복용' }),
+    ]);
+    expect(payload.items.map((item) => item.id)).not.toContain('legacy-duplicate');
+    expect(queryCalls.findIndex((call) => call.table === 'care_action_cards')).toBeLessThan(queryCalls.findIndex((call) => call.table === 'schedule_items'));
   });
 
 

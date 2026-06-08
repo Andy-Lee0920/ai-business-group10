@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import type { ScheduleItem } from '../../../src/types/slc.types';
 import { maskTechnicalError } from '../../../src/domain/slc-copy';
-import { CARE_ACTION_SCHEDULE_SELECT, projectCareActionCardsForSchedule, type CareActionScheduleRow } from '../../../src/domain/care-action-home-projection';
+import { CARE_ACTION_SCHEDULE_SELECT, mergeCanonicalScheduleItemsWithLegacyFallback, projectCareActionCardsForSchedule, type CareActionScheduleRow } from '../../../src/domain/care-action-home-projection';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +27,6 @@ export async function GET() {
     ? []
     : projectCareActionCardsForSchedule((careCardsRes.data ?? []) as CareActionScheduleRow[])
       .filter((item) => isWithinRange(item.scheduled_at, todayStart, todayEnd));
-  if (careCardItems.length > 0) return NextResponse.json({ items: careCardItems, source: 'care_action_cards' });
 
   const { data, error } = await supabase
     .from('schedule_items')
@@ -37,8 +36,13 @@ export async function GET() {
     .lte('scheduled_at', todayEnd.toISOString())
     .order('scheduled_at', { ascending: true });
 
-  if (error) return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
-  return NextResponse.json({ items: data as ScheduleItem[], source: 'legacy_schedule_items' });
+  if (error) {
+    if (careCardItems.length > 0) return NextResponse.json({ items: careCardItems, source: 'care_action_cards' });
+    return NextResponse.json({ error: maskTechnicalError(error.message) }, { status: 500 });
+  }
+
+  const items = mergeCanonicalScheduleItemsWithLegacyFallback(careCardItems, (data ?? []) as ScheduleItem[]);
+  return NextResponse.json({ items, source: careCardItems.length > 0 ? 'care_action_cards' : 'legacy_schedule_items' });
 }
 
 function isWithinRange(iso: string, start: Date, end: Date) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { projectCareActionCardsForHome } from '../../src/domain/care-action-home-projection';
+import { mergeCanonicalScheduleItemsWithLegacyFallback, projectCareActionCardsForHome } from '../../src/domain/care-action-home-projection';
 import type { CareActionCard } from '../../src/types/care-cards.types';
 
 const BASE_CARD: CareActionCard & { created_at: string } = {
@@ -65,5 +65,62 @@ describe('care_action_cards → TodayScreen projection', () => {
     ]);
 
     expect(projected?.scheduled_at).toBe('2026-05-20T00:00:00.000+09:00');
+  });
+});
+
+
+describe('canonical + legacy schedule compatibility merge', () => {
+  it('keeps canonical cards preferred while preserving unrelated legacy schedule rows', () => {
+    const [canonical] = projectCareActionCardsForHome([
+      card({ id: 'card-ovidrel', card_type: 'injection', title: '오비드렐 주사', scheduled_at: '2026-05-19T12:00:00.000Z' }),
+    ]);
+    const legacyDuplicate = {
+      id: 'legacy-duplicate',
+      patient_id: 'patient-1',
+      medication_id: null,
+      type: 'injection' as const,
+      title: ' 오비드렐   주사 ',
+      dose: '250',
+      unit: 'mcg',
+      scheduled_at: '2026-05-19T12:00:00.000Z',
+      status: 'upcoming' as const,
+      source: 'manual' as const,
+      created_at: '2026-05-18T12:00:00.000Z',
+    };
+    const unrelatedLegacy = {
+      ...legacyDuplicate,
+      id: 'legacy-duphaston',
+      type: 'medication' as const,
+      title: '듀파스톤 복용',
+      scheduled_at: '2026-05-19T13:00:00.000Z',
+    };
+
+    const merged = mergeCanonicalScheduleItemsWithLegacyFallback([canonical], [legacyDuplicate, unrelatedLegacy]);
+
+    expect(merged.map((item) => item.id)).toEqual(['card-ovidrel', 'legacy-duphaston']);
+    expect(merged[0]).toMatchObject({ id: 'card-ovidrel', source: 'capture' });
+  });
+
+  it('does not de-dupe legacy rows unless patient, type, title, and scheduled time match', () => {
+    const [canonical] = projectCareActionCardsForHome([
+      card({ id: 'card-ovidrel', card_type: 'injection', title: '오비드렐 주사', scheduled_at: '2026-05-19T12:00:00.000Z' }),
+    ]);
+    const sameTitleDifferentTime = {
+      id: 'legacy-later-ovidrel',
+      patient_id: 'patient-1',
+      medication_id: null,
+      type: 'injection' as const,
+      title: '오비드렐 주사',
+      dose: null,
+      unit: null,
+      scheduled_at: '2026-05-19T14:00:00.000Z',
+      status: 'upcoming' as const,
+      source: 'manual' as const,
+      created_at: '2026-05-18T12:00:00.000Z',
+    };
+
+    const merged = mergeCanonicalScheduleItemsWithLegacyFallback([canonical], [sameTitleDifferentTime]);
+
+    expect(merged.map((item) => item.id)).toEqual(['card-ovidrel', 'legacy-later-ovidrel']);
   });
 });

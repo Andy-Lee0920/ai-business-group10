@@ -3,6 +3,7 @@ import { isPresentationRequest } from '../../../src/config';
 import { ClinicUpdateForm } from '../../../src/features/clinic-update/clinic-update-form';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { fallbackMedications, fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
+import { CARE_ACTION_SCHEDULE_SELECT, mergeCanonicalScheduleItemsWithLegacyFallback, projectCareActionCardsForSchedule, type CareActionScheduleRow } from '../../../src/domain/care-action-home-projection';
 import type { ScheduleItem } from '../../../src/types/slc.types';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export default async function AddPage() {
     .select('id, brand_name_ko, brand_name_en, aliases, default_unit, default_cta')
     .eq('is_slc_seed', true)
     .order('brand_name_en', { ascending: true });
-  const [{ data: partnerLinks }, itemsRes] = user
+  const [{ data: partnerLinks }, careCardsRes, itemsRes] = user
     ? await Promise.all([
       supabase
         .from('partner_links')
@@ -28,18 +29,27 @@ export default async function AddPage() {
         .eq('patient_id', user.id)
         .in('status', ['requested', 'approved']),
       supabase
+        .from('care_action_cards')
+        .select(CARE_ACTION_SCHEDULE_SELECT)
+        .eq('created_by', user.id)
+        .in('status', ['confirmed', 'completed'])
+        .order('scheduled_at', { ascending: true, nullsFirst: false }),
+      supabase
         .from('schedule_items')
-        .select('id,type,title,scheduled_at,dose,unit,status')
+        .select('id,patient_id,medication_id,type,title,scheduled_at,dose,unit,status,source,created_at')
         .eq('patient_id', user.id)
         .gte('scheduled_at', dayStart(0).toISOString())
         .lte('scheduled_at', dayEnd(2).toISOString())
         .order('scheduled_at', { ascending: true }),
     ])
-    : [{ data: [] }, { data: [], error: null }];
+    : [{ data: [] }, { data: [], error: null }, { data: [], error: null }];
   const partnerConnected = partnerLinks?.some((link) => link.status === 'approved') === true;
+  const careCardItems = user && !careCardsRes.error
+    ? projectCareActionCardsForSchedule((careCardsRes.data ?? []) as CareActionScheduleRow[]).filter((item) => isWithinRange(item.scheduled_at, dayStart(0), dayEnd(2)))
+    : [];
   const currentItems = user && !isMissingSlcTable(itemsRes.error)
-    ? (itemsRes.data ?? []) as ScheduleItem[]
-    : fallbackScheduleItems(user?.id ?? 'presentation-user');
+    ? mergeCanonicalScheduleItemsWithLegacyFallback(careCardItems, (itemsRes.data ?? []) as ScheduleItem[])
+    : (careCardItems.length > 0 ? careCardItems : fallbackScheduleItems(user?.id ?? 'presentation-user'));
 
   if (error) return <ClinicUpdateForm mode="schedule" medications={fallbackMedications()} partnerConnected={partnerConnected} currentItems={currentItems} />;
   return <ClinicUpdateForm mode="schedule" medications={medications ?? []} partnerConnected={partnerConnected} currentItems={currentItems} />;
@@ -57,4 +67,9 @@ function dayEnd(offset: number) {
   date.setHours(23, 59, 59, 999);
   date.setDate(date.getDate() + offset);
   return date;
+}
+
+function isWithinRange(iso: string, start: Date, end: Date) {
+  const time = new Date(iso).getTime();
+  return time >= start.getTime() && time <= end.getTime();
 }

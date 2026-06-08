@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { isPresentationRequest } from '../../config';
 import { getKstDayEnd, getKstDayStart } from '../../domain/kst-date';
-import { projectCareActionCardsForHome, type CareActionHomeRow } from '../../domain/care-action-home-projection';
+import { mergeCanonicalScheduleItemsWithLegacyFallback, projectCareActionCardsForHome, type CareActionHomeRow } from '../../domain/care-action-home-projection';
 import { careDayForConfirmedPhase } from '../../domain/cycle-state-machine';
 import { factDict } from '../../lib/brief/factDict';
 import { generateDailyBrief } from '../../lib/brief/generateBrief';
@@ -45,7 +45,7 @@ async function renderSupabaseHomePage() {
   const homeWindowStart = getKstDayStart(0).toISOString();
   const homeWindowEnd = getKstDayEnd(2).toISOString();
 
-  const [careCardsRes, clinicUpdatesRes] = await Promise.all([
+  const [careCardsRes, clinicUpdatesRes, itemsRes] = await Promise.all([
     supabase
       .from('care_action_cards')
       .select('id,couple_id,created_by,assignee_role,card_type,title,description,source_text,scheduled_at,care_date,status,confirmation_required,user_marked_important,partner_visible,revision,created_at')
@@ -58,6 +58,13 @@ async function renderSupabaseHomePage() {
       .eq('patient_id', user.id)
       .gte('created_at', getKstDayStart(0).toISOString())
       .order('created_at', { ascending: false }),
+    supabase
+      .from('schedule_items')
+      .select('*')
+      .eq('patient_id', user.id)
+      .gte('scheduled_at', homeWindowStart)
+      .lte('scheduled_at', homeWindowEnd)
+      .order('scheduled_at', { ascending: true }),
   ]);
 
   const careCardItems = careCardsRes.error
@@ -68,38 +75,20 @@ async function renderSupabaseHomePage() {
         return scheduled >= new Date(homeWindowStart).getTime() && scheduled <= new Date(homeWindowEnd).getTime();
       });
 
-  if (careCardItems.length > 0) {
-    const dailyBrief = await buildHomeBrief(careCardItems);
-    return (
-      <TodayScreen
-        dailyBrief={dailyBrief.line}
-        initialItems={careCardItems}
-        userId={user.id}
-        initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
-        firstScheduleSkipped={firstScheduleSkipped}
-      />
-    );
-  }
+  const legacyItems = itemsRes.error ? [] : (itemsRes.data ?? []) as ScheduleItem[];
+  const mergedItems = mergeCanonicalScheduleItemsWithLegacyFallback(careCardItems, legacyItems);
 
-  const itemsRes = await supabase
-    .from('schedule_items')
-    .select('*')
-    .eq('patient_id', user.id)
-    .gte('scheduled_at', homeWindowStart)
-    .lte('scheduled_at', homeWindowEnd)
-    .order('scheduled_at', { ascending: true });
-
-  if (itemsRes.error) {
+  if (itemsRes.error && mergedItems.length === 0) {
     const fallbackItems = fallbackScheduleItems(user.id);
     const dailyBrief = await buildHomeBrief(fallbackItems);
     return <TodayScreen dailyBrief={dailyBrief.line} initialItems={fallbackItems} userId={user.id} initialClinicUpdates={[]} />;
   }
-  const legacyItems = (itemsRes.data ?? []) as ScheduleItem[];
-  const dailyBrief = await buildHomeBrief(legacyItems);
+
+  const dailyBrief = await buildHomeBrief(mergedItems);
   return (
     <TodayScreen
       dailyBrief={dailyBrief.line}
-      initialItems={legacyItems}
+      initialItems={mergedItems}
       userId={user.id}
       initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
       firstScheduleSkipped={firstScheduleSkipped}
