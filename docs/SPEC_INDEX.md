@@ -29,9 +29,10 @@ Important safety interpretations:
 
 | Area | Documents | Notes |
 |---|---|---|
-| Contribution flow | `CONTRIBUTING.md`, `docs/05-contribution/specctl-by-junhyun.md` | Human workflow and specctl notes. |
+| Contribution flow | `CONTRIBUTING.md`, `docs/05-contribution/specctl-by-junhyun.md`, `docs/ai-logs/README.md` | Human workflow, specctl notes, and AI contribution log guidance. |
 | Schema/RLS/security | `docs/03-engineering/schema-rls-matrix.md` | Start here before changing Supabase tables, RLS, partner access, or service-role code. |
 | Release/deploy | `docs/03-engineering/deployment-readiness.md`, `docs/03-engineering/vercel-preview-sop.md`, `docs/03-engineering/slc-release-gate-checklist.md` | Use for Vercel/Supabase evidence and manual acceptance. |
+| License/compliance | `LICENSE`, `docs/specs/open-source-licenses.md` | Use before public/community distribution or dependency-license updates. |
 | TDD/issues | `docs/03-engineering/tdd-policy.md`, `docs/03-engineering/slc-tdd-issue-map.md`, `docs/03-engineering/issue-writing-rules.md` | Use when writing or implementing issue slices. |
 | Legacy schedule audit | `docs/03-engineering/legacy-schedule-lane-audit.md` | Background for `schedule_items` compatibility while canonical care cards mature. |
 | Reminder dispatch | `docs/03-engineering/reminder-dispatch-sop.md` | Use before touching reminder delivery or PWA push flows. |

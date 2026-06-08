@@ -12,6 +12,8 @@ describe('README first-time developer contract', () => {
     expect(doc).toContain('sanitized projection');
     expect(doc).toContain('docs/SPEC_INDEX.md');
     expect(doc).toContain('docs/01-product/fevio-product-north-star.md');
+    expect(doc).toContain('docs/ai-logs/README.md');
+    expect(doc).toContain('docs/specs/open-source-licenses.md');
     expect(doc).not.toContain('docs/01-product/FEVIO_NORTH_STAR.md');
   });
 

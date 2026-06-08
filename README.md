@@ -111,6 +111,12 @@ Keep README stable and short:
 
 See [`docs/03-engineering/repo-hygiene-triage.md`](docs/03-engineering/repo-hygiene-triage.md) for the 2026-06-08 README and stale GitHub work-item audit.
 
+## Open-source and AI contribution baseline
+
+- License: [`LICENSE`](LICENSE) — Apache-2.0.
+- AI contribution logs: [`docs/ai-logs/README.md`](docs/ai-logs/README.md).
+- Dependency notice baseline: [`docs/specs/open-source-licenses.md`](docs/specs/open-source-licenses.md).
+
 ## Secret policy
 
 Do not commit real secrets.
