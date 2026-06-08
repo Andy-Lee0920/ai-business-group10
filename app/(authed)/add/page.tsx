@@ -20,21 +20,29 @@ export default async function AddPage() {
     .select('id, brand_name_ko, brand_name_en, aliases, default_unit, default_cta')
     .eq('is_slc_seed', true)
     .order('brand_name_en', { ascending: true });
-  const itemsRes = user
-    ? await supabase
-      .from('schedule_items')
-      .select('id,type,title,scheduled_at,dose,unit,status')
-      .eq('patient_id', user.id)
-      .gte('scheduled_at', dayStart(0).toISOString())
-      .lte('scheduled_at', dayEnd(2).toISOString())
-      .order('scheduled_at', { ascending: true })
-    : { data: [], error: null };
+  const [{ data: partnerLinks }, itemsRes] = user
+    ? await Promise.all([
+      supabase
+        .from('partner_links')
+        .select('id,status')
+        .eq('patient_id', user.id)
+        .in('status', ['requested', 'approved']),
+      supabase
+        .from('schedule_items')
+        .select('id,type,title,scheduled_at,dose,unit,status')
+        .eq('patient_id', user.id)
+        .gte('scheduled_at', dayStart(0).toISOString())
+        .lte('scheduled_at', dayEnd(2).toISOString())
+        .order('scheduled_at', { ascending: true }),
+    ])
+    : [{ data: [] }, { data: [], error: null }];
+  const partnerConnected = partnerLinks?.some((link) => link.status === 'approved') === true;
   const currentItems = user && !isMissingSlcTable(itemsRes.error)
     ? (itemsRes.data ?? []) as ScheduleItem[]
     : fallbackScheduleItems(user?.id ?? 'presentation-user');
 
-  if (error) return <ClinicUpdateForm mode="schedule" medications={fallbackMedications()} currentItems={currentItems} />;
-  return <ClinicUpdateForm mode="schedule" medications={medications ?? []} currentItems={currentItems} />;
+  if (error) return <ClinicUpdateForm mode="schedule" medications={fallbackMedications()} partnerConnected={partnerConnected} currentItems={currentItems} />;
+  return <ClinicUpdateForm mode="schedule" medications={medications ?? []} partnerConnected={partnerConnected} currentItems={currentItems} />;
 }
 
 function dayStart(offset: number) {

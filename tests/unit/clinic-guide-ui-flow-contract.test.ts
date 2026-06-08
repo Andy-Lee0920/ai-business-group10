@@ -72,9 +72,15 @@ describe('Clinic Guide visual flow contract', () => {
       '정리된 내용',
       '불명확한 시간은 저장 전에 다시 확인해요',
       '저장 전 확인해주세요',
+      'confirmStructured',
+      'structuredPartnerVisible',
+      '파트너가 도울 일로 만들기',
+      '기본은 나만 보는 케어 카드예요',
+      '의료 판단 표현 확인',
+      '용량 조정 표현',
       '저장하고 업데이트',
       '✓ 오늘 일정에 반영했어요',
-      '오늘 일정 미리보기',
+      '확정된 케어 카드 미리보기',
       '파트너가 읽기 전용으로 확인 중',
     ]) {
       expect(form).toContain(copy);
@@ -94,6 +100,7 @@ describe('Clinic Guide visual flow contract', () => {
     expect(page).toContain("link.status === 'approved'");
     expect(page).toContain('aliases');
     expect(addPage).toContain('mode="schedule"');
+    expect(addPage).toContain('partnerConnected');
     expect(guideTypes).toContain("source: 'ai' | 'fallback'");
     expect(guideInterview).toContain("source: 'ai'");
     expect(guideInterview).toContain("source: 'fallback'");

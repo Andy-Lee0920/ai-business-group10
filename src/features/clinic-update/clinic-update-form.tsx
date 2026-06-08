@@ -8,6 +8,8 @@ import { resolveMedicationNames } from '../../domain/clinic-guide-medication-nor
 import { buildClinicUpdateScheduleItems, prefillNextVisitDate } from '../../domain/slc-clinic-update';
 import { AmbientStoryBackground } from '../../components/ambient-story-background';
 import { slcAssets } from '../../design/slc-assets';
+import { validateDescription } from '../../utils/description-guard';
+import type { ForbiddenPhraseHit } from '../../types/description-guard.types';
 
 type MedicationOption = Pick<Medication, 'id' | 'brand_name_ko' | 'brand_name_en' | 'aliases' | 'default_unit' | 'default_cta'>;
 
@@ -16,7 +18,7 @@ type MedicationChangeAnswer = 'same' | 'changed' | 'unknown' | null;
 type NewMedicationIntent = 'yes' | 'no' | null;
 type SavedScheduleItem = { title: string; scheduledAt: string; unit: string | null };
 type ClinicUpdateSaveScheduleItem = { title: string; scheduledAt?: string; scheduled_at?: string; unit: string | null };
-type ClinicUpdateSaveResponse = { ok?: boolean; reviewRequired?: boolean; candidates?: ApiCandidate[]; scheduleItems?: ClinicUpdateSaveScheduleItem[]; error?: string };
+type ClinicUpdateSaveResponse = { ok?: boolean; confirmed?: boolean; reviewRequired?: boolean; candidates?: ApiCandidate[]; scheduleItems?: ClinicUpdateSaveScheduleItem[]; error?: string };
 type PhotoPhase = 'idle' | 'uploading' | 'uploaded' | 'analyzing' | 'ready' | 'not_found';
 type ExtractedCandidate = { id: string; type: ScheduleType; title: string; scheduled_at: string | null; dose: string | null; unit: string | null; decision: 'confirmed' | 'rejected' };
 type ApiCandidate = { id?: unknown; type?: unknown; title?: unknown; scheduled_at?: unknown; dose?: unknown; unit?: unknown };
@@ -103,6 +105,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   const [analyzingText, setAnalyzingText] = useState(false);
   const [extractedCandidates, setExtractedCandidates] = useState<ExtractedCandidate[]>([]);
   const [applyingCandidates, setApplyingCandidates] = useState(false);
+  const [shareStructuredWithPartner, setShareStructuredWithPartner] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState<FormState>({
@@ -136,6 +139,10 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
   const selectedMedicationNames = resolveSelectedMedicationNames(medicationOptions, form.addedMedicationIds, form.directMedicationTitle);
   const selectedSchedulePreview = buildSelectedSchedulePreview(medicationOptions, form.addedMedicationIds, form.directMedicationTitle);
   const nextVisitPreview = form.nextVisitAt ? formatKoreanVisitDate(form.nextVisitAt) : '미정';
+  const structuredWarningHits = useMemo(
+    () => validateDescription([...selectedSchedulePreview, form.memo].filter(Boolean).join('\n')).warnings,
+    [form.memo, selectedSchedulePreview],
+  );
 
   useEffect(() => {
     if (step !== 'new_med' || form.newMedicationIntent !== 'yes') return;
@@ -455,6 +462,8 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
         nextVisitAt: form.nextVisitAt ? new Date(form.nextVisitAt).toISOString() : null,
         triggerPlan: form.triggerPlan,
         memo: form.memo,
+        confirmStructured: scheduleItems.length > 0,
+        structuredPartnerVisible: shareStructuredWithPartner,
         newScheduleItems: scheduleItems,
       }),
     });
@@ -791,7 +800,7 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
     <Shell>
       <p style={successBannerStyle}>✓ 오늘 일정에 반영했어요</p>
       <section style={panelStyle}>
-        <h2 style={sectionTitleStyle}>오늘 일정 미리보기</h2>
+        <h2 style={sectionTitleStyle}>확정된 케어 카드 미리보기</h2>
         {(savedScheduleItems.length ? savedScheduleItems : previewScheduleItems(selectedMedicationNames, form.nextVisitAt)).map((item) => (
           <button key={`${item.title}-${item.scheduledAt}`} type="button" style={rowStyle(false)} onClick={() => router.push('/home')}>
             <span style={timeChipStyle}>{formatTime(item.scheduledAt)}</span><strong>{item.title}</strong><small>추가됨 / 예정 ›</small>
@@ -811,8 +820,47 @@ export function ClinicUpdateForm({ medications, partnerConnected = false, curren
       <SummaryCard icon="📅" label="추가된 일정" value={selectedSchedulePreview.length ? selectedSchedulePreview.join(', ') : '추가된 약 없음'} onClick={() => setStep('new_med')} />
       <SummaryCard icon="🕐" label="다음 방문" value={nextVisitPreview} onClick={() => setStep('days')} />
       <SummaryCard icon="📄" label="메모" value={form.memo || '없음'} onClick={() => setStep('memo')} />
+      <DescriptionWarningBadges hits={structuredWarningHits} />
+      {partnerConnected ? (
+        <button
+          type="button"
+          onClick={() => setShareStructuredWithPartner((current) => !current)}
+          style={rowStyle(shareStructuredWithPartner)}
+          aria-pressed={shareStructuredWithPartner}
+        >
+          <span style={iconPillStyle}>👥</span>
+          <span>
+            <strong>파트너가 도울 일로 만들기</strong>
+            <small>{shareStructuredWithPartner ? '파트너에게 보이는 케어 카드로 저장돼요' : '기본은 나만 보는 케어 카드예요'}</small>
+          </span>
+        </button>
+      ) : null}
       <button type="button" onClick={save} disabled={saving} style={ctaStyle(saving)}>{saving ? '저장 중...' : '저장하고 업데이트'}</button>
     </Shell>
+  );
+}
+
+const WARNING_LABELS: Record<ForbiddenPhraseHit['category'], string> = {
+  dosage_change: '용량 조정 표현',
+  diagnosis: '진단/병명 추론 표현',
+  success_rate: '성공률 단정 표현',
+  treatment_strategy: '치료 전략 변경 표현',
+};
+
+function DescriptionWarningBadges({ hits }: { hits: ForbiddenPhraseHit[] }) {
+  if (hits.length === 0) return null;
+  return (
+    <section style={warningStyle} aria-label="의료 판단 표현 확인">
+      <strong>의료 판단 표현 확인</strong>
+      <p style={{ margin: '6px 0 10px' }}>저장은 가능하지만, 병원 지시를 그대로 옮긴 표현인지 한 번 더 확인해 주세요.</p>
+      <div style={chipRowStyle}>
+        {hits.map((hit) => (
+          <span key={`${hit.category}-${hit.offset}-${hit.matched}`} style={warningBadgeStyle}>
+            {WARNING_LABELS[hit.category]}
+          </span>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -1085,6 +1133,7 @@ const textButtonStyle: CSSProperties = {
 };
 const safeNoteStyle: CSSProperties = { margin: '12px 0 0', textAlign: 'center', color: '#74675F', fontSize: 13, fontWeight: 700 };
 const warningStyle: CSSProperties = { margin: '14px 0 0', padding: '12px 14px', borderRadius: 14, background: '#FFF3EA', color: '#6B5E55', fontSize: 13, fontWeight: 800 };
+const warningBadgeStyle: CSSProperties = { padding: '7px 10px', borderRadius: 999, background: '#FFE0D4', color: '#8A3B2E', fontSize: 12, fontWeight: 900 };
 const previewRowStyle: CSSProperties = { margin: '12px 0 0', padding: '12px 14px', borderRadius: 14, border: '1px solid #EFE4DC', background: '#FFFaf6', color: '#5B504A', fontWeight: 800 };
 const progressTrackStyle: CSSProperties = { width: '100%', height: 6, borderRadius: 999, background: '#EFE4DC', overflow: 'hidden' };
 const progressFillStyle: CSSProperties = { display: 'block', height: '100%', borderRadius: 999, background: 'var(--slc-coral-light)' };
