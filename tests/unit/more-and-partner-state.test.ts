@@ -7,6 +7,7 @@ import { MoreScreen } from '../../src/features/more/more-screen';
 import { PartnerView } from '../../src/features/partner/partner-view';
 import { partnerStateCopy } from '../../src/features/partner/partner-state';
 import type { PartnerLink } from '../../src/types/slc.types';
+import type { PartnerActionViewItem } from '../../src/types/partner-view.types';
 
 const moreScreen = readFileSync('src/features/more/more-screen.tsx', 'utf8');
 const morePage = readFileSync('app/(authed)/more/page.tsx', 'utf8');
@@ -125,57 +126,61 @@ ${partnerTokenPage}`).not.toContain(directImageTag);
     expect(markup).not.toContain('REQUESTED-CODE');
   });
 
-  it('renders partner schedule status as read-only sentence copy', () => {
-    const markup = renderToStaticMarkup(React.createElement(PartnerView, {
-      items: [
-        {
-          id: 'done-1',
-          patient_id: 'patient-1',
-          medication_id: 'menopur',
-          type: 'injection',
-          title: '메노푸어',
-          dose: null,
-          unit: null,
-          scheduled_at: '2026-05-14T06:30:00.000Z',
-          status: 'completed',
-          source: 'manual',
-          created_at: '2026-05-14T00:00:00.000Z',
-        },
-        {
-          id: 'next-1',
-          patient_id: 'patient-1',
-          medication_id: null,
-          type: 'clinic',
-          title: '병원 방문',
-          dose: null,
-          unit: null,
-          scheduled_at: '2026-05-14T11:00:00.000Z',
-          status: 'upcoming',
-          source: 'manual',
-          created_at: '2026-05-14T00:00:00.000Z',
-        },
-      ],
-      completions: [{ id: 'complete-1', schedule_item_id: 'done-1', patient_id: 'patient-1', completed_at: '2026-05-14T06:35:00.000Z', injection_site: null }],
-      latestClinicUpdate: {
-        id: 'clinic-update-1',
-        patient_id: 'patient-1',
-        same_medication: true,
-        added_medication_ids: [],
-        medication_days: 2,
-        next_visit_at: '2026-05-16T09:00:00.000Z',
-        trigger_plan: null,
-        memo: null,
-        created_at: '2026-05-14T12:00:00.000Z',
+  it('renders partner canonical card status as read-only behavior-safe sentence copy', () => {
+    const items: PartnerActionViewItem[] = [
+      {
+        safe_id: 'done-safe',
+        title: '메노푸어 원문 제목은 렌더하지 않음',
+        scheduled_at: '2026-05-14T06:30:00.000Z',
+        card_type: 'injection',
+        description: '150 IU 같은 용량 상세는 렌더하지 않음',
+        display_state: 'completed',
+        sync_revision: 2,
+        partner_role: '확인자',
+        partner_action: '완료된 항목이에요. 확인자 역할은 다음 확인까지 조용히 유지해 주세요.',
+        avoid_prompt: '재촉하지 않기',
+        visibility: 'partner_safe',
       },
+      {
+        safe_id: 'next-safe',
+        title: '병원 방문 원문 제목은 렌더하지 않음',
+        scheduled_at: '2026-05-14T11:00:00.000Z',
+        card_type: 'clinic_visit',
+        description: '원문 메모는 렌더하지 않음',
+        display_state: 'current',
+        sync_revision: 1,
+        partner_role: '동행자',
+        partner_action: '이동 시간, 준비물, 상담 후 다음 일정을 함께 확인해 주세요.',
+        avoid_prompt: '의료 판단을 덧붙이지 않기',
+        visibility: 'partner_safe',
+      },
+    ];
+    const markup = renderToStaticMarkup(React.createElement(PartnerView, {
+      items,
+      hasRecentClinicUpdate: true,
     }));
 
     expect(markup).toContain('파트너가 읽기 전용으로 일정을 확인하는 일러스트');
     expect(markup).toContain('주사 일정 확인됐어요');
     expect(markup).toContain('다음은');
     expect(markup).toContain('병원 일정 예정이에요');
-    expect(markup).not.toContain('메노푸어');
+    expect(markup).toContain('확인자 역할은 다음 확인까지 조용히 유지해 주세요');
+    expect(markup).toContain('이동 시간, 준비물, 상담 후 다음 일정을 함께 확인해 주세요');
+    expect(markup).not.toContain('메노푸어 원문 제목');
+    expect(markup).not.toContain('150 IU');
+    expect(markup).not.toContain('원문 메모');
     expect(markup).toContain('오늘 병원 방문 후 일정이 변경됐어요');
     expect(markup).toContain('읽기 전용');
     expect(markup).not.toMatch(/수정|추가|완료하기|삭제/);
+  });
+
+  it('reads canonical partner-visible care cards for the authed partner page', () => {
+    expect(partnerPage).toContain("from('care_action_cards')");
+    expect(partnerPage).toContain("eq('partner_visible', true)");
+    expect(partnerPage).toContain('serializePartnerViewCards');
+    expect(partnerPage).not.toContain("from('schedule_items')");
+    expect(partnerPage).not.toContain('completion_records');
+    expect(partnerPage).not.toContain('source_text');
+    expect(partnerPage).not.toContain("select('*')");
   });
 });

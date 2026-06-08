@@ -114,7 +114,7 @@ describe('partner view serialization contract', () => {
 
   it('has public type contracts for the serializer and whitelist', () => {
     expectTypeOf(serializePartnerViewCards).returns.toEqualTypeOf<PartnerActionViewItem[]>();
-    expectTypeOf(serializePartnerViewCards).parameter(0).toMatchTypeOf<readonly CareActionCard[]>();
+    expectTypeOf<readonly CareActionCard[]>().toMatchTypeOf<Parameters<typeof serializePartnerViewCards>[0]>();
     expectTypeOf(PARTNER_VIEW_ITEM_FIELDS).toEqualTypeOf<readonly ['safe_id', 'title', 'scheduled_at', 'card_type', 'description', 'display_state', 'sync_revision', 'partner_role', 'partner_action', 'avoid_prompt', 'visibility']>();
   });
 });

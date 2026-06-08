@@ -1,18 +1,17 @@
-import type { ScheduleItem, CompletionRecord, ClinicUpdate } from '../../types/slc.types';
+import type { CardType } from '../../types/care-cards.types';
+import type { PartnerActionViewItem } from '../../types/partner-view.types';
 import { SLCIllustration } from '../../components/slc-illustration';
 import { slcAssets } from '../../design/slc-assets';
 import { partnerStateCopy } from './partner-state';
 
 interface Props {
-  items: ScheduleItem[];
-  completions: CompletionRecord[];
-  latestClinicUpdate: ClinicUpdate | null;
+  items: PartnerActionViewItem[];
+  hasRecentClinicUpdate?: boolean;
 }
 
-export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
-  const completionSet = new Set(completions.map((c) => c.schedule_item_id));
-  const completedItems = items.filter((it) => completionSet.has(it.id) || it.status === 'completed');
-  const pendingItems = items.filter((it) => !completionSet.has(it.id) && it.status !== 'completed');
+export function PartnerView({ items, hasRecentClinicUpdate = false }: Props) {
+  const completedItems = items.filter((it) => it.display_state === 'completed');
+  const pendingItems = items.filter((it) => it.display_state !== 'completed');
 
   const stateCopy = partnerStateCopy(items.length === 0 ? 'linked_no_schedule' : 'linked_with_schedule');
 
@@ -27,7 +26,7 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
         <SLCIllustration asset={slcAssets.partner.readonly} size="icon" priority style={{ width: 84, justifySelf: 'end' }} />
       </header>
 
-      {latestClinicUpdate && (
+      {hasRecentClinicUpdate && (
         <div style={{ background: '#FFF8F5', borderRadius: 16, padding: '14px 18px', border: '1.5px solid #F4D4C8', marginBottom: 20 }}>
           <p style={{ fontSize: 13, color: 'var(--slc-warning)', fontWeight: 600, margin: 0 }}>오늘 병원 방문 후 일정이 변경됐어요</p>
         </div>
@@ -37,16 +36,17 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--slc-muted)', marginBottom: 12 }}>완료</h2>
           {completedItems.map((item) => {
-            const time = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', {
-              hour: '2-digit', minute: '2-digit', hour12: false,
-            });
+            const time = formatPartnerItemTime(item.scheduled_at);
             return (
-              <div key={item.id} style={{
+              <div key={item.safe_id} style={{
                 background: '#F7F5F2', borderRadius: 14, padding: '12px 16px',
-                marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginBottom: 8, display: 'grid', gap: 4,
               }}>
-                <span style={{ fontSize: 15, color: '#6B5E55' }}>{time} {partnerItemLabel(item.type)} 확인됐어요</span>
-                <span style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 600 }}>읽기 전용</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 15, color: '#6B5E55' }}>{time} {partnerItemLabel(item.card_type)} 확인됐어요</span>
+                  <span style={{ fontSize: 12, color: 'var(--slc-muted)', fontWeight: 600 }}>읽기 전용</span>
+                </div>
+                <small style={{ color: '#8B7E74', lineHeight: 1.45 }}>{item.partner_action}</small>
               </div>
             );
           })}
@@ -57,17 +57,18 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
         <section>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--slc-muted)', marginBottom: 12 }}>다음 일정</h2>
           {pendingItems.map((item) => {
-            const time = new Date(item.scheduled_at).toLocaleTimeString('ko-KR', {
-              hour: '2-digit', minute: '2-digit', hour12: false,
-            });
+            const time = formatPartnerItemTime(item.scheduled_at);
             return (
-              <div key={item.id} style={{
+              <div key={item.safe_id} style={{
                 background: '#fff', borderRadius: 14, padding: '12px 16px',
                 marginBottom: 8, border: '1.5px solid var(--slc-border)',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                display: 'grid', gap: 4,
               }}>
-                <span style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 500 }}>다음은 {time} {partnerItemLabel(item.type)} 예정이에요</span>
-                <span style={{ fontSize: 12, color: 'var(--slc-muted)' }}>읽기 전용</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 15, color: 'var(--slc-text)', fontWeight: 500 }}>다음은 {time} {partnerItemLabel(item.card_type)} 예정이에요</span>
+                  <span style={{ fontSize: 12, color: 'var(--slc-muted)' }}>읽기 전용</span>
+                </div>
+                <small style={{ color: '#8B7E74', lineHeight: 1.45 }}>{item.partner_action}</small>
               </div>
             );
           })}
@@ -83,8 +84,16 @@ export function PartnerView({ items, completions, latestClinicUpdate }: Props) {
   );
 }
 
-function partnerItemLabel(type: ScheduleItem['type']) {
+function partnerItemLabel(type: CardType) {
   if (type === 'injection') return '주사 일정';
   if (type === 'medication') return '복약 일정';
-  return '병원 일정';
+  if (type === 'clinic_visit' || type === 'clinic_confirmation') return '병원 일정';
+  return '도움 일정';
+}
+
+function formatPartnerItemTime(scheduledAt: string | null) {
+  if (!scheduledAt) return '시간 미정';
+  return new Date(scheduledAt).toLocaleTimeString('ko-KR', {
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
 }
