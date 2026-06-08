@@ -133,6 +133,16 @@ export default function PolicySupportPage() {
         <h1 style={titleStyle}>지원금 행정 액션</h1>
       </header>
 
+      <section style={demoGateStyle} aria-label="정책 지원금 베타 안내">
+        <Badge tone="lavender">베타/예시 화면</Badge>
+        <h2 style={demoGateTitleStyle}>샘플 정책 데이터로 흐름을 확인하는 화면입니다</h2>
+        <p style={demoGateTextStyle}>
+          현재 결과와 문의 초안은 정적 근거와 샘플 정책 데이터로 만든 확인용
+          안내입니다. 실제 신청 가능 여부, 금액, 연락처, 제출 서류는 관할
+          보건소에서 다시 확인해야 합니다.
+        </p>
+      </section>
+
       <nav aria-label="지원금 확인 단계" style={stepNavStyle}>
         {STEPS.map((step) => (
           <button
@@ -200,6 +210,10 @@ function InputScreen({
     <>
       <section style={cardStyle} aria-label="지원금 상태 입력">
         <h2 style={cardTitleStyle}>지원금 상태 입력</h2>
+        <p style={inputDemoNoticeStyle}>
+          예시 입력값으로 시작합니다. 실제 개인정보나 민감정보를 입력하지 말고,
+          결과는 보건소 확인 전 확정 안내로 보지 마세요.
+        </p>
         <div style={choiceFormStyle}>
           <DistrictDropdown params={params} setParams={setParams} />
           <ChoiceGroup
@@ -730,6 +744,32 @@ const stepNavStyle = {
   marginBottom: 14,
 } as const;
 
+const demoGateStyle = {
+  background:
+    "linear-gradient(180deg, rgba(245, 237, 255, 0.96) 0%, rgba(255, 248, 244, 0.94) 100%)",
+  border: "1px solid #D9C5FF",
+  borderRadius: 18,
+  boxShadow: "0 12px 30px rgba(126, 90, 168, 0.10)",
+  marginBottom: 14,
+  padding: "16px",
+} as const;
+
+const demoGateTitleStyle = {
+  color: "var(--slc-text)",
+  fontSize: 16,
+  fontWeight: 950,
+  lineHeight: 1.35,
+  margin: "12px 0 7px",
+} as const;
+
+const demoGateTextStyle = {
+  color: "var(--slc-muted)",
+  fontSize: 13,
+  fontWeight: 850,
+  lineHeight: 1.55,
+  margin: 0,
+} as const;
+
 function stepLinkStyle(active: boolean, disabled: boolean) {
   return {
     alignItems: "center",
@@ -808,6 +848,18 @@ const cardBodyStyle = {
   fontSize: 14,
   lineHeight: 1.55,
   margin: 0,
+} as const;
+
+const inputDemoNoticeStyle = {
+  background: "#FFF8F5",
+  border: "1px solid #F4C9B8",
+  borderRadius: 14,
+  color: "#8B4B2B",
+  fontSize: 13,
+  fontWeight: 850,
+  lineHeight: 1.5,
+  margin: "0 0 14px",
+  padding: "12px 13px",
 } as const;
 
 const statusBodyStyle = {

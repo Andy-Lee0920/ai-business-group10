@@ -27,6 +27,19 @@ describe('policy support page shell', () => {
     expect(page).not.toContain('무조건 신청 가능합니다');
   });
 
+  it('labels the policy support surface as beta/demo sample-data guidance', () => {
+    expect(page).toContain('정책 지원금 베타 안내');
+    expect(page).toContain('베타/예시 화면');
+    expect(page).toContain('샘플 정책 데이터');
+    expect(page).toContain('실제 신청 가능 여부');
+    expect(page).toContain('관할');
+    expect(page).toContain('보건소에서 다시 확인');
+    expect(page).toContain('예시 입력값으로 시작합니다');
+    expect(page).toContain('실제 개인정보나 민감정보를 입력하지 말고');
+    expect(page).not.toContain('실시간 정책 데이터');
+    expect(page).not.toContain('공식 신청 안내');
+  });
+
   it('uses a Seoul district dropdown and non-radio buttons for input values', () => {
     expect(page).toContain('function DistrictDropdown');
     expect(page).toContain('서울 자치구 선택');
