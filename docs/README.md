@@ -1,5 +1,7 @@
 # Fevio [페비오] Documentation Map
 
+For the current canonical-vs-historical spec map, start with [`SPEC_INDEX.md`](SPEC_INDEX.md). This page is an older directory navigation map and remains useful after the spec index tells you which documents are current.
+
 Use this page as the first stop after `README.md`. It is a navigation interface for contributors and coding agents; it is not a progress dashboard.
 
 ## Directory contract
