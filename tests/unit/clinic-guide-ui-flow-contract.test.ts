@@ -28,7 +28,7 @@ describe('Clinic Guide visual flow contract', () => {
       'manual_entry',
       '/api/onboard/photo-upload',
       '/api/onboard/photo-analyze',
-      '/api/onboard/text-analyze',
+      '/api/clinic-update',
       '/api/onboard/candidates/confirm',
       '업로드 완료',
       '분석 중',

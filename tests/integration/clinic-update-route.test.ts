@@ -12,10 +12,19 @@ vi.mock('../../src/lib/server-supabase', () => ({
     auth: {
       getUser: async () => userResponses.shift() ?? { data: { user: null }, error: null },
     },
+    rpc: async () => ({ data: { couple_id: 'couple-1', privacy_gate_accepted_at: '2026-05-10T00:00:00.000Z' }, error: null }),
     from: (table: string) => ({
       insert: (values: unknown) => {
         insertCalls.push({ table, values });
-        return { error: null };
+        const rows = Array.isArray(values) ? values : [values];
+        const data = rows.map((row, index) => ({ id: `${table}-${index + 1}`, ...row }));
+        return {
+          error: null,
+          select: () => ({
+            single: async () => ({ data: data[0] ?? null, error: null }),
+            then: (resolve: (value: { data: Array<Record<string, unknown>>; error: null }) => unknown) => resolve({ data, error: null }),
+          }),
+        };
       },
     }),
   }),
@@ -96,5 +105,70 @@ describe('clinic update route', () => {
         source: 'clinic_update',
       }),
     ]);
+  });
+
+  it('routes ambiguous free memo to visit input, split draft, and split candidates without creating confirmed cards', async () => {
+    userResponses.push({ data: { user: { id: 'patient-1' } }, error: null });
+    const { POST } = await import('../../app/api/clinic-update/route');
+
+    const rawMemo = '오늘 밤 오비드렐 주사\n내일 오전 병원 방문';
+    const response = await POST(postRequest({
+      sameMedication: null,
+      addedMedicationIds: [],
+      medicationDays: null,
+      nextVisitAt: null,
+      triggerPlan: '',
+      memo: rawMemo,
+      newScheduleItems: [],
+    }));
+    const payload = await response.json() as {
+      reviewRequired: boolean;
+      visitInputId: string;
+      draftId: string;
+      candidates: Array<{ id: string; title: string; type: string }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      reviewRequired: true,
+      visitInputId: 'visit_inputs-1',
+      draftId: 'action_split_drafts-1',
+      candidates: [
+        expect.objectContaining({ id: 'split_candidates-1', title: '오늘 밤 오비드렐 주사', type: 'injection' }),
+        expect.objectContaining({ id: 'split_candidates-2', title: '내일 오전 병원 방문', type: 'clinic' }),
+      ],
+    });
+    expect(insertCalls.map((call) => call.table)).toEqual(['visit_inputs', 'action_split_drafts', 'split_candidates']);
+    expect(insertCalls[0]).toEqual({
+      table: 'visit_inputs',
+      values: { couple_id: 'couple-1', raw_text: rawMemo },
+    });
+    expect(insertCalls[2].values).toEqual([
+      expect.objectContaining({
+        couple_id: 'couple-1',
+        draft_id: 'action_split_drafts-1',
+        visit_input_id: 'visit_inputs-1',
+        source_text: '오늘 밤 오비드렐 주사',
+        source_offset_start: 0,
+        source_offset_end: 12,
+        assigned_to: 'my_action',
+        suggested_card_type: 'injection',
+        confidence: 'needs_confirmation',
+        order_index: 0,
+      }),
+      expect.objectContaining({
+        couple_id: 'couple-1',
+        draft_id: 'action_split_drafts-1',
+        visit_input_id: 'visit_inputs-1',
+        source_text: '내일 오전 병원 방문',
+        assigned_to: 'my_action',
+        suggested_card_type: 'clinic_visit',
+        confidence: 'needs_confirmation',
+        order_index: 1,
+      }),
+    ]);
+    expect(insertCalls.some((call) => call.table === 'clinic_updates')).toBe(false);
+    expect(insertCalls.some((call) => call.table === 'schedule_items')).toBe(false);
+    expect(insertCalls.some((call) => call.table === 'care_action_cards')).toBe(false);
   });
 });
