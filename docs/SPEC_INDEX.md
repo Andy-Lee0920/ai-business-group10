@@ -41,7 +41,7 @@ Important safety interpretations:
 
 | Topic | Current status | Read before touching |
 |---|---|---|
-| Care action migration (#440) | `main` includes through PR #445 at `5ac0f2149fc7d809d006adb070882e8793cedcac`. PR #447 / Slice 5 is pending unless GitHub shows it merged after this docs branch. | Current GitHub issue/PR, `src/domain/care-action-home-projection.ts`, `src/features/today/home-page-loader.tsx`, schedule/calendar/partner tests. |
+| Care action migration (#440) | `main` includes PR #447 Slice 5 and PR #451 partner boundary follow-up as of `fb7bfc0468c513480efff0d7f736fe490f159799`. | Current GitHub issue, `src/domain/care-action-home-projection.ts`, `src/features/today/home-page-loader.tsx`, partner/calendar/schedule regression tests. |
 | Canonical care cards | `care_action_cards` is the preferred read model for confirmed care actions. | `docs/specs/spec-care-action-cards.md`, `docs/04-decisions/0013-confirm-spine-canonical.md`, current issue/PR tests. |
 | Legacy schedule fallback | `schedule_items` remains compatibility fallback where supported writers still depend on it. | `docs/03-engineering/legacy-schedule-lane-audit.md`, schedule route/page tests, active migration issue. |
 | Partner projection | Partner is support-only and sanitized. | `docs/specs/spec-partner-access.md`, `docs/wiki/05-partner-projection.md`, partner service/tests. |
