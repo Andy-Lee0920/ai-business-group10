@@ -14,6 +14,9 @@ const morePage = readFileSync('app/(authed)/more/page.tsx', 'utf8');
 const settingsPage = readFileSync('app/(authed)/settings/page.tsx', 'utf8');
 const partnerView = readFileSync('src/features/partner/partner-view.tsx', 'utf8');
 const partnerPage = readFileSync('app/(authed)/partner/page.tsx', 'utf8');
+const partnerCareCardReader = readFileSync('src/features/partner/read-partner-care-cards.ts', 'utf8');
+const partnerCareCardProjection = readFileSync('src/features/partner/partner-care-card-projection.ts', 'utf8');
+const partnerPrivacyInvariants = readFileSync('src/features/partner/partner-privacy-invariants.ts', 'utf8');
 const partnerTokenPage = readFileSync('app/partner/[token]/page.tsx', 'utf8');
 
 describe('More and partner read-only state contract', () => {
@@ -175,13 +178,21 @@ ${partnerTokenPage}`).not.toContain(directImageTag);
   });
 
   it('reads canonical partner-visible care cards for the authed partner page', () => {
-    expect(partnerPage).toContain("from('care_action_cards')");
-    expect(partnerPage).toContain("eq('created_by', link.patient_id)");
-    expect(partnerPage).toContain("eq('partner_visible', true)");
+    expect(partnerPage).toContain('getPartnerVisibleCareCards');
+    expect(partnerPage).toContain('linkedPatientId: link.patient_id');
     expect(partnerPage).toContain('serializePartnerViewCards');
-    expect(partnerPage).not.toContain("from('schedule_items')");
-    expect(partnerPage).not.toContain('completion_records');
-    expect(partnerPage).not.toContain('source_text');
-    expect(partnerPage).not.toContain("select('*')");
+    expect(partnerCareCardReader).toContain("from('care_action_cards')");
+    expect(partnerCareCardReader).toContain("eq('created_by', input.linkedPatientId)");
+    expect(partnerCareCardReader).toContain("eq('partner_visible', true)");
+    expect(partnerCareCardReader).toContain('approved partner link supplies linkedPatientId');
+    expect(partnerCareCardReader).toContain('linked patient/couple scope');
+    expect(partnerCareCardReader).toContain('This intentionally has no schedule_items fallback');
+    expect(partnerCareCardProjection).toContain('Do not replace this with the patient/home projection');
+    expect(partnerCareCardProjection).toContain('PARTNER_VIEW_ITEM_FIELDS');
+    expect(partnerPrivacyInvariants).toContain('noRawClinicalText');
+    expect(partnerPage + partnerCareCardReader).not.toContain("from('schedule_items')");
+    expect(partnerPage + partnerCareCardReader).not.toContain('completion_records');
+    expect(partnerCareCardReader).not.toContain('source_text');
+    expect(partnerCareCardReader).not.toContain("select('*')");
   });
 });

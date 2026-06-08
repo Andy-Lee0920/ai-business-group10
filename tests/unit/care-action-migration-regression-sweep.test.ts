@@ -49,21 +49,29 @@ describe('Issue #440 Slice 5 final migration regression sweep', () => {
 
   it('guards partner-visible reads with the approved linked patient scope before serialization', () => {
     const partnerPage = source('app/(authed)/partner/page.tsx');
+    const partnerReader = source('src/features/partner/read-partner-care-cards.ts');
+    const partnerProjection = source('src/features/partner/partner-care-card-projection.ts');
     const linkIndex = partnerPage.indexOf("from('partner_links')");
-    const cardIndex = partnerPage.indexOf("from('care_action_cards')");
-    const patientScopeIndex = partnerPage.indexOf("eq('created_by', link.patient_id)");
-    const visibleIndex = partnerPage.indexOf("eq('partner_visible', true)");
-    const serializeIndex = partnerPage.lastIndexOf('serializePartnerViewCards');
+    const facadeIndex = partnerPage.indexOf('getPartnerVisibleCareCards(supabase', linkIndex);
+    const serializeIndex = partnerPage.indexOf('serializePartnerViewCards', facadeIndex);
+    const cardIndex = partnerReader.indexOf("from('care_action_cards')");
+    const patientScopeIndex = partnerReader.indexOf("eq('created_by', input.linkedPatientId)");
+    const visibleIndex = partnerReader.indexOf("eq('partner_visible', true)");
 
     expect(linkIndex).toBeGreaterThanOrEqual(0);
-    expect(cardIndex).toBeGreaterThan(linkIndex);
+    expect(facadeIndex).toBeGreaterThan(linkIndex);
+    expect(serializeIndex).toBeGreaterThan(facadeIndex);
     expect(partnerPage).toContain("select('patient_id, status')");
     expect(partnerPage).toContain("eq('partner_id', user.id)");
     expect(partnerPage).toContain("link.status !== 'approved'");
+    expect(partnerPage).toContain('linkedPatientId: link.patient_id');
+    expect(cardIndex).toBeGreaterThanOrEqual(0);
     expect(patientScopeIndex).toBeGreaterThan(cardIndex);
     expect(visibleIndex).toBeGreaterThan(patientScopeIndex);
-    expect(serializeIndex).toBeGreaterThan(visibleIndex);
-    expect(partnerPage).not.toContain("from('schedule_items')");
+    expect(partnerReader).toContain('linked patient/couple scope');
+    expect(partnerReader).toContain('This intentionally has no schedule_items fallback');
+    expect(partnerProjection).toContain('Do not replace this with the patient/home projection');
+    expect(partnerPage + partnerReader).not.toContain("from('schedule_items')");
   });
 
   it('keeps schedule_items as legacy fallback/read compatibility, not the preferred schedule read model', () => {
