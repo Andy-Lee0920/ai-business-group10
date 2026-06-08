@@ -12,6 +12,7 @@ export function PresentationHomeDemo() {
       initialClinicUpdates={buildPresentationClinicUpdates(now)}
       initialItems={buildPresentationItems(now)}
       userId="presentation-user"
+      hasActivePushSubscription={false}
     />
   );
 }

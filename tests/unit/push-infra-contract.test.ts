@@ -27,6 +27,7 @@ describe('PWA push infrastructure contract', () => {
   it('exposes a browser subscribe helper and wires the home bell to request permission', () => {
     const client = readFileSync('src/lib/pwa-push-client.ts', 'utf8');
     const homeCta = readFileSync('src/features/today/PushPermissionCta.tsx', 'utf8');
+    const homeLoader = readFileSync('src/features/today/home-page-loader.tsx', 'utf8');
 
     expect(client).toContain('enablePushReminderSubscription');
     expect(client).toContain("navigator.serviceWorker.register('/sw.js')");
@@ -34,6 +35,10 @@ describe('PWA push infrastructure contract', () => {
     expect(client).toContain("fetch('/api/push/subscribe'");
     expect(homeCta).toContain('enablePushReminderSubscription');
     expect(homeCta).toContain('data-push-subscription-status');
+    expect(homeCta).toContain('알림 다시 받기');
+    expect(homeLoader).toContain(".from('push_subscriptions')");
+    expect(homeLoader).toContain(".is('revoked_at', null)");
+    expect(homeLoader).toContain('hasActivePushSubscription');
   });
 
   it('declares iOS PWA install boundaries before requesting Home Screen push', () => {

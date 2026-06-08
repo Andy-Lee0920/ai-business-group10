@@ -45,7 +45,7 @@ async function renderSupabaseHomePage() {
   const homeWindowStart = getKstDayStart(0).toISOString();
   const homeWindowEnd = getKstDayEnd(2).toISOString();
 
-  const [careCardsRes, clinicUpdatesRes] = await Promise.all([
+  const [careCardsRes, clinicUpdatesRes, activePushSubscriptionRes] = await Promise.all([
     supabase
       .from('care_action_cards')
       .select('id,couple_id,created_by,assignee_role,card_type,title,description,source_text,scheduled_at,care_date,status,confirmation_required,user_marked_important,partner_visible,revision,created_at')
@@ -58,7 +58,13 @@ async function renderSupabaseHomePage() {
       .eq('patient_id', user.id)
       .gte('created_at', getKstDayStart(0).toISOString())
       .order('created_at', { ascending: false }),
+    supabase
+      .from('push_subscriptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .is('revoked_at', null),
   ]);
+  const hasActivePushSubscription = !activePushSubscriptionRes.error && (activePushSubscriptionRes.count ?? 0) > 0;
 
   const careCardItems = careCardsRes.error
     ? []
@@ -77,6 +83,7 @@ async function renderSupabaseHomePage() {
         userId={user.id}
         initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
         firstScheduleSkipped={firstScheduleSkipped}
+        hasActivePushSubscription={hasActivePushSubscription}
       />
     );
   }
@@ -92,7 +99,7 @@ async function renderSupabaseHomePage() {
   if (itemsRes.error) {
     const fallbackItems = fallbackScheduleItems(user.id);
     const dailyBrief = await buildHomeBrief(fallbackItems);
-    return <TodayScreen dailyBrief={dailyBrief.line} initialItems={fallbackItems} userId={user.id} initialClinicUpdates={[]} />;
+    return <TodayScreen dailyBrief={dailyBrief.line} initialItems={fallbackItems} userId={user.id} initialClinicUpdates={[]} hasActivePushSubscription={hasActivePushSubscription} />;
   }
   const legacyItems = (itemsRes.data ?? []) as ScheduleItem[];
   const dailyBrief = await buildHomeBrief(legacyItems);
@@ -103,6 +110,7 @@ async function renderSupabaseHomePage() {
       userId={user.id}
       initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
       firstScheduleSkipped={firstScheduleSkipped}
+      hasActivePushSubscription={hasActivePushSubscription}
     />
   );
 }

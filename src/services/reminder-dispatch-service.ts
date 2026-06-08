@@ -29,12 +29,27 @@ export type ReminderPushCandidate = ReminderCandidate & {
   pushSubscriptions: ReminderPushSubscription[];
 };
 
+export type ReminderPushFailureReason =
+  | 'subscription_revoked'
+  | `push_service_5xx_${number}`
+  | `network_error_${string}`;
+
+export class ReminderPushDeliveryFailure extends Error {
+  readonly shouldRevokeSubscription: boolean;
+
+  constructor(readonly failureReason: ReminderPushFailureReason) {
+    super(failureReason);
+    this.name = 'ReminderPushDeliveryFailure';
+    this.shouldRevokeSubscription = failureReason === 'subscription_revoked';
+  }
+}
+
 export type ReminderPushDispatchStore = {
   findDuePushCandidates(window: ReminderPushWindow): Promise<ReminderPushCandidate[]>;
   claimPushDispatch(input: { cardId: string; scheduledAt: string; channel: ReminderPushWindow['channel'] }): Promise<ClaimedDispatch>;
   markPushDispatchSent(input: { dispatchId: string; providerMessageId: string | null }): Promise<void>;
-  markPushDispatchFailed(input: { dispatchId: string; error: string }): Promise<void>;
-  deletePushSubscription(input: { endpoint: string }): Promise<void>;
+  markPushDispatchFailed(input: { dispatchId: string; failureReason: ReminderPushFailureReason }): Promise<void>;
+  revokePushSubscription(input: { endpoint: string; revokedAt: string }): Promise<void>;
 };
 
 export type ReminderMailer = {
@@ -129,23 +144,28 @@ export async function dispatchDuePushReminders({
       try {
         const payload = buildReminderPushPayload({ candidate, appUrl });
         const providerIds: string[] = [];
-        let expiredSubscriptions = 0;
+        const failureReasons: ReminderPushFailureReason[] = [];
 
         for (const subscription of candidate.pushSubscriptions) {
           try {
             const provider = await pusher.send({ subscription, payload });
             if (provider.providerMessageId) providerIds.push(provider.providerMessageId);
           } catch (error) {
-            if (!isExpiredPushSubscriptionError(error)) throw error;
-            expiredSubscriptions += 1;
-            await store.deletePushSubscription({ endpoint: subscription.endpoint });
+            if (!(error instanceof ReminderPushDeliveryFailure)) throw error;
+            failureReasons.push(error.failureReason);
+            if (error.shouldRevokeSubscription) {
+              await store.revokePushSubscription({
+                endpoint: subscription.endpoint,
+                revokedAt: new Date().toISOString(),
+              });
+            }
           }
         }
 
         if (providerIds.length === 0) {
           await store.markPushDispatchFailed({
             dispatchId: claim.dispatchId,
-            error: expiredSubscriptions > 0 ? 'All push subscriptions expired' : 'No push subscriptions delivered',
+            failureReason: failureReasons[0] ?? 'network_error_no_delivery',
           });
           result.failed += 1;
           continue;
@@ -154,7 +174,10 @@ export async function dispatchDuePushReminders({
         await store.markPushDispatchSent({ dispatchId: claim.dispatchId, providerMessageId: providerIds[0] ?? null });
         result.sent += 1;
       } catch (error) {
-        await store.markPushDispatchFailed({ dispatchId: claim.dispatchId, error: errorMessage(error) });
+        await store.markPushDispatchFailed({
+          dispatchId: claim.dispatchId,
+          failureReason: error instanceof ReminderPushDeliveryFailure ? error.failureReason : 'network_error_dispatch_exception',
+        });
         result.failed += 1;
       }
     }
@@ -167,8 +190,23 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unknown reminder provider error';
 }
 
-function isExpiredPushSubscriptionError(error: unknown) {
-  if (!error || typeof error !== 'object') return false;
-  const candidate = error as { statusCode?: unknown; status?: unknown };
-  return candidate.statusCode === 404 || candidate.statusCode === 410 || candidate.status === 404 || candidate.status === 410;
+export function pushDeliveryFailureFromStatusCode(statusCode: number) {
+  if (statusCode === 404 || statusCode === 410) {
+    return new ReminderPushDeliveryFailure('subscription_revoked');
+  }
+
+  if (statusCode >= 500 && statusCode <= 599) {
+    return new ReminderPushDeliveryFailure(`push_service_5xx_${statusCode}` as `push_service_5xx_${number}`);
+  }
+
+  return new ReminderPushDeliveryFailure(`network_error_${statusCode}` as `network_error_${string}`);
+}
+
+export function pushDeliveryFailureFromNetworkKind(kind: string) {
+  return new ReminderPushDeliveryFailure(`network_error_${normalizeFailureReasonPart(kind)}` as `network_error_${string}`);
+}
+
+function normalizeFailureReasonPart(value: string) {
+  const normalized = value.trim().replace(/[^A-Za-z0-9_]+/gu, '_').replace(/^_+|_+$/gu, '');
+  return normalized || 'unknown';
 }

@@ -12,8 +12,14 @@ const HOME_REMINDER_SETTING_KEY = "fevio_home_reminder_enabled";
 
 type PwaInstallGuidance = "ios_add_to_home_screen" | "none";
 
-export function PushPermissionCta() {
-  const [reminderEnabled, setReminderEnabled] = useState(false);
+type PushPermissionCtaProps = {
+  hasActivePushSubscription?: boolean;
+};
+
+export function PushPermissionCta({
+  hasActivePushSubscription = false,
+}: PushPermissionCtaProps) {
+  const [reminderEnabled, setReminderEnabled] = useState(hasActivePushSubscription);
   const [pushSubscriptionStatus, setPushSubscriptionStatus] =
     useState<PushReminderSubscriptionStatus>("idle");
   const [pwaInstallGuidance, setPwaInstallGuidance] =
@@ -22,6 +28,12 @@ export function PushPermissionCta() {
     useState(false);
 
   useEffect(() => {
+    if (!hasActivePushSubscription) {
+      setReminderEnabled(false);
+      setReminderPreferenceLoaded(true);
+      return;
+    }
+
     try {
       const stored = window.localStorage.getItem(HOME_REMINDER_SETTING_KEY);
       if (stored === "on") setReminderEnabled(true);
@@ -31,7 +43,7 @@ export function PushPermissionCta() {
     } finally {
       setReminderPreferenceLoaded(true);
     }
-  }, []);
+  }, [hasActivePushSubscription]);
 
   useEffect(() => {
     setPwaInstallGuidance(getPwaInstallGuidance());
@@ -67,29 +79,41 @@ export function PushPermissionCta() {
     if (status === "subscribed") setReminderEnabled(true);
   }, [pwaInstallGuidance, reminderEnabled]);
 
+  const shouldShowReSubscribe = !hasActivePushSubscription && !reminderEnabled;
   const ReminderIcon = reminderEnabled ? Bell : BellOff;
   const showInstallGuidance =
     pwaInstallGuidance === "ios_add_to_home_screen" ||
     pushSubscriptionStatus === "ios_install_required";
+
+  if (hasActivePushSubscription) return null;
 
   return (
     <div style={{ display: "grid", justifyItems: "end", gap: 6 }}>
       <button
         type="button"
         aria-pressed={reminderEnabled}
-        aria-label={reminderEnabled ? "홈 알림 끄기" : "홈 알림 켜기"}
+        aria-label={shouldShowReSubscribe ? "알림 다시 받기" : reminderEnabled ? "홈 알림 끄기" : "홈 알림 켜기"}
         data-reminder-state={reminderEnabled ? "on" : "off"}
         data-push-subscription-status={pushSubscriptionStatus}
         data-testid="home-reminder-toggle"
         onClick={handleReminderToggle}
-        style={reminderToggleStyle(reminderEnabled)}
+        style={reminderToggleStyle(reminderEnabled, shouldShowReSubscribe)}
       >
         <ReminderIcon aria-hidden="true" size={20} strokeWidth={2.35} />
-        <span
-          aria-hidden="true"
-          style={reminderToggleDotStyle(reminderEnabled)}
-        />
+        {shouldShowReSubscribe ? (
+          <span>알림 다시 받기</span>
+        ) : (
+          <span
+            aria-hidden="true"
+            style={reminderToggleDotStyle(reminderEnabled)}
+          />
+        )}
       </button>
+      {shouldShowReSubscribe && pushSubscriptionStatus === "idle" && (
+        <p style={inlineHintStyle}>
+          알림 경로를 새로 연결해요
+        </p>
+      )}
       {showInstallGuidance && (
         <p style={inlineHintStyle}>
           iPhone 알림은 홈 화면에 추가한 뒤 켤 수 있어요
@@ -104,17 +128,24 @@ export function PushPermissionCta() {
   );
 }
 
-function reminderToggleStyle(enabled: boolean) {
+function reminderToggleStyle(enabled: boolean, labeled: boolean) {
   return {
     position: "relative",
-    width: 44,
+    width: labeled ? "auto" : 44,
+    minWidth: 44,
     height: 44,
+    padding: labeled ? "0 14px" : 0,
     border: "none",
     borderRadius: 999,
-    display: "grid",
-    placeItems: "center",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: labeled ? 7 : 0,
     background: enabled ? "var(--slc-text)" : "rgba(255, 255, 255, 0.72)",
     color: enabled ? "#fff" : "var(--slc-text)",
+    fontSize: labeled ? 12 : undefined,
+    fontWeight: labeled ? 900 : undefined,
+    whiteSpace: "nowrap",
     boxShadow: enabled
       ? "0 10px 24px rgba(39, 32, 28, 0.18)"
       : "0 8px 20px rgba(111, 77, 58, 0.12)",

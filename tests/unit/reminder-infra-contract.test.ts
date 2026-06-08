@@ -61,6 +61,32 @@ describe('reminder infrastructure contract', () => {
     expect(migration).not.toMatch(/source_text|raw_text|clinic_memo/iu);
   });
 
+  it('tracks push delivery failure metadata without changing reminder RLS policies', () => {
+    const migration = readFileSync('supabase/migrations/202605290003_push_delivery_failure_policy.sql', 'utf8');
+
+    expect(migration).toContain('add column if not exists revoked_at timestamptz null');
+    expect(migration).toContain('add column if not exists failed_at timestamptz null');
+    expect(migration).toContain('add column if not exists failure_reason text null');
+    expect(migration).toContain('ps.revoked_at is null');
+    expect(migration).toContain('subscription_revoked');
+    expect(migration).toContain('push_service_5xx_<code>');
+    expect(migration).toContain('network_error_<code-or-kind>');
+    expect(migration).not.toMatch(/create policy|alter policy|drop policy|disable row level security|raw_text|clinic_memo|source_text/iu);
+  });
+
+  it('records ADR 0028 as the no-retry push delivery failure policy', () => {
+    const adr = readFileSync('docs/04-decisions/0028-push-delivery-failure-policy.md', 'utf8');
+
+    expect(adr).toContain('Accepted');
+    expect(adr).toContain('subscription_revoked');
+    expect(adr).toContain('push_service_5xx_<code>');
+    expect(adr).toContain('network_error_<code-or-kind>');
+    expect(adr).toContain('알림 다시 받기');
+    expect(adr).toContain('Do not enqueue an immediate retry');
+    expect(adr).toContain('Creating a retry queue');
+    expect(adr).toContain('Logging user id, endpoint, raw subscription JSON');
+  });
+
   it('keeps legacy email dispatch storage documented while MVP uses web push candidates', () => {
     const migration = readFileSync('supabase/migrations/202605110003_reminder_dispatches.sql', 'utf8');
     expect(migration).toContain('unique (card_id, scheduled_at, channel)');

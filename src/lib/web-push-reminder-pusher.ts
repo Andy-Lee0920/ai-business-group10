@@ -1,6 +1,6 @@
-import webPush, { type PushSubscription } from 'web-push';
+import webPush, { WebPushError, type PushSubscription } from 'web-push';
 import type { ReminderPushPayload } from '../domain/reminder-dispatch';
-import type { ReminderPushSubscription, ReminderPusher } from '../services/reminder-dispatch-service';
+import { pushDeliveryFailureFromNetworkKind, pushDeliveryFailureFromStatusCode, type ReminderPushSubscription, type ReminderPusher } from '../services/reminder-dispatch-service';
 
 export type WebPushConfig = {
   subject: string;
@@ -14,9 +14,14 @@ export class WebPushReminderPusher implements ReminderPusher {
   }
 
   async send({ subscription, payload }: { subscription: ReminderPushSubscription; payload: ReminderPushPayload }) {
-    const response = await webPush.sendNotification(toWebPushSubscription(subscription), JSON.stringify(payload));
-    const location = getHeader(response.headers, 'location');
-    return { providerMessageId: location ?? `${response.statusCode ?? 'push'}:${subscription.endpoint}` };
+    try {
+      const response = await webPush.sendNotification(toWebPushSubscription(subscription), JSON.stringify(payload));
+      const location = getHeader(response.headers, 'location');
+      return { providerMessageId: location ?? `${response.statusCode ?? 'push'}:${subscription.endpoint}` };
+    } catch (error) {
+      if (error instanceof WebPushError) throw pushDeliveryFailureFromStatusCode(error.statusCode);
+      throw pushDeliveryFailureFromNetworkKind(networkFailureKind(error));
+    }
   }
 }
 
@@ -49,4 +54,11 @@ function getHeader(headers: unknown, name: string) {
   const record = headers as Record<string, unknown>;
   const value = record[name] ?? record[name.toLowerCase()];
   return typeof value === 'string' && value.trim() ? value : null;
+}
+
+function networkFailureKind(error: unknown) {
+  if (!(error instanceof Error)) return 'unknown';
+  const code: unknown = Object.getOwnPropertyDescriptor(error, 'code')?.value;
+  if (typeof code === 'string' && code.trim()) return code;
+  return error.name || 'unknown';
 }
