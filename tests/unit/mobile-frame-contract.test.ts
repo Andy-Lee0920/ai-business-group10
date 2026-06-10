@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const globals = () => readFileSync("app/globals.css", "utf8");
+const rootLayout = () => readFileSync("app/layout.tsx", "utf8");
 const authedLayout = () => readFileSync("app/(authed)/layout.tsx", "utf8");
 const bottomNav = () => readFileSync("src/components/bottom-nav.tsx", "utf8");
 const postClinicBanner = () =>
@@ -30,6 +31,16 @@ describe("iPhone Safari mobile frame contract", () => {
     expect(css).toContain(".fevio-authed-frame::before");
     expect(css).toContain(".fevio-authed-frame .fevio-bottom-nav");
     expect(css).toContain(".fevio-authed-frame .fevio-community-sheet-layer");
+  });
+
+  it("turns on the iPhone frame for local desktop app previews", () => {
+    const layout = rootLayout();
+    expect(layout).toContain("data-iphone-frame=\"0\"");
+    expect(layout).toContain("localDesktop");
+    expect(layout).toContain("h==='localhost'||h==='127.0.0.1'||h==='::1'");
+    expect(layout).toContain("matchMedia('(min-width: 700px)').matches");
+    expect(layout).toContain("document.body.dataset.iphoneFrame='1'");
+    expect(layout).toContain("blocksFrame");
   });
 
   it("uses the shared frame for authed layout, bottom navigation, and fixed overlays", () => {

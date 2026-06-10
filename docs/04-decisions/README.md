@@ -28,3 +28,4 @@ What this makes easier, harder, or forbidden.
 
 - [ADR 0011 — CycleEvent state machine](0011-cycle-event-state-machine.md)
 - [ADR 0012 — Result Protection Mode after negative beta](0012-result-protection-mode.md)
+- [ADR 0028 — Manual clinic logging write bridge; migrate producer before consumer](0028-manual-logging-write-bridge-producer-first.md)

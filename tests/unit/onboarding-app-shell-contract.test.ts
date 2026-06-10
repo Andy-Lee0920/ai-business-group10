@@ -38,7 +38,6 @@ describe('app onboarding shell contract', () => {
       '안내문 찍기',
       '사진에서 선택',
       '받은 안내',
-      '받은 안내를 문자로 붙여넣기',
       '건너뛰기',
       '직접 적기',
       '확인한 이름·시간·용량',
@@ -55,7 +54,6 @@ describe('app onboarding shell contract', () => {
       'methodSecondaryCard',
       'completeAmbientScreen',
       'backButton',
-      'textFallbackButton',
       'skipCaptureButton',
     ]) {
       expect(onboardingStyles).toContain(styleName);
@@ -209,6 +207,7 @@ describe('app onboarding shell contract', () => {
     }
     expect(onboardingClient).toContain("onClick={() => continueSharing('solo')}");
     expect(onboardingClient).toContain("onClick={() => continueSharing('partner')}");
+    expect(onboardingClient).toContain('function continueSharing(choice: SharingChoice)');
     expect(onboardingClient).toContain('aria-pressed={sharingChoice ===');
     expect(onboardingClient).not.toContain('disabled={!sharingChoice}');
     expect(onboardingClient).toContain("fetch('/api/onboarding/complete'");
@@ -231,8 +230,9 @@ describe('app onboarding shell contract', () => {
   });
 
   it('compacts onboarding role selection inside the desktop phone frame', () => {
+    expect(onboardingStyles).toContain("body[data-iphone-frame='1']");
     const compactFrameBlock = onboardingStyles.slice(
-      onboardingStyles.indexOf(":global(body[data-presentation-mode='0']) .screen"),
+      onboardingStyles.indexOf(":global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .screen"),
       onboardingStyles.indexOf('@media (max-height: 780px)'),
     );
 

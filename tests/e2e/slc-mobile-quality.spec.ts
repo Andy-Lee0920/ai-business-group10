@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test';
 import { SLC_FORBIDDEN_VISIBLE_COPY, SLC_MOBILE_ROUTES, SLC_MOBILE_VIEWPORTS, SLC_STANDALONE_CAPTURE_ROUTES } from '../../src/domain/slc-mobile-quality';
 
+async function acceptPrivacyGate(page: import('@playwright/test').Page) {
+  await page.context().addCookies([
+    { name: 'fevio_privacy_gate_v1', value: 'accepted', url: 'http://127.0.0.1:3000' },
+    { name: 'fevio_privacy_accepted', value: '1', url: 'http://127.0.0.1:3000' },
+    { name: 'fevio_privacy_gate_v1', value: 'accepted', url: 'http://localhost:3000' },
+    { name: 'fevio_privacy_accepted', value: '1', url: 'http://localhost:3000' },
+  ]);
+}
+
 test.describe('SLC mobile quality smoke', () => {
   for (const viewport of SLC_MOBILE_VIEWPORTS) {
     test(`public first fold is app-like on ${viewport.name}`, async ({ page }) => {
@@ -27,6 +36,7 @@ test.describe('SLC mobile quality smoke', () => {
     const privacyShell = page.locator('main.app-shell').first();
     await expect(privacyShell).toBeVisible();
 
+    await acceptPrivacyGate(page);
     await page.goto('/home');
     const authedFrame = page.locator('.fevio-authed-frame').first();
     await expect(authedFrame).toBeVisible();
@@ -34,11 +44,12 @@ test.describe('SLC mobile quality smoke', () => {
   });
 
   test('documents the protected SLC route set for authenticated mobile smoke', async () => {
-    expect(SLC_MOBILE_ROUTES).toEqual(['/privacy', '/onboarding', '/home', '/add', '/records', '/clinic-update', '/partner', '/more']);
+    expect(SLC_MOBILE_ROUTES).toEqual(['/privacy', '/onboarding', '/home', '/care-agent', '/add', '/records', '/clinic-update', '/partner', '/more']);
   });
 
   test('renders the full SLC route set in presentation mode without technical copy', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    await acceptPrivacyGate(page);
 
     for (const route of SLC_MOBILE_ROUTES) {
       const response = await page.goto(route);
@@ -57,6 +68,7 @@ test.describe('SLC mobile quality smoke', () => {
 
   test('standalone capture pages always expose a visible recovery path', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    await acceptPrivacyGate(page);
 
     for (const route of SLC_STANDALONE_CAPTURE_ROUTES) {
       await page.goto(route);
@@ -72,6 +84,7 @@ test.describe('SLC mobile quality smoke', () => {
 
   test('Clinic Guide update flow exposes the reference UI path in presentation mode', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    await acceptPrivacyGate(page);
     await page.goto('/clinic-update');
 
     await expect(page.getByRole('heading', { name: /진료 내용을/ })).toBeVisible();

@@ -3,18 +3,13 @@
   will-change: transform;
 }
 
-.sheetHeader {
-  display: grid;
-  gap: 14px;
-  padding: 0 6px 4px;
-}
-
 .sheetHandle {
   justify-self: center;
   width: 42px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(121, 108, 98, 0.18);
+  background: rgba(121, 108, 98, 0.34);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.68);
 }
 
 @keyframes home-sheet-slide-up {

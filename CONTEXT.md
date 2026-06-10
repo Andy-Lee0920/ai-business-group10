@@ -51,6 +51,10 @@ A line-level candidate produced by manual review or advisory assistance. It beco
 
 A user-confirmed operational task. Home and partner views should render confirmed care action cards, not raw notes or unconfirmed drafts.
 
+### Schedule item
+
+`schedule_items` 행. v1.0 다수 surface(`/calendar`, `/partner/[token]`, `/add`, `/clinic-update`, schedule API)가 아직 primary 로 읽는 시간 기반 일정 행. **confirmed care action 의 진실원이 아니다** — confirmed care action 의 canonical 은 `care_action_cards` 이며(ADR 0013), schedule item 은 마이그레이션 기간의 legacy fallback 겸 시간/리마인더 파생 projection 으로만 잔존한다. Partner projection 과 today execution 은 최종적으로 `care_action_cards` 를 읽어야 하며, 두 surface 가 서로 다른 confirmed 현실을 보면 안 된다. `/home` 은 이미 canonical 로 이전됐고(`buildHomeBriefFromCanonicalContext`), 나머지 소비자는 partner-first 로 단계 이전한다. 신규 코드는 confirmed 의미를 schedule item 에 저장하지 않는다. See ADR 0013.
+
 ### Care day
 
 The deterministic home-mode label computed from couple state and confirmed cards. v1.0 terms are:
@@ -118,6 +122,26 @@ Partner View 의 daily-open surface. Primary 의 Daily Brief 와 완전 별개 �
 ### Brief Reflection Turn
 
 Daily Brief 안에서 사용자가 "오늘의 한 줄" CTA 를 self-initiated 로 누르면 열리는 ephemeral input + LLM reply 흐름. 저장하지 않는다 (`couple_journal_entries` 와 별도, ADR 0015/0019 영향 없음). ADR 0009 의 "emotionTrend active questioning" reject 정책은 push prompt 에 한정되며, 본 reflection turn 은 pull 패턴이라 동일 reject 가 적용되지 않는다. "기록" 가치는 Records tab 의 Couple journal 이 별도 제공.
+
+### Care Agent
+
+사용자 노출 명칭. `+` 버튼 진입점에서 사용자의 입력을 받아 **실행 가능한 확인·정리·라우팅으로 변환**하는 기능. 감정 상담 챗봇이 아니라 운영 지원 도구다. 매 입력 → 고정 구조 응답(상황 정리 + 액션 세트 + 원문 근거). LLM 은 자유 생성기가 아니라 발화를 고정 스키마로 분류하는 분류기 역할이며, 액션 칩 문구·동작은 deterministic 코드가 정한다. **읽기는 인라인, 쓰기는 라우팅** — Care Agent 는 어떤 쓰기도 자동 실행하지 않고 기존 surface 로 라우팅해 사용자가 마지막 확인을 한다.
+
+명칭은 사용자의 *문제*("걱정/정리")가 아니라 *지원*("케어")으로 framing 한다 — 기능 이름이 부정 감정을 점화하지 않게 한다. 단 "에이전트" 가 "AI 가 알아서 판단" 인상을 주지 않도록, UI 카피는 "제가 정리해드릴게요, 마지막 확인은 직접 해주세요" 의 비자율 계약을 분명히 드러내야 한다 (가드레일). 진입 프롬프트는 걱정을 명명하는 "무엇이 걱정되세요?" 가 아니라 케어 프레임("오늘 무엇을 도와드릴까요?", "확인하고 싶은 게 있나요?")을 쓴다. 내부 코드/도메인 식별자는 `concern-triage` 로 둘 수 있으나 (정확성·`Care*` 군집 혼선 회피), 사용자 노출 라벨은 항상 "케어 에이전트".
+**Logging-first intake router.** Care Agent 는 "AI 에게 아무거나 묻는 곳" 이 아니라 *병원 방문 후 care state 를 업데이트하는 intake router* 다. + 진입 시 default primary intent 는 clinic logging(병원 방문 남기기)이며, concern 입력은 logging 으로 라우팅되는 가장 흔한 보조 path 다. ADR 0026 의 concern-triage front door 결정은 유지하되, generic AI 상담창처럼 보여서는 안 된다.
+_Avoid_: 챗봇, 감정 상담, "걱정 정리"/"concern triage" 류 문제-명명 사용자 카피
+
+### Concern signal
+
+사용자가 Care Agent 에 입력한 걱정을 **분류된 시그널 태그**로 persist 한 record. 발화 원문이 아니라 `{ intent, related_card_id?, created_at }` 형태의 의도 분류만 저장한다 (예: `injection_timing_anxiety`, `dose_change_doubt`, `partner_sharing_hesitation`). 다음 세션에서 "이전에도 주사 시간을 확인하셨으니..." 처럼 과거 걱정 맥락을 재사용하는 근거가 된다. couple-scoped RLS 로 격리되며 `care_action_cards`·`couple_journal_entries` 와 독립. Brief Reflection Turn 과의 차이: Reflection Turn 은 ephemeral·무저장 (ADR 0025), Concern signal 은 원문 없는 분류 태그만 저장. 발화 원문·LLM 응답 본문은 어느 쪽도 저장하지 않는다.
+
+### Clinic question
+
+사용자가 병원 방문 때 들고 갈 목적으로 확정·저장하는 "물어볼 질문" record. couple-scoped RLS. `{ question_text, related_card_id?, status: 'open'|'asked'|'resolved', created_at }`. Care Agent 가 후보를 제안하지만 사용자가 confirm 후에만 저장된다 (ADR 0013 confirm spine 정합). 질문 텍스트는 저장하지만 **답은 저장하지 않는다** — 앱은 "물어볼 것"과 "물어봤는지 여부"만 추적하고 의료 판단·답변은 보관하지 않는다. 따라서 status 는 `answered` 가 아니라 `resolved`. 평소 Records 탭의 "병원에 물어볼 것" 섹션에 쌓이고, ClinicDay 진입 시 상단으로 끌어올려진다. Concern signal 과의 차이: concern signal 은 원문 무저장 분류 태그, clinic question 은 사용자 확정 운영 텍스트 (감정 발화 아님). ADR 0015 Records 엔티티 모델의 확장.
+
+### Reminder strength
+
+알림의 전달 방식(소리/반복/리드타임)을 가르는 사용자 선택. `strong`(강한 알림) / `quiet`(조용한 알림). Care Agent 가 카드 타입에서 deterministic 하게 *추천*하지만 (trigger shot·injection → strong 추천, routine medication → quiet 추천) 실제 tier 는 사용자가 선택해서 reminder preference 로 저장한다. 앱이 자동 escalate 하지 않는다. 이것은 **notification preference 이지 medical urgency 가 아니다** — 카드의 의료적 의미나 `display_safety_level` 을 건드리지 않는다. "앱의 위급 판정" 저장 금지 (제품 불변), "사용자 알림 선호" 저장만 허용.
 
 ### Onboarding Stage-neutral Brief
 

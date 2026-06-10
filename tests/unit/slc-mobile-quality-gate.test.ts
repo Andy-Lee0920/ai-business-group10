@@ -31,7 +31,7 @@ const homeOperationSources = [
 
 describe('SLC mobile quality gate', () => {
   it('covers all requested SLC routes and iPhone 17 Pro/Max viewport targets', () => {
-    expect(SLC_MOBILE_ROUTES).toEqual(['/privacy', '/onboarding', '/home', '/add', '/records', '/clinic-update', '/partner', '/more']);
+    expect(SLC_MOBILE_ROUTES).toEqual(['/privacy', '/onboarding', '/home', '/care-agent', '/add', '/records', '/clinic-update', '/partner', '/more']);
     expect(SLC_MOBILE_VIEWPORTS.map((viewport) => viewport.width)).toEqual([390, 430]);
   });
 

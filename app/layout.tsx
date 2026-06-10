@@ -50,7 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       >
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var p=new URLSearchParams(location.search);var f=(p.get('frame')||'').toLowerCase();if(f==='iphone'||f==='1'||f==='true'||(p.get('device')||'').toLowerCase()==='iphone'){document.body.dataset.iphoneFrame='1';}}catch(e){}`,
+            __html: `try{var p=new URLSearchParams(location.search);var f=(p.get('frame')||'').toLowerCase();var d=(p.get('device')||'').toLowerCase();var wantsFrame=f==='iphone'||f==='1'||f==='true'||d==='iphone';var blocksFrame=f==='0'||f==='false'||f==='none';var h=location.hostname;var localDesktop=(h==='localhost'||h==='127.0.0.1'||h==='::1')&&matchMedia('(min-width: 700px)').matches;var path=location.pathname;var customDemo=path==='/demo'||path.indexOf('/demo/')===0||path==='/partner/demo';if(!blocksFrame&&(wantsFrame||(localDesktop&&!customDemo))){document.body.dataset.iphoneFrame='1';}}catch(e){}`,
           }}
         />
         {children}

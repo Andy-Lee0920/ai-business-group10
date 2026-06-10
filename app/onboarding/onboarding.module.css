@@ -512,22 +512,6 @@
   margin-top: 24px;
 }
 
-.textFallbackButton {
-  display: inline-flex;
-  justify-content: center;
-  min-height: 42px;
-  align-items: center;
-  border: 0;
-  background: transparent;
-  color: #756960;
-  font: inherit;
-  font-size: 0.92rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
 .skipCaptureButton {
   display: inline-flex;
   gap: 3px;
@@ -856,62 +840,62 @@
 }
 
 @media (min-width: 700px) {
-  :global(body[data-presentation-mode='0']) .screen {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .screen {
     min-height: 100%;
     padding: 34px 12px 0;
   }
 
-  :global(body[data-presentation-mode='0']) .stepHeader {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .stepHeader {
     gap: 10px;
     margin-top: 30px;
     margin-bottom: 24px;
   }
 
-  :global(body[data-presentation-mode='0']) .sectionTitle {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .sectionTitle {
     max-width: 8.8em;
     font-size: clamp(1.72rem, 4.8vw, 2.08rem);
     line-height: 1.14;
   }
 
-  :global(body[data-presentation-mode='0']) .questionLead {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .questionLead {
     max-width: 20em;
     font-size: 0.92rem;
     line-height: 1.56;
   }
 
-  :global(body[data-presentation-mode='0']) .roleGrid {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .roleGrid {
     gap: 12px;
   }
 
-  :global(body[data-presentation-mode='0']) .roleCard {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .roleCard {
     min-height: 196px;
     gap: 10px;
     padding: 22px 12px 20px !important;
     border-radius: 24px !important;
   }
 
-  :global(body[data-presentation-mode='0']) .roleImageWrap {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .roleImageWrap {
     width: 84px;
     height: 84px;
   }
 
-  :global(body[data-presentation-mode='0']) .roleCard strong {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .roleCard strong {
     font-size: 1.04rem;
   }
 
-  :global(body[data-presentation-mode='0']) .roleCard small {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .roleCard small {
     margin-top: 4px;
     font-size: 0.78rem;
     line-height: 1.32;
   }
 
-  :global(body[data-presentation-mode='0']) .bottomDock {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .bottomDock {
     gap: 14px;
     padding-top: 18px;
   }
 
-  :global(body[data-presentation-mode='0']) .primaryCta,
-  :global(body[data-presentation-mode='0']) .softCta {
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .primaryCta,
+  :global(:where(body[data-presentation-mode='0'], body[data-iphone-frame='1'])) .softCta {
     min-height: 54px !important;
   }
 }
@@ -974,6 +958,10 @@
   display: grid;
   gap: 12px;
   width: 100%;
+}
+
+.sharingScreen .stepHeader {
+  margin-top: 58px;
 }
 
 .methodHeroCard {

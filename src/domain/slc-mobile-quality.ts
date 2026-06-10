@@ -3,7 +3,7 @@ export const SLC_MOBILE_VIEWPORTS = [
   { name: 'iPhone 17 Pro Max', width: 430, height: 932 },
 ] as const;
 
-export const SLC_MOBILE_ROUTES = ['/privacy', '/onboarding', '/home', '/add', '/records', '/clinic-update', '/partner', '/more'] as const;
+export const SLC_MOBILE_ROUTES = ['/privacy', '/onboarding', '/home', '/care-agent', '/add', '/records', '/clinic-update', '/partner', '/more'] as const;
 
 export const SLC_STANDALONE_CAPTURE_ROUTES = [
   '/onboard/prescription-capture',

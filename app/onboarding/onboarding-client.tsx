@@ -507,9 +507,6 @@ export function OnboardingClient() {
               <div className={styles.photoPickerActions}>
                 <CtaButton className={styles.primaryCta} onClick={() => cameraInputRef.current?.click()} type="button">안내문 찍기</CtaButton>
                 <CtaButton className={styles.softCta} onClick={() => galleryInputRef.current?.click()} type="button">사진에서 선택</CtaButton>
-                <button className={styles.textFallbackButton} onClick={() => goToStep('text_paste')} type="button">
-                  받은 안내를 문자로 붙여넣기
-                </button>
               </div>
             ) : null}
 
@@ -713,7 +710,7 @@ export function OnboardingClient() {
         ) : null}
 
         {activeStep === 'sharing' ? (
-          <section className={styles.screen} aria-labelledby="sharing-title">
+          <section className={`${styles.screen} ${styles.sharingScreen}`} aria-labelledby="sharing-title">
             <div className={styles.stepHeader}>
               <h2 className={styles.sectionTitle} id="sharing-title">공유 범위를 정할까요?</h2>
               <p className={styles.questionLead}>
