@@ -22,7 +22,8 @@ test('presentation home defaults to a full-bleed care-state instrument', async (
   await expect(operation).toBeVisible();
   await expect(page.getByRole('heading', { name: '오늘 실행' })).toBeVisible();
   await expect(page.getByTestId('home-hero-zone')).toContainText(/확인이 필요한 일정이 있어요|병원 안내 기준으로 다음 실행을 정리했어요\.|천천히 준비하면 돼요|오늘은 예정된 일정이 없어요/);
-  await expect(page.getByText('확인할 항목은 아래에 접어뒀어요')).toBeVisible();
+  await expect(page.getByText('확인할 항목은 아래에 접어뒀어요')).toHaveCount(0);
+  await expect(page.getByTestId('home-sheet-handle')).toBeVisible();
   await expect(page.getByRole('navigation', { name: '일정 날짜' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '오늘 확인할 항목' })).toBeVisible();
   await expect(page.getByRole('region', { name: '병원 안내 기준' })).toBeVisible();
