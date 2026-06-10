@@ -90,6 +90,8 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
           </PrivacyInfoRow>
         </div>
 
+        <TrustBoundarySummary />
+
         <form action="/api/privacy/accept" method="post" style={{ marginTop: 28 }}>
           <input type="hidden" name="next" value={nextPath} />
           <button
@@ -139,6 +141,43 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
         </p>
       </section>
     </main>
+  );
+}
+
+
+function TrustBoundarySummary() {
+  const rules = [
+    ['오늘 할 일만', '주사·약·내원·확인처럼 실행할 항목만 홈에 둡니다.'],
+    ['원문 확인 후 저장', 'AI/OCR 후보는 사용자가 확인하기 전에는 실행 카드가 아닙니다.'],
+    ['중요 시간 알림', '알림은 사용자가 켠 confirmed 일정 기준으로만 작동합니다.'],
+    ['파트너 역할만', '파트너 화면에는 원문·검사결과·감정기록 없이 도울 역할만 보냅니다.'],
+  ] as const;
+
+  return (
+    <section
+      aria-label="Fevio 실행 기준"
+      data-testid="privacy-trust-boundary-summary"
+      style={{
+        marginTop: 24,
+        padding: '16px 14px',
+        borderRadius: 24,
+        background: 'rgba(246, 249, 244, 0.74)',
+        border: '1px solid rgba(196, 211, 200, 0.72)',
+        color: '#4F4640',
+      }}
+    >
+      <p style={{ margin: '0 0 12px', color: 'var(--fevio-sage-dark)', fontSize: 14, fontWeight: 900, letterSpacing: '-0.025em' }}>
+        Fevio가 지키는 실행 기준
+      </p>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {rules.map(([title, detail]) => (
+          <div key={title} style={{ display: 'grid', gap: 3 }}>
+            <strong style={{ color: 'var(--slc-text)', fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em' }}>{title}</strong>
+            <span style={{ color: '#766B64', fontSize: 13, lineHeight: 1.5, letterSpacing: '-0.035em', wordBreak: 'keep-all' }}>{detail}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

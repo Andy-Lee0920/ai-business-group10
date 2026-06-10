@@ -8,6 +8,12 @@ test('privacy gate presents one premium storage-scope confirmation before onboar
   await expect(page.getByText('Fevio는 로그인 상태와 사용자가 직접 입력한 일정, 약명, 완료 여부를 저장합니다.')).toBeVisible();
   await expect(page.getByText('이 정보는 오늘 할 일, 기록, 파트너 읽기 전용 화면을 만들기 위해 사용됩니다.')).toBeVisible();
   await expect(page.getByText('Fevio는 의료 판단을 하지 않고 병원 안내를 기록·확인하는 도구입니다.')).toBeVisible();
+  await expect(page.getByTestId('privacy-trust-boundary-summary')).toBeVisible();
+  await expect(page.getByText('Fevio가 지키는 실행 기준')).toBeVisible();
+  await expect(page.getByText('오늘 할 일만')).toBeVisible();
+  await expect(page.getByText('원문 확인 후 저장')).toBeVisible();
+  await expect(page.getByText('중요 시간 알림')).toBeVisible();
+  await expect(page.getByText('파트너 역할만')).toBeVisible();
   await expect(page.getByText('민감정보와 의료 경계 동의')).toHaveCount(0);
   const continueButton = page.getByRole('button', { name: '확인하고 계속' });
   await expect(continueButton).toBeVisible();
