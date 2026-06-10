@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { POST as createEmotion } from '../../app/api/emotion/route';
 import { createCookieBackedSupabaseClient } from '../../src/lib/server-supabase';
 
@@ -27,7 +27,15 @@ function createInsertTable(data: unknown) {
 }
 
 describe('/api/emotion', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-09T16:30:00.000Z')); // 2026-06-10 KST
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   it('keeps emotion records private by default and stores them as record cards', async () => {
     const visitTable = createInsertTable({ id: 'visit-emotion-1' });
@@ -53,6 +61,7 @@ describe('/api/emotion', () => {
       created_by: 'user-1',
       source_input_id: 'visit-emotion-1',
       card_type: 'record',
+      care_date: '2026-06-10',
       title: '감정 기록 · 버거워요',
       description: '나를 위한 비공개 감정 기록이에요. 공유하지 않아도 충분해요.',
       status: 'confirmed',
@@ -83,6 +92,7 @@ describe('/api/emotion', () => {
     expect(response.status).toBe(200);
     expect(cardTable.insert).toHaveBeenCalledWith(expect.objectContaining({
       card_type: 'record',
+      care_date: '2026-06-10',
       title: '공유된 감정 신호',
       description: '오늘은 마음이 많이 긴장된 날이에요. 해결책보다 조용한 도움을 먼저 건네 주세요.',
       partner_visible: true,
