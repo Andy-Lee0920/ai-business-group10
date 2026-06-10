@@ -57,6 +57,26 @@ describe("iPhone Safari mobile frame contract", () => {
     expect(communityPreview()).toContain("aria-label=\"닫기\"");
   });
 
+
+  it("auto-enables the iPhone frame for local and presentation-host desktop demos", () => {
+    const rootLayout = readFileSync("app/layout.tsx", "utf8");
+
+    for (const token of [
+      "IPHONE_FRAME_BOOTSTRAP_SCRIPT",
+      "matchMedia('(min-width: 700px)').matches",
+      "h==='localhost'||h==='127.0.0.1'||h==='::1'",
+      "h==='ai-business-group10.vercel.app'",
+      "/^ai-business-group10[-.]/",
+      "h==='fevio.app'||h==='www.fevio.app'||h==='project-oznp0.vercel.app'",
+      "path==='/demo'||path.indexOf('/demo/')===0||path==='/partner/demo'||path.indexOf('/partner/demo/')===0",
+      "f==='0'||f==='false'||f==='none'",
+      "f==='iphone'||f==='1'||f==='true'||d==='iphone'",
+      "document.body.dataset.iphoneFrame='1'",
+    ]) {
+      expect(rootLayout).toContain(token);
+    }
+  });
+
   it("documents the mobile frame decision in DESIGN.md", () => {
     const design = readFileSync("DESIGN.md", "utf8");
     expect(design).toContain(

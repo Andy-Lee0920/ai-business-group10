@@ -42,18 +42,36 @@ test('desktop home is constrained to an iPhone 17-width frame with the refined b
 
   const shellBox = await page.locator('#home-screen').boundingBox();
   const navBox = await page.getByRole('navigation', { name: '하단 주요 메뉴' }).boundingBox();
-  const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-  const viewportWidth = await page.evaluate(() => window.innerWidth);
+  const frameMetrics = await page.evaluate(() => ({
+    bodyIphoneFrame: document.body.dataset.iphoneFrame,
+    scrollWidth: document.documentElement.scrollWidth,
+    viewportWidth: window.innerWidth,
+  }));
 
   expect(shellBox).not.toBeNull();
   expect(navBox).not.toBeNull();
   expect(shellBox!.width).toBeLessThanOrEqual(440);
   expect(shellBox!.width).toBeGreaterThanOrEqual(430);
-  expect(Math.abs(shellBox!.x + shellBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  expect(frameMetrics.bodyIphoneFrame).toBe('1');
+  expect(Math.abs(shellBox!.x + shellBox!.width / 2 - frameMetrics.viewportWidth / 2)).toBeLessThanOrEqual(1);
   expect(navBox!.width).toBeLessThanOrEqual(440);
-  expect(Math.abs(navBox!.x + navBox!.width / 2 - viewportWidth / 2)).toBeLessThanOrEqual(1);
+  expect(Math.abs(navBox!.x + navBox!.width / 2 - frameMetrics.viewportWidth / 2)).toBeLessThanOrEqual(1);
   await expect(page.getByRole('navigation', { name: '주 탐색' })).toHaveCount(0);
-  expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);
+  expect(frameMetrics.scrollWidth).toBeLessThanOrEqual(frameMetrics.viewportWidth);
+});
+
+
+test('desktop frame bootstrap keeps explicit opt-out and custom demo routes unframed', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  await page.goto('/home?care=injection&frame=0');
+  await expect(page.locator('body')).toHaveAttribute('data-iphone-frame', '0');
+
+  await page.goto('/demo');
+  await expect(page.locator('body')).toHaveAttribute('data-iphone-frame', '0');
+
+  await page.goto('/partner/demo');
+  await expect(page.locator('body')).toHaveAttribute('data-iphone-frame', '0');
 });
 
 test('not-found page renders the Fevio 404 shell', async ({ page }) => {
