@@ -61,6 +61,31 @@ describe('reminder infrastructure contract', () => {
     expect(migration).not.toMatch(/source_text|raw_text|clinic_memo/iu);
   });
 
+  it('retimestamps the medication push candidate RPC replacement without changing dispatch history', () => {
+    const migration = readFileSync('supabase/migrations/202606100001_medication_push_reminder_candidates.sql', 'utf8');
+    const uniqueMigration = readFileSync('supabase/migrations/202605290001_reminder_dispatches_card_time_channel_unique.sql', 'utf8');
+
+    expect(migration).toContain('create or replace function public.get_due_web_push_reminder_candidates');
+    expect(migration).toContain('p_channel text');
+    expect(migration).toContain('returns table (');
+    expect(migration).toContain('card_id uuid');
+    expect(migration).toContain('title text');
+    expect(migration).toContain('scheduled_at timestamptz');
+    expect(migration).toContain('push_subscriptions jsonb');
+    expect(migration).toContain("c.status = 'confirmed'");
+    expect(migration).toContain("c.card_type in ('injection', 'medication')");
+    expect(migration).toContain("p_channel in ('web_push_t60', 'web_push_t15')");
+    expect(migration).toContain('rd.card_id = c.id');
+    expect(migration).toContain('rd.scheduled_at = c.scheduled_at');
+    expect(migration).toContain('rd.channel = p_channel');
+    expect(migration).toContain('order by c.scheduled_at asc, c.created_at asc');
+    expect(migration).toContain('grant execute on function public.get_due_web_push_reminder_candidates(timestamptz, timestamptz, text) to service_role');
+    expect(migration).toContain('injection and medication cards');
+    expect(migration).not.toMatch(/source_text|raw_text|clinic_memo/iu);
+    expect(migration).not.toMatch(/insert\s+into\s+public\.reminder_dispatches|update\s+public\.reminder_dispatches|delete\s+from\s+public\.reminder_dispatches/iu);
+    expect(uniqueMigration).toContain('unique (card_id, scheduled_at, channel)');
+  });
+
   it('keeps legacy email dispatch storage documented while MVP uses web push candidates', () => {
     const migration = readFileSync('supabase/migrations/202605110003_reminder_dispatches.sql', 'utf8');
     expect(migration).toContain('unique (card_id, scheduled_at, channel)');
