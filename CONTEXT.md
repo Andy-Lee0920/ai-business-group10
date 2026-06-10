@@ -51,6 +51,10 @@ A line-level candidate produced by manual review or advisory assistance. It beco
 
 A user-confirmed operational task. Home and partner views should render confirmed care action cards, not raw notes or unconfirmed drafts.
 
+### Schedule item
+
+A row in `schedule_items`. Several v1.0 surfaces still read time-based schedule rows as a legacy fallback or derived scheduling projection. A schedule item is **not** the source of truth for confirmed care meaning: confirmed care actions are canonical in `care_action_cards` (ADR 0013), and manual logging migration follows the producer-before-consumer rule recorded in ADR 0031. New code must not store confirmed meaning primarily in `schedule_items`; home, partner, calendar, and schedule surfaces should converge on the same confirmed care-action reality.
+
 ### Care day
 
 The deterministic home-mode label computed from couple state and confirmed cards. v1.0 terms are:
