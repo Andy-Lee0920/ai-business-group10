@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
         description: safeCard.description,
         source_text: sourceText,
         scheduled_at: null,
+        care_date: todayKstDate(),
         status: 'confirmed',
         confirmation_required: false,
         user_marked_important: false,
@@ -140,6 +141,18 @@ function buildSourceText(input: EmotionInput) {
   ]
     .filter(Boolean)
     .join(' · ');
+}
+
+
+function todayKstDate(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+  const part = (type: string) => parts.find((item) => item.type === type)?.value;
+  return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
 function buildSafeCard(input: EmotionInput) {
