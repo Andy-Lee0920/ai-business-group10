@@ -35,7 +35,7 @@ export function CaptureForm({ initialRawText = '', presentationMode = false }: C
       return;
     }
 
-    sessionStorage.setItem('fevio.splitReview', JSON.stringify(payload));
+    sessionStorage.setItem('fevio.splitReview', JSON.stringify({ ...payload, rawText }));
     window.location.href = `/split-review?draftId=${encodeURIComponent(payload.draftId)}`;
   }
 
