@@ -11,12 +11,14 @@ import { DemoParsingScreen } from './demo-parsing-screen';
 import { IntroLanding } from './intro-landing';
 import { PartnerPanel } from './partner-panel';
 import { PatientPanel } from './patient-panel';
+import { buildDemoExperienceGuide } from './stage-experience';
 import styles from './dual-panel-demo.module.css';
 
 export function DualPanelDemoClient({ initialMode, initialStageIndex }: { initialMode: Exclude<DemoState['mode'], 'parsing'>; initialStageIndex: IvfStageIndex }) {
   const router = useRouter();
   const [state, dispatch] = useReducer(demoReducer, undefined, () => createInitialDemoState(initialStageIndex, initialMode));
   const scenario = DEMO_SCENARIOS[state.selectedStage];
+  const guide = buildDemoExperienceGuide(scenario);
   const summary = summarizeSharedCareState(state);
   const generatedFromMemo = Boolean(state.parsedResult);
 
@@ -93,6 +95,19 @@ export function DualPanelDemoClient({ initialMode, initialStageIndex }: { initia
         </details>
       </header>
 
+      <section className={styles.experienceGuide} aria-label="상황별 화면 변화 가이드" data-testid="demo-experience-guide">
+        <div>
+          <span className={styles.guideKicker}>What changes now</span>
+          <strong>{guide.surfaceShift}</strong>
+        </div>
+        <div className={styles.guideDeltaGrid}>
+          <p><span>내 화면</span>{guide.patientDelta}</p>
+          <p><span>파트너 화면</span>{guide.partnerDelta}</p>
+        </div>
+        <ul className={styles.guideProofList} aria-label="화면 변화 확인 포인트">
+          {guide.proofPoints.map((point) => <li key={point}>{point}</li>)}
+        </ul>
+      </section>
 
       <section className={`${styles.dualPanel} ${generatedFromMemo ? styles.dualPanelFromMemo : ''}`} aria-label="내 화면과 파트너 동시 화면" key={`${state.selectedStage}-${state.mode}`}>
         <DemoDeviceFrame className={`${styles.revealPatient} ${generatedFromMemo ? styles.splitPatientFromMemo : ''}`} labelledBy="patient-panel-title">
