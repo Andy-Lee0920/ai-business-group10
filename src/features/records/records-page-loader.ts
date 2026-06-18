@@ -1,7 +1,8 @@
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { isPresentationRequest } from '../../config';
 import { buildPresentationClinicUpdates, buildPresentationCompletions, buildPresentationItems } from '../presentation/presentation-testbed';
 import { createCookieBackedSupabaseClient } from '../../lib/server-supabase';
+import { FEVIO_JUNE_TEST_SEED_COOKIE, isJuneTestScheduleSeedEnabled, mergeJuneTestCommunityPosts, mergeJuneTestJournalEntries } from '../../lib/june-test-schedule-seed';
 import type { ClinicUpdate, CompletionRecord, ScheduleItem } from '../../types/mvp.types';
 import type { CoupleJournalEntry } from '../../types/journal.types';
 import type { CommunityActorRole, CommunityAudience, CommunityAudienceScope, CommunityPostListItem } from '../../types/community.types';
@@ -75,6 +76,8 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
   const communityAudience: CommunityAudience = actor?.role === 'partner' ? 'partner_feed' : 'primary_feed';
   const actorRole: CommunityActorRole = actor?.role ?? 'primary';
   const isPartnerLinked = actor ? await hasApprovedPartnerLink(supabase, actor.couple_id) : false;
+  const cookieStore = await cookies();
+  const juneTestSeedEnabled = isJuneTestScheduleSeedEnabled(cookieStore.get(FEVIO_JUNE_TEST_SEED_COOKIE)?.value);
   const since = new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString();
   const [itemsRes, completionsRes, clinicRes, journalRes, communityRes] = await Promise.all([
     supabase.from('schedule_items').select('*').eq('patient_id', user.id)
@@ -92,16 +95,18 @@ export async function loadRecordsScreenProps(source: RecordsDataSource): Promise
   ]);
 
   if (itemsRes.error || completionsRes.error || clinicRes.error || journalRes.error || communityRes.error) return emptyRecordsProps(communityAudience);
+  const journalEntries = mergeJuneTestJournalEntries((journalRes.data ?? []).map(toJournalEntry), juneTestSeedEnabled);
+  const communityPosts = mergeJuneTestCommunityPosts(await Promise.all((communityRes.data ?? []).map((row) => toCommunityPost(supabase, row))), juneTestSeedEnabled);
   return {
     items: itemsRes.data ?? [],
     completions: completionsRes.data ?? [],
     clinicUpdates: clinicRes.data ?? [],
-    journalEntries: (journalRes.data ?? []).map(toJournalEntry),
-    communityPosts: await Promise.all((communityRes.data ?? []).map((row) => toCommunityPost(supabase, row))),
+    journalEntries,
+    communityPosts,
     communityAudience,
     actorRole,
-    isPartnerLinked,
-    coupleId: actor?.couple_id ?? null,
+    isPartnerLinked: isPartnerLinked || juneTestSeedEnabled,
+    coupleId: actor?.couple_id ?? (juneTestSeedEnabled ? 'june-test-couple' : null),
   };
 }
 

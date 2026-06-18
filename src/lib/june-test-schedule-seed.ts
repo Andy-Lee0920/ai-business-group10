@@ -1,4 +1,6 @@
 import type { ScheduleItem } from '../types/slc.types';
+import type { CommunityPostListItem } from '../types/community.types';
+import type { CoupleJournalEntry } from '../types/journal.types';
 
 export const FEVIO_JUNE_TEST_SEED_COOKIE = 'fevio_test_seed_june_2026';
 
@@ -28,6 +30,81 @@ export function mergeJuneTestScheduleItems(items: ScheduleItem[], patientId: str
   if (!enabled) return items;
   const merged = [...items, ...juneTestScheduleItems(patientId)];
   return merged.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+}
+
+export function mergeJuneTestJournalEntries(entries: CoupleJournalEntry[], enabled: boolean): CoupleJournalEntry[] {
+  if (!enabled) return entries;
+  return [...juneTestJournalEntries(), ...entries];
+}
+
+export function mergeJuneTestCommunityPosts(posts: CommunityPostListItem[], enabled: boolean): CommunityPostListItem[] {
+  if (!enabled) return posts;
+  return [...juneTestCommunityPosts(), ...posts];
+}
+
+function juneTestJournalEntries(): CoupleJournalEntry[] {
+  return [
+    {
+      id: 'june-test-journal-3',
+      body: '13:30 주사 시간을 같이 확인했고, 알림 울리기 전에 준비물을 꺼내뒀어요.',
+      mood: 'calm',
+      painScore: 1,
+      photoUrls: [],
+      authorRole: 'primary',
+      createdAt: '2026-06-18T13:45:00+09:00',
+    },
+    {
+      id: 'june-test-journal-2',
+      body: '옆에서 타이머만 같이 봤고, 다음 방문 시간은 캘린더에서 다시 확인했어요.',
+      mood: 'hopeful',
+      painScore: null,
+      photoUrls: [],
+      authorRole: 'partner',
+      createdAt: '2026-06-18T14:10:00+09:00',
+    },
+    {
+      id: 'june-test-journal-1',
+      body: '초음파/채혈 후 안내를 캘린더에 같이 정리했어요.',
+      mood: 'tired',
+      painScore: 2,
+      photoUrls: [],
+      authorRole: 'primary',
+      createdAt: '2026-06-17T11:20:00+09:00',
+    },
+  ];
+}
+
+function juneTestCommunityPosts(): CommunityPostListItem[] {
+  return [
+    {
+      id: 'june-test-community-2',
+      body: '주사 시간은 병원 안내와 앱 알림을 같이 맞춰두니 훨씬 덜 헷갈렸어요.',
+      mood: 'calm',
+      subCategory: 'tip',
+      photoUrls: ['/assets/slc/clinic-update-banner.png'],
+      audience: 'primary_feed',
+      audienceScope: 'everyone',
+      audienceRole: null,
+      moderationStatus: 'approved',
+      isOfficial: false,
+      createdAt: '2026-06-18T14:30:00+09:00',
+      authorNickname: '테스트 기록',
+    },
+    {
+      id: 'june-test-community-1',
+      body: '개인정보가 보이는 원문 대신, 확인한 시간과 준비물만 짧게 남겼어요.',
+      mood: null,
+      subCategory: 'today',
+      photoUrls: ['/assets/slc/clinic-update-banner.png'],
+      audience: 'primary_feed',
+      audienceScope: 'same_role',
+      audienceRole: 'primary',
+      moderationStatus: 'approved',
+      isOfficial: true,
+      createdAt: '2026-06-17T18:20:00+09:00',
+      authorNickname: 'Fevio',
+    },
+  ];
 }
 
 function item(
