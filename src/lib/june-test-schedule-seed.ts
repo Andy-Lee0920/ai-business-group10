@@ -13,7 +13,7 @@ export function juneTestScheduleItems(patientId: string): ScheduleItem[] {
   return [
     item(patientId, 1, 'clinic', '[테스트] 초음파/채혈 확인', null, null, '2026-06-17T09:30:00+09:00', createdAt),
     item(patientId, 2, 'injection', '[테스트] 고날에프 주사', '150', 'IU', '2026-06-17T21:00:00+09:00', createdAt),
-    item(patientId, 3, 'injection', '[테스트] 고날에프 주사', '150', 'IU', '2026-06-18T13:30:00+09:00', createdAt),
+    item(patientId, 3, 'clinic', '[테스트] 병원 진료 방문', null, null, '2026-06-18T13:30:00+09:00', createdAt),
     item(patientId, 4, 'clinic', '[테스트] 난포 확인 방문', null, null, '2026-06-19T09:30:00+09:00', createdAt),
     item(patientId, 5, 'injection', '[테스트] 오비드렐 트리거 확인', '250', 'μg', '2026-06-19T22:00:00+09:00', createdAt),
     item(patientId, 6, 'clinic', '[테스트] 채혈/시술 전 확인', null, null, '2026-06-20T09:00:00+09:00', createdAt),
@@ -46,7 +46,7 @@ function juneTestJournalEntries(): CoupleJournalEntry[] {
   return [
     {
       id: 'june-test-journal-3',
-      body: '13:30 주사 시간을 같이 확인했고, 알림 울리기 전에 준비물을 꺼내뒀어요.',
+      body: '13:30 병원 진료 방문을 같이 확인했고, 알림 울리기 전에 준비물을 꺼내뒀어요.',
       mood: 'calm',
       painScore: 1,
       photoUrls: [],
@@ -78,7 +78,7 @@ function juneTestCommunityPosts(): CommunityPostListItem[] {
   return [
     {
       id: 'june-test-community-2',
-      body: '주사 시간은 병원 안내와 앱 알림을 같이 맞춰두니 훨씬 덜 헷갈렸어요.',
+      body: '병원 방문 시간은 안내문과 앱 알림을 같이 맞춰두니 훨씬 덜 헷갈렸어요.',
       mood: 'calm',
       subCategory: 'tip',
       photoUrls: ['/assets/slc/clinic-update-banner.png'],
