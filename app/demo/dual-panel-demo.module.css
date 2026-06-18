@@ -2477,3 +2477,100 @@
     --demo-device-scale: 1.58;
   }
 }
+
+.experienceGuide {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(360px, 1.35fr) auto;
+  gap: 10px;
+  align-items: center;
+  max-width: 1128px;
+  margin: 0 auto 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.34)),
+    rgba(255, 252, 247, 0.58);
+  box-shadow: 0 12px 36px rgba(71, 63, 55, 0.11);
+  backdrop-filter: blur(var(--fevio-material-thin-blur)) saturate(1.18);
+}
+
+.guideKicker {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--fevio-text-tertiary);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.experienceGuide strong {
+  display: block;
+  color: var(--fevio-ink);
+  font-size: clamp(13px, 1.15vw, 16px);
+  line-height: 1.18;
+  letter-spacing: -0.035em;
+}
+
+.guideDeltaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.guideDeltaGrid p {
+  min-height: 54px;
+  margin: 0;
+  padding: 9px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(55, 65, 81, 0.92);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.guideDeltaGrid span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--fevio-muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.guideProofList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+  max-width: 252px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guideProofList li {
+  padding: 5px 8px;
+  border: 1px solid rgba(32, 35, 31, 0.08);
+  border-radius: 999px;
+  background: rgba(32, 35, 31, 0.055);
+  color: var(--fevio-ink);
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+  .experienceGuide {
+    grid-template-columns: 1fr;
+    margin-bottom: 8px;
+  }
+
+  .guideProofList {
+    justify-content: flex-start;
+    max-width: none;
+  }
+}
