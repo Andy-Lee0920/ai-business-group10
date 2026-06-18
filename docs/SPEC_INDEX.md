@@ -37,6 +37,7 @@ Important safety interpretations:
 | Legacy schedule audit | `docs/03-engineering/legacy-schedule-lane-audit.md` | Background for `schedule_items` compatibility while canonical care cards mature. |
 | Reminder dispatch | `docs/03-engineering/reminder-dispatch-sop.md` | Use before touching reminder delivery or PWA push flows. |
 | Design direction | `docs/02-design/designer-brief.md`, `docs/02-design/deck.md`, `docs/02-design/ux-usefulness-reset.md` | Visual and UX direction; not raw production asset requirements. |
+| State-driven home mockups | `docs/specs/spec-state-driven-home-mockups.md` | Four PNG mockup situations for the home surface: trigger shot, clinic visit, waiting quiet mode, and rest day. Use the current Vercel app design assets/style. |
 
 ## Active migration / epic references
 
