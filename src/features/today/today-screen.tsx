@@ -166,12 +166,12 @@ function resolveHeroVisual(story: HeroStory): HeroVisual {
     case "clinic_tomorrow":
       return {
         bgGradient:
-          "linear-gradient(to bottom, #E6DEFF 0%, #EDE8FF 55%, #EDE8FF 100%)",
-        sheetBg: "rgba(241, 238, 255, 0.96)",
-        cardGradient: "linear-gradient(145deg, #F6F2FF 0%, #EDE5FF 100%)",
-        accentColor: "#8B70D4",
-        accentLight: "#D8CEFF",
-        textAccent: "#3A1E7A",
+          "radial-gradient(circle at 50% -6%, rgba(255, 232, 218, 0.92) 0%, rgba(255, 246, 237, 0.70) 32%, transparent 58%), linear-gradient(180deg, #FFF8F2 0%, #FAF7F2 100%)",
+        sheetBg: "rgba(255, 252, 248, 0.96)",
+        cardGradient: "linear-gradient(145deg, #FFFFFF 0%, #FFF4EA 100%)",
+        accentColor: HOME_SOFT_CORAL,
+        accentLight: HOME_SOFT_CORAL_LIGHT,
+        textAccent: HOME_SOFT_CORAL_DEEP,
         badgeEmoji: "🌙",
         badgeLabel: "내일 병원",
         asset: slcAssets.home.waiting,
@@ -743,6 +743,85 @@ const nextActionHeroStyle = {
   boxShadow: "0 20px 48px rgba(111, 77, 58, 0.08)",
 } as const;
 
+const tomorrowClinicHeroStyle = {
+  display: "grid",
+  alignContent: "center",
+  gap: 14,
+  marginTop: 8,
+  padding: "18px 18px 16px",
+  borderRadius: 30,
+  background: "rgba(255, 255, 255, 0.78)",
+  border: "1.5px solid rgba(255, 255, 255, 0.92)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+} as const;
+
+const tomorrowClinicHeroTopStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 10,
+} as const;
+
+const tomorrowClinicHeroBadgeStyle = {
+  color: HOME_SOFT_WARM_MUTED,
+  fontSize: 12,
+  fontWeight: 900,
+} as const;
+
+const tomorrowClinicHeroDdayStyle = {
+  flex: "0 0 auto",
+  borderRadius: 999,
+  background: HOME_SOFT_CORAL_LIGHT,
+  color: HOME_SOFT_CORAL_DEEP,
+  padding: "6px 10px",
+  fontSize: 11,
+  fontWeight: 950,
+} as const;
+
+const tomorrowClinicHeroTitleStyle = {
+  margin: 0,
+  color: "var(--slc-text)",
+  fontSize: 24,
+  fontWeight: 950,
+  lineHeight: 1.16,
+  letterSpacing: 0,
+  wordBreak: "keep-all",
+} as const;
+
+const tomorrowClinicHeroTimeStyle = {
+  margin: "8px 0 0",
+  color: HOME_SOFT_CORAL_DEEP,
+  fontSize: 14,
+  fontWeight: 900,
+  lineHeight: 1.35,
+  wordBreak: "keep-all",
+} as const;
+
+const tomorrowClinicHeroListStyle = {
+  display: "grid",
+  gap: 8,
+  margin: 0,
+  padding: "12px 12px 12px 28px",
+  borderRadius: 18,
+  background: "rgba(255, 248, 242, 0.78)",
+  border: "1px solid rgba(219, 202, 190, 0.46)",
+  color: "var(--slc-text)",
+  fontSize: 12,
+  fontWeight: 850,
+  lineHeight: 1.42,
+  wordBreak: "keep-all",
+} as const;
+
+const tomorrowClinicHeroFootnoteStyle = {
+  margin: 0,
+  color: "var(--slc-muted)",
+  fontSize: 11,
+  fontWeight: 800,
+  lineHeight: 1.4,
+  wordBreak: "keep-all",
+} as const;
+
 const sectionCardStyle = {
   display: "grid",
   gap: 12,
@@ -1096,6 +1175,8 @@ function HeroZone({
           onCta={onCta}
           accentColor={heroVisual.accentColor}
         />
+      ) : story.kind === "tomorrow" && story.item.type === "clinic" ? (
+        <TomorrowClinicPrepHero item={story.item} visual={heroVisual} />
       ) : (
         <>
           <HomeHeroCard visual={heroVisual} />
@@ -1113,6 +1194,44 @@ function HeroZone({
         </>
       )}
     </section>
+  );
+}
+
+function TomorrowClinicPrepHero({
+  item,
+  visual,
+}: {
+  item: ScheduleItem;
+  visual: HeroVisual;
+}) {
+  return (
+    <article
+      data-testid="home-tomorrow-clinic-prep-hero"
+      style={{
+        ...tomorrowClinicHeroStyle,
+        boxShadow: `0 18px 42px ${visual.accentColor}18, inset 0 1px 0 rgba(255,255,255,0.92)`,
+      }}
+    >
+      <div style={tomorrowClinicHeroTopStyle}>
+        <span style={tomorrowClinicHeroBadgeStyle}>병원 안내 기준</span>
+        <span style={tomorrowClinicHeroDdayStyle}>내일 병원</span>
+      </div>
+      <div>
+        <h1 style={tomorrowClinicHeroTitleStyle}>내일 방문 전 확인할 것</h1>
+        <p style={tomorrowClinicHeroTimeStyle}>
+          {formatScheduleTime(item.scheduled_at)} · {formatScheduleTitle(item)}
+        </p>
+      </div>
+      <ul style={tomorrowClinicHeroListStyle}>
+        <li>신분증, 보험증, 병원 안내문 또는 처방 메모 챙기기</li>
+        <li>복용/주사 중인 약 이름과 시간을 한 번 더 확인하기</li>
+        <li>초음파·채혈 후 물어볼 질문 2개를 짧게 메모하기</li>
+        <li>출혈, 복통, 발열처럼 병원에 문의할 기준 확인하기</li>
+      </ul>
+      <p style={tomorrowClinicHeroFootnoteStyle}>
+        병원 원문과 다른 부분이 있으면 원문 안내를 우선해요.
+      </p>
+    </article>
   );
 }
 
