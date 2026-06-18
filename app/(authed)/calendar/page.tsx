@@ -1,7 +1,8 @@
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { isPresentationRequest } from '../../../src/config';
 import { CalendarScreen } from '../../../src/features/calendar/calendar-screen';
 import { buildPresentationItems } from '../../../src/features/presentation/presentation-testbed';
+import { FEVIO_JUNE_TEST_SEED_COOKIE, isJuneTestScheduleSeedEnabled, mergeJuneTestScheduleItems } from '../../../src/lib/june-test-schedule-seed';
 import { createCookieBackedSupabaseClient } from '../../../src/lib/server-supabase';
 import { fallbackScheduleItems, isMissingSlcTable } from '../../../src/lib/slc-fallback';
 import { CARE_ACTION_SCHEDULE_SELECT, mergeCanonicalScheduleItemsWithLegacyFallback, projectCareActionCardsForSchedule, type CareActionScheduleRow } from '../../../src/domain/care-action-home-projection';
@@ -16,6 +17,8 @@ export default async function CalendarPage() {
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+  const cookieStore = await cookies();
+  const juneTestSeedEnabled = isJuneTestScheduleSeedEnabled(cookieStore.get(FEVIO_JUNE_TEST_SEED_COOKIE)?.value);
 
   const { start, end } = currentMonthRange();
   const careCardsRes = await supabase
@@ -40,10 +43,19 @@ export default async function CalendarPage() {
 
   if (isMissingSlcTable(itemsRes.error)) {
     const fallbackItems = careCardItems.length > 0 ? careCardItems : fallbackScheduleItems(user.id);
-    return <CalendarScreen items={fallbackItems} />;
+    const seededItems = mergeJuneTestScheduleItems(fallbackItems, user.id, juneTestSeedEnabled)
+      .filter((item) => isWithinRange(item.scheduled_at, start, end));
+    return <CalendarScreen items={seededItems} />;
   }
-  if (itemsRes.error) return <CalendarScreen items={careCardItems} />;
-  return <CalendarScreen items={mergeCanonicalScheduleItemsWithLegacyFallback(careCardItems, (itemsRes.data ?? []) as ScheduleItem[])} />;
+  if (itemsRes.error) {
+    const seededItems = mergeJuneTestScheduleItems(careCardItems, user.id, juneTestSeedEnabled)
+      .filter((item) => isWithinRange(item.scheduled_at, start, end));
+    return <CalendarScreen items={seededItems} />;
+  }
+  const mergedItems = mergeCanonicalScheduleItemsWithLegacyFallback(careCardItems, (itemsRes.data ?? []) as ScheduleItem[]);
+  const seededItems = mergeJuneTestScheduleItems(mergedItems, user.id, juneTestSeedEnabled)
+    .filter((item) => isWithinRange(item.scheduled_at, start, end));
+  return <CalendarScreen items={seededItems} />;
 }
 
 function isWithinRange(iso: string, start: Date, end: Date) {

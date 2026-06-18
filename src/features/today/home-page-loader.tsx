@@ -6,6 +6,7 @@ import { mergeCanonicalScheduleItemsWithLegacyFallback, projectCareActionCardsFo
 import { careDayForConfirmedPhase } from '../../domain/cycle-state-machine';
 import { factDict } from '../../lib/brief/factDict';
 import { generateDailyBrief } from '../../lib/brief/generateBrief';
+import { FEVIO_JUNE_TEST_SEED_COOKIE, isJuneTestScheduleSeedEnabled, mergeJuneTestScheduleItems } from '../../lib/june-test-schedule-seed';
 import { createCookieBackedSupabaseClient } from '../../lib/server-supabase';
 import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../lib/slc-fallback';
 import type { ClinicUpdate, ScheduleItem } from '../../types/slc.types';
@@ -39,6 +40,7 @@ async function renderSupabaseHomePage() {
   const cookieStore = await cookies();
   const fallbackRole = cookieStore.get(SLC_ROLE_COOKIE)?.value;
   const firstScheduleSkipped = cookieStore.get(SLC_FIRST_SCHEDULE_SKIPPED_COOKIE)?.value === '1';
+  const juneTestSeedEnabled = isJuneTestScheduleSeedEnabled(cookieStore.get(FEVIO_JUNE_TEST_SEED_COOKIE)?.value);
 
   if ((isMissingSlcTable(profileError) ? fallbackRole : profile?.role) === 'partner') redirect('/partner');
 
@@ -79,16 +81,17 @@ async function renderSupabaseHomePage() {
   const mergedItems = mergeCanonicalScheduleItemsWithLegacyFallback(careCardItems, legacyItems);
 
   if (itemsRes.error && mergedItems.length === 0) {
-    const fallbackItems = fallbackScheduleItems(user.id);
+    const fallbackItems = mergeJuneTestScheduleItems(fallbackScheduleItems(user.id), user.id, juneTestSeedEnabled);
     const dailyBrief = await buildHomeBrief(fallbackItems);
     return <TodayScreen dailyBrief={dailyBrief.line} initialItems={fallbackItems} userId={user.id} initialClinicUpdates={[]} />;
   }
 
-  const dailyBrief = await buildHomeBrief(mergedItems);
+  const seededItems = mergeJuneTestScheduleItems(mergedItems, user.id, juneTestSeedEnabled);
+  const dailyBrief = await buildHomeBrief(seededItems);
   return (
     <TodayScreen
       dailyBrief={dailyBrief.line}
-      initialItems={mergedItems}
+      initialItems={seededItems}
       userId={user.id}
       initialClinicUpdates={(clinicUpdatesRes.data ?? []) as ClinicUpdate[]}
       firstScheduleSkipped={firstScheduleSkipped}
