@@ -333,6 +333,9 @@ export function TodayScreen({
   );
   const clinicContextItem =
     clinicFollowUpItem ??
+    (heroStory.kind === "tomorrow" && heroStory.item.type === "clinic"
+      ? heroStory.item
+      : null) ??
     operationalItems.find((item) => item.type === "clinic") ??
     null;
 
@@ -664,19 +667,23 @@ function ClinicNoteSummary({
   item: ScheduleItem | null;
   hasClinicUpdates: boolean;
 }) {
+  const isTomorrowClinic = item?.type === "clinic" && isOnDay(item.scheduled_at, 1);
   return (
     <section aria-label="병원 안내 기준" style={sectionCardStyle}>
       <p style={sectionEyebrowStyle}>병원 안내 기준</p>
       <h2 style={sectionTitleStyle}>
-        {item
-          ? "확정한 다음 실행입니다"
-          : "바뀐 안내는 확인 후 반영하세요"}
+        {isTomorrowClinic
+          ? "내일 방문 전 확인할 것"
+          : item
+            ? "확정한 다음 실행입니다"
+            : "바뀐 안내는 확인 후 반영하세요"}
       </h2>
       <p style={mutedParagraphStyle}>
         {item
           ? `${formatScheduleTime(item.scheduled_at)} · ${formatScheduleTitle(item)}`
           : "AI/OCR 후보는 원문과 비교한 뒤 저장할 때만 오늘 실행이 됩니다."}
       </p>
+      {isTomorrowClinic ? <ClinicPrepChecklist /> : null}
       <div style={clinicNoteFooterStyle}>
         <span>{hasClinicUpdates ? "업데이트 기록 있음" : "최근 업데이트 없음"}</span>
         <Link href="/clinic-update" style={smallTextLinkStyle}>
@@ -684,6 +691,17 @@ function ClinicNoteSummary({
         </Link>
       </div>
     </section>
+  );
+}
+
+function ClinicPrepChecklist() {
+  return (
+    <ul style={clinicPrepListStyle} aria-label="내일 병원 방문 준비 예시">
+      <li>신분증, 보험증, 병원 안내문 또는 처방 메모 챙기기</li>
+      <li>복용/주사 중인 약 이름과 시간을 한 번 더 확인하기</li>
+      <li>초음파·채혈 후 물어볼 질문 2개를 짧게 메모하기</li>
+      <li>출혈, 복통, 발열처럼 병원에 문의할 기준 확인하기</li>
+    </ul>
   );
 }
 
@@ -970,6 +988,21 @@ const mutedParagraphStyle = {
   wordBreak: "keep-all",
 } as const;
 
+const clinicPrepListStyle = {
+  display: "grid",
+  gap: 7,
+  margin: "10px 0 0",
+  padding: "10px 12px 10px 26px",
+  borderRadius: 16,
+  background: "rgba(255, 252, 250, 0.66)",
+  border: "1px solid rgba(219, 202, 190, 0.45)",
+  color: "var(--slc-text)",
+  fontSize: 12,
+  fontWeight: 800,
+  lineHeight: 1.45,
+  wordBreak: "keep-all",
+} as const;
+
 const clinicNoteFooterStyle = {
   display: "flex",
   justifyContent: "space-between",
@@ -1069,7 +1102,13 @@ function HeroZone({
           <div style={{ margin: "10px 0" }}></div>
           <CheerCard
             visual={heroVisual}
-            heading={priority === "brief" ? dailyBrief : heroVisual.heading}
+            heading={
+              story.kind === "tomorrow" && story.item.type === "clinic"
+                ? heroVisual.heading
+                : priority === "brief"
+                  ? dailyBrief
+                  : heroVisual.heading
+            }
           />
         </>
       )}
