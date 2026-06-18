@@ -11,7 +11,7 @@ export function juneTestScheduleItems(patientId: string): ScheduleItem[] {
   return [
     item(patientId, 1, 'clinic', '[테스트] 초음파/채혈 확인', null, null, '2026-06-17T09:30:00+09:00', createdAt),
     item(patientId, 2, 'injection', '[테스트] 고날에프 주사', '150', 'IU', '2026-06-17T21:00:00+09:00', createdAt),
-    item(patientId, 3, 'injection', '[테스트] 고날에프 주사', '150', 'IU', '2026-06-18T21:00:00+09:00', createdAt),
+    item(patientId, 3, 'injection', '[테스트] 고날에프 주사', '150', 'IU', '2026-06-18T13:30:00+09:00', createdAt),
     item(patientId, 4, 'clinic', '[테스트] 난포 확인 방문', null, null, '2026-06-19T09:30:00+09:00', createdAt),
     item(patientId, 5, 'injection', '[테스트] 오비드렐 트리거 확인', '250', 'μg', '2026-06-19T22:00:00+09:00', createdAt),
     item(patientId, 6, 'clinic', '[테스트] 채혈/시술 전 확인', null, null, '2026-06-20T09:00:00+09:00', createdAt),
