@@ -11,7 +11,12 @@ import { createCookieBackedSupabaseClient } from '../../lib/server-supabase';
 import { SLC_FIRST_SCHEDULE_SKIPPED_COOKIE, SLC_ROLE_COOKIE, fallbackScheduleItems, isMissingSlcTable } from '../../lib/slc-fallback';
 import type { ClinicUpdate, ScheduleItem } from '../../types/slc.types';
 import type { IvfPhase } from '../../types/cycle-event.types';
-import { PresentationHomeDemo } from './presentation-home-demo';
+import {
+  AdaptiveHomeDemo,
+  getAdaptiveHomeDemoCare,
+  hasAdaptiveHomeDemoParam,
+  type AdaptiveHomeDemoParams,
+} from './adaptive-home-demo';
 import { TodayScreen } from './today-screen';
 
 export type HomeDataSource = { kind: 'fixture' } | { kind: 'supabase' };
@@ -21,13 +26,13 @@ export async function resolveHomeDataSource(): Promise<HomeDataSource> {
   return isPresentationRequest({ headers: requestHeaders }) ? { kind: 'fixture' } : { kind: 'supabase' };
 }
 
-export async function renderHomePage() {
+export async function renderHomePage(searchParams?: AdaptiveHomeDemoParams) {
   const source = await resolveHomeDataSource();
-  if (source.kind === 'fixture') return <PresentationHomeDemo />;
-  return renderSupabaseHomePage();
+  if (source.kind === 'fixture') return <AdaptiveHomeDemo care={getAdaptiveHomeDemoCare(searchParams)} />;
+  return renderSupabaseHomePage(searchParams);
 }
 
-async function renderSupabaseHomePage() {
+async function renderSupabaseHomePage(searchParams?: AdaptiveHomeDemoParams) {
   const supabase = await createCookieBackedSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/sign-in');
@@ -43,6 +48,10 @@ async function renderSupabaseHomePage() {
   const juneTestSeedEnabled = isJuneTestScheduleSeedEnabled(cookieStore.get(FEVIO_JUNE_TEST_SEED_COOKIE)?.value);
 
   if ((isMissingSlcTable(profileError) ? fallbackRole : profile?.role) === 'partner') redirect('/partner');
+
+  if (juneTestSeedEnabled || hasAdaptiveHomeDemoParam(searchParams)) {
+    return <AdaptiveHomeDemo care={getAdaptiveHomeDemoCare(searchParams)} />;
+  }
 
   const homeWindowStart = getKstDayStart(0).toISOString();
   const homeWindowEnd = getKstDayEnd(2).toISOString();

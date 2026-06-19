@@ -37,10 +37,11 @@ export function getPresentationPartnerView(): PartnerActionViewItem[] {
 
 export function normalizePresentationCare(value: string | string[] | null | undefined): PresentationCareParam {
   const raw = Array.isArray(value) ? value[0] : value;
-  if (raw === 'clinic') return 'clinic';
-  if (raw === 'waiting') return 'waiting';
-  if (raw === 'two_week_wait_day') return 'two_week_wait_day';
-  if (raw === 'result_protection_day') return 'result_protection_day';
+  if (raw === 'clinic' || raw === 'clinic_day') return 'clinic';
+  if (raw === 'waiting' || raw === 'waiting_day') return 'waiting';
+  if (raw === 'two_week_wait' || raw === 'two_week_wait_day') return 'two_week_wait_day';
+  if (raw === 'result_protection' || raw === 'result_protection_day') return 'result_protection_day';
+  if (raw === 'injection' || raw === 'injection_day') return 'injection';
   return 'injection';
 }
 

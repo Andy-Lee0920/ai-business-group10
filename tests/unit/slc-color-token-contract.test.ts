@@ -163,8 +163,7 @@ describe('SLC color token contract', () => {
 
     expect(homeDemo).not.toContain('Fevio scenario testbed');
     expect(homeDemo).not.toContain('PresentationTestbedNav');
-    expect(homeDemo).toContain('<TodayScreen');
-    expect(homeDemo).toContain('병원 안내 기준으로 다음 실행을 정리했어요.');
+    expect(homeDemo).toContain('<AdaptiveHomeDemo');
     expect(homeDemo).not.toContain('StageHomeScreen');
     expect(testbedNav).toContain("background: active ? 'var(--slc-coral)' : 'rgba(255, 255, 255, 0.72)'"
     );
