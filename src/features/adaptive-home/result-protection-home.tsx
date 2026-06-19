@@ -1,5 +1,6 @@
 import { buildResultProtectionSurface } from '../../domain/result-protection';
 import {
+  CarePhaseStrip,
   CareSurfaceFrame,
   CompactHeroGreeting,
   QuietChecklist,
@@ -13,6 +14,7 @@ export function ResultProtectionHome({ context, composition }: AdaptiveStateHome
 
   return (
     <CareSurfaceFrame phase="waiting" context={context} intensity={composition?.intensity ?? 0.12} appliedRules={composition?.appliedRules}>
+      <CarePhaseStrip activePhase="waiting" activeStep="result_protection" />
       <CompactHeroGreeting phase="waiting" title="오늘은 보호 모드" momentCopy={surface.heroCopy} />
       <QuietChecklist
         label="오늘 남겨둘 것"

@@ -422,40 +422,117 @@
 /* ── Compact layout (consulting-doc structure) ──────────────────────── */
 
 .phaseStrip {
+  display: grid;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow:
+    0 8px 22px rgba(50, 61, 46, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(var(--fevio-material-thin-blur));
+}
+
+.phaseStripHeader {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.phaseStripHeader span {
+  color: var(--phase-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.phaseStripHeader strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--phase-accent-deep);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phaseTrack {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.phaseTrack::before {
+  position: absolute;
+  top: 11px;
+  right: 9%;
+  left: 9%;
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--phase-accent) 22%, rgba(255, 255, 255, 0.62));
+  content: '';
+}
+
+.phaseStep {
+  position: relative;
+  min-width: 0;
 }
 
 .phaseTab {
-  padding: 6px 14px;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 1px;
   border: 1px solid transparent;
-  border-radius: 20px;
+  border-radius: 14px;
   background: transparent;
   color: var(--phase-muted);
-  font-size: 0.82rem;
-  font-weight: 780;
+  font-size: 0.66rem;
+  font-weight: 860;
   text-decoration: none;
   white-space: nowrap;
   transition: background 180ms, color 180ms, border-color 180ms;
 }
 
-.phaseTab[aria-current='page'] {
-  background: rgba(255, 255, 255, 0.72);
-  border-color: rgba(255, 255, 255, 0.54);
-  color: var(--phase-ink);
+.phaseDot {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--phase-muted);
+  font-size: 0.68rem;
+  font-weight: 950;
   box-shadow: 0 2px 8px rgba(50, 61, 46, 0.08);
 }
 
-.phaseProgressBadge {
-  margin-left: auto;
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--phase-accent) 14%, white);
+.phaseStep[data-complete='true'] .phaseDot {
+  background: color-mix(in srgb, var(--phase-accent) 30%, white);
   color: var(--phase-accent-deep);
-  font-size: 0.68rem;
-  font-weight: 950;
-  white-space: nowrap;
+}
+
+.phaseTab[aria-current='step'] {
+  color: var(--phase-ink);
+}
+
+.phaseTab[aria-current='step'] .phaseDot {
+  border-color: color-mix(in srgb, var(--phase-accent) 44%, white);
+  background: var(--phase-accent-deep);
+  color: white;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--phase-accent) 30%, transparent);
 }
 
 .compactGreeting {

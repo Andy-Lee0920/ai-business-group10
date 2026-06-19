@@ -196,26 +196,54 @@ export function CareMomentRing({ card, generatedAt }: { card: HomeActionCard | n
 
 // ── Compact layout components (consulting-doc structure) ────────────
 
-const PHASE_TABS = [
-  { key: 'injection' as CareSurfacePhase, label: '주사', href: '/home?care=injection' },
-  { key: 'clinic' as CareSurfacePhase, label: '병원', href: '/home?care=clinic' },
-  { key: 'waiting' as CareSurfacePhase, label: '대기', href: '/home?care=waiting' },
+export type IvfStageStep = 'stimulation' | 'monitoring' | 'retrieval_culture' | 'transfer_wait' | 'result_protection';
+
+const IVF_STAGE_STEPS = [
+  { key: 'stimulation' as IvfStageStep, label: '자극', fullLabel: '난포 자극', href: '/home?care=injection_day' },
+  { key: 'monitoring' as IvfStageStep, label: '확인', fullLabel: '초음파·채혈', href: '/home?care=clinic_day' },
+  { key: 'retrieval_culture' as IvfStageStep, label: '채취', fullLabel: '채취·배양', href: '/home?care=waiting_day' },
+  { key: 'transfer_wait' as IvfStageStep, label: '이식', fullLabel: '이식 후 대기', href: '/home?care=two_week_wait_day' },
+  { key: 'result_protection' as IvfStageStep, label: '결과', fullLabel: '결과 보호', href: '/home?care=result_protection_day' },
 ] as const;
 
-export function CarePhaseStrip({ activePhase }: { activePhase: CareSurfacePhase }) {
+const PHASE_TO_IVF_STAGE: Record<CareSurfacePhase, IvfStageStep> = {
+  injection: 'stimulation',
+  clinic: 'monitoring',
+  waiting: 'retrieval_culture',
+  two_week_wait: 'transfer_wait',
+  routine: 'stimulation',
+};
+
+export function CarePhaseStrip({ activePhase, activeStep }: { activePhase: CareSurfacePhase; activeStep?: IvfStageStep }) {
+  const currentStep = activeStep ?? PHASE_TO_IVF_STAGE[activePhase];
+  const currentIndex = IVF_STAGE_STEPS.findIndex((step) => step.key === currentStep);
+  const current = IVF_STAGE_STEPS[currentIndex] ?? IVF_STAGE_STEPS[0];
+
   return (
-    <nav className={styles.phaseStrip} aria-label="케어 단계 전환">
-      {PHASE_TABS.map((tab) => (
-        <a
-          key={tab.key}
-          href={tab.href}
-          className={styles.phaseTab}
-          aria-current={activePhase === tab.key ? 'page' : undefined}
-        >
-          {tab.label}
-        </a>
-      ))}
-      <span className={styles.phaseProgressBadge}>진행 중</span>
+    <nav className={styles.phaseStrip} aria-label="IVF 5단계 진행">
+      <div className={styles.phaseStripHeader}>
+        <span>IVF 5단계</span>
+        <strong>{currentIndex + 1}/5 · {current.fullLabel}</strong>
+      </div>
+      <ol className={styles.phaseTrack}>
+        {IVF_STAGE_STEPS.map((step, index) => {
+          const isCurrent = step.key === currentStep;
+          const isDone = index < currentIndex;
+          return (
+            <li className={styles.phaseStep} data-complete={isDone ? 'true' : undefined} key={step.key}>
+              <a
+                href={step.href}
+                className={styles.phaseTab}
+                aria-current={isCurrent ? 'step' : undefined}
+                aria-label={`${index + 1}단계 ${step.fullLabel}`}
+              >
+                <span className={styles.phaseDot}>{index + 1}</span>
+                <span>{step.label}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
     </nav>
   );
 }

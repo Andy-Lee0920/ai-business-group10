@@ -15,7 +15,7 @@ export function TwoWeekWaitHome({ context, composition }: AdaptiveStateHomeBaseP
 
   return (
     <CareSurfaceFrame phase="two_week_wait" context={context} intensity={composition?.intensity ?? 0.2} appliedRules={composition?.appliedRules}>
-      <CarePhaseStrip activePhase="waiting" />
+      <CarePhaseStrip activePhase="two_week_wait" />
       <CompactHeroGreeting phase="two_week_wait" title={anchor.title} momentCopy={composition?.momentCopy ?? anchor.explanation} />
       <QuickStatRow
         stats={[
