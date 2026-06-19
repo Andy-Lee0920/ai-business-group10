@@ -268,21 +268,27 @@ const PHASE_VISUALS: Record<CareSurfacePhase, { asset: string; label: string; he
 
 export function CompactHeroGreeting({ phase, momentCopy, title }: { phase: CareSurfacePhase; momentCopy?: string; title?: string }) {
   const copy = PHASE_GREETING[phase];
-  const visual = title?.includes('보호') ? { asset: '/assets/home/pregnancy_wait.png', label: '결과 보호', helper: '공유 범위 먼저 선택' } : PHASE_VISUALS[phase];
   return (
     <div className={styles.compactGreeting} data-testid="compact-hero-greeting">
       <div className={styles.compactGreetingCopy}>
         <h1 className={styles.compactGreetingTitle}>{title ?? copy.title}</h1>
         <p className={styles.compactGreetingContext}>{momentCopy ?? copy.context}</p>
       </div>
-      <figure className={styles.phaseVisualCard} aria-label="IVF 과정 이미지">
-        <img src={visual.asset} alt="" aria-hidden="true" />
-        <figcaption>
-          <span>{visual.label}</span>
-          <strong>{visual.helper}</strong>
-        </figcaption>
-      </figure>
+      <PhaseVisualCard phase={phase} title={title} />
     </div>
+  );
+}
+
+export function PhaseVisualCard({ phase, title }: { phase: CareSurfacePhase; title?: string }) {
+  const visual = title?.includes('보호') ? { asset: '/assets/home/pregnancy_wait.png', label: '결과 보호', helper: '공유 범위 먼저 선택' } : PHASE_VISUALS[phase];
+  return (
+    <figure className={styles.phaseVisualCard} aria-label="IVF 과정 이미지">
+      <img src={visual.asset} alt="" aria-hidden="true" />
+      <figcaption>
+        <span>{visual.label}</span>
+        <strong>{visual.helper}</strong>
+      </figcaption>
+    </figure>
   );
 }
 

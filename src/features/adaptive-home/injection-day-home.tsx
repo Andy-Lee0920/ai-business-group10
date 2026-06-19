@@ -5,6 +5,7 @@ import {
   CareSurfaceFrame,
   CompactHeroGreeting,
   MissionCardPair,
+  PhaseVisualCard,
   QuickStatRow,
 } from './care-surface-primitives';
 import { countPartnerActionSignals, findPrimaryCareCard, toMissionCardData } from './care-surface-model';
@@ -86,6 +87,7 @@ function InjectionCountdownHero({
           {formatRemainingClock(remainingSeconds)}
         </strong>
       </div>
+      <PhaseVisualCard phase="injection" />
       <div style={{ width: '100%', display: 'grid', gap: 8, marginTop: 10 }}>
         <CountdownInfoRow label="주사 시간" value={primary?.scheduledAt ? formatCardTime(primary.scheduledAt) : '확인 필요'} />
         <CountdownInfoRow label="약물명" value={primary ? extractDrug(primary.title) : '확인 필요'} />
