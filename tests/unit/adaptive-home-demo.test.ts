@@ -27,6 +27,7 @@ describe('adaptive home demo', () => {
     expect(markup).toContain(expectedText);
     expect(markup).toContain('IVF 5단계');
     expect(markup).toContain(stageText);
+    expect(markup).toContain('aria-label="IVF 과정 이미지"');
     expect(buildAdaptiveHomeDemoState(getAdaptiveHomeDemoCare({ care: careDay }), now).context.careDay).toBe(careDay);
   });
 });

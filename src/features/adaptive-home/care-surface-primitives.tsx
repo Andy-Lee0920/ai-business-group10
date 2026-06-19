@@ -199,11 +199,11 @@ export function CareMomentRing({ card, generatedAt }: { card: HomeActionCard | n
 export type IvfStageStep = 'stimulation' | 'monitoring' | 'retrieval_culture' | 'transfer_wait' | 'result_protection';
 
 const IVF_STAGE_STEPS = [
-  { key: 'stimulation' as IvfStageStep, label: '자극', fullLabel: '난포 자극', href: '/home?care=injection_day' },
-  { key: 'monitoring' as IvfStageStep, label: '확인', fullLabel: '초음파·채혈', href: '/home?care=clinic_day' },
-  { key: 'retrieval_culture' as IvfStageStep, label: '채취', fullLabel: '채취·배양', href: '/home?care=waiting_day' },
-  { key: 'transfer_wait' as IvfStageStep, label: '이식', fullLabel: '이식 후 대기', href: '/home?care=two_week_wait_day' },
-  { key: 'result_protection' as IvfStageStep, label: '결과', fullLabel: '결과 보호', href: '/home?care=result_protection_day' },
+  { key: 'stimulation' as IvfStageStep, label: '자극', fullLabel: '난포 자극', href: '/home?care=injection_day', asset: '/assets/home/superovulation_induction.png' },
+  { key: 'monitoring' as IvfStageStep, label: '확인', fullLabel: '초음파·채혈', href: '/home?care=clinic_day', asset: '/assets/fevio/clinic-note.svg' },
+  { key: 'retrieval_culture' as IvfStageStep, label: '채취', fullLabel: '채취·배양', href: '/home?care=waiting_day', asset: '/assets/home/collection_of_eggs.png' },
+  { key: 'transfer_wait' as IvfStageStep, label: '이식', fullLabel: '이식 후 대기', href: '/home?care=two_week_wait_day', asset: '/assets/home/transplantation_date.png' },
+  { key: 'result_protection' as IvfStageStep, label: '결과', fullLabel: '결과 보호', href: '/home?care=result_protection_day', asset: '/assets/home/pregnancy_wait.png' },
 ] as const;
 
 const PHASE_TO_IVF_STAGE: Record<CareSurfacePhase, IvfStageStep> = {
@@ -237,7 +237,9 @@ export function CarePhaseStrip({ activePhase, activeStep }: { activePhase: CareS
                 aria-current={isCurrent ? 'step' : undefined}
                 aria-label={`${index + 1}단계 ${step.fullLabel}`}
               >
-                <span className={styles.phaseDot}>{index + 1}</span>
+                <span className={styles.phaseDot}>
+                  <img src={step.asset} alt="" aria-hidden="true" />
+                </span>
                 <span>{step.label}</span>
               </a>
             </li>
@@ -256,12 +258,30 @@ const PHASE_GREETING: Record<CareSurfacePhase, { title: string; context: string 
   routine: { title: '오늘 케어', context: '확정된 일정과 기록만 차분히 확인해요.' },
 };
 
+const PHASE_VISUALS: Record<CareSurfacePhase, { asset: string; label: string; helper: string }> = {
+  injection: { asset: '/assets/home/superovulation_induction.png', label: '난포 자극', helper: '주사·약 시간 확인' },
+  clinic: { asset: '/assets/fevio/clinic-note.svg', label: '초음파·채혈', helper: '방문 전 메모 정리' },
+  waiting: { asset: '/assets/home/collection_of_eggs.png', label: '채취·배양', helper: '다음 일정만 확인' },
+  two_week_wait: { asset: '/assets/home/transplantation_date.png', label: '이식 후 대기', helper: '판단은 잠시 보류' },
+  routine: { asset: '/assets/fevio/ivf-cycle.svg', label: '오늘 케어', helper: '확정된 내용 중심' },
+};
+
 export function CompactHeroGreeting({ phase, momentCopy, title }: { phase: CareSurfacePhase; momentCopy?: string; title?: string }) {
   const copy = PHASE_GREETING[phase];
+  const visual = title?.includes('보호') ? { asset: '/assets/home/pregnancy_wait.png', label: '결과 보호', helper: '공유 범위 먼저 선택' } : PHASE_VISUALS[phase];
   return (
     <div className={styles.compactGreeting} data-testid="compact-hero-greeting">
-      <h1 className={styles.compactGreetingTitle}>{title ?? copy.title}</h1>
-      <p className={styles.compactGreetingContext}>{momentCopy ?? copy.context}</p>
+      <div className={styles.compactGreetingCopy}>
+        <h1 className={styles.compactGreetingTitle}>{title ?? copy.title}</h1>
+        <p className={styles.compactGreetingContext}>{momentCopy ?? copy.context}</p>
+      </div>
+      <figure className={styles.phaseVisualCard} aria-label="IVF 과정 이미지">
+        <img src={visual.asset} alt="" aria-hidden="true" />
+        <figcaption>
+          <span>{visual.label}</span>
+          <strong>{visual.helper}</strong>
+        </figcaption>
+      </figure>
     </div>
   );
 }
